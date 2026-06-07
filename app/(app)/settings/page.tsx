@@ -311,9 +311,8 @@ export default function Settings() {
  ].map((plan, idx) => (
  <div 
  key={idx} 
- className={`card-5bloc flex flex-col justify-between border ${
- plan.current ? ' bg-amber/5' : '
- }`}
+ className="card-5bloc flex flex-col justify-between"
+ style={plan.current ? { boxShadow: 'var(--shadow-amber)', background: 'rgba(245,166,35,.06)', color: 'var(--amber)' } : { color: 'var(--on-surface)' }}
  >
  <div>
  <h4 className="text-xs font-semibold text-stone">{plan.name}</h4>
@@ -323,7 +322,7 @@ export default function Settings() {
 
  <div className="pt-4">
  {plan.current ? (
- <span className="w-full text-center block text-[11px] text-amber border bg-amber/10 py-1.5 font-medium">
+ <span className="w-full text-center block text-[11px] py-1.5 font-medium" style={{ background: 'rgba(245,166,35,.10)', color: 'var(--amber)' }}>
  Current subscription
  </span>
  ) : (
