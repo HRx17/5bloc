@@ -271,9 +271,13 @@ export default function Settings() {
  <td className="py-3 text-xs">{member.email}</td>
  <td className="py-3 text-xs">{member.joined_at}</td>
  <td className="py-3">
- <span className={`px-2 py-0.5 text-[11px] border font-medium ${
- member.role === 'Owner' ? 'bg-amber/10 text-amber : 'bg-navy 
- }`}>
+ <span
+   className="chip"
+   style={{
+     background: member.role === 'Owner' ? 'rgba(245,166,35,.12)' : 'rgba(159,142,122,.10)',
+     color: member.role === 'Owner' ? 'var(--amber)' : 'var(--stone)'
+   }}
+ >
  {member.role}
  </span>
  </td>
