@@ -1,0 +1,22 @@
+{
+  "name":             "5Bloc — Where Projects Get Built",
+  "short_name":       "5Bloc",
+  "description":      "Project coordination and contractor marketplace for AEC",
+  "start_url":        "/dashboard",
+  "scope":            "/",
+  "display":          "standalone",
+  "background_color": "#0C1220",
+  "theme_color":      "#0C1220",
+  "orientation":      "any",
+  "lang":             "en",
+  "icons": [
+    { "src": "/icons/icon-192.png",  "sizes": "192x192",  "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512.png",  "sizes": "512x512",  "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-1024.png", "sizes": "1024x1024","type": "image/png" }
+  ],
+  "shortcuts": [
+    { "name": "Dashboard",   "url": "/dashboard"   },
+    { "name": "New project", "url": "/projects/new" },
+    { "name": "AI Estimate", "url": "/ai/estimate"  }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "MH": {
+    "authority": "MahaRERA",
+    "portal": "maharera.mahaonline.gov.in",
+    "quarterly_report_fields": [
+      "project_name", "rera_registration_number", "architect_name",
+      "reporting_quarter", "construction_progress_percentage",
+      "funds_collected_from_allottees", "funds_utilised",
+      "funds_in_escrow", "architect_certification",
+      "engineer_certification", "chartered_accountant_certification"
+    ],
+    "required_documents": [
+      "quarterly_progress_report", "architect_certificate",
+      "engineer_certificate", "ca_certificate",
+      "escrow_bank_statement"
+    ],
+    "escrow_rules": "70% of collections must be in escrow, withdrawal requires architect + engineer + CA certification",
+    "certification_requirement": "Architect must certify each milestone withdrawal against physical progress"
+  },
+  "KA": {
+    "authority": "RERA Karnataka",
+    "portal": "rera.karnataka.gov.in",
+    "quarterly_report_fields": [
+      "project_name", "rera_number", "architect_details", "quarterly_status", "progress_percentage"
+    ],
+    "required_documents": [
+      "progress_report_qpr", "architect_milestone_cert"
+    ],
+    "escrow_rules": "70% in escrow accounts",
+    "certification_requirement": "Architect certification required on work completion percentages"
+  },
+  "DL": {
+    "authority": "DRERA Delhi",
+    "portal": "dda.gov.in/rera",
+    "quarterly_report_fields": [
+      "project_name", "rera_id", "architect_firm", "milestone_completion"
+    ],
+    "required_documents": [
+      "qpr_format_rera", "ca_audit_sheet"
+    ],
+    "escrow_rules": "Escrow account active",
+    "certification_requirement": "Quarterly certifications on concrete pours and brick layouts"
+  },
+  "RJ": {
+    "authority": "RERA Rajasthan",
+    "portal": "rera.rajasthan.gov.in",
+    "quarterly_report_fields": [
+      "project_name", "registration_num", "architect_name", "completed_milestones"
+    ],
+    "required_documents": [
+      "qpr_form", "architect_certificate_form3"
+    ],
+    "escrow_rules": "70% project fund escrow",
+    "certification_requirement": "Form 3 architect certification for milestone payouts"
+  },
+  "HR": {
+    "authority": "HRERA Haryana",
+    "portal": "hrera.org.in",
+    "quarterly_report_fields": [
+      "project_details", "registration_number", "architect", "progress_sheet"
+    ],
+    "required_documents": [
+      "progress_declaration", "architect_signoff"
+    ],
+    "escrow_rules": "70% escrow releases",
+    "certification_requirement": "HRERA milestone completion checks"
+  }
+}
