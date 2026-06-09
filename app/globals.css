@@ -413,3 +413,57 @@ body {
   to   { transform: translateX(0); }
 }
 .animate-slide-in { animation: slideInLeft 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+
+/* ══════════════════════════════════
+   LANDING PAGE DESIGN SYSTEM
+   Warm bone-paper palette (5bloc-explorer)
+   Scoped to .landing class — does NOT
+   affect the dark app theme at all.
+══════════════════════════════════ */
+
+.landing {
+  --lp-bg:          #FAFAF8;
+  --lp-surface:     #FFFFFF;
+  --lp-fg:          #1a1714;
+  --lp-card:        #FFFFFF;
+  --lp-muted:       #f5f2ee;
+  --lp-muted-fg:    #6b5e50;
+  --lp-border:      rgba(26,23,20,0.10);
+  --lp-blueprint:   #2B7FFF;
+  --lp-ochre:       #F5A623;
+  --lp-primary:     #F5A623;
+  --lp-primary-fg:  #1a1714;
+  --lp-success:     #2ECC8A;
+  --font-lp-display: 'Fraunces', ui-serif, Georgia, serif;
+  --font-lp-sans:    'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-lp-mono:    'IBM Plex Mono', ui-monospace, monospace;
+  background-color: var(--lp-bg);
+  color: var(--lp-fg);
+  font-family: var(--font-lp-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.landing h1, .landing h2, .landing h3, .landing h4 {
+  font-family: var(--font-lp-display);
+  letter-spacing: -0.02em;
+  font-weight: 500;
+}
+
+.landing .font-lp-mono {
+  font-family: var(--font-lp-mono);
+}
+
+.paper-grid {
+  background-image:
+    linear-gradient(to right, rgba(26,23,20,0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(26,23,20,0.05) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+.blueprint-grid-lp {
+  background-color: #2B7FFF;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.14) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.14) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
