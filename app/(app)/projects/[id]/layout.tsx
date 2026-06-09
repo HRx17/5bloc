@@ -47,8 +47,14 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
  { name: 'Documents', path: `/projects/${projectId}/documents` },
  { name: 'RFIs', path: `/projects/${projectId}/rfis` },
  { name: 'Submittals', path: `/projects/${projectId}/submittals` },
- { name: 'Team', path: `/projects/${projectId}/team` },
+ { name: 'Messages', path: `/projects/${projectId}/messages` },
+ { name: 'Meetings', path: `/projects/${projectId}/meetings` },
+ { name: 'Issues', path: `/projects/${projectId}/issues` },
+ { name: 'Site', path: `/projects/${projectId}/site` },
+ { name: 'Permits', path: `/projects/${projectId}/permits` },
+ { name: 'Transmittals', path: `/projects/${projectId}/transmittals` },
  { name: 'Invoices', path: `/projects/${projectId}/invoices` },
+ { name: 'Team', path: `/projects/${projectId}/team` },
  { name: 'Settings', path: `/projects/${projectId}/settings` },
  ]
 

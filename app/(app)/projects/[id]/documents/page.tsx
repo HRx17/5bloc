@@ -444,53 +444,132 @@ export default function DocumentVault() {
  </button>
  </div>
 
- {/* Viewer body area */}
- <div className="flex-grow flex items-center justify-center p-8 bg-navy/20 relative">
- {viewingDoc.extension === 'pdf' ? (
- /* Mock PDF preview container */
- <div className="w-full h-full border bg-navy/70 rounded-md flex flex-col items-center justify-center text-center p-6 text-stone">
- <span className="material-icons-outlined text-[48px] text-amber mb-2">picture_as_pdf</span>
- <span className="text-xs font-semibold text-white">Integrated PDF Canvas Viewer (pdfjs-dist)</span>
- <span className="text-[10px] mt-1">Simulated display buffer. Actual files downloaded securely.</span>
- <button className="btn-secondary py-1 px-4 mt-4 text-xs">Page 1 of 4</button>
- </div>
- ) : viewingDoc.extension === 'jpg' || viewingDoc.extension === 'png' ? (
- /* Image preview container */
- <div className="max-w-full max-h-full overflow-hidden rounded-md border relative bg-navy/70 flex items-center justify-center">
- <img 
- src={`https://dummyimage.com/800x600/0c1220/f5a623.png&text=${encodeURIComponent(viewingDoc.name)}`} 
- alt={viewingDoc.name}
- className="max-w-full max-h-[50vh] object-contain"
- />
- </div>
- ) : (
- /* CAD DWG/DXF files details fallback */
- <div className="text-center p-8 max-w-sm">
- <div className="w-16 h-16 rounded-md bg-amber/10 border text-amber flex items-center justify-center mx-auto mb-4">
- <span className="material-icons-outlined text-[32px]">architecture</span>
- </div>
- <h4 className="text-sm font-semibold text-white">AutoCAD Drawing File (.DWG)</h4>
- <p className="text-xs text-stone mt-1.5 leading-relaxed">
- DWG rendering uses the OpenDesign Web SDK. Native desktop users can sync this directly to their local filesystem for quick launching.
- </p>
- <div className="mt-5 flex gap-3 justify-center">
- <button 
- onClick={() => alert(`Simulating file open in local CAD editor (R2 signed download validation)`)}
- className="btn-primary text-xs py-2 px-4"
- >
- Open in CAD Editor
- </button>
- <a 
- href={`https://dummyimage.com/600x400/0c1220/f5a623.png&text=Download_${viewingDoc.name}`}
- download
- className="btn-secondary text-xs py-2 px-4"
- >
- Download Raw
- </a>
- </div>
- </div>
- )}
- </div>
+  {/* Viewer body area */}
+  <div className="flex-grow flex flex-col md:flex-row overflow-hidden">
+    {/* Left column: main viewer */}
+    <div className="flex-1 flex items-center justify-center p-8 bg-navy/20 relative overflow-y-auto">
+      {viewingDoc.extension === 'pdf' ? (
+      /* Mock PDF preview container */
+      <div className="w-full h-full min-h-[300px] border bg-navy/70 rounded-md flex flex-col items-center justify-center text-center p-6 text-stone">
+      <span className="material-icons-outlined text-[48px] text-amber mb-2">picture_as_pdf</span>
+      <span className="text-xs font-semibold text-white">Integrated PDF Canvas Viewer (pdfjs-dist)</span>
+      <span className="text-[10px] mt-1">Simulated display buffer. Actual files downloaded securely.</span>
+      <button className="btn-secondary py-1 px-4 mt-4 text-xs">Page 1 of 4</button>
+      </div>
+      ) : viewingDoc.extension === 'jpg' || viewingDoc.extension === 'png' ? (
+      /* Image preview container */
+      <div className="max-w-full max-h-full overflow-hidden rounded-md border relative bg-navy/70 flex items-center justify-center">
+      <img 
+      src={`https://dummyimage.com/800x600/0c1220/f5a623.png&text=${encodeURIComponent(viewingDoc.name)}`} 
+      alt={viewingDoc.name}
+      className="max-w-full max-h-[50vh] object-contain"
+      />
+      </div>
+      ) : (
+      /* CAD DWG/DXF files details fallback */
+      <div className="text-center p-8 max-w-sm">
+      <div className="w-16 h-16 rounded-md bg-amber/10 border text-amber flex items-center justify-center mx-auto mb-4">
+      <span className="material-icons-outlined text-[32px]">architecture</span>
+      </div>
+      <h4 className="text-sm font-semibold text-white">AutoCAD Drawing File (.DWG)</h4>
+      <p className="text-xs text-stone mt-1.5 leading-relaxed">
+      DWG rendering uses the OpenDesign Web SDK. Native desktop users can sync this directly to their local filesystem for quick launching.
+      </p>
+      <div className="mt-5 flex gap-3 justify-center">
+      <button 
+      onClick={() => alert(`Simulating file open in local CAD editor (R2 signed download validation)`)}
+      className="btn-primary text-xs py-2 px-4"
+      >
+      Open in CAD Editor
+      </button>
+      <a 
+      href={`https://dummyimage.com/600x400/0c1220/f5a623.png&text=Download_${viewingDoc.name}`}
+      download
+      className="btn-secondary text-xs py-2 px-4"
+      >
+      Download Raw
+      </a>
+      </div>
+      </div>
+      )}
+    </div>
+
+    {/* Right column: Version History & PDF Tools panels */}
+    <div className="w-full md:w-80 shrink-0 border-t md:border-t-0 md:border-l bg-navy p-5 space-y-6 overflow-y-auto">
+      {/* Version History section */}
+      <div className="space-y-3">
+        <div className="border-b pb-2 flex items-center justify-between">
+          <span className="text-[10px] font-bold font-mono text-amber uppercase tracking-wider">Version History</span>
+          <span className="material-icons-outlined text-stone text-[15px]">history</span>
+        </div>
+        <div className="space-y-3">
+          {[
+            { ver: viewingDoc.version, date: viewingDoc.created_at, author: viewingDoc.uploaded_by, active: true },
+            { ver: Math.max(1, viewingDoc.version - 1), date: '2026-05-10', author: 'Amit Sharma', active: false },
+            { ver: Math.max(1, viewingDoc.version - 2), date: '2026-04-12', author: 'Parth Patel', active: false }
+          ].slice(0, viewingDoc.version).map((v, i) => (
+            <div key={i} className={`p-3 border text-xs space-y-1.5 ${v.active ? 'bg-amber/5 border-amber/35' : 'bg-navy/40 border-navy-lt/50'}`}>
+              <div className="flex justify-between items-center font-mono">
+                <span className={`font-bold ${v.active ? 'text-amber' : 'text-white'}`}>Version {v.ver}.0</span>
+                {v.active ? (
+                  <span className="text-[9px] bg-amber/15 text-amber px-1.5 py-0.5 rounded font-bold uppercase">Active</span>
+                ) : (
+                  <button 
+                    onClick={() => alert(`Restoring file to version ${v.ver}.0 (simulated)`)}
+                    className="text-[9px] text-blue font-bold uppercase hover:underline"
+                  >
+                    Restore
+                  </button>
+                )}
+              </div>
+              <div className="flex justify-between text-[10px] text-stone">
+                <span>Uploaded: {v.date}</span>
+                <span>By: {v.author}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* PDF & Markup tools section */}
+      <div className="space-y-3 pt-2">
+        <div className="border-b pb-2 flex items-center justify-between">
+          <span className="text-[10px] font-bold font-mono text-blue uppercase tracking-wider">PDF & Drawing Tools</span>
+          <span className="material-icons-outlined text-stone text-[15px]">construction</span>
+        </div>
+        <div className="grid grid-cols-1 gap-2">
+          <button 
+            onClick={() => alert('Launching PDF split tool')}
+            className="btn-secondary w-full py-1.5 text-xs text-left px-3 flex items-center gap-2"
+          >
+            <span className="material-icons-outlined text-[15px] text-stone">call_split</span>
+            Split PDF Pages
+          </button>
+          <button 
+            onClick={() => alert('Select drawing sheet to merge...')}
+            className="btn-secondary w-full py-1.5 text-xs text-left px-3 flex items-center gap-2"
+          >
+            <span className="material-icons-outlined text-[15px] text-stone">merge_type</span>
+            Merge Sheets
+          </button>
+          <button 
+            onClick={() => alert('Activating markup overlay layers')}
+            className="btn-secondary w-full py-1.5 text-xs text-left px-3 flex items-center gap-2"
+          >
+            <span className="material-icons-outlined text-[15px] text-stone">draw</span>
+            Add Markup Layer
+          </button>
+          <button 
+            onClick={() => alert('Exporting file to editable Word format (.docx)')}
+            className="btn-secondary w-full py-1.5 text-xs text-left px-3 flex items-center gap-2"
+          >
+            <span className="material-icons-outlined text-[15px] text-stone">description</span>
+            Export to Word (.docx)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
  {/* Viewer footer audit logs */}
  <div className="px-6 py-3 bg-navy border-t flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[10px] text-stone font-mono">

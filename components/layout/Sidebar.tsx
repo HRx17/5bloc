@@ -34,7 +34,8 @@ export default function Sidebar({
  label: 'Tools',
  items: [
  { name: 'Marketplace', path: '/marketplace', icon: 'storefront' },
- { name: 'AI Estimator', path: '/ai/estimate', icon: 'auto_awesome' },
+ { name: 'AI Cost Estimator', path: '/ai/estimate', icon: 'auto_awesome' },
+ { name: 'AI Contract Scan', path: '/ai/contract-scan', icon: 'gavel' },
  { name: 'Integrations', path: '/integrations', icon: 'extension' },
  ],
  },
