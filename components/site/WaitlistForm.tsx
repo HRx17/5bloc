@@ -54,16 +54,16 @@ export function WaitlistForm({ source = 'landing', compact = false }: { source?:
   if (done) {
     return (
       <div className="rounded-2xl border border-[rgba(26,23,20,0.1)] bg-white p-6 text-sm text-[#1a1714]">
-        <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(26,23,20,0.1)] bg-[#f5f2ee] px-3 py-1 font-mono text-[11px] uppercase tracking-[0.18em] text-[#2B7FFF]">
+        <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(26,23,20,0.1)] bg-[#f5f2ee] px-3 py-1 font-mono text-[11px] uppercase tracking-[0.18em] text-[#F5A623]">
           <Check className="h-3.5 w-3.5" /> You're in
         </div>
         <p className="mt-4 text-base font-medium">
           Thanks{name ? `, ${name.split(' ')[0]}` : ''}. We've registered{' '}
-          <span className="font-mono text-[#2B7FFF]">{email}</span> for private beta onboarding.
+          <span className="font-mono text-[#F5A623]">{email}</span> for private beta onboarding.
         </p>
         <p className="mt-2 text-[#6b5e50]">
           Want to skip the queue? Contact us at{' '}
-          <a href="mailto:contact@5bloc.com" className="underline font-semibold hover:text-[#2B7FFF]">
+          <a href="mailto:contact@5bloc.com" className="underline font-semibold hover:text-[#F5A623]">
             contact@5bloc.com
           </a>{' '}
           with details about your active project.
@@ -99,7 +99,7 @@ export function WaitlistForm({ source = 'landing', compact = false }: { source?:
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="grid gap-1.5">
           <label className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#6b5e50]">
-            Work email <span className="text-[#2B7FFF]">*</span>
+            Work email <span className="text-[#F5A623]">*</span>
           </label>
           <input
             type="email"

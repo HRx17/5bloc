@@ -40,7 +40,7 @@ export function InteractivePrototype() {
         <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#6b5e50]">
           5bloc.app / lotus-residences
         </div>
-        <div className="font-mono text-[11px] text-[#2B7FFF]">demo</div>
+        <div className="font-mono text-[11px] text-[#F5A623]">demo</div>
       </div>
 
       <div className="flex flex-wrap gap-1 border-b border-[rgba(26,23,20,0.1)] bg-[#f5f2ee]/60 px-2 py-2">
@@ -106,7 +106,7 @@ function DrawingsDemo() {
                   <span
                     className={cn(
                       'font-mono text-[9px] uppercase tracking-[0.18em]',
-                      v.status === 'current' ? 'text-[#2B7FFF]' : 'text-[#6b5e50]/70'
+                      v.status === 'current' ? 'text-[#F5A623]' : 'text-[#6b5e50]/70'
                     )}
                   >
                     {v.status}
@@ -193,7 +193,7 @@ function RfiDemo() {
       <div className="flex flex-col border-b border-[rgba(26,23,20,0.1)] md:border-b-0 md:border-r">
         <div className="flex items-center justify-between border-b border-[rgba(26,23,20,0.1)] px-4 py-3">
           <div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#2B7FFF]">RFI #042 · Open</div>
+            <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#F5A623]">RFI #042 · Open</div>
             <div className="mt-0.5 font-semibold text-base text-[#1a1714]">Window head detail conflict — A-04 vs A-12</div>
           </div>
           <button className="rounded-md border border-[rgba(26,23,20,0.1)] bg-white px-2 py-1 text-xs hover:bg-[#f5f2ee]">Mark resolved</button>
@@ -213,7 +213,7 @@ function RfiDemo() {
               placeholder="Reply… (Enter to send)"
               className="flex-1 resize-none bg-transparent text-sm outline-none text-[#1a1714]"
             />
-            <button onClick={send} className="grid h-8 w-8 place-items-center rounded-md bg-[#2B7FFF] text-white">
+            <button onClick={send} className="grid h-8 w-8 place-items-center rounded-md bg-[#F5A623] text-white">
               <Send className="h-3.5 w-3.5" />
             </button>
           </div>
@@ -254,7 +254,7 @@ function Bubble({ msg }: { msg: Message }) {
   const mine = msg.from === 'you'
   return (
     <div className={cn('flex', mine ? 'justify-end' : 'justify-start')}>
-      <div className={cn('max-w-[80%] rounded-2xl px-3.5 py-2 text-sm shadow-sm', mine ? 'bg-[#2B7FFF] text-white' : 'bg-white text-[#1a1714]')}>
+      <div className={cn('max-w-[80%] rounded-2xl px-3.5 py-2 text-sm shadow-sm', mine ? 'bg-[#F5A623] text-white' : 'bg-white text-[#1a1714]')}>
         <div className={cn('font-mono text-[9px] uppercase tracking-[0.18em]', mine ? 'text-white/70' : 'text-[#6b5e50]')}>
           {mine ? 'You' : 'Shenoy Build Co.'} · {msg.time}
         </div>
@@ -290,7 +290,7 @@ function BoqDemo() {
     <div className="flex flex-col">
       <div className="flex items-center justify-between border-b border-[rgba(26,23,20,0.1)] px-4 py-3">
         <div>
-          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#2B7FFF]">BOQ · Lotus Residences · Block A</div>
+          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#F5A623]">BOQ · Lotus Residences · Block A</div>
           <div className="mt-0.5 font-semibold text-base text-[#1a1714]">Draft — based on DPR v2</div>
         </div>
         <button
@@ -298,7 +298,7 @@ function BoqDemo() {
           disabled={estimating}
           className="inline-flex items-center gap-1.5 rounded-md border border-[rgba(26,23,20,0.1)] bg-white px-3 py-1.5 text-xs font-medium hover:bg-[#f5f2ee] disabled:opacity-60 text-[#1a1714]"
         >
-          <Sparkles className="h-3.5 w-3.5 text-[#2B7FFF]" />
+          <Sparkles className="h-3.5 w-3.5 text-[#F5A623]" />
           {estimating ? 'Estimating…' : 'AI estimate missing lines'}
         </button>
       </div>
@@ -321,7 +321,7 @@ function BoqDemo() {
                 <td className="px-4 py-2">
                   {it.desc}
                   {it.ai && (
-                    <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-[rgba(26,23,20,0.1)] bg-[#f5f2ee] px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.18em] text-[#2B7FFF]">
+                    <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-[rgba(26,23,20,0.1)] bg-[#f5f2ee] px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.18em] text-[#F5A623]">
                       <Sparkles className="h-2.5 w-2.5" /> AI
                     </span>
                   )}
@@ -366,18 +366,18 @@ function ClientDemo() {
     <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr]">
       <section className="border-b border-[rgba(26,23,20,0.1)] md:border-b-0 md:border-r p-4">
         <div className="border-b border-[rgba(26,23,20,0.1)] pb-3">
-          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#2B7FFF]">Your home, this week</div>
+          <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#F5A623]">Your home, this week</div>
           <div className="mt-0.5 font-semibold text-lg text-[#1a1714]">Lotus Residences · Unit A-04</div>
         </div>
         <div className="grid gap-4 pt-4">
           <div className="rounded-xl border border-[rgba(26,23,20,0.1)] bg-[#FAFAF8] p-4">
             <div className="flex items-center justify-between">
               <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#6b5e50]">Phase</div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#2B7FFF]">62% · on track</div>
+              <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#F5A623]">62% · on track</div>
             </div>
             <div className="mt-2 font-medium text-base text-[#1a1714]">Interior finishing</div>
             <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#f5f2ee]">
-              <div className="h-full w-[62%] rounded-full bg-[#2B7FFF]" />
+              <div className="h-full w-[62%] rounded-full bg-[#F5A623]" />
             </div>
             <div className="mt-3 grid grid-cols-3 gap-3 text-xs text-[#1a1714]">
               <div>
@@ -413,14 +413,14 @@ function ClientDemo() {
             <li key={a.title} className="flex items-start gap-3 py-3">
               <button
                 onClick={() => approve(i)}
-                className="mt-0.5 text-[#2B7FFF] hover:text-[#2B7FFF]/80 disabled:opacity-50"
+                className="mt-0.5 text-[#F5A623] hover:text-[#F5A623]/80 disabled:opacity-50"
                 aria-label="Approve"
                 disabled={a.status === 'approved'}
               >
                 {a.status === 'approved' ? (
                   <CheckCircle2 className="h-5 w-5" />
                 ) : (
-                  <Circle className="h-5 w-5 text-[#6b5e50] hover:text-[#2B7FFF]" />
+                  <Circle className="h-5 w-5 text-[#6b5e50] hover:text-[#F5A623]" />
                 )}
               </button>
               <div className="flex-1">

@@ -153,7 +153,7 @@ function Hero() {
       <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
         <div className="max-w-3xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(26,23,20,0.1)] bg-white px-3 py-1 font-mono text-[11px] uppercase tracking-[0.18em] text-[#6b5e50]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#2B7FFF]" />
+            <span className="h-1.5 w-1.5 rounded-full bg-[#F5A623]" />
             Private beta · India + US · Onboarding 10 practices / week
           </div>
           <h1 className="mt-6 text-5xl leading-[1.02] sm:text-6xl lg:text-[68px]">
@@ -221,7 +221,7 @@ function PrototypeSection() {
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div className="max-w-2xl">
-            <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#2B7FFF]">
+            <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#F5A623]">
               Try it · no signup
             </div>
             <h2 className="mt-3 text-3xl sm:text-4xl text-[#1a1714]">
@@ -235,7 +235,7 @@ function PrototypeSection() {
           </div>
           <a
             href="#waitlist"
-            className="inline-flex items-center gap-1 text-sm font-semibold text-[#1a1714] hover:text-[#2B7FFF]"
+            className="inline-flex items-center gap-1 text-sm font-semibold text-[#1a1714] hover:text-[#F5A623]"
           >
             Like what you see? Join the waitlist <ArrowRight className="h-4 w-4" />
           </a>
@@ -262,7 +262,7 @@ function Pillars() {
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[1fr_2fr] lg:gap-16">
           <div>
-            <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#2B7FFF]">
+            <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#F5A623]">
               Why 5Bloc
             </div>
             <h2 className="mt-3 text-3xl sm:text-4xl text-[#1a1714]">
@@ -277,7 +277,7 @@ function Pillars() {
           <div className="grid gap-px overflow-hidden rounded-xl border border-[rgba(26,23,20,0.1)] bg-[rgba(26,23,20,0.08)] sm:grid-cols-2">
             {items.map((p) => (
               <div key={p.title} className="bg-white p-6">
-                <p.icon className="h-5 w-5 text-[#2B7FFF]" />
+                <p.icon className="h-5 w-5 text-[#F5A623]" />
                 <div className="mt-4 font-semibold text-lg text-[#1a1714]">{p.title}</div>
                 <p className="mt-1.5 text-sm text-[#6b5e50]">{p.body}</p>
               </div>
@@ -301,7 +301,7 @@ function RolesGrid() {
     <section id="roles" className="border-b border-[rgba(26,23,20,0.1)] bg-white">
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div>
-          <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#2B7FFF]">
+          <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#F5A623]">
             Five roles · one project
           </div>
           <h2 className="mt-3 max-w-2xl text-3xl sm:text-4xl text-[#1a1714]">
@@ -312,7 +312,7 @@ function RolesGrid() {
         <div className="mt-10 grid gap-px overflow-hidden rounded-xl border border-[rgba(26,23,20,0.1)] bg-[rgba(26,23,20,0.08)] md:grid-cols-5">
           {list.map((r) => (
             <div key={r.title} className="flex flex-col bg-white p-6 min-h-[180px]">
-              <r.icon className="h-5 w-5 text-[#2B7FFF]" />
+              <r.icon className="h-5 w-5 text-[#F5A623]" />
               <div className="mt-4 font-semibold text-lg text-[#1a1714]">{r.title}</div>
               <div className="mt-1.5 text-xs text-[#6b5e50]">{r.tagline}</div>
               <div className="mt-auto pt-4 font-mono text-[10px] uppercase tracking-[0.18em] text-[#6b5e50]/80">
@@ -344,7 +344,7 @@ function ModulesSection() {
   return (
     <section id="modules" className="border-b border-[rgba(26,23,20,0.1)] bg-[#FAFAF8]">
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-        <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#2B7FFF]">
+        <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#F5A623]">
           12 modules
         </div>
         <h2 className="mt-3 max-w-3xl text-3xl sm:text-4xl text-[#1a1714]">
@@ -380,7 +380,7 @@ function FlowSection() {
   return (
     <section className="border-b border-[rgba(26,23,20,0.1)] bg-white">
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-        <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#2B7FFF]">
+        <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#F5A623]">
           From brief to handover
         </div>
         <h2 className="mt-3 max-w-3xl text-3xl sm:text-4xl text-[#1a1714]">
@@ -389,7 +389,7 @@ function FlowSection() {
         <ol className="mt-10 grid gap-px overflow-hidden rounded-xl border border-[rgba(26,23,20,0.1)] bg-[rgba(26,23,20,0.08)] md:grid-cols-5">
           {steps.map(([n, t, d]) => (
             <li key={n} className="flex flex-col bg-white p-6">
-              <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#2B7FFF]">
+              <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#F5A623]">
                 Step {n}
               </div>
               <div className="mt-2 font-semibold text-lg text-[#1a1714]">{t}</div>
@@ -429,7 +429,7 @@ function Testimonials() {
   return (
     <section className="border-b border-[rgba(26,23,20,0.1)] bg-[#FAFAF8]">
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-        <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#2B7FFF]">
+        <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#F5A623]">
           From the field
         </div>
         <h2 className="mt-3 max-w-3xl text-3xl sm:text-4xl text-[#1a1714]">
@@ -439,7 +439,7 @@ function Testimonials() {
           {quotes.map((q) => (
             <figure key={q.name} className="flex flex-col bg-white p-7">
               <blockquote className="text-base leading-relaxed text-[#1a1714]">
-                <span className="font-serif text-3xl leading-none text-[#2B7FFF] mr-1">“</span>
+                <span className="font-serif text-3xl leading-none text-[#F5A623] mr-1">“</span>
                 {q.quote}
               </blockquote>
               <figcaption className="mt-auto border-t border-[rgba(26,23,20,0.1)] pt-4">
@@ -489,7 +489,7 @@ function FAQ() {
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div className="grid gap-10 lg:grid-cols-[1fr_1.6fr] lg:gap-16">
           <div>
-            <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#2B7FFF]">
+            <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-[#F5A623]">
               Frequently asked
             </div>
             <h2 className="mt-3 text-3xl sm:text-4xl text-[#1a1714]">
@@ -499,7 +499,7 @@ function FAQ() {
               Still on the fence? Email{' '}
               <a
                 href="mailto:hello@5bloc.com"
-                className="text-[#1a1714] underline underline-offset-4 hover:text-[#2B7FFF]"
+                className="text-[#1a1714] underline underline-offset-4 hover:text-[#F5A623]"
               >
                 hello@5bloc.com
               </a>{' '}
@@ -546,7 +546,7 @@ function WaitlistCTA() {
                   'Direct line to the founding team on WhatsApp',
                 ].map((b) => (
                   <li key={b} className="flex items-center gap-2 text-white">
-                    <Check className="h-4 w-4 text-[#2B7FFF]" /> {b}
+                    <Check className="h-4 w-4 text-[#F5A623]" /> {b}
                   </li>
                 ))}
               </ul>
@@ -600,7 +600,7 @@ function SiteFooter() {
               <ul className="mt-4 grid gap-2 text-sm font-medium">
                 {c.links.map((l) => (
                   <li key={l.label}>
-                    <Link href={l.href} className="text-[#6b5e50] transition-colors hover:text-[#2B7FFF]">
+                    <Link href={l.href} className="text-[#6b5e50] transition-colors hover:text-[#F5A623]">
                       {l.label}
                     </Link>
                   </li>
