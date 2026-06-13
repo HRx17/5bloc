@@ -312,7 +312,7 @@ export default function ProjectMessages() {
 
                       <div className={`p-3 text-xs leading-relaxed ${
                         isMe ? 'bg-amber text-navy font-medium' : 'bg-navy border text-white'
-                      }`} style={{ borderRadius: '0px' }}>
+                      }`} style={{ borderRadius: isMe ? '16px 4px 16px 16px' : '4px 16px 16px 16px' }}>
                         <p>{m.text}</p>
                         
                         {m.attachment && (
@@ -364,7 +364,7 @@ export default function ProjectMessages() {
 
                         <div className={`p-3 text-xs leading-relaxed ${
                           isMe ? 'bg-amber text-navy font-medium' : 'bg-navy border text-white'
-                        }`} style={{ borderRadius: '0px' }}>
+                        }`} style={{ borderRadius: isMe ? '16px 4px 16px 16px' : '4px 16px 16px 16px' }}>
                           <p>{m.text}</p>
                           
                           {m.attachment && (

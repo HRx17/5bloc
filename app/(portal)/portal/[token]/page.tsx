@@ -208,7 +208,7 @@ export default function ClientPortal() {
                   ? 'bg-navy text-white border-navy font-bold shadow-sm' 
                   : 'bg-white text-stone border-[#EDE9E2] hover:text-navy'
               }`}
-              style={{ borderRadius: '0px' }}
+              style={{ borderRadius: '8px' }}
             >
               {role} portal
             </button>

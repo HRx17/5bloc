@@ -131,12 +131,12 @@ export default function TopNav({
  <img
  src={avatarUrl}
  alt={userName}
- className="w-7 h-7 object-cover"
+ className="w-7 h-7 object-cover rounded-full"
  style={{ boxShadow: 'var(--shadow-1)' }}
  />
  ) : (
  <div
- className="w-7 h-7 flex items-center justify-center text-[10px] font-bold"
+ className="w-7 h-7 flex items-center justify-center text-[10px] font-bold rounded-full"
  style={{
  background: 'rgba(245,166,35,0.18)',
  color: 'var(--amber)',

@@ -189,7 +189,7 @@ body {
 /* Standard tonal card — Level 2 */
 .card-5bloc {
   background: var(--surface-container);
-  border-radius: 0;
+  border-radius: 16px;
   padding: 20px 24px;
   box-shadow: var(--shadow-2);
 }
@@ -199,7 +199,7 @@ body {
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  border-radius: 0;
+  border-radius: 16px;
   padding: 20px 24px;
   box-shadow: var(--shadow-3);
 }
@@ -207,7 +207,7 @@ body {
 /* Active card — amber glow */
 .card-5bloc-active {
   background: var(--surface-container);
-  border-radius: 0;
+  border-radius: 16px;
   padding: 20px 24px;
   box-shadow: var(--shadow-amber);
 }
@@ -224,7 +224,7 @@ body {
   font-weight: 600;
   font-size: 13px;
   padding: 10px 20px;
-  border-radius: 0;
+  border-radius: 9999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -232,7 +232,7 @@ body {
   cursor: pointer;
   letter-spacing: 0.01em;
   box-shadow: var(--shadow-1);
-  transition: background 0.1s, box-shadow 0.1s;
+  transition: background 0.1s, box-shadow 0.1s, transform 0.05s;
 }
 .btn-primary:hover  { background: var(--amber); box-shadow: var(--shadow-2); }
 .btn-primary:active { background: var(--amber-lt); box-shadow: var(--shadow-0); }
@@ -250,14 +250,14 @@ body {
   font-weight: 500;
   font-size: 13px;
   padding: 10px 20px;
-  border-radius: 0;
+  border-radius: 9999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   cursor: pointer;
   box-shadow: var(--shadow-1);
-  transition: background 0.1s, box-shadow 0.1s;
+  transition: background 0.1s, box-shadow 0.1s, transform 0.05s;
 }
 .btn-secondary:hover  { background: var(--surface-container-highest); box-shadow: var(--shadow-2); }
 .btn-secondary:disabled { color: var(--stone); cursor: not-allowed; box-shadow: none; }
@@ -269,14 +269,14 @@ body {
   font-weight: 500;
   font-size: 13px;
   padding: 10px 20px;
-  border-radius: 0;
+  border-radius: 9999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   cursor: pointer;
   box-shadow: var(--shadow-1);
-  transition: background 0.1s;
+  transition: background 0.1s, transform 0.05s;
 }
 .btn-ghost-amber:hover { background: rgba(245, 166, 35, 0.18); }
 
@@ -287,7 +287,7 @@ body {
 
 .input-5bloc {
   background: var(--surface-container-low);
-  border-radius: 0;
+  border-radius: 12px;
   color: var(--on-surface);
   font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 13.5px;
@@ -312,11 +312,11 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
-  border-radius: 0;
+  padding: 2px 10px;
+  border-radius: 9999px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: uppercase;
 }

@@ -252,8 +252,8 @@ export default function TransmittalsLog() {
 
       {/* Dispatch Creator Modal */}
       {showFormModal && (
-        <div className="fixed inset-0 bg-navy/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="w-full max-w-md bg-navy-mid border p-6 space-y-4">
+        <div className="fixed inset-0 bg-navy/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="w-full max-w-md bg-navy-mid border p-6 space-y-4 rounded-2xl">
             <div className="border-b pb-3 flex justify-between items-center">
               <h3 className="text-xs font-bold font-mono text-amber uppercase tracking-wider">Create Transmittal Sheet</h3>
               <button onClick={() => setShowFormModal(false)} className="text-stone hover:text-white transition">
@@ -293,8 +293,8 @@ export default function TransmittalsLog() {
                   value={newTransmittal.documents}
                   placeholder="Detail drawing name, sheet numbers and revision codes..."
                   onChange={e => setNewTransmittal(prev => ({ ...prev, documents: e.target.value }))}
-                  className="w-full bg-[#141E30] border text-xs text-white p-2 focus:outline-none resize-none"
-                  style={{ borderRadius: '0px' }}
+                  className="w-full bg-navy border text-xs text-white p-3 focus:outline-none resize-none"
+                  style={{ borderRadius: '12px' }}
                 />
               </div>
 

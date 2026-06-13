@@ -92,11 +92,10 @@ export default function Sidebar({
  key={item.name}
  href={item.path}
  onClick={onClose}
- className="flex items-center gap-3 px-3 py-2 text-[13px] font-medium"
+ className="flex items-center gap-3 px-3 py-2.5 text-[13px] font-medium rounded-xl transition-all duration-150"
  style={{
  color: active ? 'var(--amber)' : 'var(--on-surface-variant)',
- background: active ? 'rgba(245, 166, 35, 0.10)' : 'transparent',
- boxShadow: active ? 'inset 3px 0 0 var(--amber-dk)' : 'none',
+ background: active ? 'rgba(245, 166, 35, 0.08)' : 'transparent',
  }}
  onMouseEnter={(e) => {
  if (!active) {
@@ -136,7 +135,7 @@ export default function Sidebar({
  {/* Org row */}
  <div className="flex items-center gap-3 mb-3">
  <div
- className="w-8 h-8 flex items-center justify-center text-[11px] font-bold shrink-0"
+ className="w-8 h-8 flex items-center justify-center text-[11px] font-bold shrink-0 rounded-lg"
  style={{
  background: 'rgba(245,166,35,0.15)',
  color: 'var(--amber)',
@@ -157,7 +156,7 @@ export default function Sidebar({
 
  {/* Plan badge */}
  <div
- className="flex items-center justify-between px-3 py-2"
+ className="flex items-center justify-between px-3 py-2 rounded-lg"
  style={{
  background: 'var(--surface-container)',
  boxShadow: 'var(--shadow-1)',
