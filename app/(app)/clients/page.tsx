@@ -88,278 +88,331 @@ export default function ClientCRM() {
  }
 
  const stages: { id: Client['pipeline_stage']; label: string; color: string }[] = [
- { id: 'prospect', label: 'Prospect', color: 'border-t-stone' },
- { id: 'briefing', label: 'Briefing', color: 'border-t-blue' },
- { id: 'proposal', label: 'Proposal', color: 'border-t-amber' },
- { id: 'won', label: 'Won', color: 'border-t-success' },
- { id: 'lost', label: 'Lost', color: 'border-t-error' },
+ { id: 'prospect', label: 'Prospect', color: 'var(--on-surface-variant)' },
+ { id: 'briefing', label: 'Briefing', color: 'var(--blue)' },
+ { id: 'proposal', label: 'Proposal', color: 'var(--amber)' },
+ { id: 'won', label: 'Won', color: 'var(--success)' },
+ { id: 'lost', label: 'Lost', color: 'var(--error)' },
  ]
 
  return (
- <div className="p-6 space-y-6 font-body select-none max-w-7xl mx-auto">
- {/* Header */}
- <div className="flex items-center justify-between">
- <div>
- <h1 className="text-2xl font-bold tracking-wide">Client CRM Pipeline</h1>
- <p className="text-xs text-stone mt-1">Track business development leads and manage client project acquisitions.</p>
- </div>
- <div className="flex items-center gap-3">
- {/* Toggle View Mode */}
- <div className="bg-navy-mid p-0.5 flex">
- <button
- onClick={() => setViewMode('kanban')}
- className={`p-1.5 text-xs font-semibold transition flex items-center ${
- viewMode === 'kanban' ? 'bg-amber text-navy font-bold' : 'text-stone hover:text-white'
- }`}
- >
- <span className="material-icons-outlined text-[16px] mr-1">dashboard</span> Kanban
- </button>
- <button
- onClick={() => setViewMode('table')}
- className={`p-1.5 text-xs font-semibold transition flex items-center ${
- viewMode === 'table' ? 'bg-amber text-navy font-bold' : 'text-stone hover:text-white'
- }`}
- >
- <span className="material-icons-outlined text-[16px] mr-1">view_list</span> Table
- </button>
- </div>
+    <div className="min-h-[calc(100vh-64px)] bg-[var(--surface-canvas)] p-8 space-y-8 font-body select-none animate-stitch-reveal text-[var(--on-surface)]">
+      <div className="max-w-[1400px] mx-auto space-y-8 relative z-10">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-[var(--surface-container-high)]">
+          <div>
+            <h1 className="text-4xl md:text-5xl font-display tracking-tight text-[var(--on-surface)] mb-2">
+              Client Pipeline
+            </h1>
+            <p className="text-sm text-[var(--on-surface-variant)] font-editorial max-w-lg">
+              Manage your business development lifecycle and track prospect conversions with precision.
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            {/* View Toggles */}
+            <div className="bg-[var(--surface-container)] p-1 flex rounded-xl shadow-1">
+              <button
+                onClick={() => setViewMode('kanban')}
+                className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2 ${
+                  viewMode === 'kanban' ? 'bg-[var(--surface-elevated)] text-[var(--amber)] shadow-[var(--glow-active)]' : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
+                }`}
+              >
+                <span className="material-icons-outlined text-[16px]">dashboard</span> Kanban
+              </button>
+              <button
+                onClick={() => setViewMode('table')}
+                className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all flex items-center gap-2 ${
+                  viewMode === 'table' ? 'bg-[var(--surface-elevated)] text-[var(--amber)] shadow-[var(--glow-active)]' : 'text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'
+                }`}
+              >
+                <span className="material-icons-outlined text-[16px]">view_list</span> Table
+              </button>
+            </div>
 
- <button onClick={() => setShowCreateModal(true)} className="btn-primary">
- <span className="material-icons-outlined text-[18px]">add</span>
- ADD NEW LEAD
- </button>
- </div>
- </div>
+            <button 
+              onClick={() => setShowCreateModal(true)} 
+              className="btn-pill-primary"
+            >
+              <span className="material-icons-outlined text-[18px]">add</span>
+              NEW LEAD
+            </button>
+          </div>
+        </div>
 
- {loading ? (
- <div className="p-8 text-center text-stone animate-pulse h-48">Loading pipeline registry...</div>
- ) : viewMode === 'table' ? (
- /* Table View */
- <div className="card-5bloc">
- <div className="overflow-x-auto">
- <table className="w-full text-left text-xs ">
- <thead>
- <tr className="text-stone font-mono uppercase text-[10px] tracking-wider">
- <th className="pb-3 pl-2">Client Name</th>
- <th className="pb-3">Company</th>
- <th className="pb-3">City</th>
- <th className="pb-3">Active Projects</th>
- <th className="pb-3 text-right">Lead Value (₹)</th>
- <th className="pb-3">Stage</th>
- <th className="pb-3 pr-2 text-right">Actions</th>
- </tr>
- </thead>
- <tbody className="divide-y divide-navy-lt/40">
- {clients.map((c) => (
- <tr key={c.id} className="hover:bg-navy-lt/20 transition-colors">
- <td className="py-4 pl-2 font-semibold text-white">
- <Link href={`/clients/${c.id}`} className="hover:text-amber transition-colors block">
- {c.full_name}
- </Link>
- <span className="text-[10px] text-stone font-mono block mt-0.5">{c.email}</span>
- </td>
- <td className="py-4 text-stone">{c.company}</td>
- <td className="py-4 text-stone">{c.city}</td>
- <td className="py-4 text-stone font-mono">{c.projects_count}</td>
- <td className="py-4 text-right font-mono font-semibold text-white">{c.total_value.toLocaleString()}</td>
- <td className="py-4">
- <span
-   className="chip capitalize"
-   style={{
-     background:
-       c.pipeline_stage === 'won'      ? 'rgba(111,220,140,.12)' :
-       c.pipeline_stage === 'lost'     ? 'rgba(255,180,171,.12)' :
-       c.pipeline_stage === 'proposal' ? 'rgba(245,166,35,.12)'  :
-       'rgba(159,142,122,.10)',
-     color:
-       c.pipeline_stage === 'won'      ? 'var(--success)' :
-       c.pipeline_stage === 'lost'     ? 'var(--error)'   :
-       c.pipeline_stage === 'proposal' ? 'var(--amber)'   :
-       'var(--stone)',
-   }}
- >
-   {c.pipeline_stage}
- </span>
- </td>
- <td className="py-4 pr-2 text-right">
- <Link href={`/clients/${c.id}`} className="p-1 text-stone hover:text-white transition">
- <span className="material-icons-outlined text-[16px]">chevron_right</span>
- </Link>
- </td>
- </tr>
- ))}
- </tbody>
- </table>
- </div>
- </div>
- ) : (
- /* Kanban View columns */
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
- {stages.map((stage) => {
- const stageClients = clients.filter(c => c.pipeline_stage === stage.id)
- return (
- <div key={stage.id} className="space-y-4">
- <div className="flex justify-between items-center px-1 font-mono text-[10px] text-stone">
- <span className="font-bold uppercase tracking-wider text-white">{stage.label}</span>
- <span>({stageClients.length})</span>
- </div>
+        {loading ? (
+          <div className="h-[50vh] flex items-center justify-center">
+            <div className="bg-[var(--surface-container)] p-8 rounded-2xl animate-float-slow flex flex-col items-center gap-4 shadow-2">
+              <div className="w-8 h-8 border-4 border-[var(--amber)] border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-[var(--on-surface-variant)] font-mono text-sm tracking-widest uppercase">Loading Pipeline...</p>
+            </div>
+          </div>
+        ) : viewMode === 'table' ? (
+          /* Premium Table View */
+          <div className="bg-[var(--surface-container)] rounded-2xl overflow-hidden shadow-2 animate-stitch-reveal delay-100">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="bg-[var(--surface-elevated)] text-[var(--on-surface-variant)] font-mono uppercase text-[10px] tracking-wider">
+                    <th className="py-4 px-6 font-semibold">Client Name</th>
+                    <th className="py-4 px-6 font-semibold">Company</th>
+                    <th className="py-4 px-6 font-semibold">Location</th>
+                    <th className="py-4 px-6 font-semibold">Active Projects</th>
+                    <th className="py-4 px-6 font-semibold text-right">Lead Value</th>
+                    <th className="py-4 px-6 font-semibold">Stage</th>
+                    <th className="py-4 px-6 font-semibold text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--surface-container-high)]">
+                  {clients.map((c) => (
+                    <tr key={c.id} className="group hover:bg-[var(--surface-elevated)] transition-colors duration-200">
+                      <td className="py-5 px-6">
+                        <Link href={`/clients/${c.id}`} className="font-semibold text-[var(--on-surface)] group-hover:text-[var(--amber)] transition-colors text-base block font-display">
+                          {c.full_name}
+                        </Link>
+                        <span className="text-[11px] text-[var(--on-surface-variant)] font-mono mt-1 block">{c.email}</span>
+                      </td>
+                      <td className="py-5 px-6 text-[var(--on-surface-variant)]">{c.company}</td>
+                      <td className="py-5 px-6 text-[var(--on-surface-variant)]">{c.city}, {c.state}</td>
+                      <td className="py-5 px-6">
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-[var(--surface-container-high)] text-xs font-mono font-bold text-[var(--on-surface)]">
+                          {c.projects_count}
+                        </span>
+                      </td>
+                      <td className="py-5 px-6 text-right font-mono font-semibold text-[var(--amber)]">
+                        {c.total_value.toLocaleString()} ₹
+                      </td>
+                      <td className="py-5 px-6">
+                        <span
+                          className="px-3 py-1 rounded-full text-xs font-semibold capitalize"
+                          style={{
+                            background:
+                              c.pipeline_stage === 'won'      ? 'rgba(46,204,138,.1)' :
+                              c.pipeline_stage === 'lost'     ? 'rgba(255,180,171,.1)' :
+                              c.pipeline_stage === 'proposal' ? 'rgba(255,200,128,.1)'  :
+                              'var(--surface-container-high)',
+                            color:
+                              c.pipeline_stage === 'won'      ? 'var(--success)' :
+                              c.pipeline_stage === 'lost'     ? 'var(--error)'   :
+                              c.pipeline_stage === 'proposal' ? 'var(--amber)'   :
+                              'var(--on-surface-variant)'
+                          }}
+                        >
+                          {c.pipeline_stage}
+                        </span>
+                      </td>
+                      <td className="py-5 px-6 text-right">
+                        <Link href={`/clients/${c.id}`} className="w-8 h-8 inline-flex items-center justify-center rounded bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:bg-[var(--primary)] hover:text-[var(--on-primary)] transition-all duration-200 transform group-hover:translate-x-1 hover:shadow-[var(--glow-amber)]">
+                          <span className="material-icons-outlined text-[16px]">arrow_forward</span>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          /* Premium Kanban View */
+          <div className="flex gap-6 overflow-x-auto pb-8 snap-x">
+            {stages.map((stage, i) => {
+              const stageClients = clients.filter(c => c.pipeline_stage === stage.id)
+              return (
+                <div key={stage.id} className="min-w-[300px] w-[320px] shrink-0 snap-center animate-stitch-reveal" style={{ animationDelay: `${i * 100}ms` }}>
+                  {/* Column Header */}
+                  <div className="flex justify-between items-center px-2 mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full`} 
+                           style={{ backgroundColor: stage.color }}>
+                      </div>
+                      <span className="font-mono text-[11px] font-bold uppercase tracking-widest text-[var(--on-surface-variant)]">{stage.label}</span>
+                    </div>
+                    <span className="bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] px-2 py-0.5 rounded text-[10px] font-mono font-bold">
+                      {stageClients.length}
+                    </span>
+                  </div>
 
- <div className={`card-5bloc p-3 bg-navy-mid/40 border-t-2 ${stage.color} min-h-[400px] space-y-3`}>
- {stageClients.map((client) => (
- <div 
- key={client.id}
- className="card-5bloc p-3.5 bg-navy-mid hover: transition cursor-pointer space-y-3 group"
- >
- <div className="space-y-1">
- <h4 className="text-xs font-bold text-white group-hover:text-amber transition-colors line-clamp-1">
- <Link href={`/clients/${client.id}`}>{client.full_name}</Link>
- </h4>
- <p className="text-[10px] text-stone font-mono">{client.company}</p>
- </div>
+                  {/* Column Body */}
+                  <div className="bg-[var(--surface-recessed)] rounded-2xl p-2 min-h-[60vh] space-y-3">
+                    {stageClients.length === 0 && (
+                      <div className="absolute inset-0 flex items-center justify-center text-[var(--on-surface-variant)] text-xs font-mono opacity-50 m-3">
+                        [ Empty ]
+                      </div>
+                    )}
+                    {stageClients.map((client) => (
+                      <div 
+                        key={client.id}
+                        className="bg-[var(--surface-container)] rounded-xl p-5 space-y-4 group cursor-grab active:cursor-grabbing shadow-1 hover:shadow-[var(--glow-blue)] transition-shadow duration-300"
+                      >
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="space-y-1">
+                            <h4 className="text-base font-display font-bold text-[var(--on-surface)] group-hover:text-[var(--blue)] transition-colors line-clamp-1">
+                              <Link href={`/clients/${client.id}`}>{client.full_name}</Link>
+                            </h4>
+                            <p className="text-[11px] text-[var(--on-surface-variant)] font-mono flex items-center gap-1">
+                              <span className="material-icons-outlined text-[12px]">business</span>
+                              {client.company}
+                            </p>
+                          </div>
+                          <Link href={`/clients/${client.id}`} className="opacity-0 group-hover:opacity-100 w-6 h-6 rounded bg-[var(--surface-container-high)] flex items-center justify-center text-[var(--on-surface-variant)] transition-all transform hover:scale-110 hover:text-[var(--blue)]">
+                            <span className="material-icons-outlined text-[14px]">open_in_new</span>
+                          </Link>
+                        </div>
 
- <div className="flex justify-between items-center text-[10px] font-mono">
- <span className="text-stone">{client.city}</span>
- <span className="text-white font-semibold">{formatLakhs(client.total_value)}</span>
- </div>
+                        <div className="flex items-center gap-2 text-[11px] text-[var(--on-surface-variant)]">
+                          <span className="material-icons-outlined text-[12px]">location_on</span>
+                          {client.city}
+                        </div>
 
- {/* Small Quick-change dropdown triggers */}
- <div className="flex gap-1 justify-end pt-2 ">
- {stages.filter(s => s.id !== stage.id).map(s => (
- <button
- key={s.id}
- onClick={() => handleStageChange(client.id, s.id)}
- className="w-4 h-4 flex items-center justify-center text-[8px] text-stone hover:text-white hover: transition"
- title={`Move to ${s.label}`}
- >
- <span className="material-icons-outlined text-[10px]">
- {s.id === 'won' ? 'check' : s.id === 'lost' ? 'close' : 'arrow_forward'}
- </span>
- </button>
- ))}
- </div>
- </div>
- ))}
- </div>
- </div>
- )
- })}
- </div>
- )}
+                        <div className="ghost-cut my-3"></div>
 
- {/* Add Lead Creation Modal */}
- {showCreateModal && (
- <div className="fixed inset-0 bg-navy/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
- <div className="w-full max-w-md bg-navy-mid p-6 shadow-none relative">
- <div className="flex items-center justify-between pb-3 mb-4">
- <h3 className="text-sm font-bold uppercase tracking-wider text-amber font-mono">Add Client Lead</h3>
- <button onClick={() => setShowCreateModal(false)} className="text-stone hover:text-white transition">
- <span className="material-icons-outlined text-[18px]">close</span>
- </button>
- </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-[var(--amber)] font-mono font-bold text-sm">
+                            {formatLakhs(client.total_value)}
+                          </span>
+                          
+                          {/* Quick Actions */}
+                          <div className="flex gap-1">
+                            {stages.filter(s => s.id !== stage.id).map(s => (
+                              <button
+                                key={s.id}
+                                onClick={() => handleStageChange(client.id, s.id)}
+                                className="w-6 h-6 rounded flex items-center justify-center text-[var(--on-surface-variant)] hover:bg-[var(--surface-container-high)] hover:text-[var(--on-surface)] transition-all"
+                                title={`Move to ${s.label}`}
+                              >
+                                <span className="material-icons-outlined text-[12px]">
+                                  {s.id === 'won' ? 'check' : s.id === 'lost' ? 'close' : 'arrow_forward'}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
 
- <form onSubmit={handleCreateClient} className="space-y-4">
- <div>
- <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1.5 font-mono">Client Name *</label>
- <input
- type="text"
- required
- placeholder="e.g. Harish Wadhwa"
- value={newClient.name}
- onChange={(e) => setNewClient(prev => ({ ...prev, name: e.target.value }))}
- className="input-5bloc py-1.5 text-xs"
- />
- </div>
+        {/* Premium Lead Creation Modal */}
+        {showCreateModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-md animate-stitch-reveal" onClick={() => setShowCreateModal(false)}></div>
+            <div className="bg-[var(--surface-container)] w-full max-w-xl p-8 rounded-2xl relative z-10 animate-stitch-reveal shadow-4">
+              
+              {/* Decorative top glow */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[60%] h-[2px] bg-gradient-to-r from-transparent via-[var(--amber)] to-transparent opacity-50"></div>
 
- <div className="grid grid-cols-2 gap-4">
- <div>
- <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1.5 font-mono">Email Address</label>
- <input
- type="email"
- placeholder="client@email.com"
- value={newClient.email}
- onChange={(e) => setNewClient(prev => ({ ...prev, email: e.target.value }))}
- className="input-5bloc py-1.5 text-xs"
- />
- </div>
- <div>
- <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1.5 font-mono">Phone Number</label>
- <input
- type="text"
- placeholder="e.g. 9876543210"
- value={newClient.phone}
- onChange={(e) => setNewClient(prev => ({ ...prev, phone: e.target.value }))}
- className="input-5bloc py-1.5 text-xs font-mono"
- />
- </div>
- </div>
+              <div className="flex items-center justify-between pb-6 mb-6">
+                <h3 className="text-2xl font-display tracking-tight text-[var(--on-surface)]">Add New Client Lead</h3>
+                <button onClick={() => setShowCreateModal(false)} className="w-8 h-8 flex items-center justify-center rounded-lg bg-[var(--surface-container-high)] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] transition-colors">
+                  <span className="material-icons-outlined text-[18px]">close</span>
+                </button>
+              </div>
 
- <div className="grid grid-cols-2 gap-4">
- <div>
- <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1.5 font-mono">Company / Firm</label>
- <input
- type="text"
- placeholder="e.g. Wadhwa Group"
- value={newClient.company}
- onChange={(e) => setNewClient(prev => ({ ...prev, company: e.target.value }))}
- className="input-5bloc py-1.5 text-xs"
- />
- </div>
- <div>
- <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1.5 font-mono">Est. Project Budget (₹)</label>
- <input
- type="number"
- placeholder="Budget"
- value={newClient.value}
- onChange={(e) => setNewClient(prev => ({ ...prev, value: e.target.value }))}
- className="input-5bloc py-1.5 text-xs font-mono"
- />
- </div>
- </div>
+              <form onSubmit={handleCreateClient} className="space-y-6">
+                <div>
+                  <label className="block text-[var(--on-surface-variant)] text-[11px] font-bold uppercase tracking-widest mb-2 font-mono">Client Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Harish Wadhwa"
+                    value={newClient.name}
+                    onChange={(e) => setNewClient(prev => ({ ...prev, name: e.target.value }))}
+                    className="input-recessed"
+                  />
+                </div>
 
- <div className="grid grid-cols-2 gap-4">
- <div>
- <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1.5 font-mono">City</label>
- <input
- type="text"
- placeholder="Mumbai"
- value={newClient.city}
- onChange={(e) => setNewClient(prev => ({ ...prev, city: e.target.value }))}
- className="input-5bloc py-1.5 text-xs"
- />
- </div>
- <div>
- <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1.5 font-mono">State</label>
- <input
- type="text"
- placeholder="Maharashtra"
- value={newClient.state}
- onChange={(e) => setNewClient(prev => ({ ...prev, state: e.target.value }))}
- className="input-5bloc py-1.5 text-xs"
- />
- </div>
- </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-[var(--on-surface-variant)] text-[11px] font-bold uppercase tracking-widest mb-2 font-mono">Email Address</label>
+                    <input
+                      type="email"
+                      placeholder="client@email.com"
+                      value={newClient.email}
+                      onChange={(e) => setNewClient(prev => ({ ...prev, email: e.target.value }))}
+                      className="input-recessed"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[var(--on-surface-variant)] text-[11px] font-bold uppercase tracking-widest mb-2 font-mono">Phone Number</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 9876543210"
+                      value={newClient.phone}
+                      onChange={(e) => setNewClient(prev => ({ ...prev, phone: e.target.value }))}
+                      className="input-recessed font-mono"
+                    />
+                  </div>
+                </div>
 
- <div className="pt-4 flex justify-end gap-3 ">
- <button 
- type="button" 
- onClick={() => setShowCreateModal(false)}
- className="btn-secondary py-1.5 px-4 text-xs"
- >
- CANCEL
- </button>
- <button 
- type="submit"
- className="btn-primary py-1.5 px-6 text-xs font-bold"
- >
- ADD LEAD
- </button>
- </div>
- </form>
- </div>
- </div>
- )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-[var(--on-surface-variant)] text-[11px] font-bold uppercase tracking-widest mb-2 font-mono">Company / Firm</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Wadhwa Group"
+                      value={newClient.company}
+                      onChange={(e) => setNewClient(prev => ({ ...prev, company: e.target.value }))}
+                      className="input-recessed"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[var(--on-surface-variant)] text-[11px] font-bold uppercase tracking-widest mb-2 font-mono">Est. Budget (₹)</label>
+                    <input
+                      type="number"
+                      placeholder="Budget"
+                      value={newClient.value}
+                      onChange={(e) => setNewClient(prev => ({ ...prev, value: e.target.value }))}
+                      className="input-recessed font-mono"
+                    />
+                  </div>
+                </div>
 
- </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-[var(--on-surface-variant)] text-[11px] font-bold uppercase tracking-widest mb-2 font-mono">City</label>
+                    <input
+                      type="text"
+                      placeholder="Mumbai"
+                      value={newClient.city}
+                      onChange={(e) => setNewClient(prev => ({ ...prev, city: e.target.value }))}
+                      className="input-recessed"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[var(--on-surface-variant)] text-[11px] font-bold uppercase tracking-widest mb-2 font-mono">State</label>
+                    <input
+                      type="text"
+                      placeholder="Maharashtra"
+                      value={newClient.state}
+                      onChange={(e) => setNewClient(prev => ({ ...prev, state: e.target.value }))}
+                      className="input-recessed"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-6 mt-6 border-t border-[var(--surface-container-high)] flex justify-end gap-4">
+                  <button 
+                    type="button" 
+                    onClick={() => setShowCreateModal(false)}
+                    className="px-6 py-2.5 rounded-full text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] hover:bg-[var(--surface-elevated)] transition-colors text-sm font-semibold tracking-wide"
+                  >
+                    CANCEL
+                  </button>
+                  <button 
+                    type="submit"
+                    className="btn-pill-primary"
+                  >
+                    ADD LEAD
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
  )
 }
-
