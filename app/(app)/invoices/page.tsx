@@ -156,7 +156,7 @@ export default function InvoicesList() {
  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
  >
  <td className="py-4 pl-3 font-mono text-[10px] text-white font-semibold">{inv.invoice_number}</td>
- <td className="py-4 font-semibold text-white truncate max-w-[160px]">{inv.project_name}</td>
+ <td className="py-4 font-semibold" style={{ color: 'var(--on-surface)', maxWidth: '220px' }}><span className="line-clamp-1">{inv.project_name}</span></td>
  <td className="py-4 text-stone">{inv.client_name}</td>
  <td className="py-4 text-right font-mono text-stone">{inv.subtotal.toLocaleString()}</td>
  <td className="py-4 text-right font-mono font-semibold text-white">{inv.total.toLocaleString()}</td>

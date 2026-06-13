@@ -1,30 +1,12 @@
-import { createBrowserClient } from '@supabase/auth-helpers-nextjs'
+import { createBrowserClient } from '@supabase/ssr'
+import type { Database } from '@/lib/supabase/types'
 
 export function createSupabaseClient() {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    // Return empty shell / mock proxies if not set
-    return new Proxy({}, {
-      get: () => {
-        return () => ({
-          select: () => ({
-            eq: () => ({
-              single: () => Promise.resolve({ data: null, error: null }),
-              maybeSingle: () => Promise.resolve({ data: null, error: null }),
-            }),
-            order: () => Promise.resolve({ data: [], error: null }),
-          }),
-          insert: () => Promise.resolve({ data: null, error: null }),
-          update: () => ({
-            eq: () => Promise.resolve({ data: null, error: null })
-          }),
-        })
-      }
-    }) as any
-  }
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  return createBrowserClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 }
 
+// Singleton for use in client components
 export const supabaseClient = createSupabaseClient()

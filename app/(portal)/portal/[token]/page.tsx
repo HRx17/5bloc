@@ -288,7 +288,7 @@ export default function ClientPortal() {
                           {doc.extension === 'pdf' ? 'picture_as_pdf' : 'image'}
                         </span>
                         <div>
-                          <h4 className="text-xs font-bold text-navy truncate max-w-[200px]">{doc.name}</h4>
+                          <h4 className="text-xs font-bold text-navy line-clamp-2">{doc.name}</h4>
                           <p className="text-[11px] text-stone">Format: .{doc.extension.toLowerCase()} (v{doc.version})</p>
                         </div>
                       </div>

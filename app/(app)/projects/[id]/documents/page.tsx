@@ -256,10 +256,10 @@ export default function DocumentVault() {
  </div>
  {uploadQueue.map(item => (
  <div key={item.id} className="space-y-1 text-xs">
- <div className="flex justify-between text-stone truncate max-w-[240px]">
- <span className="truncate">{item.name}</span>
- <span className="font-mono">{item.progress}%</span>
- </div>
+              <div className="flex justify-between gap-2 text-stone">
+                <span className="line-clamp-1 flex-1">{item.name}</span>
+                <span className="font-mono shrink-0">{item.progress}%</span>
+              </div>
  <div className="w-full bg-navy h-1.5 rounded-full overflow-hidden border ">
  <div className="bg-amber h-full rounded-full transition-all duration-300" style={{ width: `${item.progress}%` }} />
  </div>
@@ -393,11 +393,11 @@ export default function DocumentVault() {
  v{doc.version}
  </span>
  </div>
- <span className="text-[10px] text-stone font-mono block truncate max-w-[180px]">{doc.original_filename}</span>
- </td>
+                <span className="text-[10px] text-stone font-mono block" title={doc.original_filename}><span className="line-clamp-1">{doc.original_filename}</span></span>
+              </td>
 
- {/* Uploader */}
- <td className="py-3.5 text-stone truncate max-w-[120px]">{doc.uploaded_by}</td>
+              {/* Uploader */}
+              <td className="py-3.5 text-stone" title={doc.uploaded_by}><span className="line-clamp-1">{doc.uploaded_by}</span></td>
 
  {/* Upload Date */}
  <td className="py-3.5 font-mono text-[10px] text-stone">{doc.created_at}</td>

@@ -26,9 +26,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const result = await generateEstimate(body)
 
-    // Store every estimate for future accuracy tracking
+    // Store every estimate for future accuracy tracking (fire-and-forget)
     if (supabase) {
-      supabase.from('ai_estimates').insert({
+      ;(supabase as any).from('ai_estimates').insert({
         org_id:          profile.org_id,
         user_id:         profile.id,
         project_id:      body.projectId || null,

@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 interface OrgMember {
  id: string
@@ -10,8 +11,21 @@ interface OrgMember {
  joined_at: string
 }
 
-export default function Settings() {
- const [activeTab, setActiveTab] = useState<'profile' | 'organisation' | 'team' | 'billing' | 'notifications' | 'integrations'>('profile')
+type TabId = 'profile' | 'organisation' | 'team' | 'billing' | 'notifications' | 'integrations' | 'download'
+const VALID_TABS: TabId[] = ['profile', 'organisation', 'team', 'billing', 'notifications', 'integrations', 'download']
+
+function SettingsInner() {
+ const searchParams = useSearchParams()
+ const tabParam = searchParams.get('tab') as TabId | null
+ const [activeTab, setActiveTab] = useState<TabId>(
+   tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'profile'
+ )
+
+ useEffect(() => {
+   if (tabParam && VALID_TABS.includes(tabParam)) {
+     setActiveTab(tabParam)
+   }
+ }, [tabParam])
  
  // Profile settings
  const [profile, setProfile] = useState({
@@ -100,7 +114,8 @@ export default function Settings() {
  { id: 'billing', label: 'Billing & Plans', icon: 'receipt_long' },
  { id: 'notifications', label: 'Notifications', icon: 'notifications' },
  { id: 'integrations', label: 'Integrations', icon: 'sync_alt' },
- ].map(tab => (
+ { id: 'download', label: 'Download App', icon: 'download' },
+].map(tab => (
  <button
  key={tab.id}
  onClick={() => setActiveTab(tab.id as any)}
@@ -115,7 +130,7 @@ export default function Settings() {
  </div>
 
  {/* Right Tab Content panels */}
- <div className="flex-grow w-full">
+ <div className="grow w-full">
  {activeTab === 'profile' && (
  <div className="card-5bloc space-y-6">
  <h3 className="text-sm font-semibold text-amber pb-2.5">User Profile</h3>
@@ -233,7 +248,7 @@ export default function Settings() {
  <div className="card-5bloc space-y-4">
  <h3 className="text-sm font-semibold text-amber pb-2.5">Invite Firm Co-Worker</h3>
  <form onSubmit={handleInviteTeam} className="flex gap-4 items-end">
- <div className="flex-grow">
+              <div className="grow">
  <label className="block text-stone text-xs font-medium mb-1.5">Co-worker Email *</label>
  <input
  type="email"
@@ -488,12 +503,100 @@ export default function Settings() {
  </div>
  </div>
  </div>
- </div>
- )}
- </div>
+        </div>
+        )}
 
- </div>
+        {activeTab === 'download' && (
+        <div className="card-5bloc space-y-6">
+          <div>
+            <h3 className="text-sm font-semibold text-amber pb-1">Download Desktop App</h3>
+            <p className="text-xs text-stone">Run 5Bloc natively on your machine — faster, works offline, opens CAD files directly.</p>
+          </div>
+
+          {/* Platform cards */}
+          <div className="grid gap-4 sm:grid-cols-3">
+            {[
+              { platform: 'macOS', icon: 'laptop_mac',   sub: 'Apple Silicon + Intel',   ext: '.dmg',    size: '~120 MB' },
+              { platform: 'Windows', icon: 'computer',   sub: 'Windows 10 / 11',         ext: '.exe',    size: '~110 MB' },
+              { platform: 'Linux', icon: 'terminal',     sub: 'AppImage / .deb',         ext: '.AppImage',size: '~130 MB' },
+            ].map(({ platform, icon, sub, ext, size }) => (
+              <div key={platform} className="app-card flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 flex items-center justify-center rounded-xl" style={{ background: 'rgba(245,166,35,0.08)', color: 'var(--amber)' }}>
+                    <span className="material-icons-outlined text-[20px]">{icon}</span>
+                  </div>
+                  <div>
+                    <p className="text-[13px] font-semibold" style={{ color: 'var(--on-surface)' }}>{platform}</p>
+                    <p className="text-[11px]" style={{ color: 'var(--stone)' }}>{sub}</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-[11px]" style={{ color: 'var(--stone)' }}>
+                  <span>{ext}</span>
+                  <span>{size}</span>
+                </div>
+                <button
+                  onClick={() => alert(`Download for ${platform} will be available at launch. Sign up for beta to get early access.`)}
+                  className="btn-primary text-[12px] py-2 w-full justify-center"
+                >
+                  <span className="material-icons-outlined text-[14px]">download</span>
+                  Download for {platform}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* Electron info */}
+          <div className="app-card space-y-3">
+            <h4 className="text-[13px] font-semibold" style={{ color: 'var(--on-surface)' }}>
+              What you get with the desktop app
+            </h4>
+            <ul className="grid gap-2">
+              {[
+                ['folder_open', 'Open & view DWG/DXF files without AutoCAD'],
+                ['wifi_off',    'Offline mode — read & annotate docs without internet'],
+                ['notifications', 'Native desktop notifications for RFIs and approvals'],
+                ['sync',        'Auto-sync files from your local drive to cloud'],
+                ['speed',       'Faster performance, no browser overhead'],
+              ].map(([icon, text]) => (
+                <li key={text} className="flex items-start gap-2.5 text-[12.5px]" style={{ color: 'var(--on-surface-variant)' }}>
+                  <span className="material-icons-outlined text-[15px] shrink-0 mt-0.5" style={{ color: 'var(--amber)' }}>{icon}</span>
+                  {text}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Dev instructions */}
+          <div className="app-card">
+            <p className="text-[12px] font-semibold mb-2" style={{ color: 'var(--on-surface)' }}>For developers / early testers</p>
+            <p className="text-[11.5px] mb-3" style={{ color: 'var(--stone)' }}>
+              Clone the repo and run locally as an Electron app:
+            </p>
+            <div
+              className="rounded-xl p-3 font-mono text-[11px] space-y-1"
+              style={{ background: 'var(--surface-container-lowest)', color: 'var(--on-surface-variant)' }}
+            >
+              <p style={{ color: 'var(--stone)' }}># Install dependencies</p>
+              <p>npm install</p>
+              <p style={{ color: 'var(--stone)', marginTop: 8 }}># Start dev server + Electron together</p>
+              <p>npm run electron:dev</p>
+              <p style={{ color: 'var(--stone)', marginTop: 8 }}># Build distributable</p>
+              <p>npm run electron:build</p>
+            </div>
+          </div>
+        </div>
+        )}
+        </div>
+
+  </div>
  </div>
  )
 }
 
+export default function Settings() {
+ return (
+   <Suspense fallback={null}>
+     <SettingsInner />
+   </Suspense>
+ )
+}

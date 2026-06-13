@@ -3,157 +3,349 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Logo } from '@/components/brand/LogoMark'
+import { motion } from 'framer-motion'
+import { Eye, EyeOff, AlertCircle, Check, Info } from 'lucide-react'
+import { createSupabaseClient } from '@/lib/supabase/client'
 
-export default function Signup() {
- const router = useRouter()
- const [formData, setFormData] = useState({ name: '', email: '', password: '' })
- const [showPassword, setShowPassword] = useState(false)
- const [loading, setLoading] = useState(false)
- const [error, setError] = useState('')
+const SUPABASE_CONFIGURED =
+  typeof process !== 'undefined' &&
+  !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
+  !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
- const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
- const { name, value } = e.target
- setFormData((prev) => ({ ...prev, [name]: value }))
- }
-
- const handleSubmit = async (e: React.FormEvent) => {
- e.preventDefault()
- setLoading(true)
- setError('')
-
- if (formData.password.length < 8) {
- setError('Password must be at least 8 characters long.')
- setLoading(false)
- return
- }
-
- try {
- // Offline fallback / mock check
- // In a real Supabase setup, we'd do supabase.auth.signUp(...)
- console.log('User signing up:', formData)
- 
- // Simulate API call
- await new Promise((resolve) => setTimeout(resolve, 1000))
- 
- // Navigate to onboarding
- router.push('/onboarding')
- } catch (err) {
- setError('Signup failed. Please try again.')
- } finally {
- setLoading(false)
- }
- }
-
- return (
- <div className="min-h-screen bg-navy flex items-center justify-center px-4 relative overflow-hidden font-body">
- {/* Visual Dot Grid Background Accent */}
- <div className="absolute inset-0 opacity-15 pointer-events-none">
- <div className="w-full h-full bg-[radial-gradient(#f5a623_1px,transparent_1px)] [background-size:24px_24px]" />
- </div>
-
- <div className="w-full max-w-md bg-navy-mid p-8 shadow-none relative z-10">
- {/* Logo Header */}
- <div className="flex flex-col items-center mb-8">
- <Logo size={48} showTagline={true} />
- <h2 className="text-stone text-xs mt-3 uppercase tracking-wider font-mono">Create an account</h2>
- </div>
-
- {error && (
- <div className="mb-4 p-3 bg-error/10 border text-error text-xs font-semibold flex items-center gap-2">
- <span className="material-icons-outlined text-[16px]">error</span>
- <span>{error}</span>
- </div>
- )}
-
- <form onSubmit={handleSubmit} className="space-y-4">
- <div>
- <label className="block text-stone text-xs font-bold uppercase tracking-wider mb-1.5 font-mono">Full Name</label>
- <input
- type="text"
- name="name"
- required
- placeholder="e.g. Parth Patel"
- value={formData.name}
- onChange={handleInputChange}
- className="input-5bloc"
- />
- </div>
-
- <div>
- <label className="block text-stone text-xs font-bold uppercase tracking-wider mb-1.5 font-mono">Email Address</label>
- <input
- type="email"
- name="email"
- required
- placeholder="architect@firm.com"
- value={formData.email}
- onChange={handleInputChange}
- className="input-5bloc"
- />
- </div>
-
- <div>
- <label className="block text-stone text-xs font-bold uppercase tracking-wider mb-1.5 font-mono">Password</label>
- <div className="relative">
- <input
- type={showPassword ? 'text' : 'password'}
- name="password"
- required
- placeholder="Minimum 8 characters"
- value={formData.password}
- onChange={handleInputChange}
- className="input-5bloc pr-10"
- />
- <button
- type="button"
- onClick={() => setShowPassword(!showPassword)}
- className="absolute right-3 top-1/2 -translate-y-1/2 text-stone hover:text-white transition"
- >
- <span className="material-icons-outlined text-[18px]">
- {showPassword ? 'visibility_off' : 'visibility'}
- </span>
- </button>
- </div>
- </div>
-
- <button
- type="submit"
- disabled={loading}
- className="w-full btn-primary font-bold tracking-wider mt-2 py-3"
- >
- {loading ? 'Creating Account...' : 'CREATE ACCOUNT'}
- </button>
- </form>
-
- <div className="relative flex py-5 items-center">
- <div className="flex-grow "></div>
- <span className="flex-shrink mx-4 text-[10px] text-stone font-mono uppercase">or continue with</span>
- <div className="flex-grow "></div>
- </div>
-
- {/* Google OAuth Button */}
- <button
- onClick={() => {
- console.log('Google Auth clicked')
- router.push('/onboarding')
- }}
- className="w-full btn-secondary text-xs flex items-center justify-center gap-2 py-2.5"
- >
- <svg className="w-4 h-4 text-white fill-current" viewBox="0 0 24 24">
- <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.136 4.114-3.487 0-6.321-2.833-6.321-6.32 0-3.488 2.834-6.322 6.32-6.322 1.567 0 2.993.57 4.11 1.51l3.076-3.078C19.336 2.54 16.036 1.2 12.24 1.2 6.208 1.2 1.2 6.208 1.2 12.24s5.008 11.04 11.04 11.04c5.787 0 10.51-4.11 10.51-10.51 0-.64-.078-1.285-.21-1.92L12.24 10.285z" />
- </svg>
- GOOGLE SINGLE SIGN-ON
- </button>
-
- <div className="mt-8 text-center text-xs text-stone">
- Already have an account?{' '}
- <Link href="/login" className="text-blue hover:text-blue-lt font-semibold transition-colors">
- Sign in →
- </Link>
- </div>
- </div>
- </div>
- )
+function LogoMark({ size = 28 }: { size?: number }) {
+  const a = 'var(--amber)'
+  return (
+    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" aria-hidden>
+      <rect x="6" y="6"  width="28" height="5.5" rx="1.5" fill={a} />
+      <rect x="6" y="15" width="22" height="5.5" rx="1.5" fill={a} opacity="0.72" />
+      <rect x="6" y="24" width="16" height="5.5" rx="1.5" fill={a} opacity="0.44" />
+      <rect x="6" y="33" width="10" height="4.5" rx="1.5" fill={a} opacity="0.22" />
+    </svg>
+  )
 }
 
+export default function Signup() {
+  const router = useRouter()
+  const [name,         setName]         = useState('')
+  const [email,        setEmail]        = useState('')
+  const [password,     setPassword]     = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading,      setLoading]      = useState(false)
+  const [error,        setError]        = useState('')
+  const [done,         setDone]         = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+
+    if (!name.trim())         return setError('Please enter your full name.')
+    if (!email.trim())        return setError('Please enter your email address.')
+    if (password.length < 8)  return setError('Password must be at least 8 characters.')
+
+    setLoading(true)
+
+    try {
+      if (!SUPABASE_CONFIGURED) {
+        /* ── Demo mode — accounts not persisted ── */
+        await new Promise((r) => setTimeout(r, 700))
+        router.push('/onboarding')
+        return
+      }
+
+      const supabase = createSupabaseClient()
+      const { error: authError } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+        options: {
+          data: { full_name: name.trim() },
+          emailRedirectTo: `${location.origin}/onboarding`,
+        },
+      })
+
+      if (authError) {
+        if (authError.message.includes('already registered')) {
+          setError('An account with this email already exists. Sign in instead.')
+        } else {
+          setError(authError.message)
+        }
+        return
+      }
+
+      /* Supabase sends a confirmation email — show the "check inbox" state */
+      setDone(true)
+    } catch {
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogle = async () => {
+    if (!SUPABASE_CONFIGURED) {
+      setError('Google sign-up requires Supabase to be configured.')
+      return
+    }
+    const supabase = createSupabaseClient()
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${location.origin}/onboarding` },
+    })
+  }
+
+  const pwStrong = password.length >= 8
+
+  return (
+    <div
+      className="min-h-screen flex items-center justify-center px-4 py-10 relative overflow-hidden font-body dot-grid"
+      style={{ background: 'var(--surface-canvas)' }}
+    >
+      {/* Ambient glow */}
+      <div
+        className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse at center, rgba(122,184,255,0.04) 0%, transparent 65%)' }}
+        aria-hidden
+      />
+
+      <motion.div
+        className="w-full max-w-[400px] relative z-10"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-[12px] font-medium mb-8 transition-colors"
+          style={{ color: 'var(--stone)' }}
+          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--on-surface)')}
+          onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--stone)')}
+        >
+          ← Back to site
+        </Link>
+
+        <div
+          className="rounded-2xl p-8"
+          style={{
+            background: 'var(--surface-container)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), var(--shadow-3)',
+          }}
+        >
+          {/* Logo */}
+          <div className="flex flex-col items-center mb-8">
+            <LogoMark size={40} />
+            <div className="mt-3">
+              <span
+                className="font-mono text-[16px] font-bold tracking-widest"
+                style={{ color: 'var(--on-surface)' }}
+              >
+                5BLOC
+              </span>
+            </div>
+            <p
+              className="mt-1.5 font-mono text-[10.5px] uppercase tracking-[0.16em]"
+              style={{ color: 'var(--stone)' }}
+            >
+              Create your workspace
+            </p>
+          </div>
+
+          {/* Demo mode banner */}
+          {!SUPABASE_CONFIGURED && (
+            <div
+              className="mb-5 flex items-start gap-2.5 rounded-xl px-4 py-3 text-[12.5px]"
+              style={{
+                background: 'rgba(122,184,255,0.08)',
+                color: 'var(--blue)',
+                boxShadow: 'inset 0 0 0 1px rgba(122,184,255,0.15)',
+              }}
+            >
+              <Info className="h-4 w-4 shrink-0 mt-0.5" />
+              <span><strong>Demo mode</strong> — accounts are not persisted. Connect Supabase to enable real sign-up.</span>
+            </div>
+          )}
+
+          {/* Email verification sent state */}
+          {done ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col items-center gap-4 py-6 text-center"
+            >
+              <div
+                className="h-14 w-14 rounded-full flex items-center justify-center"
+                style={{ background: 'rgba(100,220,150,0.12)', boxShadow: 'inset 0 0 0 1px rgba(100,220,150,0.25)' }}
+              >
+                <Check className="h-7 w-7" style={{ color: 'var(--success)' }} />
+              </div>
+              <div>
+                <p className="font-semibold text-[15px]" style={{ color: 'var(--on-surface)' }}>Check your inbox</p>
+                <p className="mt-1 text-[13px]" style={{ color: 'var(--stone)' }}>
+                  We sent a confirmation link to <strong>{email}</strong>. Click it to activate your account.
+                </p>
+              </div>
+              <Link href="/login" className="btn-secondary px-6 py-2 text-[13px]">Back to sign in</Link>
+            </motion.div>
+          ) : (
+            <>
+          {error && (
+            <motion.div
+              key={error}
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-5 flex items-start gap-2.5 rounded-xl px-4 py-3 text-[13px]"
+              style={{
+                background: 'rgba(255,138,128,0.10)',
+                color: 'var(--error)',
+                boxShadow: 'inset 0 0 0 1px rgba(255,138,128,0.18)',
+              }}
+            >
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+              {error}
+            </motion.div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="label-sm block mb-2" style={{ color: 'var(--stone)' }}>
+                Full name
+              </label>
+              <input
+                type="text"
+                required
+                autoComplete="name"
+                placeholder="Parth Patel"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="input-5bloc"
+              />
+            </div>
+
+            <div>
+              <label className="label-sm block mb-2" style={{ color: 'var(--stone)' }}>
+                Email address
+              </label>
+              <input
+                type="email"
+                required
+                autoComplete="email"
+                placeholder="architect@firm.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input-5bloc"
+              />
+            </div>
+
+            <div>
+              <label className="label-sm block mb-2" style={{ color: 'var(--stone)' }}>
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  autoComplete="new-password"
+                  placeholder="Minimum 8 characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="input-5bloc pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                  style={{ color: 'var(--stone)' }}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {password.length > 0 && (
+                <div className="mt-2 flex items-center gap-1.5">
+                  <div
+                    className="h-1 flex-1 rounded-full transition-colors duration-300"
+                    style={{ background: pwStrong ? 'var(--success)' : 'var(--stone)', opacity: pwStrong ? 1 : 0.3 }}
+                  />
+                  <div
+                    className="h-1 flex-1 rounded-full transition-colors duration-300"
+                    style={{ background: pwStrong ? 'var(--success)' : 'var(--surface-container-high)' }}
+                  />
+                  <span className="text-[11px]" style={{ color: pwStrong ? 'var(--success)' : 'var(--stone)' }}>
+                    {pwStrong ? 'Strong' : 'Too short'}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary w-full mt-2 py-3"
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <motion.span
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+                    className="block h-4 w-4 rounded-full"
+                    style={{ border: '2px solid rgba(0,0,0,0.2)', borderTopColor: 'var(--ink-black)' }}
+                  />
+                  Creating account…
+                </span>
+              ) : (
+                'Create account'
+              )}
+            </button>
+          </form>
+
+          <div className="my-6 flex items-center gap-3">
+            <div className="ghost-cut flex-1" />
+            <span className="font-mono text-[10px] uppercase tracking-[0.16em]" style={{ color: 'var(--stone)' }}>
+              or
+            </span>
+            <div className="ghost-cut flex-1" />
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGoogle}
+            className="btn-secondary w-full flex items-center justify-center gap-2.5"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            Continue with Google
+          </button>
+
+          <p className="mt-6 text-center text-[13px]" style={{ color: 'var(--stone)' }}>
+            Already have an account?{' '}
+            <Link
+              href="/login"
+              className="font-semibold transition-colors"
+              style={{ color: 'var(--amber)' }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--amber-lt)')}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--amber)')}
+            >
+              Sign in →
+            </Link>
+          </p>
+            </>
+          )}
+        </div>
+
+        {/* Trust badges */}
+        <div className="mt-6 flex items-center justify-center gap-5">
+          {['SOC 2 ready', 'Data in India', 'RERA compliant'].map((t) => (
+            <div key={t} className="flex items-center gap-1.5">
+              <Check className="h-3 w-3" style={{ color: 'var(--success)' }} />
+              <span className="font-mono text-[10px] uppercase tracking-wider" style={{ color: 'var(--stone)' }}>
+                {t}
+              </span>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    </div>
+  )
+}

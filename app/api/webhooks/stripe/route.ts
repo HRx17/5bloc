@@ -24,20 +24,16 @@ export async function POST(req: Request) {
         if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated') {
           const priceId = sub.items?.data[0]?.price?.id
           const plan = priceId === process.env.STRIPE_PRICE_SOLO ? 'solo' : 'team'
-          
-          await supabase.from('organisations')
-            .update({ plan, seats_max: plan === 'team' ? 5 : 1 })
-            .eq('owner_id', userId)
-          await supabase.from('users')
+
+          await (supabase as any).from('organisations')
             .update({ plan })
-            .eq('id', userId)
-        } else if (event.type === 'customer.subscription.deleted') {
-          await supabase.from('organisations')
-            .update({ plan: 'free', seats_max: 1 })
             .eq('owner_id', userId)
-          await supabase.from('users')
+          await supabase.from('profiles').update({ plan }).eq('auth_id', userId)
+        } else if (event.type === 'customer.subscription.deleted') {
+          await (supabase as any).from('organisations')
             .update({ plan: 'free' })
-            .eq('id', userId)
+            .eq('owner_id', userId)
+          await supabase.from('profiles').update({ plan: 'free' }).eq('auth_id', userId)
         }
       }
     } catch (err) {

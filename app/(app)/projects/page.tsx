@@ -33,7 +33,7 @@ export default function ProjectsList() {
  const hasKeys = !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
  if (hasKeys) {
  const { data, error } = await supabaseClient.from('projects').select('*').order('created_at', { ascending: false })
- if (!error && data && data.length > 0) { setProjects(data as Project[]); setLoading(false); return }
+ if (!error && data && data.length > 0) { setProjects(data as unknown as Project[]); setLoading(false); return }
  }
  } catch (e) { console.warn('Supabase fallback:', e) }
 

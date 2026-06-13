@@ -69,10 +69,15 @@ export default function AppShell({ children, userProfile }: AppShellProps) {
  onMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
  />
 
- <main
- className="flex-1 overflow-x-hidden overflow-y-auto relative"
- style={{ background: 'var(--surface)', color: 'var(--on-surface)' }}
- >
+      <main
+            className="flex-1 overflow-x-hidden overflow-y-auto relative"
+            style={{
+              background: 'var(--surface)',
+              color: 'var(--on-surface)',
+              /* Subtle blue diffuse light bleeding from the top right */
+              backgroundImage: 'radial-gradient(ellipse 70% 40% at 80% 0%, rgba(40,120,255,0.055) 0%, transparent 60%)',
+            }}
+          >
  {children}
  </main>
  </div>

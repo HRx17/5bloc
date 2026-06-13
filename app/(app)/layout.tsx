@@ -3,25 +3,37 @@ import AppShell from '@/components/layout/AppShell'
 import { getAuthUser } from '@/lib/supabase/get-user'
 
 export default async function AppLayout({
- children,
+  children,
 }: {
- children: React.ReactNode
+  children: React.ReactNode
 }) {
- let profile = undefined
+  let profileShape: {
+    full_name?: string
+    role?: string
+    avatar_url?: string
+    plan?: string
+    organisations?: { name?: string }
+  } | undefined = undefined
 
- try {
- const authData = await getAuthUser()
- profile = authData.profile
- } catch (e) {
- // If unauthorized or error in server component, getAuthUser throws.
- // In dev mode it falls back to mock profile. If there's an error,
- // we let profile stay undefined so AppShell uses its built-in fallbacks.
- console.warn('AppLayout server profile fetch bypassed/failed:', e)
- }
+  try {
+    const { profile } = await getAuthUser()
+    const p = profile as any
+    profileShape = {
+      full_name:     p.full_name  ?? undefined,
+      role:          p.role       ?? undefined,
+      avatar_url:    p.avatar_url ?? undefined,
+      plan:          p.plan       ?? undefined,
+      organisations: p.organisations
+        ? { name: p.organisations?.name ?? undefined }
+        : undefined,
+    }
+  } catch (e) {
+    console.warn('AppLayout profile fetch failed:', e)
+  }
 
- return (
- <AppShell userProfile={profile}>
- {children}
- </AppShell>
- )
+  return (
+    <AppShell userProfile={profileShape}>
+      {children}
+    </AppShell>
+  )
 }

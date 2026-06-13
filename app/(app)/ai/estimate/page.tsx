@@ -349,8 +349,8 @@ export default function AIEstimator() {
  <tbody className="divide-y divide-navy-lt/40">
  {result.line_items.map((line, idx) => (
  <tr key={idx} className="hover:bg-navy-lt/10 transition-colors">
- <td className="py-3 pl-2 font-semibold text-white truncate max-w-[120px]">{line.category}</td>
- <td className="py-3 text-stone truncate max-w-[160px]" title={line.description}>{line.description}</td>
+              <td className="py-3 pl-2 font-semibold" style={{ color: 'var(--on-surface)' }}><span className="line-clamp-1">{line.category}</span></td>
+              <td className="py-3" style={{ color: 'var(--stone)' }} title={line.description}><span className="line-clamp-2">{line.description}</span></td>
  
  {/* Quantity editable input */}
  <td className="py-3 text-right">

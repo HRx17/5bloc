@@ -1,0 +1,20 @@
+feat: full Supabase auth integration and UI overhaul
+
+- Integrate real Supabase auth (signIn/signUp/signOut/OAuth) replacing fake setTimeout flow
+- Upgrade @supabase/auth-helpers-nextjs to @supabase/ssr with proper cookie handling
+- Add root middleware enforcing auth on all app routes with next= redirect
+- Apply database schema: organisations, profiles, projects, project_members, clients, documents, invoices, waitlist
+- Add DB trigger to auto-create profile row on auth.users insert with RLS policies
+- Generate TypeScript types from Supabase schema
+- Wire sidebar logout to supabase.auth.signOut()
+- Save waitlist signups to Supabase with duplicate-email handling
+- Fix auth callback route, files download route, stripe/razorpay webhooks for new schema
+- Landing page: Google Stitch atmospheric gradients, header blur on scroll, scrolling fix
+- Redesign login/signup pages with demo-mode banner and email verification flow
+- Add Electron desktop app support (main.js, preload.js) and Download tab in settings
+- Add global coordination and documents pages per information architecture
+- Sidebar: IA-based navigation, logout button, Download App link
+- Dashboard: onboarding checklist, project cards, quick actions, time-aware greeting
+- Project layout: 6 grouped sections replacing flat 13-tab navigation
+- Fix text truncation across invoices, documents, AI estimate, portal pages
+- Dark theme overhaul: prototype screens, waitlist card, atmospheric background

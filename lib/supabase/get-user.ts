@@ -1,67 +1,34 @@
-import { createServerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createSupabaseServer } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
 
 export async function getAuthUser() {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    // Mock user for local development and testing when Supabase keys are not set yet
-    return {
-      user: { id: 'mock-user-id', email: 'architect@5bloc.com' },
-      profile: {
-        id: 'mock-profile-id',
-        full_name: 'Parth (Mock Architect)',
-        email: 'architect@5bloc.com',
-        role: 'architect',
-        org_id: 'mock-org-id',
-        plan: 'team',
-        ai_add_on: true,
-        organisations: {
-          id: 'mock-org-id',
-          name: 'Apex Architects',
-          plan: 'team',
-          owner_id: 'mock-profile-id'
-        }
-      },
-      supabase: null as any,
-      orgId: 'mock-org-id'
-    }
-  }
-
-  const cookieStore = await cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          } catch {
-            // Ignore error if set from Server Component
-          }
-        },
-      },
-    }
-  )
+  const supabase = await createSupabaseServer()
   const { data: { user }, error } = await supabase.auth.getUser()
-  
+
   if (error || !user) {
-    throw new Response('Unauthorized', { status: 401 })
+    redirect('/login')
   }
 
   const { data: profile } = await supabase
-    .from('users')
+    .from('profiles')
     .select('*, organisations(*)')
     .eq('auth_id', user.id)
     .single()
 
-  if (!profile) {
-    throw new Response('Profile not found', { status: 404 })
+  return {
+    user,
+    profile: profile ?? {
+      id: user.id,
+      auth_id: user.id,
+      email: user.email,
+      full_name: user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'User',
+      role: 'architect',
+      org_id: null,
+      plan: 'free',
+      ai_add_on: false,
+      organisations: null,
+    },
+    supabase,
+    orgId: profile?.org_id ?? null,
   }
-
-  return { user, profile, supabase, orgId: profile.org_id }
 }

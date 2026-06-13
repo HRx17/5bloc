@@ -2,76 +2,150 @@
 
 import { useState } from 'react'
 import { ArrowRight, Check, Loader2 } from 'lucide-react'
+import { createSupabaseClient } from '@/lib/supabase/client'
 
-export function WaitlistForm({ source = 'landing', compact = false }: { source?: string; compact?: boolean }) {
-  const [email, setEmail] = useState('')
-  const [name, setName] = useState('')
-  const [role, setRole] = useState('architect')
+/* Dark palette matching the rest of the landing page */
+const C = {
+  base:    '#0b0c10',
+  mid:     '#13151a',
+  raised:  '#1a1d24',
+  hover:   '#1f2330',
+  border:  'rgba(255,255,255,0.07)',
+  txt:     '#d8d3cc',
+  txtDim:  '#6e6660',
+  amber:   '#F5A623',
+}
+
+function Field({
+  label,
+  required,
+  children,
+}: {
+  label: string
+  required?: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <div className="grid gap-1.5">
+      <label
+        className="font-mono text-[10px] uppercase tracking-[0.18em]"
+        style={{ color: C.txtDim }}
+      >
+        {label}
+        {required && <span style={{ color: C.amber }}> *</span>}
+      </label>
+      {children}
+    </div>
+  )
+}
+
+const inputCls = `
+  h-10 w-full rounded-lg px-3 py-2 text-sm outline-none transition-all
+`
+const inputStyle = {
+  background: C.base,
+  color: C.txt,
+  boxShadow: `inset 0 0 0 1px ${C.border}`,
+}
+function focusStyle(e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) {
+  ;(e.target as HTMLElement).style.boxShadow = `inset 0 0 0 1px rgba(245,166,35,0.5), 0 0 0 3px rgba(245,166,35,0.08)`
+}
+function blurStyle(e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) {
+  ;(e.target as HTMLElement).style.boxShadow = `inset 0 0 0 1px ${C.border}`
+}
+
+export function WaitlistForm({
+  source = 'landing',
+  compact = false,
+}: {
+  source?: string
+  compact?: boolean
+}) {
+  const [email,    setEmail]    = useState('')
+  const [name,     setName]     = useState('')
+  const [role,     setRole]     = useState('architect')
   const [practice, setPractice] = useState('')
-  const [city, setCity] = useState('')
-  const [notes, setNotes] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [done, setDone] = useState(false)
+  const [city,     setCity]     = useState('')
+  const [notes,    setNotes]    = useState('')
+  const [busy,     setBusy]     = useState(false)
+  const [done,     setDone]     = useState(false)
 
   const roles = [
-    { key: 'architect', label: 'Architect' },
+    { key: 'architect',  label: 'Architect' },
     { key: 'contractor', label: 'Contractor / Vendor' },
-    { key: 'builder', label: 'Builder / Developer' },
+    { key: 'builder',    label: 'Builder / Developer' },
     { key: 'consultant', label: 'Consultant' },
-    { key: 'client', label: 'Client' },
-    { key: 'other', label: 'Something else' },
+    { key: 'client',     label: 'Client' },
+    { key: 'other',      label: 'Something else' },
   ]
+
+  const [error, setError] = useState('')
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
     if (!email.trim()) return
     setBusy(true)
-
-    // Simulate server call
-    await new Promise((resolve) => setTimeout(resolve, 800))
-
+    setError('')
     try {
-      const submissions = JSON.parse(localStorage.getItem('5bloc_waitlist') || '[]')
-      submissions.push({
-        email: email.trim().toLowerCase(),
-        name: name.trim() || null,
+      const supabase = createSupabaseClient()
+      const { error: dbError } = await supabase.from('waitlist').insert({
+        email:    email.trim().toLowerCase(),
+        name:     name.trim() || null,
         role,
-        practice: practice.trim() || null,
-        city: city.trim() || null,
-        notes: notes.trim() || null,
-        source,
-        timestamp: new Date().toISOString()
+        firm:     practice.trim() || null,
       })
-      localStorage.setItem('5bloc_waitlist', JSON.stringify(submissions))
-    } catch (err) {
-      console.error('Local storage error:', err)
+      if (dbError) {
+        if (dbError.code === '23505') {
+          // unique_violation — already on waitlist
+          setDone(true)
+        } else {
+          setError('Something went wrong. Please try again.')
+        }
+      } else {
+        setDone(true)
+      }
+    } catch (_) {
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setBusy(false)
     }
-
-    setBusy(false)
-    setDone(true)
   }
 
+  /* ── Success state ── */
   if (done) {
     return (
-      <div className="rounded-2xl border border-[rgba(26,23,20,0.1)] bg-white p-6 text-sm text-[#1a1714]">
-        <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(26,23,20,0.1)] bg-[#f5f2ee] px-3 py-1 font-mono text-[11px] uppercase tracking-[0.18em] text-[#F5A623]">
+      <div
+        className="rounded-2xl p-6"
+        style={{ background: C.mid, boxShadow: `inset 0 0 0 1px ${C.border}` }}
+      >
+        <div
+          className="inline-flex items-center gap-2 rounded-full px-3 py-1 font-mono text-[11px] uppercase tracking-[0.18em] mb-4"
+          style={{ background: 'rgba(46,204,138,0.12)', color: '#2ECC8A' }}
+        >
           <Check className="h-3.5 w-3.5" /> You're in
         </div>
-        <p className="mt-4 text-base font-medium">
+        <p className="text-base font-medium mb-2" style={{ color: C.txt }}>
           Thanks{name ? `, ${name.split(' ')[0]}` : ''}. We've registered{' '}
-          <span className="font-mono text-[#F5A623]">{email}</span> for private beta onboarding.
+          <span className="font-mono" style={{ color: C.amber }}>{email}</span>{' '}
+          for private beta onboarding.
         </p>
-        <p className="mt-2 text-[#6b5e50]">
-          Want to skip the queue? Contact us at{' '}
-          <a href="mailto:contact@5bloc.com" className="underline font-semibold hover:text-[#F5A623]">
+        <p className="text-sm" style={{ color: C.txtDim }}>
+          Want to skip the queue?{' '}
+          <a
+            href="mailto:contact@5bloc.com"
+            className="underline font-semibold transition-colors"
+            style={{ color: C.txtDim }}
+            onMouseEnter={(e) => ((e.target as HTMLElement).style.color = C.amber)}
+            onMouseLeave={(e) => ((e.target as HTMLElement).style.color = C.txtDim)}
+          >
             contact@5bloc.com
-          </a>{' '}
-          with details about your active project.
+          </a>
         </p>
       </div>
     )
   }
 
+  /* ── Compact (inline / hero) variant ── */
   if (compact) {
     return (
       <form onSubmit={submit} className="flex w-full max-w-md flex-col gap-2 sm:flex-row">
@@ -81,108 +155,146 @@ export function WaitlistForm({ source = 'landing', compact = false }: { source?:
           placeholder="you@studio.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="h-11 flex-1 rounded-lg border border-[rgba(26,23,20,0.15)] bg-white px-4 py-2 text-sm text-[#1a1714] outline-none transition-shadow focus:ring-2 focus:ring-[#F5A623]"
+          className={inputCls + ' flex-1'}
+          style={inputStyle}
+          onFocus={focusStyle}
+          onBlur={blurStyle}
         />
         <button
           type="submit"
           disabled={busy}
-          className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-[#F5A623] px-6 text-sm font-semibold text-white transition-all hover:bg-[#ffb94a] active:scale-[0.98] disabled:opacity-50"
+          className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg px-6 text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-50"
+          style={{ background: C.amber, color: '#0d0a00' }}
+          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = '#ffb94a')}
+          onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = C.amber)}
         >
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : (<>Join waitlist <ArrowRight className="h-4 w-4" /></>)}
+          {busy ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <>Join waitlist <ArrowRight className="h-4 w-4" /></>
+          )}
         </button>
       </form>
     )
   }
 
+  /* ── Full form ── */
   return (
-    <form onSubmit={submit} className="grid gap-4 rounded-2xl border border-[rgba(26,23,20,0.1)] bg-white p-6 text-[#1a1714] sm:p-8">
+    <form
+      onSubmit={submit}
+      className="grid gap-4 rounded-2xl p-6 sm:p-7"
+      style={{
+        background: C.mid,
+        boxShadow: `inset 0 0 0 1px ${C.border}`,
+        color: C.txt,
+      }}
+    >
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="grid gap-1.5">
-          <label className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#6b5e50]">
-            Work email <span className="text-[#F5A623]">*</span>
-          </label>
+        <Field label="Work email" required>
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@studio.com"
-            className="h-10 rounded-lg border border-[rgba(26,23,20,0.15)] bg-white px-3 py-2 text-sm outline-none transition-shadow focus:ring-2 focus:ring-[#F5A623]"
+            className={inputCls}
+            style={inputStyle}
+            onFocus={focusStyle}
+            onBlur={blurStyle}
           />
-        </div>
-        <div className="grid gap-1.5">
-          <label className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#6b5e50]">
-            Full name
-          </label>
+        </Field>
+        <Field label="Full name">
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Aanya Mehta"
-            className="h-10 rounded-lg border border-[rgba(26,23,20,0.15)] bg-white px-3 py-2 text-sm outline-none transition-shadow focus:ring-2 focus:ring-[#F5A623]"
+            className={inputCls}
+            style={inputStyle}
+            onFocus={focusStyle}
+            onBlur={blurStyle}
           />
-        </div>
+        </Field>
       </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="grid gap-1.5">
-          <label className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#6b5e50]">
-            I'm a
-          </label>
+        <Field label="I'm a">
           <select
             value={role}
             onChange={(e) => setRole(e.target.value)}
-            className="h-10 rounded-lg border border-[rgba(26,23,20,0.15)] bg-white px-3 py-2 text-sm outline-none transition-shadow focus:ring-2 focus:ring-[#F5A623]"
+            className={inputCls}
+            style={{ ...inputStyle, appearance: 'none' as const }}
+            onFocus={focusStyle}
+            onBlur={blurStyle}
           >
             {roles.map((r) => (
-              <option key={r.key} value={r.key}>{r.label}</option>
+              <option key={r.key} value={r.key} style={{ background: C.mid, color: C.txt }}>
+                {r.label}
+              </option>
             ))}
           </select>
-        </div>
-        <div className="grid gap-1.5">
-          <label className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#6b5e50]">
-            Practice / company
-          </label>
+        </Field>
+        <Field label="Practice / company">
           <input
             value={practice}
             onChange={(e) => setPractice(e.target.value)}
             placeholder="Mehta + Rao Architects"
-            className="h-10 rounded-lg border border-[rgba(26,23,20,0.15)] bg-white px-3 py-2 text-sm outline-none transition-shadow focus:ring-2 focus:ring-[#F5A623]"
+            className={inputCls}
+            style={inputStyle}
+            onFocus={focusStyle}
+            onBlur={blurStyle}
           />
-        </div>
+        </Field>
       </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="grid gap-1.5">
-          <label className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#6b5e50]">
-            City
-          </label>
+        <Field label="City">
           <input
             value={city}
             onChange={(e) => setCity(e.target.value)}
             placeholder="Bengaluru"
-            className="h-10 rounded-lg border border-[rgba(26,23,20,0.15)] bg-white px-3 py-2 text-sm outline-none transition-shadow focus:ring-2 focus:ring-[#F5A623]"
+            className={inputCls}
+            style={inputStyle}
+            onFocus={focusStyle}
+            onBlur={blurStyle}
           />
-        </div>
-        <div className="grid gap-1.5">
-          <label className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#6b5e50]">
-            First Use Case
-          </label>
+        </Field>
+        <Field label="First use case">
           <input
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="RFI chaos on a project…"
-            className="h-10 rounded-lg border border-[rgba(26,23,20,0.15)] bg-white px-3 py-2 text-sm outline-none transition-shadow focus:ring-2 focus:ring-[#F5A623]"
+            className={inputCls}
+            style={inputStyle}
+            onFocus={focusStyle}
+            onBlur={blurStyle}
           />
-        </div>
+        </Field>
       </div>
-      <button
-        type="submit"
-        disabled={busy}
-        className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-[#F5A623] px-6 text-sm font-semibold text-white transition-all hover:bg-[#ffb94a] active:scale-[0.98] disabled:opacity-50 justify-self-start"
-      >
-        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : (<>Request access <ArrowRight className="h-4 w-4" /></>)}
-      </button>
-      <p className="text-xs text-[#6b5e50]">
-        No spam. We onboard 10 practices per week.
-      </p>
+
+      <div className="flex items-center justify-between gap-4">
+        <button
+          type="submit"
+          disabled={busy}
+          className="inline-flex h-11 items-center gap-1.5 rounded-full px-7 text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-50"
+          style={{ background: C.amber, color: '#0d0a00' }}
+          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = '#ffb94a')}
+          onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = C.amber)}
+        >
+          {busy ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <>Request access <ArrowRight className="h-4 w-4" /></>
+          )}
+        </button>
+        {error && (
+          <p className="text-xs" style={{ color: '#ff6b6b' }}>{error}</p>
+        )}
+        {!error && (
+          <p className="text-xs" style={{ color: C.txtDim }}>
+            No spam. 10 practices onboarded per week.
+          </p>
+        )}
+      </div>
     </form>
   )
 }

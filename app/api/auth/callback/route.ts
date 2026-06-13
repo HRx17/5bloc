@@ -1,10 +1,11 @@
-import { createServerClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function GET(req: NextRequest) {
   const requestUrl = new URL(req.url)
   const code = requestUrl.searchParams.get('code')
+  const next = requestUrl.searchParams.get('next') ?? '/dashboard'
 
   if (code) {
     try {
@@ -23,7 +24,7 @@ export async function GET(req: NextRequest) {
                   cookieStore.set(name, value, options)
                 )
               } catch {
-                // Ignore error if set from Server Component
+                // ignore — cookies can't be set from a Server Component context
               }
             },
           },
@@ -32,9 +33,9 @@ export async function GET(req: NextRequest) {
       await supabase.auth.exchangeCodeForSession(code)
     } catch (e) {
       console.error('Auth callback code exchange error:', e)
+      return NextResponse.redirect(new URL('/login?error=auth_callback_failed', req.url))
     }
   }
 
-  // URL to redirect to after sign in process completes
-  return NextResponse.redirect(new URL('/onboarding', req.url))
+  return NextResponse.redirect(new URL(next, req.url))
 }
