@@ -64,6 +64,7 @@ export function WaitlistForm({
   const [email, setEmail] = useState('')
   const [name,  setName]  = useState('')
   const [role,  setRole]  = useState('architect')
+  const [firm,  setFirm]  = useState('')
   const [busy,  setBusy]  = useState(false)
   const [done,  setDone]  = useState(false)
 
@@ -89,6 +90,7 @@ export function WaitlistForm({
         email: email.trim().toLowerCase(),
         name:  name.trim() || null,
         role,
+        firm:  firm.trim() || null,
       })
       if (dbError) {
         if (dbError.code === '23505') {
@@ -228,6 +230,18 @@ export function WaitlistForm({
           </select>
         </Field>
       </div>
+
+      <Field label="Firm / organisation">
+        <input
+          value={firm}
+          onChange={(e) => setFirm(e.target.value)}
+          placeholder="Mehta + Rao Architects"
+          className={inputCls}
+          style={inputStyle}
+          onFocus={focusStyle}
+          onBlur={blurStyle}
+        />
+      </Field>
 
       <div className="flex items-center justify-between gap-4 pt-1">
         <button
