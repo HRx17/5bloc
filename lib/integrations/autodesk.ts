@@ -92,7 +92,7 @@ export async function ensureBucket(appToken: string, bucketKey: string) {
   const res = await fetch(`${APS_BASE}/oss/v2/buckets`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${appToken}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ bucketKey, policyKey: 'transient' }),
+    body: JSON.stringify({ bucketKey, policyKey: 'persistent' }),
   })
   if (res.status === 409) return // already exists
   if (!res.ok) throw new Error('Bucket creation failed')
@@ -109,10 +109,15 @@ export async function uploadToOSS(appToken: string, bucketKey: string, objectKey
   return res.json() as Promise<{ objectId: string; objectKey: string }>
 }
 
-/** Kick off Model Derivative translation (DWG → SVF2 for viewer) */
+/** Convert an OSS objectId into the URL-safe base64 URN used by the viewer + derivative API */
+export function toUrn(objectId: string): string {
+  return Buffer.from(objectId).toString('base64url')
+}
+
+/** Kick off Model Derivative translation (DWG/RVT → SVF2 for viewer). `urn` is the base64url URN. */
 export async function translateModel(appToken: string, urn: string) {
   const body = {
-    input:  { urn: Buffer.from(urn).toString('base64') },
+    input:  { urn },
     output: { formats: [{ type: 'svf2', views: ['2d', '3d'] }] },
   }
   const res = await fetch(`${APS_BASE}/modelderivative/v2/designdata/job`, {
@@ -120,14 +125,16 @@ export async function translateModel(appToken: string, urn: string) {
     headers: { Authorization: `Bearer ${appToken}`, 'Content-Type': 'application/json', 'x-ads-force': 'true' },
     body: JSON.stringify(body),
   })
-  if (!res.ok) throw new Error('Model translation failed')
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`Model translation failed: ${err}`)
+  }
   return res.json()
 }
 
-/** Check translation status */
+/** Check translation status. `urn` is the base64url URN. */
 export async function getTranslationStatus(appToken: string, urn: string) {
-  const b64 = Buffer.from(urn).toString('base64url')
-  const res = await fetch(`${APS_BASE}/modelderivative/v2/designdata/${b64}/manifest`, {
+  const res = await fetch(`${APS_BASE}/modelderivative/v2/designdata/${urn}/manifest`, {
     headers: { Authorization: `Bearer ${appToken}` },
   })
   if (!res.ok) throw new Error('Translation status fetch failed')

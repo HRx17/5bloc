@@ -20,6 +20,20 @@
   --surface-recessed:           #080909;
   --surface-elevated:           #232626;
 
+  /* ── Elevation surfaces (used by viewer + integration panels) ── */
+  --surface-1:                  #141616;
+  --surface-2:                  #1a1c1c;
+  --surface-3:                  #222424;
+
+  /* ── Hairline / overlay tokens — theme-aware so light mode isn't washed out ── */
+  --hairline:                   rgba(255,255,255,0.06);
+  --hairline-strong:            rgba(255,255,255,0.10);
+  --overlay-hover:              rgba(255,255,255,0.05);
+  --overlay-active:             rgba(255,255,255,0.08);
+  --card-bg:                    rgba(255,255,255,0.04);
+  --card-top-glow:              rgba(255,255,255,0.06);
+  --scrim:                      rgba(0,0,0,0.55);
+
   /* ── Legacy aliases (keep for backward compat) ── */
   --navy:     var(--surface);
   --navy-mid: var(--surface-container);
@@ -92,31 +106,73 @@
   --shadow-amber: 0 0 0 1px rgba(245,166,35,.18), 0 8px 32px rgba(245,166,35,.20);  /* ← was missing */
 }
 
-/* ── Bone-Paper Day (Light Mode) ── */
+/* ══════════════════════════════════
+   Bone-Paper Day (Light Mode)
+   Warm off-white paper, ink text, dark-alpha overlays
+══════════════════════════════════ */
 .light {
-  --surface:                  #F8F7F4;
+  /* Surfaces — warm paper whites */
+  --surface:                  #f7f6f3;
+  --surface-dim:              #eeece7;
+  --surface-bright:           #ffffff;
   --surface-container-lowest: #ffffff;
-  --surface-container-low:    #f2f0ec;
-  --surface-container:        #eceae6;
-  --surface-container-high:   #e6e4e0;
-  --surface-container-highest:#dedad6;
-  --surface-canvas:           #F8F7F4;
-  --surface-recessed:         #eeece8;
+  --surface-container-low:    #faf9f6;
+  --surface-container:        #ffffff;
+  --surface-container-high:   #f3f1ec;
+  --surface-container-highest:#ebe8e2;
+  --surface-canvas:           #f4f2ee;
+  --surface-recessed:         #eeece7;
   --surface-elevated:         #ffffff;
+
+  --surface-1:                #ffffff;
+  --surface-2:                #faf9f6;
+  --surface-3:                #f3f1ec;
+
+  /* Legacy navy aliases */
   --navy:                     var(--surface);
   --navy-mid:                 #ffffff;
-  --navy-lt:                  #e3ddd6;
-  --on-surface:               #18150e;
-  --on-surface-variant:       #4a4038;
-  --stone:                    #6b6058;
-  --primary:                  #d47800;
+  --navy-lt:                  #ebe8e2;
+
+  /* Text — warm ink */
+  --on-surface:               #1c1813;
+  --on-surface-variant:       #544c42;
+  --chalk-white:              #1c1813;
+  --stone:                    #8a8178;
+
+  /* Primary — richer amber that reads on white */
+  --primary:                  #b86a00;
   --on-primary:               #ffffff;
-  --glass-bg:                 rgba(248,247,244,.80);
-  --shadow-1: 0 2px 8px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
-  --shadow-2: 0 6px 20px rgba(0,0,0,.12), 0 2px 6px rgba(0,0,0,.07);
-  --shadow-3: 0 12px 36px rgba(0,0,0,.16), 0 4px 10px rgba(0,0,0,.08);
-  --shadow-4: 0 20px 56px rgba(0,0,0,.20), 0 8px 18px rgba(0,0,0,.12);
-  --glow-amber: 0 0 0 1px rgba(212,120,0,.22), 0 4px 24px rgba(212,120,0,.16);
+  --amber:                    #c47d12;
+  --amber-dk:                 #9c6200;
+  --amber-lt:                 #e09a2e;
+  --ink-black:                #ffffff;   /* btn-primary text → white on amber in light */
+
+  /* Accents tuned for light bg */
+  --blue:                     #2b6fc4;
+  --blue-lt:                  #4f8de0;
+  --purple:                   #7c5cd6;
+  --success:                  #1f9d6b;
+  --error:                    #d14b3f;
+
+  /* Overlays / hairlines — DARK alpha (the key fix for light mode) */
+  --hairline:                 rgba(28,24,19,0.08);
+  --hairline-strong:          rgba(28,24,19,0.14);
+  --overlay-hover:            rgba(28,24,19,0.04);
+  --overlay-active:           rgba(28,24,19,0.07);
+  --card-bg:                  #ffffff;
+  --card-top-glow:            rgba(28,24,19,0.04);
+  --scrim:                    rgba(40,36,30,0.40);
+
+  --glass-bg:                 rgba(255,255,255,0.82);
+
+  --shadow-1: 0 1px 2px rgba(40,36,30,.06), 0 2px 6px rgba(40,36,30,.05);
+  --shadow-2: 0 2px 6px rgba(40,36,30,.07), 0 8px 24px rgba(40,36,30,.07);
+  --shadow-3: 0 6px 16px rgba(40,36,30,.09), 0 16px 40px rgba(40,36,30,.10);
+  --shadow-4: 0 12px 28px rgba(40,36,30,.12), 0 28px 64px rgba(40,36,30,.14);
+  --glow-amber:  0 0 0 1px rgba(196,125,18,.22), 0 6px 22px rgba(196,125,18,.16);
+  --glow-blue:   0 0 0 1px rgba(43,111,196,.18), 0 6px 22px rgba(43,111,196,.14);
+  --glow-active: 0 0 0 1px rgba(28,24,19,.08), 0 2px 8px rgba(28,24,19,.05);
+  --shadow-amber:0 0 0 1px rgba(196,125,18,.20), 0 8px 28px rgba(196,125,18,.16);
 }
 
 /* ── Tailwind v4 theme map ── */
@@ -173,6 +229,24 @@ body {
   padding: 0;
 }
 
+/* ── Smooth theme switch ──
+   Animate color/background/shadow changes when toggling .light so the
+   transition feels fluid rather than a hard flash. Excludes transform-based
+   interactions (handled per-component) to avoid jank. */
+*, *::before, *::after {
+  transition-property: background-color, border-color, box-shadow, color, fill, stroke;
+  transition-duration: 0.32s;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* Don't slow down explicit hover/interaction transitions or animated elements */
+button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
+.btn-icon, .btn-ai-wash, input, textarea, [class*="animate-"], .skeleton, .pulse-dot {
+  transition-property: background-color, border-color, box-shadow, color, transform, opacity;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; }
+}
+
 /* Strip default browser borders/outlines — box-shadow used for rings instead */
 *, *::before, *::after {
   border-width: 0;
@@ -212,9 +286,10 @@ body {
    (Stitch landing page hallmark texture)
 ══════════════════════════════════ */
 .dot-grid {
-  background-image: radial-gradient(rgba(255,255,255,0.055) 1px, transparent 1px);
+  background-image: radial-gradient(var(--dot-grid-color, rgba(255,255,255,0.055)) 1px, transparent 1px);
   background-size: 24px 24px;
 }
+.light .dot-grid { --dot-grid-color: rgba(28,24,19,0.06); }
 .dot-grid-amber {
   background-image: radial-gradient(rgba(245,166,35,0.12) 1px, transparent 1px);
   background-size: 24px 24px;
@@ -228,7 +303,95 @@ body {
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   /* Hairline top catch-light, no hard border */
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+  box-shadow: inset 0 1px 0 var(--card-top-glow);
+}
+
+/* ══════════════════════════════════
+   SEARCH BAR
+══════════════════════════════════ */
+/* Usage:
+  <div class="search-5bloc">
+    <span class="material-icons-outlined">search</span>
+    <input type="text" placeholder="Search…" />
+  </div>
+*/
+.search-5bloc {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-recessed);
+  border-radius: 10px;
+  padding: 8px 12px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.14), inset 0 0 0 1px var(--hairline);
+  transition: box-shadow 0.2s cubic-bezier(.25,.46,.45,.94);
+}
+.search-5bloc:focus-within {
+  box-shadow: var(--glow-amber), inset 0 1px 3px rgba(0,0,0,.06);
+}
+.search-5bloc > .material-icons-outlined,
+.search-5bloc > .material-icons {
+  font-size: 16px !important;
+  color: var(--stone);
+  flex-shrink: 0;
+  pointer-events: none;
+}
+.search-5bloc input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none !important;
+  padding: 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13.5px;
+  color: var(--on-surface);
+  width: 100%;
+  min-width: 0;
+}
+.search-5bloc input::placeholder { color: var(--stone); opacity: 0.65; }
+
+/* ── Styled select wrapper ── */
+/* Usage:
+  <div class="select-5bloc">
+    <select>…</select>
+    <span class="material-icons-outlined chevron">expand_more</span>
+  </div>
+*/
+.select-5bloc {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.select-5bloc select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--surface-container);
+  color: var(--on-surface);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 7px 32px 7px 12px;
+  border-radius: 9999px;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px var(--hairline-strong), var(--shadow-1);
+  transition: box-shadow 0.18s ease, background 0.18s ease;
+  outline: none;
+}
+.select-5bloc select:hover {
+  background: var(--surface-container-high);
+  box-shadow: inset 0 0 0 1px var(--hairline-strong), var(--glow-active);
+}
+.select-5bloc select:focus {
+  box-shadow: var(--glow-amber);
+}
+.select-5bloc .chevron {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px !important;
+  color: var(--stone);
+  pointer-events: none;
 }
 
 /* ══════════════════════════════════
@@ -240,10 +403,10 @@ body {
   border-radius: 10px;
   color: var(--on-surface);
   font-family: 'DM Sans', sans-serif;
-  font-size: 14px;
-  padding: 11px 14px;
+  font-size: 13.5px;
+  padding: 9px 13px;
   width: 100%;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,.22);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.14), inset 0 0 0 1px var(--hairline);
   transition: box-shadow 0.2s cubic-bezier(.25,.46,.45,.94);
   display: block;
 }
@@ -251,7 +414,7 @@ body {
 .input-5bloc::placeholder { color: var(--stone); opacity: 0.7; }
 .input-recessed:focus,
 .input-5bloc:focus {
-  box-shadow: var(--glow-amber), inset 0 2px 4px rgba(0,0,0,.10);
+  box-shadow: var(--glow-amber), inset 0 1px 3px rgba(0,0,0,.06);
 }
 
 /* ══════════════════════════════════
@@ -265,13 +428,13 @@ body {
   color: var(--ink-black);
   font-family: 'DM Sans', sans-serif;
   font-weight: 600;
-  font-size: 13.5px;
-  padding: 10px 22px;
+  font-size: 13px;
+  padding: 8px 18px;
   border-radius: 9999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  gap: 6px;
   cursor: pointer;
   letter-spacing: 0.01em;
   box-shadow: var(--shadow-1);
@@ -298,22 +461,22 @@ body {
   color: var(--on-surface);
   font-family: 'DM Sans', sans-serif;
   font-weight: 500;
-  font-size: 13.5px;
-  padding: 10px 22px;
+  font-size: 13px;
+  padding: 8px 18px;
   border-radius: 9999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
   cursor: pointer;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.07), var(--shadow-1);
+  box-shadow: inset 0 0 0 1px var(--hairline-strong), var(--shadow-1);
   transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
   white-space: nowrap;
   text-decoration: none;
 }
 .btn-secondary:hover {
   background: var(--surface-container-high);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.10), var(--glow-active);
+  box-shadow: inset 0 0 0 1px var(--hairline-strong), var(--glow-active);
   transform: translateY(-1px);
 }
 
@@ -323,8 +486,8 @@ body {
   color: var(--amber);
   font-family: 'DM Sans', sans-serif;
   font-weight: 500;
-  font-size: 13.5px;
-  padding: 10px 22px;
+  font-size: 13px;
+  padding: 8px 18px;
   border-radius: 9999px;
   display: inline-flex;
   align-items: center;
@@ -361,8 +524,8 @@ body {
   color: var(--error);
   font-family: 'DM Sans', sans-serif;
   font-weight: 500;
-  font-size: 13.5px;
-  padding: 10px 22px;
+  font-size: 13px;
+  padding: 8px 18px;
   border-radius: 9999px;
   display: inline-flex;
   align-items: center;
@@ -395,7 +558,7 @@ body {
 }
 .btn-icon:hover {
   color: var(--on-surface);
-  background: rgba(255,255,255,0.05);
+  background: var(--overlay-hover);
 }
 .btn-icon-sm {
   width: 26px;
@@ -409,8 +572,8 @@ body {
   color: var(--tertiary-container);
   font-family: 'DM Sans', sans-serif;
   font-weight: 600;
-  font-size: 13.5px;
-  padding: 10px 22px;
+  font-size: 13px;
+  padding: 8px 18px;
   border-radius: 9999px;
   display: inline-flex;
   align-items: center;
@@ -432,30 +595,25 @@ body {
 ══════════════════════════════════ */
 .card-5bloc,
 .card-glass {
-  background: rgba(255,255,255,0.04);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: var(--shadow-2);
+  background: var(--card-bg);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: inset 0 1px 0 var(--card-top-glow), inset 0 0 0 1px var(--hairline), var(--shadow-1);
   position: relative;
   overflow: hidden;
 }
-.card-5bloc {
-  /* Subtle top glow line + inner border-like ring */
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.06), inset 0 0 0 1px rgba(255,255,255,.04), var(--shadow-2);
-}
 .card-glass {
-  background: rgba(255,255,255,0.03);
+  background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.06), inset 0 0 0 1px rgba(255,255,255,.04), var(--shadow-2);
 }
 
-/* App cards (inside dashboard/app pages) keep solid background */
+/* App cards (inside dashboard/app pages) */
 .app-card {
   background: var(--surface-container);
-  border-radius: 16px;
-  padding: 20px;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.04), var(--shadow-2);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: inset 0 1px 0 var(--card-top-glow), inset 0 0 0 1px var(--hairline), var(--shadow-1);
   position: relative;
   overflow: hidden;
 }
@@ -489,7 +647,7 @@ body {
   font-weight: 500;
   letter-spacing: 0.10em;
   text-transform: uppercase;
-  background: rgba(255,255,255,.04);
+  background: var(--overlay-hover);
 }
 .metadata-ai {
   background: rgba(122,184,255,.10);
@@ -644,5 +802,5 @@ body {
 ══════════════════════════════════ */
 ::-webkit-scrollbar           { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track     { background: transparent; }
-::-webkit-scrollbar-thumb     { background: rgba(255,255,255,.08); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover{ background: rgba(255,255,255,.15); }
+::-webkit-scrollbar-thumb     { background: var(--hairline-strong); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover{ background: var(--stone); }

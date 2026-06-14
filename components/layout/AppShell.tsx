@@ -51,8 +51,8 @@ export default function AppShell({ children, userProfile }: AppShellProps) {
  {/* Mobile Drawer */}
  {mobileMenuOpen && (
  <div
- className="fixed inset-0 z-50 flex lg:hidden"
- style={{ background: 'rgba(12, 14, 14, 0.75)', backdropFilter: 'blur(4px)' }}
+      className="fixed inset-0 z-50 flex lg:hidden"
+        style={{ background: 'var(--scrim)', backdropFilter: 'blur(4px)' }}
  >
  <div className="relative flex flex-col shrink-0 animate-slide-in">
  <Sidebar
@@ -77,9 +77,8 @@ export default function AppShell({ children, userProfile }: AppShellProps) {
       <main
             className="flex-1 overflow-x-hidden overflow-y-auto relative"
             style={{
-              background: 'var(--surface)',
+              background: 'var(--surface-canvas)',
               color: 'var(--on-surface)',
-              backgroundImage: 'radial-gradient(ellipse 70% 40% at 80% 0%, rgba(40,120,255,0.055) 0%, transparent 60%)',
             }}
           >
         <AnimatePresence mode="wait">

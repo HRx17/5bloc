@@ -45,12 +45,12 @@ export default function TopNav({
 
   return (
     <header
-      className="h-[56px] px-4 lg:px-5 flex items-center justify-between z-30 w-full shrink-0"
+      className="h-[52px] px-4 lg:px-5 flex items-center justify-between z-30 w-full shrink-0"
       style={{
         background: 'var(--glass-bg)',
         backdropFilter: 'var(--glass-blur)',
         WebkitBackdropFilter: 'var(--glass-blur)',
-        boxShadow: '0 1px 0 rgba(255,255,255,0.04)',
+        boxShadow: '0 1px 0 var(--hairline)',
       }}
     >
       {/* ── Left ── */}
@@ -114,7 +114,7 @@ export default function TopNav({
           onMouseEnter={(e) => {
             const t = e.currentTarget as HTMLElement
             t.style.color = 'var(--on-surface)'
-            t.style.background = 'rgba(255,255,255,0.04)'
+            t.style.background = 'var(--overlay-hover)'
           }}
           onMouseLeave={(e) => {
             const t = e.currentTarget as HTMLElement
@@ -135,7 +135,7 @@ export default function TopNav({
           onMouseEnter={(e) => {
             const t = e.currentTarget as HTMLElement
             t.style.color = 'var(--on-surface)'
-            t.style.background = 'rgba(255,255,255,0.04)'
+            t.style.background = 'var(--overlay-hover)'
           }}
           onMouseLeave={(e) => {
             const t = e.currentTarget as HTMLElement
@@ -153,16 +153,16 @@ export default function TopNav({
 
         {/* Divider */}
         <div
-          className="h-5 mx-1.5"
-          style={{ width: '1px', background: 'rgba(255,255,255,0.07)' }}
+          className="h-5 mx-1"
+          style={{ width: '1px', background: 'var(--hairline-strong)' }}
           aria-hidden
         />
 
         {/* User avatar */}
         <Link
           href="/settings"
-          className="flex items-center gap-2.5 px-2 py-1 rounded-xl transition-all group"
-          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)')}
+          className="flex items-center gap-2 px-2 py-1 rounded-xl transition-all"
+          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'var(--overlay-hover)')}
           onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
         >
           <div className="hidden sm:flex flex-col items-end">

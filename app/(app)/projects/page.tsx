@@ -39,8 +39,6 @@ export default function ProjectsList() {
 
  setProjects([
  { id: 'proj-1', name: 'Wadhwa Prime Plaza', type: 'commercial', phase: 'construction_docs', status: 'active', city: 'Mumbai', state: 'MH', total_sqft: 45000, construction_cost: 120000000, is_rera_registered: true },
- { id: 'proj-2', name: 'Lodha Signature Residences', type: 'residential', phase: 'design_development', status: 'active', city: 'Bangalore', state: 'KA', total_sqft: 22000, construction_cost: 65000000, is_rera_registered: true },
- { id: 'proj-3', name: 'Gundecha Industrial Park', type: 'industrial', phase: 'pre_design', status: 'active', city: 'Pune', state: 'MH', total_sqft: 75000, construction_cost: 180000000, is_rera_registered: false },
  ])
  setLoading(false)
  }
@@ -94,29 +92,52 @@ export default function ProjectsList() {
  </div>
  </div>
 
- {/* ── Filters ── */}
- <div className="card-5bloc flex flex-col md:flex-row gap-4 items-center justify-between" style={{ padding: '14px 20px' }}>
- <div className="relative w-full md:w-72">
- <span className="material-icons-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[16px] pointer-events-none" style={{ color: 'var(--stone)' }}>
- search
- </span>
- <input
- type="text"
- placeholder="Search by name..."
- value={searchQuery}
- onChange={(e) => setSearchQuery(e.target.value)}
- className="input-5bloc pl-9 text-[12.5px] py-2"
- />
+ {/* ── Starter template banner ── */}
+ <div
+ className="flex items-center gap-3 rounded-2xl px-4 py-3"
+ style={{ background: 'rgba(245,166,35,0.08)', boxShadow: 'inset 0 0 0 1px rgba(245,166,35,0.18)' }}
+ >
+ <span className="material-icons-outlined text-[20px] shrink-0" style={{ color: 'var(--amber)' }}>school</span>
+ <div className="flex-1 min-w-0">
+ <p className="text-[13px] font-semibold" style={{ color: 'var(--on-surface)' }}>
+ Starter template project
+ </p>
+ <p className="text-[11.5px]" style={{ color: 'var(--on-surface-variant)' }}>
+ Explore <strong>Wadhwa Prime Plaza</strong> to learn the tool — every tab, document, RFI and workflow is fully interactive. Create your own project when you&apos;re ready.
+ </p>
+ </div>
+ <Link href="/projects/new" className="btn-ghost-amber btn-sm shrink-0 hidden sm:inline-flex">
+ <span className="material-icons-outlined text-[14px]">add</span>
+ New
+ </Link>
  </div>
 
- <div className="flex flex-wrap items-center gap-3">
- <div className="flex items-center gap-2">
- <span className="label-sm" style={{ color: 'var(--stone)' }}>Phase</span>
- <select
- value={filterPhase}
- onChange={(e) => setFilterPhase(e.target.value)}
- className="input-5bloc text-[12px] py-2 px-3 w-auto cursor-pointer"
+ {/* ── Filters ── */}
+ <div className="app-card flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+ {/* Search */}
+ <div className="search-5bloc flex-1 max-w-xs">
+ <span className="material-icons-outlined">search</span>
+ <input
+ type="text"
+ placeholder="Search projects…"
+ value={searchQuery}
+ onChange={(e) => setSearchQuery(e.target.value)}
+ />
+ {searchQuery && (
+ <button
+ onClick={() => setSearchQuery('')}
+ className="shrink-0"
+ style={{ color: 'var(--stone)', lineHeight: 1 }}
  >
+ <span className="material-icons-outlined text-[15px]">close</span>
+ </button>
+ )}
+ </div>
+
+ {/* Select filters */}
+ <div className="flex flex-wrap items-center gap-2">
+ <div className="select-5bloc">
+ <select value={filterPhase} onChange={(e) => setFilterPhase(e.target.value)}>
  <option value="all">All Phases</option>
  <option value="pre_design">Pre-Design</option>
  <option value="schematic_design">Schematic Design</option>
@@ -127,20 +148,17 @@ export default function ProjectsList() {
  <option value="construction_admin">Construction Admin</option>
  <option value="complete">Complete</option>
  </select>
+ <span className="material-icons-outlined chevron">expand_more</span>
  </div>
 
- <div className="flex items-center gap-2">
- <span className="label-sm" style={{ color: 'var(--stone)' }}>City</span>
- <select
- value={filterCity}
- onChange={(e) => setFilterCity(e.target.value)}
- className="input-5bloc text-[12px] py-2 px-3 w-auto cursor-pointer"
- >
+ <div className="select-5bloc">
+ <select value={filterCity} onChange={(e) => setFilterCity(e.target.value)}>
  <option value="all">All Cities</option>
  <option value="mumbai">Mumbai</option>
  <option value="bangalore">Bangalore</option>
  <option value="pune">Pune</option>
  </select>
+ <span className="material-icons-outlined chevron">expand_more</span>
  </div>
  </div>
  </div>
@@ -167,12 +185,17 @@ export default function ProjectsList() {
  className="card-5bloc flex flex-col justify-between group"
  style={{ minHeight: '180px' }}
  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-amber)' }}
- onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-2)' }}
+ onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = '' }}
  >
  {/* Top */}
  <div>
  <div className="flex justify-between items-start gap-2 mb-3">
- <span className="label-sm" style={{ color: 'var(--stone)' }}>{proj.type}</span>
+ <span className="label-sm flex items-center gap-1.5" style={{ color: 'var(--stone)' }}>
+ {proj.type}
+ <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(245,166,35,0.14)', color: 'var(--amber)' }}>
+ TEMPLATE
+ </span>
+ </span>
  <span className="chip shrink-0" style={phaseStyle(proj.phase)}>
  {getPhaseLabel(proj.phase)}
  </span>
@@ -191,7 +214,7 @@ export default function ProjectsList() {
  {/* Bottom row */}
  <div
  className="pt-3 mt-4 flex items-center justify-between text-[11px]"
- style={{ boxShadow: '0 -1px 0 rgba(159,142,122,0.10)' }}
+         style={{ boxShadow: '0 -1px 0 var(--hairline)' }}
  >
  <span style={{ color: 'var(--on-surface-variant)' }}>
  Area:{' '}

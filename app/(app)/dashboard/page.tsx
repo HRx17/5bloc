@@ -225,9 +225,7 @@ export default function Dashboard() {
   useEffect(() => {
     const t = setTimeout(() => {
       setProjects([
-        { id: 'proj-1', name: 'Wadhwa Prime Plaza',        type: 'Commercial',  phase: 'construction_docs',  status: 'active', city: 'Mumbai',    openRfis: 3 },
-        { id: 'proj-2', name: 'Lodha Signature Residences', type: 'Residential', phase: 'design_development', status: 'active', city: 'Bangalore', openRfis: 1 },
-        { id: 'proj-3', name: 'Gundecha Industrial Park',   type: 'Industrial',  phase: 'pre_design',         status: 'active', city: 'Pune',      openRfis: 0 },
+        { id: 'proj-1', name: 'Wadhwa Prime Plaza', type: 'Commercial', phase: 'construction_docs', status: 'active', city: 'Mumbai', openRfis: 3 },
       ])
       setLoading(false)
     }, 500)
@@ -235,10 +233,10 @@ export default function Dashboard() {
   }, [])
 
   const activities = [
-    { id: 1, icon: 'upload_file', accent: 'var(--blue)',    user: 'Aritro Roy',  action: 'uploaded structural column drawings',        project: 'Wadhwa',   time: '10m', href: '/projects/proj-1' },
-    { id: 2, icon: 'verified',    accent: 'var(--success)', user: 'Parth Patel', action: 'approved Electrical Submittal #4',           project: 'Lodha',    time: '1h',  href: '/projects/proj-2' },
-    { id: 3, icon: 'forum',       accent: 'var(--error)',   user: 'Amit Sharma', action: 'raised RFI #8',                              project: 'Wadhwa',   time: '3h',  href: '/coordination'    },
-    { id: 4, icon: 'auto_awesome',accent: 'var(--amber)',   user: 'System',      action: 'phase updated to Construction Docs',         project: 'Gundecha', time: '1d',  href: '/projects/proj-3' },
+    { id: 1, icon: 'upload_file', accent: 'var(--blue)',    user: 'Aritro Roy',  action: 'uploaded structural column drawings',        project: 'Wadhwa', time: '10m', href: '/projects/proj-1' },
+    { id: 2, icon: 'verified',    accent: 'var(--success)', user: 'Parth Patel', action: 'approved Electrical Submittal #4',           project: 'Wadhwa', time: '1h',  href: '/projects/proj-1' },
+    { id: 3, icon: 'forum',       accent: 'var(--error)',   user: 'Amit Sharma', action: 'raised RFI #8',                              project: 'Wadhwa', time: '3h',  href: '/coordination'    },
+    { id: 4, icon: 'auto_awesome',accent: 'var(--amber)',   user: 'System',      action: 'phase updated to Construction Docs',         project: 'Wadhwa', time: '1d',  href: '/projects/proj-1' },
   ]
 
   const totalRfis = projects.reduce((s, p) => s + p.openRfis, 0)
