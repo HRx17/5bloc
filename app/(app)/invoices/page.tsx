@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useToast } from '@/components/ui/Toast'
+import { supabaseClient } from '@/lib/supabase/client'
+import { hasSupabaseEnv } from '@/lib/data/client-data'
 
 interface Invoice {
  id: string
@@ -22,44 +24,43 @@ export default function InvoicesList() {
  const { toast } = useToast()
 
  useEffect(() => {
- // Mock load invoices
- const timer = setTimeout(() => {
- setInvoices([
- {
- id: 'inv-1',
- invoice_number: 'INV-001',
- client_name: 'Parth Patel',
- project_name: 'Wadhwa Prime Plaza',
- subtotal: 350000,
- total: 413000, // GST included
- status: 'paid',
- due_date: '2026-02-15',
- paid_at: '2026-02-12',
- },
- {
- id: 'inv-2',
- invoice_number: 'INV-002',
- client_name: 'Wadhwa Developers',
- project_name: 'Wadhwa Prime Plaza',
- subtotal: 1200000,
- total: 1416000,
- status: 'sent',
- due_date: '2026-06-25',
- },
- {
- id: 'inv-3',
- invoice_number: 'INV-003',
- client_name: 'Karan Shah',
- project_name: 'Lodha Signature Residences',
- subtotal: 585000,
- total: 690300,
- status: 'overdue',
- due_date: '2026-05-30',
+ let cancelled = false
+ async function load() {
+ try {
+ if (hasSupabaseEnv()) {
+ const { data, error } = await supabaseClient
+ .from('invoices')
+ .select('*, projects(name)')
+ .order('created_at', { ascending: false })
+ if (!error && data && data.length > 0) {
+ if (!cancelled) {
+ setInvoices(data.map((inv) => ({
+ id: inv.id,
+ invoice_number: inv.invoice_number,
+ client_name: inv.client_name,
+ project_name: (inv as { projects?: { name?: string } | null }).projects?.name ?? '—',
+ subtotal: Number(inv.amount ?? 0),
+ total: Number(inv.amount ?? 0),
+ status: (['draft','sent','paid','overdue','cancelled'].includes(inv.status) ? inv.status : 'draft') as Invoice['status'],
+ due_date: inv.due_date ?? '',
+ })))
+ setLoading(false)
  }
+ return
+ }
+ }
+ } catch (e) { console.warn('Invoices Supabase fallback:', e) }
+ if (!cancelled) {
+ setInvoices([
+ { id: 'inv-1', invoice_number: 'INV-001', client_name: 'Parth Patel', project_name: 'Wadhwa Prime Plaza', subtotal: 350000, total: 413000, status: 'paid', due_date: '2026-02-15', paid_at: '2026-02-12' },
+ { id: 'inv-2', invoice_number: 'INV-002', client_name: 'Wadhwa Developers', project_name: 'Wadhwa Prime Plaza', subtotal: 1200000, total: 1416000, status: 'sent', due_date: '2026-06-25' },
+ { id: 'inv-3', invoice_number: 'INV-003', client_name: 'Karan Shah', project_name: 'Lodha Signature Residences', subtotal: 585000, total: 690300, status: 'overdue', due_date: '2026-05-30' },
  ])
  setLoading(false)
- }, 400)
- return () => clearTimeout(timer)
+ }
+ }
+ load()
+ return () => { cancelled = true }
  }, [])
 
  const getStatusStyle = (status: Invoice['status']): React.CSSProperties => {
@@ -73,11 +74,16 @@ export default function InvoicesList() {
  }
 }
 
- const handleMarkPaid = (invId: string) => {
+ const handleMarkPaid = async (invId: string) => {
  setInvoices(prev => 
  prev.map(i => i.id === invId ? { ...i, status: 'paid', paid_at: new Date().toISOString().split('T')[0] } : i)
  )
  toast('Invoice marked as paid', 'success')
+ try {
+ if (hasSupabaseEnv() && !invId.startsWith('inv-')) {
+ await supabaseClient.from('invoices').update({ status: 'paid' }).eq('id', invId)
+ }
+ } catch (e) { console.warn('Invoice update skipped:', e) }
  }
 
  // Stats

@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { supabaseClient } from '@/lib/supabase/client'
+import { getMyOrgId, hasSupabaseEnv } from '@/lib/data/client-data'
 
 interface Client {
  id: string
@@ -32,27 +34,61 @@ export default function ClientCRM() {
  })
 
  useEffect(() => {
- // Mock load clients
- const timer = setTimeout(() => {
+ let cancelled = false
+ async function load() {
+ try {
+ if (hasSupabaseEnv()) {
+ const { data, error } = await supabaseClient
+ .from('clients')
+ .select('*')
+ .order('created_at', { ascending: false })
+ if (!error && data && data.length > 0) {
+ if (!cancelled) {
+ setClients(data.map((c) => ({
+ id: c.id,
+ full_name: c.name,
+ email: c.email ?? '',
+ phone: c.phone ?? '',
+ company: c.company ?? 'Individual',
+ city: (c as { city?: string | null }).city ?? '',
+ state: (c as { state?: string | null }).state ?? '',
+ pipeline_stage: ((c as { pipeline_stage?: string | null }).pipeline_stage ?? 'prospect') as Client['pipeline_stage'],
+ total_value: Number((c as { total_value?: number | null }).total_value ?? 0),
+ projects_count: 0,
+ })))
+ setLoading(false)
+ }
+ return
+ }
+ }
+ } catch (e) { console.warn('Clients Supabase fallback:', e) }
+ if (!cancelled) {
  setClients([
  { id: 'cli-1', full_name: 'Parth Patel', email: 'parth@5bloc.com', phone: '9876543210', company: 'Self', city: 'Mumbai', state: 'MH', pipeline_stage: 'won', total_value: 120000000, projects_count: 1 },
  { id: 'cli-2', full_name: 'Harish Wadhwa', email: 'harish@wadhwagroup.in', phone: '9988776655', company: 'Wadhwa Developers', city: 'Mumbai', state: 'MH', pipeline_stage: 'proposal', total_value: 85000000, projects_count: 1 },
  { id: 'cli-3', full_name: 'Karan Shah', email: 'karan@karanbuilders.com', phone: '9765432109', company: 'Karan Builders', city: 'Bangalore', state: 'KA', pipeline_stage: 'won', total_value: 65000000, projects_count: 1 },
  { id: 'cli-4', full_name: 'Anita Sen', email: 'anita.sen@gmail.com', phone: '9812345678', company: 'Sen Design Lab', city: 'Pune', state: 'MH', pipeline_stage: 'briefing', total_value: 4500000, projects_count: 0 },
- { id: 'cli-5', full_name: 'Devendra Chawla', email: 'chawla.d@outlook.com', phone: '9543210987', company: 'Chawla Group', city: 'Delhi', state: 'DL', pipeline_stage: 'prospect', total_value: 180000000, projects_count: 0 }
+ { id: 'cli-5', full_name: 'Devendra Chawla', email: 'chawla.d@outlook.com', phone: '9543210987', company: 'Chawla Group', city: 'Delhi', state: 'DL', pipeline_stage: 'prospect', total_value: 180000000, projects_count: 0 },
  ])
  setLoading(false)
- }, 400)
- return () => clearTimeout(timer)
+ }
+ }
+ load()
+ return () => { cancelled = true }
  }, [])
 
- const handleStageChange = (clientId: string, newStage: Client['pipeline_stage']) => {
+ const handleStageChange = async (clientId: string, newStage: Client['pipeline_stage']) => {
  setClients(prev => 
  prev.map(c => c.id === clientId ? { ...c, pipeline_stage: newStage } : c)
  )
+ try {
+ if (hasSupabaseEnv() && !clientId.startsWith('cli-')) {
+ await supabaseClient.from('clients').update({ pipeline_stage: newStage } as never).eq('id', clientId)
+ }
+ } catch (e) { console.warn('Client stage update skipped:', e) }
  }
 
- const handleCreateClient = (e: React.FormEvent) => {
+ const handleCreateClient = async (e: React.FormEvent) => {
  e.preventDefault()
  if (!newClient.name) return
 
@@ -80,6 +116,27 @@ export default function ClientCRM() {
  parsed.client = true
  localStorage.setItem('onboarding_checklist_v1', JSON.stringify(parsed))
  }
+
+ try {
+ const orgId = await getMyOrgId()
+ if (orgId) {
+ const { data } = await supabaseClient.from('clients').insert({
+ org_id: orgId,
+ name: clientRecord.full_name,
+ email: clientRecord.email || null,
+ phone: clientRecord.phone || null,
+ company: clientRecord.company || null,
+ city: clientRecord.city || null,
+ state: clientRecord.state || null,
+ pipeline_stage: 'prospect',
+ total_value: clientRecord.total_value,
+ } as never).select('id').single()
+ if (data && (data as { id?: string }).id) {
+ const newId = (data as { id: string }).id
+ setClients(prev => prev.map(c => c.id === clientRecord.id ? { ...c, id: newId } : c))
+ }
+ }
+ } catch (e) { console.warn('Client insert skipped:', e) }
  }
 
  const formatLakhs = (amt: number) => {

@@ -6,6 +6,29 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useToast } from '@/components/ui/Toast'
 import { DrivePanel } from '@/components/integrations/DrivePanel'
 import { StatCard } from '@/components/ui/StatCard'
+import { supabaseClient } from '@/lib/supabase/client'
+import { hasSupabaseEnv } from '@/lib/data/client-data'
+
+const PHASE_LABELS: Record<string, string> = {
+  pre_design: 'Pre-Design',
+  schematic_design: 'Schematic Design',
+  design_development: 'Design Development',
+  construction_docs: 'Construction Docs',
+  bidding: 'Construction Docs',
+  permits: 'Construction Docs',
+  construction_admin: 'Construction',
+  complete: 'Construction',
+}
+
+function docTypeFromName(name: string, fileType?: string | null): Document['type'] {
+  const n = (name || '').toLowerCase()
+  const t = (fileType || '').toLowerCase()
+  if (n.endsWith('.dwg') || t === 'dwg') return 'dwg'
+  if (n.endsWith('.pdf') || t === 'pdf') return 'pdf'
+  if (n.endsWith('.xlsx') || n.endsWith('.xls') || t.includes('sheet') || t === 'xlsx') return 'xlsx'
+  if (n.endsWith('.docx') || n.endsWith('.doc') || t.includes('word') || t === 'docx') return 'docx'
+  return 'image'
+}
 
 interface Document {
   id: string
@@ -102,24 +125,54 @@ export default function DocumentVault() {
   }
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      setDocs([
-        { id: 'd1',  name: 'Ground Floor Plan — Rev 4',               type: 'dwg',   project: 'Wadhwa Prime Plaza',          project_id: 'proj-1', phase: 'Construction Docs',  version: 'v4', uploaded_by: 'Parth Patel',  uploaded_at: '2026-06-12', size_kb: 2400, status: 'approved' },
-        { id: 'd2',  name: 'Structural Column Schedule',              type: 'dwg',   project: 'Wadhwa Prime Plaza',          project_id: 'proj-1', phase: 'Construction Docs',  version: 'v2', uploaded_by: 'Aritro Roy',   uploaded_at: '2026-06-11', size_kb: 1800, status: 'pending'  },
-        { id: 'd3',  name: 'Project Brief — Lodha Signature',         type: 'docx',  project: 'Lodha Signature Residences',  project_id: 'proj-2', phase: 'Schematic Design',   version: 'v1', uploaded_by: 'Parth Patel',  uploaded_at: '2026-06-10', size_kb: 340,  status: 'approved' },
-        { id: 'd4',  name: 'Schematic Design Presentation',           type: 'pdf',   project: 'Lodha Signature Residences',  project_id: 'proj-2', phase: 'Schematic Design',   version: 'v3', uploaded_by: 'Parth Patel',  uploaded_at: '2026-06-09', size_kb: 8700, status: 'approved' },
-        { id: 'd5',  name: 'BOQ Estimate — Gundecha Industrial',      type: 'xlsx',  project: 'Gundecha Industrial Park',    project_id: 'proj-3', phase: 'Pre-Design',         version: 'v1', uploaded_by: 'Parth Patel',  uploaded_at: '2026-06-08', size_kb: 520,  status: 'draft'    },
-        { id: 'd6',  name: 'Site Photo — Foundation Level',           type: 'image', project: 'Wadhwa Prime Plaza',          project_id: 'proj-1', phase: 'Construction Docs',  version: 'v1', uploaded_by: 'Suresh Nair',  uploaded_at: '2026-06-07', size_kb: 1200, status: 'approved' },
-        { id: 'd7',  name: 'Electrical Load Schedule',                type: 'xlsx',  project: 'Wadhwa Prime Plaza',          project_id: 'proj-1', phase: 'Construction Docs',  version: 'v2', uploaded_by: 'Priya Mehta',  uploaded_at: '2026-06-06', size_kb: 410,  status: 'revision' },
-        { id: 'd8',  name: 'MEP Coordination Drawing — Level 2',      type: 'dwg',   project: 'Lodha Signature Residences',  project_id: 'proj-2', phase: 'Design Development', version: 'v1', uploaded_by: 'Ravi Gupta',   uploaded_at: '2026-06-05', size_kb: 3100, status: 'pending'  },
-        { id: 'd9',  name: 'Permit Application — MCGM',               type: 'pdf',   project: 'Wadhwa Prime Plaza',          project_id: 'proj-1', phase: 'Construction Docs',  version: 'v1', uploaded_by: 'Parth Patel',  uploaded_at: '2026-06-04', size_kb: 640,  status: 'pending'  },
-        { id: 'd10', name: 'Detailed Project Report — Gundecha',      type: 'docx',  project: 'Gundecha Industrial Park',    project_id: 'proj-3', phase: 'Pre-Design',         version: 'v2', uploaded_by: 'Parth Patel',  uploaded_at: '2026-06-03', size_kb: 890,  status: 'draft'    },
-        { id: 'd11', name: 'Landscape Layout Plan',                   type: 'dwg',   project: 'Lodha Signature Residences',  project_id: 'proj-2', phase: 'Design Development', version: 'v2', uploaded_by: 'Aritro Roy',   uploaded_at: '2026-06-02', size_kb: 1950, status: 'approved' },
-        { id: 'd12', name: 'Fire Safety Compliance Checklist',        type: 'pdf',   project: 'Gundecha Industrial Park',    project_id: 'proj-3', phase: 'Pre-Design',         version: 'v1', uploaded_by: 'Parth Patel',  uploaded_at: '2026-06-01', size_kb: 230,  status: 'draft'    },
-      ])
-      setLoading(false)
-    }, 500)
-    return () => clearTimeout(t)
+    let cancelled = false
+    async function load() {
+      try {
+        if (hasSupabaseEnv()) {
+          const { data, error } = await supabaseClient
+            .from('documents')
+            .select('*, projects(name)')
+            .order('created_at', { ascending: false })
+          if (!error && data && data.length > 0) {
+            if (!cancelled) {
+              setDocs(data.map((d) => {
+                const projName = (d as { projects?: { name?: string } | null }).projects?.name ?? 'General'
+                const phaseKey = d.phase ?? ''
+                return {
+                  id: d.id,
+                  name: d.original_filename,
+                  type: docTypeFromName(d.original_filename, d.file_type),
+                  project: projName,
+                  project_id: d.project_id ?? '',
+                  phase: PHASE_LABELS[phaseKey] ?? 'General',
+                  version: 'v1',
+                  uploaded_by: 'Team',
+                  uploaded_at: (d.created_at ?? '').split('T')[0],
+                  size_kb: Math.round(Number(d.file_size ?? 0) / 1024),
+                  status: (['approved', 'pending', 'revision', 'draft'].includes(d.status) ? d.status : 'draft') as Document['status'],
+                }
+              }))
+              setLoading(false)
+            }
+            return
+          }
+        }
+      } catch (e) { console.warn('Documents Supabase fallback:', e) }
+      if (!cancelled) {
+        setDocs([
+          { id: 'd1',  name: 'Ground Floor Plan — Rev 4',               type: 'dwg',   project: 'Wadhwa Prime Plaza',          project_id: 'proj-1', phase: 'Construction Docs',  version: 'v4', uploaded_by: 'Parth Patel',  uploaded_at: '2026-06-12', size_kb: 2400, status: 'approved' },
+          { id: 'd2',  name: 'Structural Column Schedule',              type: 'dwg',   project: 'Wadhwa Prime Plaza',          project_id: 'proj-1', phase: 'Construction Docs',  version: 'v2', uploaded_by: 'Aritro Roy',   uploaded_at: '2026-06-11', size_kb: 1800, status: 'pending'  },
+          { id: 'd3',  name: 'Project Brief — Lodha Signature',         type: 'docx',  project: 'Lodha Signature Residences',  project_id: 'proj-2', phase: 'Schematic Design',   version: 'v1', uploaded_by: 'Parth Patel',  uploaded_at: '2026-06-10', size_kb: 340,  status: 'approved' },
+          { id: 'd4',  name: 'Schematic Design Presentation',           type: 'pdf',   project: 'Lodha Signature Residences',  project_id: 'proj-2', phase: 'Schematic Design',   version: 'v3', uploaded_by: 'Parth Patel',  uploaded_at: '2026-06-09', size_kb: 8700, status: 'approved' },
+          { id: 'd5',  name: 'BOQ Estimate — Gundecha Industrial',      type: 'xlsx',  project: 'Gundecha Industrial Park',    project_id: 'proj-3', phase: 'Pre-Design',         version: 'v1', uploaded_by: 'Parth Patel',  uploaded_at: '2026-06-08', size_kb: 520,  status: 'draft'    },
+          { id: 'd6',  name: 'Site Photo — Foundation Level',           type: 'image', project: 'Wadhwa Prime Plaza',          project_id: 'proj-1', phase: 'Construction Docs',  version: 'v1', uploaded_by: 'Suresh Nair',  uploaded_at: '2026-06-07', size_kb: 1200, status: 'approved' },
+          { id: 'd7',  name: 'Electrical Load Schedule',                type: 'xlsx',  project: 'Wadhwa Prime Plaza',          project_id: 'proj-1', phase: 'Construction Docs',  version: 'v2', uploaded_by: 'Priya Mehta',  uploaded_at: '2026-06-06', size_kb: 410,  status: 'revision' },
+        ])
+        setLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
   }, [])
 
   const filtered = docs.filter((d) => {

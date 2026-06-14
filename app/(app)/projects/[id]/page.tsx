@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
+import { supabaseClient } from '@/lib/supabase/client'
+import { hasSupabaseEnv } from '@/lib/data/client-data'
 
 interface PhaseMilestone {
  phase: string
@@ -36,20 +38,9 @@ export default function ProjectOverview() {
  const [loading, setLoading] = useState(true)
 
  useEffect(() => {
- // Simulated loading of project details & milestones
- const timer = setTimeout(() => {
- setProjectStats({
- sqft: projectId === 'proj-2' ? 22000 : projectId === 'proj-3' ? 75000 : 45000,
- floors: projectId === 'proj-2' ? 3 : projectId === 'proj-3' ? 1 : 12,
- cost: projectId === 'proj-2' ? 65000000 : projectId === 'proj-3' ? 180000000 : 120000000,
- feePercent: projectId === 'proj-2' ? 9 : projectId === 'proj-3' ? 8 : 10,
- feeAmount: projectId === 'proj-2' ? 5850000 : projectId === 'proj-3' ? 14400000 : 12000000,
- startDate: '2026-01-15',
- endDate: '2026-12-20',
- brief: 'Deliver a state-of-the-art structure matching high energy-efficiency ratings and local green standards.',
- })
+ let cancelled = false
 
- setMilestones([
+ const fallbackMilestones: PhaseMilestone[] = [
  { phase: 'pre_design', label: 'Pre-Design', date: '2026-02-10', completion: 100, fee: 350000, paid: true, reraCertified: false, notes: 'Client brief, surveys, and site analysis compiled.' },
  { phase: 'schematic_design', label: 'Schematic Design', date: '2026-03-25', completion: 100, fee: 650000, paid: true, reraCertified: false, notes: 'Alternative layouts and massing models approved by builder.' },
  { phase: 'design_development', label: 'Design Development', date: '2026-05-15', completion: 100, fee: 1200000, paid: true, reraCertified: false, notes: 'Structural framing models and core detailing finalized.' },
@@ -58,11 +49,67 @@ export default function ProjectOverview() {
  { phase: 'permits', label: 'Permits & Approvals', date: '2026-09-25', completion: 0, fee: 1200000, paid: false, reraCertified: false, notes: 'Local municipal fire and zoning documents filed.' },
  { phase: 'construction_admin', label: 'Construction Admin', date: '2026-11-30', completion: 0, fee: 4000000, paid: false, reraCertified: false, notes: 'On-site inspections and RFI resolution.' },
  { phase: 'complete', label: 'Close Out & Handover', date: '2026-12-15', completion: 0, fee: 1700000, paid: false, reraCertified: false, notes: 'Defect checklists and occupancy certificate file audits.' },
- ])
- setExpandedPhase('construction_docs') // default open active phase
+ ]
+
+ async function load() {
+ try {
+ if (hasSupabaseEnv()) {
+ const { data: proj } = await supabaseClient
+ .from('projects')
+ .select('*')
+ .eq('id', projectId)
+ .maybeSingle()
+ const { data: ms } = await supabaseClient
+ .from('phase_milestones')
+ .select('*')
+ .eq('project_id', projectId)
+ .order('milestone_date', { ascending: true })
+
+ if (proj && !cancelled) {
+ setProjectStats({
+ sqft: Number(proj.total_sqft ?? 45000),
+ floors: Number(proj.floors ?? 12),
+ cost: Number(proj.construction_cost ?? 120000000),
+ feePercent: Number(proj.architect_fee_pct ?? 10),
+ feeAmount: Number(proj.architect_fee ?? 12000000),
+ startDate: proj.start_date ?? '2026-01-15',
+ endDate: proj.end_date ?? '2026-12-20',
+ brief: proj.brief ?? proj.description ?? '',
+ })
+ if (ms && ms.length > 0) {
+ setMilestones(ms.map((m) => ({
+ phase: m.phase_key,
+ label: m.label ?? m.phase_key,
+ date: m.milestone_date ?? '',
+ completion: m.completion ?? 0,
+ fee: Number(m.fee ?? 0),
+ paid: !!m.paid,
+ reraCertified: !!m.rera_certified,
+ notes: m.notes ?? '',
+ })))
+ } else {
+ setMilestones(fallbackMilestones)
+ }
+ setExpandedPhase('construction_docs')
  setLoading(false)
- }, 400)
- return () => clearTimeout(timer)
+ return
+ }
+ }
+ } catch (e) { console.warn('Project detail Supabase fallback:', e) }
+
+ if (!cancelled) {
+ setProjectStats({
+ sqft: 45000, floors: 12, cost: 120000000, feePercent: 10, feeAmount: 12000000,
+ startDate: '2026-01-15', endDate: '2026-12-20',
+ brief: 'Deliver a state-of-the-art structure matching high energy-efficiency ratings and local green standards.',
+ })
+ setMilestones(fallbackMilestones)
+ setExpandedPhase('construction_docs')
+ setLoading(false)
+ }
+ }
+ load()
+ return () => { cancelled = true }
  }, [projectId])
 
  const toggleExpand = (phase: string) => {
@@ -84,9 +131,23 @@ export default function ProjectOverview() {
  )
  }
 
- const saveMilestone = (phase: string) => {
+ const saveMilestone = async (phase: string) => {
  const milestone = milestones.find(m => m.phase === phase)
- alert(`Milestone ${milestone?.label} changes saved successfully (simulated)`)
+ if (!milestone) return
+ try {
+ if (hasSupabaseEnv()) {
+ await supabaseClient.from('phase_milestones').update({
+ completion: milestone.completion,
+ fee: milestone.fee,
+ paid: milestone.paid,
+ rera_certified: milestone.reraCertified,
+ notes: milestone.notes,
+ milestone_date: milestone.date || null,
+ updated_at: new Date().toISOString(),
+ }).eq('project_id', projectId).eq('phase_key', phase)
+ }
+ } catch (e) { console.warn('Milestone update skipped:', e) }
+ setExpandedPhase(null)
  }
 
  const exportMilestonesToCSV = () => {
