@@ -1,0 +1,13 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  # SUPABASE_SERVICE_ROLE_KEY is a server-only secret used exclusively in API route
+  # webhook handlers (Stripe, Razorpay). Next.js embeds process.env values into
+  # server-side bundles at compile time, so the value legitimately appears in the
+  # server chunks that run on Netlify's infrastructure — never in client bundles.
+  SECRETS_SCAN_OMIT_KEYS = "SUPABASE_SERVICE_ROLE_KEY"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
