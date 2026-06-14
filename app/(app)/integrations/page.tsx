@@ -26,9 +26,9 @@ export default function IntegrationsDashboard() {
       icon: 'cloud_queue',
       color: '#4285F4',
       description: 'Sync design sheets, municipal bye-laws, rates comparisons, and project files directly with Google Drive.',
-      status: 'connected',
-      lastSync: '2 mins ago',
-      syncedItemsCount: 12,
+      status: 'disconnected',
+      lastSync: 'Never',
+      syncedItemsCount: 0,
       category: 'workspace',
     },
     {
@@ -38,9 +38,9 @@ export default function IntegrationsDashboard() {
       icon: 'mail',
       color: '#EA4335',
       description: 'Ingest stone quotes, fire NOC approvals, and steel test certificates. Automatically convert email threads to RFIs.',
-      status: 'connected',
-      lastSync: '10 mins ago',
-      syncedItemsCount: 5,
+      status: 'disconnected',
+      lastSync: 'Never',
+      syncedItemsCount: 0,
       category: 'communication',
     },
     {
@@ -50,9 +50,9 @@ export default function IntegrationsDashboard() {
       icon: 'chat',
       color: '#25D366',
       description: 'Link site supervisor chats. Log snags and defect issues instantly from photo messages. Prefill PDF drawing shares.',
-      status: 'connected',
-      lastSync: '1 min ago',
-      syncedItemsCount: 24,
+      status: 'disconnected',
+      lastSync: 'Never',
+      syncedItemsCount: 0,
       category: 'communication',
     },
     {
@@ -62,9 +62,9 @@ export default function IntegrationsDashboard() {
       icon: 'architecture',
       color: '#D82424',
       description: 'Inspect 2D blueprints (.dwg) and 3D wireframe models in real-time. Automated spatial clash detection for beams and ducts.',
-      status: 'connected',
-      lastSync: '1 hour ago',
-      syncedItemsCount: 3,
+      status: 'disconnected',
+      lastSync: 'Never',
+      syncedItemsCount: 0,
       category: 'engineering',
     },
   ])
@@ -76,18 +76,23 @@ export default function IntegrationsDashboard() {
   const [whatsappPhone, setWhatsappPhone] = useState('9876543210')
   const [googleFolder, setGoogleFolder] = useState('5Bloc Project Files')
 
+  const CONNECT_INFO: Record<string, string> = {
+    'google-drive': 'Add GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET to your .env and configure OAuth in Google Cloud Console.',
+    'gmail':        'Add GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET to your .env — Gmail uses the same Google OAuth app.',
+    'whatsapp':     'WhatsApp Business API requires a Meta Business account and WHATSAPP_TOKEN in your .env.',
+    'autodesk':     'Autodesk Forge integration requires AUTODESK_CLIENT_ID + AUTODESK_CLIENT_SECRET from developer.autodesk.com.',
+  }
+
   const toggleConnection = (id: string) => {
-    setIntegrations(prev =>
-      prev.map(item =>
-        item.id === id
-          ? {
-              ...item,
-              status: item.status === 'connected' ? 'disconnected' : 'connected',
-              lastSync: item.status === 'connected' ? 'Never' : 'Just now',
-            }
-          : item
-      )
-    )
+    const item = integrations.find(i => i.id === id)
+    if (!item) return
+    if (item.status === 'connected') {
+      setIntegrations(prev => prev.map(i => i.id === id ? { ...i, status: 'disconnected', lastSync: 'Never', syncedItemsCount: 0 } : i))
+      toast(`${item.name} disconnected`, 'info')
+    } else {
+      // Not yet implemented — show setup info
+      toast(CONNECT_INFO[id] || `To connect ${item.name}, add the required API keys to your .env file.`, 'info', 7000)
+    }
   }
 
   const triggerSync = (id: string) => {
