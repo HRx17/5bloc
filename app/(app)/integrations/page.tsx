@@ -45,7 +45,10 @@ export default function IntegrationsDashboard() {
     if (connected === 'autodesk') toast('Autodesk AutoCAD & Fusion 360 connected!', 'success', 5000)
     if (error === 'google_denied') toast('Google connection cancelled.', 'info')
     if (error === 'autodesk_denied') toast('Autodesk connection cancelled.', 'info')
-    if (error === 'google_callback_failed') toast('Google connection failed. Try again.', 'error')
+    if (error === 'google_callback_failed') {
+      const msg = params.get('msg') ? decodeURIComponent(params.get('msg')!) : ''
+      toast(`Google connection failed${msg ? `: ${msg}` : '. Try again.'}`, 'error', 8000)
+    }
     if (error === 'autodesk_callback_failed') toast('Autodesk connection failed. Try again.', 'error')
     if (connected || error) {
       // Clean URL

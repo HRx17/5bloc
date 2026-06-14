@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { exchangeGoogleCode, getGoogleRedirectUri, getGoogleUserInfo } from '@/lib/integrations/google'
 import { saveToken } from '@/lib/integrations/token-store'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl
   const code  = searchParams.get('code')
@@ -31,8 +33,9 @@ export async function GET(req: NextRequest) {
     })
 
     return NextResponse.redirect(new URL('/integrations?connected=google', origin))
-  } catch (e) {
-    console.error('Google callback error:', e)
-    return NextResponse.redirect(new URL('/integrations?error=google_callback_failed', req.url))
+  } catch (e: any) {
+    console.error('Google callback error:', e?.message ?? e)
+    const errMsg = encodeURIComponent(e?.message ?? 'unknown')
+    return NextResponse.redirect(new URL(`/integrations?error=google_callback_failed&msg=${errMsg}`, req.url))
   }
 }

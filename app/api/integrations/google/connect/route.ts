@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServer } from '@/lib/supabase/server'
 import { buildGoogleAuthUrl, getGoogleRedirectUri } from '@/lib/integrations/google'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: NextRequest) {
   const supabase = await createSupabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
