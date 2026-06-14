@@ -98,12 +98,6 @@ export default function Sidebar({
       >
         <Link href="/dashboard" onClick={onClose} className="flex items-center gap-2">
           <Logo size={24} showTagline={false} />
-          <span
-            className="font-mono text-[13px] font-bold tracking-widest"
-            style={{ color: 'var(--on-surface)' }}
-          >
-            5BLOC
-          </span>
         </Link>
         {onClose && (
           <button
