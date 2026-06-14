@@ -131,15 +131,6 @@ function SiteHeader() {
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
-          <Link
-            href="/login"
-            className="text-[13.5px] font-medium transition-colors"
-            style={{ color: scrolled ? 'var(--on-surface-variant)' : 'var(--stone)' }}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--on-surface)')}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = scrolled ? 'var(--on-surface-variant)' : 'var(--stone)')}
-          >
-            Sign in
-          </Link>
           <a href="#waitlist" className="btn-primary text-[13px] px-5 py-2.5">
             Join waitlist
           </a>
@@ -182,13 +173,6 @@ function SiteHeader() {
             </nav>
             <div className="ghost-cut my-4" />
             <div className="flex flex-col gap-3">
-              <Link
-                href="/login"
-                onClick={() => setOpen(false)}
-                className="btn-secondary w-full text-center"
-              >
-                Sign in
-              </Link>
               <a
                 href="#waitlist"
                 onClick={() => setOpen(false)}
@@ -891,11 +875,11 @@ function FAQ() {
             <p className="mt-5 text-[15px] leading-relaxed" style={{ color: 'var(--on-surface-variant)' }}>
               Still on the fence?{' '}
               <a
-                href="mailto:hello@5bloc.com"
+                href="mailto:contact@5bloc.com"
                 className="font-medium underline underline-offset-4 transition-colors"
                 style={{ color: 'var(--amber)' }}
               >
-                hello@5bloc.com
+                contact@5bloc.com
               </a>{' '}
               — we'll do a 20-minute walkthrough.
             </p>
@@ -1046,9 +1030,8 @@ function SiteFooter() {
     {
       title: 'Company',
       links: [
-        { href: 'mailto:hello@5bloc.com', label: 'Contact sales' },
-        { href: '/login',                 label: 'Client sign in' },
-        { href: '/login',                 label: 'Vendor registration' },
+        { href: 'mailto:contact@5bloc.com', label: 'Contact us' },
+        { href: '#waitlist',              label: 'Join the beta' },
       ],
     },
   ]

@@ -63,7 +63,7 @@ export function InteractivePrototype() {
           <span className="h-2.5 w-2.5 rounded-full" style={{ background: 'rgba(255,255,255,0.10)' }} />
         </div>
         <div className="font-mono text-[11px] uppercase tracking-[0.18em]" style={{ color: C.txtDim }}>
-          5bloc.app / lotus-residences
+          5bloc.app / kapoor-villa-juhu
         </div>
         <div className="font-mono text-[11px]" style={{ color: C.amber }}>demo</div>
       </div>
@@ -112,10 +112,10 @@ export function InteractivePrototype() {
 /* ══════════════════ DRAWINGS ══════════════════ */
 function DrawingsDemo() {
   const versions = [
-    { v: 'v12', date: 'Today · 11:24', by: 'Aanya M.', status: 'current',    note: 'Updated window head detail per RFI #042' },
-    { v: 'v11', date: 'Yesterday',     by: 'Aanya M.', status: 'superseded', note: 'Toilet plumbing revisions' },
-    { v: 'v10', date: '5 Jun',         by: 'Rohit S.', status: 'superseded', note: 'Client markup incorporated' },
-    { v: 'v09', date: '1 Jun',         by: 'Aanya M.', status: 'superseded', note: 'Initial GA' },
+    { v: 'v14', date: 'Today · 09:41',  by: 'Priya N.',  status: 'current',    note: 'Staircase landing width corrected per RFI #061 — NBC clause 4.3.2' },
+    { v: 'v13', date: 'Yesterday',      by: 'Priya N.',  status: 'superseded', note: 'Structural consultant markup — column C7 shifted 150mm' },
+    { v: 'v12', date: '9 Jun',          by: 'Dev R.',    status: 'superseded', note: 'Client-approved toilet layout revision, master bath' },
+    { v: 'v11', date: '4 Jun',          by: 'Priya N.',  status: 'superseded', note: 'Initial issued-for-tender GA' },
   ]
   const [active, setActive] = useState(0)
   return (
@@ -126,7 +126,7 @@ function DrawingsDemo() {
           className="px-4 py-3 font-mono text-[10px] uppercase tracking-[0.18em]"
           style={{ color: C.txtDim, boxShadow: `0 1px 0 ${C.border}` }}
         >
-          A-04 · Ground floor plan
+          A-07 · First floor plan · 1:100
         </div>
         <ol>
           {versions.map((v, i) => (
@@ -202,22 +202,22 @@ function DrawingsDemo() {
               <path d="M40 70 L70 70 A20 20 0 0 1 70 90 L40 90" />
               {active === 0 && (
                 <g stroke="#F5A623" strokeWidth="1.5">
-                  <rect x="206" y="44" width="60" height="14" fill="rgba(245,166,35,0.06)" />
+                  <rect x="40" y="180" width="80" height="20" fill="rgba(245,166,35,0.06)" />
                 </g>
               )}
             </g>
             <g fill="rgba(140,190,255,0.65)" fontSize="9" fontFamily="monospace">
-              <text x="48"  y="60">LIVING · 24.3 m²</text>
-              <text x="208" y="60">KITCHEN · 12.1 m²</text>
-              <text x="48"  y="150">BED 01 · 18.7 m²</text>
-              <text x="208" y="150">BATH</text>
-              <text x="48"  y="220">FOYER</text>
-              <text x="208" y="220">BED 02 · 16.4 m²</text>
+              <text x="48"  y="60">MASTER BED · 22.8 m²</text>
+              <text x="208" y="60">DRESSING · 8.4 m²</text>
+              <text x="48"  y="150">BED 02 · 17.2 m²</text>
+              <text x="208" y="150">BATH · EN-SUITE</text>
+              <text x="48"  y="220">PASSAGE</text>
+              <text x="208" y="220">BED 03 · 15.6 m²</text>
             </g>
             {active === 0 && (
               <g>
-                <circle cx="236" cy="51" r="4" fill="#F5A623" />
-                <text x="244" y="54" fill="#F5A623" fontSize="9" fontFamily="monospace">RFI #042 resolved</text>
+                <circle cx="80" cy="190" r="4" fill="#F5A623" />
+                <text x="88" y="193" fill="#F5A623" fontSize="9" fontFamily="monospace">RFI #061 resolved</text>
               </g>
             )}
           </svg>
@@ -232,9 +232,9 @@ type Message = { from: 'you' | 'contractor' | 'system'; body: string; time: stri
 
 function RfiDemo() {
   const [messages, setMessages] = useState<Message[]>([
-    { from: 'contractor', time: '10:14', body: "Window head detail on A-04 v11 doesn't match the section A-12 v3. Which is binding?" },
-    { from: 'system',     time: '10:14', body: 'Linked to A-04 · v11 · grid C4–D4' },
-    { from: 'you',        time: '10:36', body: 'A-12 is binding. Section governs over plan. Updating A-04.' },
+    { from: 'contractor', time: '08:52', body: "Staircase landing on A-07 v13 shows 900mm clear width but NBC Table 4.3.2 requires 1050mm min for residential above G+2. Which should we proceed with?" },
+    { from: 'system',     time: '08:52', body: 'Linked to A-07 · v13 · staircase at grid D5–D6' },
+    { from: 'you',        time: '09:18', body: 'Correct — NBC governs. Revising landing to 1100mm with a 50mm tolerance buffer. Updated in v14. Please hold wall marking until new drawing is issued.' },
   ])
   const [draft, setDraft] = useState('')
   const send = () => {
@@ -244,7 +244,7 @@ function RfiDemo() {
     setTimeout(() => {
       setMessages((m) => [
         ...m,
-        { from: 'contractor', time: 'now', body: 'Got it. Proceeding with section detail. Will close RFI on site sign-off.' },
+        { from: 'contractor', time: 'now', body: 'Understood. Holding wall marking. Will update setting-out once v14 is received. Can you share the revised staircase detail sheet separately?' },
       ])
     }, 700)
   }
@@ -258,10 +258,10 @@ function RfiDemo() {
         >
           <div>
             <div className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: C.amber }}>
-              RFI #042 · Open
+              RFI #061 · Resolved
             </div>
             <div className="mt-0.5 font-semibold text-base" style={{ color: C.txt }}>
-              Window head detail conflict — A-04 vs A-12
+              Staircase landing width — NBC compliance, A-07
             </div>
           </div>
           <button
@@ -322,12 +322,12 @@ function RfiDemo() {
         </div>
         <dl className="grid gap-3 pt-3 text-xs">
           {[
-            ['Linked drawing', 'A-04 · v11'],
-            ['Grid ref', 'C4–D4'],
-            ['Raised by', 'Shenoy Build Co.'],
-            ['Assigned', 'Aanya Mehta'],
-            ['Cost impact', '₹0 (clarification)'],
-            ['SLA', '12h remaining'],
+            ['Linked drawing', 'A-07 · v13'],
+            ['Grid ref', 'D5–D6'],
+            ['Raised by', 'Mehta Constructions'],
+            ['Assigned', 'Priya Nair'],
+            ['Cost impact', '₹0 (code compliance)'],
+            ['Closed', 'Today · 09:41'],
           ].map(([k, v]) => (
             <div key={k} className="flex items-center justify-between gap-3">
               <dt style={{ color: C.txtDim }}>{k}</dt>
@@ -377,9 +377,10 @@ function Bubble({ msg }: { msg: Message }) {
 /* ══════════════════ BOQ ══════════════════ */
 function BoqDemo() {
   const [items, setItems] = useState([
-    { code: 'CIV-01', desc: 'RCC M25 — slabs & beams',         qty: 84,  unit: 'm³',   rate: 7800,  ai: false },
-    { code: 'MAS-01', desc: 'Brick masonry, 230mm',             qty: 312, unit: 'm²',   rate: 1240,  ai: false },
-    { code: 'FIN-04', desc: 'Vitrified tile flooring 600×600',  qty: 218, unit: 'm²',   rate: 1850,  ai: false },
+    { code: 'STR-01', desc: 'RCC M30 — slabs, beams & columns',             qty: 112, unit: 'm³',  rate: 8600,  ai: false },
+    { code: 'MAS-01', desc: 'AAC block masonry 200mm, 5th storey',          qty: 284, unit: 'm²',  rate: 1480,  ai: false },
+    { code: 'FIN-07', desc: 'Italian marble flooring 800×800, living areas',qty: 186, unit: 'm²',  rate: 4200,  ai: false },
+    { code: 'PLB-01', desc: 'CP fittings — Kohler Stile series, bathrooms', qty: 4,   unit: 'sets',rate: 38500, ai: false },
   ])
   const [estimating, setEstimating] = useState(false)
   const runAi = () => {
@@ -387,9 +388,9 @@ function BoqDemo() {
     setTimeout(() => {
       setItems((it) => [
         ...it,
-        { code: 'ELE-02', desc: 'Conduit + wiring, 2BHK loop',            qty: 6,   unit: 'loops', rate: 18400, ai: true },
-        { code: 'PLB-03', desc: 'CPVC supply lines incl. fittings',        qty: 312, unit: 'm',     rate: 295,   ai: true },
-        { code: 'DOO-01', desc: 'Flush door 35mm, both sides laminate',    qty: 14,  unit: 'no.',   rate: 6450,  ai: true },
+        { code: 'ELE-03', desc: 'Concealed conduit + Havells wiring, 4BHK',  qty: 8,   unit: 'loops',rate: 22400, ai: true },
+        { code: 'FIN-12', desc: 'False ceiling — gypsum grid with cove light', qty: 284, unit: 'm²',  rate: 680,   ai: true },
+        { code: 'DOO-02', desc: 'Veneer flush door 40mm, fire-rated staircase',qty: 6,   unit: 'no.', rate: 14800, ai: true },
       ])
       setEstimating(false)
     }, 900)
@@ -404,9 +405,9 @@ function BoqDemo() {
       >
         <div>
           <div className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: C.amber }}>
-            BOQ · Lotus Residences · Block A
+            BOQ · Kapoor Villa · Juhu · Floors 3–5
           </div>
-          <div className="mt-0.5 font-semibold text-base" style={{ color: C.txt }}>Draft — based on DPR v2</div>
+          <div className="mt-0.5 font-semibold text-base" style={{ color: C.txt }}>Draft — based on DPR v3 · interiors scope</div>
         </div>
         <button
           onClick={runAi}
@@ -479,7 +480,7 @@ function BoqDemo() {
         className="px-4 py-2.5 text-xs"
         style={{ background: C.mid, boxShadow: `inset 0 1px 0 ${C.border}`, color: C.txtDim }}
       >
-        Rates pulled from Karnataka SOR 2024 · your office rate book overrides where set.
+        Rates from Maharashtra SOR 2024–25 · office rate book overrides applied for Italian marble &amp; CP fittings.
       </div>
     </div>
   )
@@ -488,9 +489,9 @@ function BoqDemo() {
 /* ══════════════════ CLIENT PORTAL ══════════════════ */
 function ClientDemo() {
   const [approvals, setApprovals] = useState([
-    { title: 'Vitrified tile sample — living areas',                    status: 'pending'  as 'pending' | 'approved' },
-    { title: 'Variation: extended kitchen island (+₹84,000)',           status: 'pending'  as 'pending' | 'approved' },
-    { title: 'Final paint palette — bedrooms',                          status: 'approved' as 'pending' | 'approved' },
+    { title: 'Italian marble sample — Statuario Bianco, living & dining',  status: 'pending'  as 'pending' | 'approved' },
+    { title: 'Variation order #3 — home theatre acoustic wall (+₹2,18,000)', status: 'pending'  as 'pending' | 'approved' },
+    { title: 'CP fittings selection — Kohler Stile Matt Black, all baths',  status: 'approved' as 'pending' | 'approved' },
   ])
   const approve = (i: number) =>
     setApprovals((a) => a.map((x, idx) => (idx === i ? { ...x, status: 'approved' } : x)))
@@ -503,7 +504,7 @@ function ClientDemo() {
           <div className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: C.amber }}>
             Your home, this week
           </div>
-          <div className="mt-0.5 font-semibold text-lg" style={{ color: C.txt }}>Lotus Residences · Unit A-04</div>
+          <div className="mt-0.5 font-semibold text-lg" style={{ color: C.txt }}>Kapoor Villa · Juhu Tara Road</div>
         </div>
 
         <div className="grid gap-3 pt-4">
@@ -514,17 +515,17 @@ function ClientDemo() {
           >
             <div className="flex items-center justify-between">
               <div className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: C.txtDim }}>Phase</div>
-              <div className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: C.amber }}>62% · on track</div>
+              <div className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: C.amber }}>67% · on track</div>
             </div>
-            <div className="mt-2 font-medium text-base" style={{ color: C.txt }}>Interior finishing</div>
+            <div className="mt-2 font-medium text-base" style={{ color: C.txt }}>Finishing & MEP rough-in</div>
             <div
               className="mt-3 h-2 overflow-hidden rounded-full"
               style={{ background: C.raised }}
             >
-              <div className="h-full rounded-full" style={{ width: '62%', background: C.amber }} />
+              <div className="h-full rounded-full" style={{ width: '67%', background: C.amber }} />
             </div>
             <div className="mt-3 grid grid-cols-3 gap-3 text-xs">
-              {[['Started', '12 Jan'], ['Handover', '28 Sep'], ['Next milestone', 'Floor polish']].map(([k, v]) => (
+              {[['Started', '3 Feb'], ['Handover', '15 Nov'], ['Next milestone', 'False ceiling']].map(([k, v]) => (
                 <div key={k}>
                   <div className="font-mono text-[9px] uppercase tracking-[0.18em]" style={{ color: C.txtDim }}>{k}</div>
                   <div className="mt-0.5 font-medium" style={{ color: C.txt }}>{v}</div>
@@ -539,8 +540,8 @@ function ClientDemo() {
             style={{ background: C.mid, boxShadow: `inset 0 0 0 1px ${C.border}` }}
           >
             <div className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: C.txtDim }}>Next payment</div>
-            <div className="mt-1 font-semibold text-2xl" style={{ color: C.txt }}>₹ 4,20,000</div>
-            <div className="mt-0.5 text-xs" style={{ color: C.txtDim }}>Due on floor polish completion · est. 14 Jun</div>
+            <div className="mt-1 font-semibold text-2xl" style={{ color: C.txt }}>₹ 18,50,000</div>
+            <div className="mt-0.5 text-xs" style={{ color: C.txtDim }}>Due on false ceiling completion · est. 28 Jun</div>
             <button
               className="mt-3 inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors"
               style={{ background: C.raised, color: C.txt, boxShadow: `inset 0 0 0 1px ${C.border}` }}
