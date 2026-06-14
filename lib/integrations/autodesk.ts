@@ -98,14 +98,51 @@ export async function ensureBucket(appToken: string, bucketKey: string) {
   if (!res.ok) throw new Error('Bucket creation failed')
 }
 
-/** Upload a DWG/model file to OSS */
+/** Upload a DWG/model file to OSS (direct PUT — suitable for small files / server-side use) */
 export async function uploadToOSS(appToken: string, bucketKey: string, objectKey: string, buffer: Uint8Array, contentType = 'application/octet-stream') {
-  const res = await fetch(`${APS_BASE}/oss/v2/buckets/${bucketKey}/objects/${encodeURIComponent(objectKey)}`, {
+  const res = await fetch(`${APS_BASE}/oss/v2/buckets/${encodeURIComponent(bucketKey)}/objects/${encodeURIComponent(objectKey)}`, {
     method: 'PUT',
     headers: { Authorization: `Bearer ${appToken}`, 'Content-Type': contentType },
     body: buffer as BodyInit,
   })
-  if (!res.ok) throw new Error('OSS upload failed')
+  if (!res.ok) {
+    const err = await res.text().catch(() => res.statusText)
+    throw new Error(`OSS upload failed (${res.status}): ${err}`)
+  }
+  return res.json() as Promise<{ objectId: string; objectKey: string }>
+}
+
+/**
+ * Step 1 of the recommended signed-S3 upload flow.
+ * Returns a pre-signed URL the client can PUT directly — bypasses Vercel body size limits.
+ */
+export async function getSignedUploadUrl(appToken: string, bucketKey: string, objectKey: string) {
+  const url = `${APS_BASE}/oss/v2/buckets/${encodeURIComponent(bucketKey)}/objects/${encodeURIComponent(objectKey)}/signeds3upload?minutesExpiration=60`
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${appToken}` },
+  })
+  if (!res.ok) {
+    const err = await res.text().catch(() => res.statusText)
+    throw new Error(`Signed upload URL failed (${res.status}): ${err}`)
+  }
+  return res.json() as Promise<{ uploadKey: string; urls: string[]; uploadExpiration: string }>
+}
+
+/**
+ * Step 2 of the signed-S3 upload flow — call after the client has PUT the file.
+ * Finalises the OSS object and returns its objectId/key.
+ */
+export async function completeSignedUpload(appToken: string, bucketKey: string, objectKey: string, uploadKey: string) {
+  const url = `${APS_BASE}/oss/v2/buckets/${encodeURIComponent(bucketKey)}/objects/${encodeURIComponent(objectKey)}/signeds3upload`
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${appToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ uploadKey }),
+  })
+  if (!res.ok) {
+    const err = await res.text().catch(() => res.statusText)
+    throw new Error(`Complete signed upload failed (${res.status}): ${err}`)
+  }
   return res.json() as Promise<{ objectId: string; objectKey: string }>
 }
 

@@ -109,7 +109,7 @@ export default function Sidebar({
         <Link
           href="/projects/new"
           onClick={onClose}
-          className="flex items-center gap-2 w-full px-3 py-2 rounded-xl font-medium text-[12.5px]"
+          className="flex items-center gap-2 w-full px-3 py-2 rounded-xl font-semibold text-[12px]"
           style={{
             background: 'rgba(245,166,35,0.10)',
             color: 'var(--amber)',
@@ -142,7 +142,7 @@ export default function Sidebar({
                     key={item.path}
                     href={item.path}
                     onClick={onClose}
-                    className="relative flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] font-medium"
+                    className="relative flex items-center gap-2 px-3 py-2 rounded-xl text-[12.5px] font-normal"
                     style={{
                       background: active ? 'var(--overlay-active)' : 'transparent',
                       color: active ? 'var(--on-surface)' : 'var(--on-surface-variant)',
@@ -204,7 +204,7 @@ export default function Sidebar({
         <button
           onClick={handleLogout}
           disabled={loggingOut}
-          className="flex items-center gap-2 px-3 py-2 rounded-xl text-[12.5px] font-medium w-full text-left"
+          className="flex items-center gap-2 px-3 py-2 rounded-xl text-[12px] font-normal w-full text-left"
           style={{ color: 'var(--stone)' }}
           onMouseEnter={(e) => {
             const t = e.currentTarget as HTMLElement
@@ -275,7 +275,7 @@ function FooterLink({ href, icon, label, onClose }: { href: string; icon: string
     <Link
       href={href}
       onClick={onClose}
-      className="flex items-center gap-2 px-3 py-2 rounded-xl text-[12.5px] font-medium"
+      className="flex items-center gap-2 px-3 py-2 rounded-xl text-[12px] font-normal"
       style={{ color: 'var(--stone)' }}
       onMouseEnter={(e) => {
         const t = e.currentTarget as HTMLElement

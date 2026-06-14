@@ -82,19 +82,44 @@ export default function CadViewerPage() {
     const file = files[0]
     setUploading(true)
     try {
-      const form = new FormData()
-      form.append('file', file)
-      const res  = await fetch('/api/integrations/autodesk/upload', { method: 'POST', body: form })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Upload failed')
+      // Step 1 — get a pre-signed S3 URL from Autodesk (tiny request, no file data)
+      const prep = await fetch('/api/integrations/autodesk/upload-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName: file.name }),
+      })
+      const prepData = await prep.json()
+      if (!prep.ok) throw new Error(prepData.error ?? 'Failed to prepare upload')
 
-      const model: CadModel = { urn: data.urn, name: data.name, status: 'translating', addedAt: Date.now() }
+      // Step 2 — PUT file directly to the Autodesk/AWS signed URL (bypasses Vercel)
+      const s3 = await fetch(prepData.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/octet-stream' },
+        body: file,
+      })
+      if (!s3.ok) throw new Error(`Upload to Autodesk failed (${s3.status})`)
+
+      // Step 3 — notify our API to finalise & kick off translation
+      const done = await fetch('/api/integrations/autodesk/complete-upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uploadKey: prepData.uploadKey,
+          objectKey: prepData.objectKey,
+          bucketKey: prepData.bucketKey,
+          fileName:  file.name,
+        }),
+      })
+      const doneData = await done.json()
+      if (!done.ok) throw new Error(doneData.error ?? 'Failed to complete upload')
+
+      const model: CadModel = { urn: doneData.urn, name: doneData.name, status: 'translating', addedAt: Date.now() }
       persist([model, ...models])
-      setSelected(data.urn)
-      startPolling(data.urn)
+      setSelected(doneData.urn)
+      startPolling(doneData.urn)
       toast('Uploaded — translating model for the viewer…', 'info', 6000)
     } catch (e: any) {
-      toast(e.message ?? 'Upload failed', 'error', 7000)
+      toast(e.message ?? 'Upload failed', 'error', 8000)
     } finally {
       setUploading(false)
     }
