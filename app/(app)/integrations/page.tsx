@@ -24,6 +24,9 @@ const OAUTH_PROVIDERS: Record<string, string> = {
   'autodesk':     'autodesk',
 }
 
+// Integrations that are always "active" via env vars (no OAuth flow)
+const ENV_CONFIGURED = ['whatsapp']
+
 export default function IntegrationsDashboard() {
   const { toast } = useToast()
   const router = useRouter()
@@ -255,11 +258,13 @@ export default function IntegrationsDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {filtered.map(item => {
           const provider    = OAUTH_PROVIDERS[item.id]
-          const isConnected = provider
-            ? connectedProviders.includes(provider) &&
-              // Google Drive + Gmail both show connected when google token exists
-              (provider !== 'google' || connectedProviders.includes('google'))
-            : false
+          const isEnvConfig = ENV_CONFIGURED.includes(item.id)
+          const isConnected = isEnvConfig
+            ? true
+            : provider
+              ? connectedProviders.includes(provider) &&
+                (provider !== 'google' || connectedProviders.includes('google'))
+              : false
           const hasOAuth    = !!provider
           const isBusy      = disconnecting === item.id
 
@@ -315,7 +320,7 @@ export default function IntegrationsDashboard() {
                 {isConnected && (
                   <p className="text-[11px]" style={{ color: 'var(--stone)' }}>
                     <span className="material-icons-outlined text-[12px] mr-1" style={{ verticalAlign: 'middle' }}>account_circle</span>
-                    Connected via {item.provider} OAuth
+                    {isEnvConfig ? 'Connected via API token' : `Connected via ${item.provider} OAuth`}
                   </p>
                 )}
               </div>
@@ -331,21 +336,31 @@ export default function IntegrationsDashboard() {
 
                 {isConnected ? (
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => triggerSync(item.id)}
-                      className="btn-ghost-amber py-1.5 px-3 text-[11px] font-bold rounded-lg flex items-center gap-1"
-                    >
-                      <span className="material-icons-outlined text-[13px]">sync</span>
-                      Sync
-                    </button>
-                    <button
-                      onClick={() => handleDisconnect(item.id, item.name)}
-                      disabled={isBusy}
-                      className="py-1.5 px-3 text-[11px] font-bold rounded-lg transition-colors"
-                      style={{ color: 'var(--error)', background: 'rgba(255,138,128,0.08)' }}
-                    >
-                      {isBusy ? 'Disconnecting…' : 'Disconnect'}
-                    </button>
+                    {!isEnvConfig && (
+                      <button
+                        onClick={() => triggerSync(item.id)}
+                        className="btn-ghost-amber py-1.5 px-3 text-[11px] font-bold rounded-lg flex items-center gap-1"
+                      >
+                        <span className="material-icons-outlined text-[13px]">sync</span>
+                        Sync
+                      </button>
+                    )}
+                    {isEnvConfig ? (
+                      <a href="/coordination"
+                        className="btn-primary py-1.5 px-4 text-[11px] font-bold rounded-lg flex items-center gap-1">
+                        <span className="material-icons-outlined text-[13px]">open_in_new</span>
+                        Open Chat
+                      </a>
+                    ) : (
+                      <button
+                        onClick={() => handleDisconnect(item.id, item.name)}
+                        disabled={isBusy}
+                        className="py-1.5 px-3 text-[11px] font-bold rounded-lg transition-colors"
+                        style={{ color: 'var(--error)', background: 'rgba(255,138,128,0.08)' }}
+                      >
+                        {isBusy ? 'Disconnecting…' : 'Disconnect'}
+                      </button>
+                    )}
                   </div>
                 ) : hasOAuth ? (
                   <button

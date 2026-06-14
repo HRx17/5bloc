@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GmailPanel } from '@/components/integrations/GmailPanel'
+import { WhatsAppPanel } from '@/components/integrations/WhatsAppPanel'
 
-type TabId = 'rfis' | 'messages' | 'meetings' | 'issues' | 'gmail'
+type TabId = 'rfis' | 'messages' | 'meetings' | 'issues' | 'gmail' | 'whatsapp'
 
 interface RFI {
   id: string; number: string; title: string; project: string
@@ -115,6 +116,7 @@ export default function CoordinationHub() {
     { id: 'meetings', label: 'Meetings', icon: 'event',          count: () => meetings.filter(m => m.status === 'upcoming').length },
     { id: 'issues',   label: 'Issues',   icon: 'warning_amber',  count: () => issues.filter(i => i.status !== 'resolved').length },
     { id: 'gmail',    label: 'Gmail',    icon: 'mail',           count: () => 0 },
+    { id: 'whatsapp', label: 'WhatsApp', icon: 'chat',           count: () => 0 },
   ]
 
   const filterText = search.toLowerCase()
@@ -427,6 +429,13 @@ export default function CoordinationHub() {
           {tab === 'gmail' && (
             <div style={{ minHeight: 500 }}>
               <GmailPanel className="h-[600px]" />
+            </div>
+          )}
+
+          {/* ── WhatsApp Tab ── */}
+          {tab === 'whatsapp' && (
+            <div className="relative" style={{ minHeight: 500 }}>
+              <WhatsAppPanel className="h-[600px]" />
             </div>
           )}
 
