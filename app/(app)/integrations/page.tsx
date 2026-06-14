@@ -52,7 +52,10 @@ export default function IntegrationsDashboard() {
       const msg = params.get('msg') ? decodeURIComponent(params.get('msg')!) : ''
       toast(`Google connection failed${msg ? `: ${msg}` : '. Try again.'}`, 'error', 8000)
     }
-    if (error === 'autodesk_callback_failed') toast('Autodesk connection failed. Try again.', 'error')
+    if (error === 'autodesk_callback_failed') {
+      const msg = params.get('msg') ? decodeURIComponent(params.get('msg')!) : ''
+      toast(`Autodesk connection failed${msg ? `: ${msg}` : '. Try again.'}`, 'error', 8000)
+    }
     if (connected || error) {
       // Clean URL
       router.replace('/integrations', { scroll: false })

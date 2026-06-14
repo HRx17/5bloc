@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { exchangeAutodeskCode, getAutodeskRedirectUri, getAutodeskUserProfile } from '@/lib/integrations/autodesk'
 import { saveToken } from '@/lib/integrations/token-store'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl
   const code  = searchParams.get('code')
@@ -30,8 +32,9 @@ export async function GET(req: NextRequest) {
     })
 
     return NextResponse.redirect(new URL('/integrations?connected=autodesk', origin))
-  } catch (e) {
-    console.error('Autodesk callback error:', e)
-    return NextResponse.redirect(new URL('/integrations?error=autodesk_callback_failed', req.url))
+  } catch (e: any) {
+    console.error('Autodesk callback error:', e?.message ?? e)
+    const msg = encodeURIComponent(e?.message ?? 'unknown')
+    return NextResponse.redirect(new URL(`/integrations?error=autodesk_callback_failed&msg=${msg}`, req.url))
   }
 }
