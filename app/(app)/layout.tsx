@@ -2,6 +2,8 @@ import React from 'react'
 import AppShell from '@/components/layout/AppShell'
 import { getAuthUser } from '@/lib/supabase/get-user'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AppLayout({
   children,
 }: {
