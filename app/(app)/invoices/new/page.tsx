@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Toggle } from '@/components/ui/Toggle'
 
 interface LineItem {
  description: string
@@ -234,19 +235,7 @@ export default function NewInvoice() {
  <span className="text-white font-semibold">Interstate Transaction</span>
  <p className="text-[10px] text-stone">Applies IGST 18% instead of CGST+SGST</p>
  </div>
- <button
- type="button"
- onClick={() => setIsInterstate(!isInterstate)}
- className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer border-2 transition-colors duration-200 ease-in-out focus:outline-none ${
- isInterstate ? 'bg-success' : 'bg-navy-lt'
- }`}
- >
- <span
- className={`pointer-events-none inline-block h-4 w-4 transform bg-white shadow ring-0 transition duration-200 ease-in-out ${
- isInterstate ? 'translate-x-5' : 'translate-x-0'
- }`}
- />
- </button>
+ <Toggle on={isInterstate} onChange={(v) => setIsInterstate(v)} label="Interstate GST" />
  </div>
 
  <div className=" pt-4 space-y-2.5 text-xs font-mono text-stone">

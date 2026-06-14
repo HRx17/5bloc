@@ -245,7 +245,7 @@ export default function IntegrationsDashboard() {
                         : 'bg-navy-lt text-stone hover:text-white border border-transparent'
                     }`}
                   >
-                    {isConnected ? 'Connected' : 'Disconnect'}
+                    {isConnected ? 'Connected' : 'Connect'}
                   </button>
                 </div>
 

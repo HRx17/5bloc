@@ -353,7 +353,8 @@ export default function SubmittalsLog() {
  <div className="px-6 py-4 bg-navy border-t flex flex-wrap gap-2.5 items-center justify-end shrink-0">
  <button 
  onClick={() => handleReviewAction('revise_resubmit')}
- className="btn-secondary text-xs text-error hover: py-1.5 px-4"
+ className="btn-secondary btn-sm"
+                      style={{ color: 'var(--error)' }}
  >
  Revise & Resubmit
  </button>

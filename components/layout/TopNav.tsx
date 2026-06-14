@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Logo } from '../brand/LogoMark'
-import { Search, Bell, Sun, Moon, X } from 'lucide-react'
+import { Search, Bell, Sun, Moon, X, Menu } from 'lucide-react'
 
 interface TopNavProps {
   userName?: string
@@ -63,8 +63,9 @@ export default function TopNav({
             style={{ color: 'var(--stone)' }}
             onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--on-surface)')}
             onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--stone)')}
+            aria-label="Open menu"
           >
-            <span className="material-icons-outlined text-[20px]">menu</span>
+            <Menu className="h-4 w-4" />
           </button>
         )}
 
@@ -76,7 +77,7 @@ export default function TopNav({
         {/* Desktop search */}
         <div className="hidden lg:flex items-center relative max-w-[260px] w-full">
           <Search
-            className="absolute left-3 h-3.5 w-3.5 pointer-events-none transition-colors"
+            className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 pointer-events-none transition-colors"
             style={{ color: searchFocused ? 'var(--on-surface-variant)' : 'var(--stone)' }}
           />
           <input
@@ -87,12 +88,12 @@ export default function TopNav({
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setSearchFocused(false)}
             placeholder="Search…"
-            className="input-5bloc pl-9 py-2 text-[12.5px]"
-            style={{ background: 'var(--surface-container-low)', borderRadius: '10px' }}
+            className="input-5bloc pl-9 pr-8 h-[34px] text-[12.5px]"
+            style={{ background: 'var(--surface-container-low)', borderRadius: '10px', padding: '0 8px 0 34px' }}
           />
           {searchQuery && (
             <button
-              className="absolute right-2.5 h-4 w-4 flex items-center justify-center rounded-full transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 flex items-center justify-center rounded-full transition-opacity hover:opacity-70"
               style={{ background: 'var(--stone)', color: 'var(--surface)' }}
               onClick={() => { setSearchQuery(''); searchRef.current?.focus() }}
             >

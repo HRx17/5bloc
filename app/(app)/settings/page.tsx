@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { Toggle } from '@/components/ui/Toggle'
 
 interface OrgMember {
  id: string
@@ -107,26 +108,32 @@ function SettingsInner() {
  
  {/* Left tabs selector panel */}
  <div className="card-5bloc w-full md:w-56 shrink-0 py-4 px-3 space-y-1">
- {[
- { id: 'profile', label: 'User Profile', icon: 'person_outline' },
- { id: 'organisation', label: 'Organisation', icon: 'domain' },
- { id: 'team', label: 'Org Team', icon: 'contacts' },
- { id: 'billing', label: 'Billing & Plans', icon: 'receipt_long' },
- { id: 'notifications', label: 'Notifications', icon: 'notifications' },
- { id: 'integrations', label: 'Integrations', icon: 'sync_alt' },
- { id: 'download', label: 'Download App', icon: 'download' },
+{[
+  { id: 'profile',       label: 'User Profile',    icon: 'person_outline' },
+  { id: 'organisation',  label: 'Organisation',    icon: 'domain' },
+  { id: 'team',          label: 'Org Team',        icon: 'contacts' },
+  { id: 'billing',       label: 'Billing & Plans', icon: 'receipt_long' },
+  { id: 'notifications', label: 'Notifications',   icon: 'notifications' },
+  { id: 'integrations',  label: 'Integrations',    icon: 'sync_alt' },
+  { id: 'download',      label: 'Download App',    icon: 'download' },
 ].map(tab => (
- <button
- key={tab.id}
- onClick={() => setActiveTab(tab.id as any)}
- className={`w-full flex items-center gap-3 px-3 py-2.5 text-xs font-medium transition ${
- activeTab === tab.id ? 'bg-amber text-navy font-semibold' : 'text-stone hover:text-white hover:bg-navy-lt'
- }`}
- >
- <span className="material-icons-outlined text-[16px]">{tab.icon}</span>
- <span>{tab.label}</span>
- </button>
- ))}
+  <button
+    key={tab.id}
+    onClick={() => setActiveTab(tab.id as any)}
+    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[12.5px] font-medium transition-all"
+    style={activeTab === tab.id ? {
+      background: 'rgba(245,166,35,0.12)',
+      color: 'var(--amber)',
+    } : {
+      color: 'var(--stone)',
+    }}
+    onMouseEnter={(e) => { if (activeTab !== tab.id) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)' }}
+    onMouseLeave={(e) => { if (activeTab !== tab.id) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+  >
+    <span className="material-icons-outlined text-[15px] shrink-0">{tab.icon}</span>
+    <span>{tab.label}</span>
+  </button>
+))}
  </div>
 
  {/* Right Tab Content panels */}
@@ -136,9 +143,12 @@ function SettingsInner() {
  <h3 className="text-sm font-semibold text-amber pb-2.5">User Profile</h3>
  <form onSubmit={handleProfileSave} className="space-y-4">
  <div className="flex items-center gap-4 pb-2">
- <div className="w-14 h-14 bg-navy-lt border flex items-center justify-center font-bold text-lg text-amber">
- PP
- </div>
+ <div
+    className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-lg shrink-0"
+    style={{ background: 'rgba(245,166,35,0.12)', color: 'var(--amber)' }}
+   >
+    PP
+   </div>
  <div>
  <button type="button" className="btn-secondary py-1 px-3 text-xs">Upload avatar</button>
  <p className="text-[11px] text-stone mt-1">Accepts PNG, JPG up to 2MB</p>
@@ -337,8 +347,8 @@ function SettingsInner() {
 
  <div className="pt-4">
  {plan.current ? (
- <span className="w-full text-center block text-[11px] py-1.5 font-medium" style={{ background: 'rgba(245,166,35,.10)', color: 'var(--amber)' }}>
- Current subscription
+ <span className="w-full text-center block text-[11px] py-1.5 font-medium rounded-full" style={{ background: 'rgba(245,166,35,.10)', color: 'var(--amber)' }}>
+  Current subscription
  </span>
  ) : (
  <button 
@@ -356,8 +366,8 @@ function SettingsInner() {
  {/* AI add on billing card */}
  <div className="card-5bloc flex flex-col sm:flex-row sm:items-center justify-between gap-4 ">
  <div className="flex items-center gap-3">
- <div className="w-10 h-10 bg-amber/10 border text-amber flex items-center justify-center shrink-0">
- <span className="material-icons-outlined text-[20px]">auto_awesome</span>
+ <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(245,166,35,0.10)', color: 'var(--amber)' }}>
+  <span className="material-icons-outlined text-[20px]">auto_awesome</span>
  </div>
  <div>
  <h4 className="text-xs font-bold text-white">AI Assistant Add-On</h4>
@@ -366,7 +376,8 @@ function SettingsInner() {
  </div>
  <button 
  onClick={() => alert('Razorpay subscription checkout triggered')}
- className="btn-secondary py-1.5 text-xs font-medium text-amber hover:"
+ className="btn-secondary btn-sm"
+            style={{ color: 'var(--amber)' }}
  >
  Add to billing
  </button>
@@ -391,19 +402,11 @@ function SettingsInner() {
  <span className="text-white font-medium">{item.label}</span>
  <p className="text-[11px] text-stone mt-0.5 leading-relaxed">{item.desc}</p>
  </div>
- <button
- type="button"
- onClick={() => handleToggleNotification(item.key as any)}
- className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer border-2 transition-colors duration-200 ease-in-out focus:outline-none ${
- (notifications as any)[item.key] ? 'bg-success' : 'bg-navy-lt'
- }`}
- >
- <span
- className={`pointer-events-none inline-block h-4 w-4 transform bg-white shadow ring-0 transition duration-200 ease-in-out ${
- (notifications as any)[item.key] ? 'translate-x-5' : 'translate-x-0'
- }`}
- />
- </button>
+ <Toggle
+    on={!!(notifications as any)[item.key]}
+    onChange={() => handleToggleNotification(item.key as any)}
+    label={item.label}
+   />
  </div>
  ))}
  </div>
@@ -414,94 +417,30 @@ function SettingsInner() {
  <div className="card-5bloc space-y-6">
  <h3 className="text-sm font-semibold text-amber pb-2.5">Platform Integrations</h3>
  
- <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
- {/* Gmail Sync Card */}
- <div className=" p-4 bg-navy/20 flex flex-col justify-between h-48">
- <div>
- <div className="flex items-center gap-2">
- <span className="material-icons-outlined text-amber text-[20px]">mail</span>
- <h4 className="text-xs font-semibold text-white">Gmail / Email Sync</h4>
- </div>
- <p className="text-[10px] text-stone mt-2 leading-relaxed">
- Automatically routes coordination digests, RFI queries, and invoice links directly through your official email address.
- </p>
- </div>
- <div className="flex items-center justify-between mt-4 pt-3">
- <span className="text-[10px] text-stone font-medium">Status: Connected</span>
- <button 
- onClick={() => alert('Simulated Gmail connection refreshed')} 
- className="btn-secondary py-1 px-3 text-[10px] font-semibold"
- >
- Refresh Connect
- </button>
- </div>
- </div>
-
- {/* Excel & Sheets Sync Card */}
- <div className=" p-4 bg-navy/20 flex flex-col justify-between h-48">
- <div>
- <div className="flex items-center gap-2">
- <span className="material-icons-outlined text-amber text-[20px]">table_chart</span>
- <h4 className="text-xs font-semibold text-white">Excel / Sheets Automation</h4>
- </div>
- <p className="text-[10px] text-stone mt-2 leading-relaxed">
- Enable client-side importing/exporting of BOQs, milestone schedules, and RFI databases. Connect directly to online spreadsheet pipelines.
- </p>
- </div>
- <div className="flex items-center justify-between mt-4 pt-3">
- <span className="text-[10px] text-stone font-medium">Status: Enabled</span>
- <button 
- onClick={() => alert('Microsoft Office 365 / Google Sheets sync triggered')} 
- className="btn-secondary py-1 px-3 text-[10px] font-semibold"
- >
- Sync Now
- </button>
- </div>
- </div>
-
- {/* Google Calendar Sync Card */}
- <div className=" p-4 bg-navy/20 flex flex-col justify-between h-48">
- <div>
- <div className="flex items-center gap-2">
- <span className="material-icons-outlined text-amber text-[20px]">calendar_today</span>
- <h4 className="text-xs font-semibold text-white">Google Calendar Integration</h4>
- </div>
- <p className="text-[10px] text-stone mt-2 leading-relaxed">
- Synchronizes project milestone dates directly to your workspace calendar to prevent delayed handovers.
- </p>
- </div>
- <div className="flex items-center justify-between mt-4 pt-3">
- <span className="text-[10px] text-stone font-medium">Status: Active</span>
- <button 
- onClick={() => alert('Simulating Google Calendar webhook sync...')} 
- className="btn-secondary py-1 px-3 text-[10px] font-semibold"
- >
- Resync Dates
- </button>
- </div>
- </div>
-
- {/* WhatsApp Notifications Card */}
- <div className=" p-4 bg-navy/20 flex flex-col justify-between h-48">
- <div>
- <div className="flex items-center gap-2">
- <span className="material-icons-outlined text-[#25D366] text-[20px]">chat</span>
- <h4 className="text-xs font-semibold text-white">WhatsApp Communication</h4>
- </div>
- <p className="text-[10px] text-stone mt-2 leading-relaxed">
- Send RFI updates and drawings directly to contractors using prefilled mobile links.
- </p>
- </div>
- <div className="flex items-center justify-between mt-4 pt-3">
- <span className="text-[10px] text-stone font-medium">Status: Active Link</span>
- <button 
- onClick={() => alert('WhatsApp quick-link integration verified')} 
- className="btn-secondary py-1 px-3 text-[10px] font-semibold"
- >
- Verify Link
- </button>
- </div>
- </div>
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+  {[
+    { icon: 'mail',          iconColor: 'var(--amber)',  title: 'Gmail / Email Sync',        desc: 'Automatically routes coordination digests, RFI queries, and invoice links through your official email address.', status: 'Connected',   action: 'Refresh',  onClick: () => alert('Simulated Gmail connection refreshed') },
+    { icon: 'table_chart',   iconColor: 'var(--blue)',   title: 'Excel / Sheets Automation', desc: 'Enable importing/exporting of BOQs, milestone schedules, and RFI databases. Connect to spreadsheet pipelines.', status: 'Enabled',    action: 'Sync Now', onClick: () => alert('Microsoft Office 365 / Google Sheets sync triggered') },
+    { icon: 'calendar_today',iconColor: 'var(--blue)',   title: 'Google Calendar',           desc: 'Synchronizes project milestone dates to your workspace calendar to prevent delayed handovers.', status: 'Active',     action: 'Resync',   onClick: () => alert('Simulating Google Calendar webhook sync...') },
+    { icon: 'chat',          iconColor: '#25D366',       title: 'WhatsApp Communication',    desc: 'Send RFI updates and drawings directly to contractors using prefilled mobile links.', status: 'Active Link',action: 'Verify',   onClick: () => alert('WhatsApp quick-link integration verified') },
+  ].map((card) => (
+   <div key={card.title} className="rounded-2xl p-4 flex flex-col justify-between gap-3" style={{ background: 'var(--surface-container)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)' }}>
+    <div className="flex items-start gap-3">
+     <span className="material-icons-outlined text-[18px] mt-0.5 shrink-0" style={{ color: card.iconColor }}>{card.icon}</span>
+     <div>
+      <h4 className="text-[12px] font-semibold" style={{ color: 'var(--on-surface)' }}>{card.title}</h4>
+      <p className="text-[11px] mt-1 leading-relaxed" style={{ color: 'var(--stone)' }}>{card.desc}</p>
+     </div>
+    </div>
+    <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+     <span className="flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--success)' }}>
+      <span className="material-icons-outlined text-[12px]">check_circle</span>
+      {card.status}
+     </span>
+     <button onClick={card.onClick} className="btn-secondary btn-sm">{card.action}</button>
+    </div>
+   </div>
+  ))}
  </div>
         </div>
         )}

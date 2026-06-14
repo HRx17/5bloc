@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Toggle } from '@/components/ui/Toggle'
 
 export default function NewProject() {
  const router = useRouter()
@@ -272,19 +273,7 @@ export default function NewProject() {
  <h4 className="text-xs font-bold text-white">RERA Registered Project</h4>
  <p className="text-[10px] text-stone">Does this project comply with digital RERA reporting?</p>
  </div>
- <button
- type="button"
- onClick={handleReraToggle}
- className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer border-2 transition-colors duration-200 ease-in-out focus:outline-none ${
- formData.isRera ? 'bg-success' : 'bg-navy-lt'
- }`}
- >
- <span
- className={`pointer-events-none inline-block h-5 w-5 transform bg-white shadow ring-0 transition duration-200 ease-in-out ${
- formData.isRera ? 'translate-x-5' : 'translate-x-0'
- }`}
- />
- </button>
+ <Toggle on={formData.isRera} onChange={(v) => setFormData(prev => ({ ...prev, isRera: v }))} label="RERA compliant" />
  </div>
 
  {formData.isRera && (

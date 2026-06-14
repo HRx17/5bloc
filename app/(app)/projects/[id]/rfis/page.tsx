@@ -386,7 +386,7 @@ export default function RFILog() {
  <button 
  onClick={handleRequestAIDraft}
  disabled={aiDrafting}
- className="btn-secondary text-xs py-1 px-3 flex items-center gap-1 hover: hover:text-amber"
+ className="btn-secondary btn-sm flex items-center gap-1.5"
  >
  <span className="material-icons-outlined text-[12px]">auto_awesome</span>
  {aiDrafting ? 'Drafting...' : 'Request AI Draft'}

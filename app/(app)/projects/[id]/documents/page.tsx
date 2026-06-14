@@ -752,15 +752,15 @@ export default function DocumentVault() {
                   <div className="flex flex-col gap-1.5">
                     <button 
                       onClick={() => alert('Created RFI #043 and mapped to structural team.')}
-                      className="w-full btn-primary py-1 text-[9px] font-bold"
+                      className="w-full btn-primary btn-xs"
                     >
                       Convert to RFI
                     </button>
                     <button 
                       onClick={() => alert('Prefilled WhatsApp link generated: "Clash alert on Grid C4..."')}
-                      className="w-full btn-secondary py-1 text-[9px] font-bold flex items-center justify-center gap-1"
+                      className="w-full btn-secondary btn-xs flex items-center justify-center gap-1"
                     >
-                      <span className="material-icons-outlined text-[11px] text-[#25D366]">chat</span>
+                      <span className="material-icons-outlined text-[12px]" style={{ color: '#25D366' }}>chat</span>
                       WhatsApp Site
                     </button>
                   </div>

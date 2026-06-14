@@ -216,7 +216,7 @@ export default function ProjectOverview() {
  <div className="flex items-center gap-3">
  <button 
  onClick={exportMilestonesToCSV}
- className="btn-secondary py-1 px-3 text-xs flex items-center gap-1.5 hover: hover:text-amber"
+ className="btn-secondary btn-sm flex items-center gap-1.5"
  >
  <span className="material-icons-outlined text-[16px]">file_download</span>
  Export Schedule (CSV)
