@@ -72,7 +72,7 @@ export async function getAutodeskUserProfile(accessToken: string) {
 }
 
 /** Get a 2-legged app token for server-side model translation */
-export async function getAppToken(): Promise<string> {
+export async function getAppToken(): Promise<{ access_token: string; expires_in: number }> {
   const res = await fetch(`${APS_BASE}/authentication/v2/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -84,8 +84,7 @@ export async function getAppToken(): Promise<string> {
     }),
   })
   if (!res.ok) throw new Error('Autodesk app token failed')
-  const json = await res.json()
-  return json.access_token
+  return res.json() as Promise<{ access_token: string; expires_in: number }>
 }
 
 /** Ensure OSS bucket exists for the app */

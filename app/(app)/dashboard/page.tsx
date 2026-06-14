@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
+import { CalendarWidget } from '@/components/integrations/CalendarWidget'
 
 interface Project {
   id: string; name: string; type: string; phase: string
@@ -479,6 +480,24 @@ export default function Dashboard() {
               ))}
             </div>
           </div>
+
+          {/* ── Google Calendar widget ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.4 }}
+            className="rounded-2xl p-4 relative"
+            style={{ background: 'var(--surface-container)', border: '1px solid rgba(255,255,255,0.06)' }}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-7 h-7 flex items-center justify-center rounded-lg"
+                style={{ background: 'rgba(66,133,244,0.12)', color: '#4285F4' }}>
+                <span className="material-icons-outlined text-[15px]">event</span>
+              </div>
+              <h3 className="text-[12px] font-bold" style={{ color: 'var(--on-surface)' }}>Calendar</h3>
+            </div>
+            <CalendarWidget compact className="max-h-[320px]" />
+          </motion.div>
         </div>
       </div>
     </div>

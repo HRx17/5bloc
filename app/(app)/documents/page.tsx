@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useToast } from '@/components/ui/Toast'
+import { DrivePanel } from '@/components/integrations/DrivePanel'
 
 interface Document {
   id: string
@@ -398,6 +399,27 @@ export default function DocumentVault() {
           )}
         </motion.div>
       </AnimatePresence>
+
+      {/* ── Google Drive Panel ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.25 }}
+        className="rounded-2xl p-5"
+        style={{ background: 'var(--surface-container)', border: '1px solid rgba(255,255,255,0.06)' }}
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-8 h-8 flex items-center justify-center rounded-xl"
+            style={{ background: 'rgba(66,133,244,0.12)', color: '#4285F4' }}>
+            <span className="material-icons-outlined text-[18px]">cloud_queue</span>
+          </div>
+          <div>
+            <h3 className="text-[13px] font-bold" style={{ color: 'var(--on-surface)' }}>Google Drive</h3>
+            <p className="text-[11px]" style={{ color: 'var(--stone)' }}>Browse your connected Drive files</p>
+          </div>
+        </div>
+        <DrivePanel className="h-[400px]" />
+      </motion.div>
     </div>
   )
 }
