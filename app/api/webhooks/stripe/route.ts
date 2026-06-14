@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { stripe } from '@/lib/payments/stripe'
-import { createServiceRoleClient } from '@/lib/supabase/server'
+import { createServiceRoleClient } from '@/lib/supabase/admin'
 
 export async function POST(req: Request) {
   const body = await req.text()
