@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
+import { useToast } from '@/components/ui/Toast'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 interface Issue {
   id: string
@@ -19,11 +21,13 @@ interface Issue {
 export default function IssueTracker() {
   const params = useParams()
   const projectId = params.id as string
+  const { toast } = useToast()
 
   const [issues, setIssues] = useState<Issue[]>([])
   const [loading, setLoading] = useState(true)
   const [showReportModal, setShowReportModal] = useState(false)
   const [activeIssue, setActiveIssue] = useState<Issue | null>(null)
+  const [pendingStatus, setPendingStatus] = useState<{ id: string; status: Issue['status'] } | null>(null)
   
   // Search and filter
   const [searchTerm, setSearchTerm] = useState('')
@@ -102,13 +106,19 @@ export default function IssueTracker() {
     setNewIssue({ title: '', description: '', severity: 'medium', assigned_to: 'Amit Sharma' })
   }
 
-  const handleUpdateStatus = (issueId: string, status: Issue['status']) => {
+  const applyStatusUpdate = (issueId: string, status: Issue['status']) => {
     setIssues(prev => 
       prev.map(i => i.id === issueId ? { ...i, status } : i)
     )
     if (activeIssue && activeIssue.id === issueId) {
       setActiveIssue(prev => prev ? { ...prev, status } : null)
     }
+    toast(`Issue marked as ${status.replace('_', ' ')}`, 'success')
+    setPendingStatus(null)
+  }
+
+  const requestStatusUpdate = (issueId: string, status: Issue['status']) => {
+    setPendingStatus({ id: issueId, status })
   }
 
   const getSeverityStyle = (s: Issue['severity']) => {
@@ -139,36 +149,36 @@ export default function IssueTracker() {
     <div className="space-y-6 font-body select-none relative h-full">
       {/* Search & Filters block */}
       <div className="flex flex-wrap gap-4 items-center justify-between">
-        <div className="flex flex-wrap gap-3 items-center flex-1 max-w-xl">
-          <input
-            type="text"
-            placeholder="Search issues..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="input-5bloc py-2 text-xs flex-1 min-w-[200px]"
-          />
-          
-          <select
-            value={filterSeverity}
-            onChange={e => setFilterSeverity(e.target.value)}
-            className="input-5bloc py-2 text-xs w-32 font-medium"
-          >
-            <option value="all">All Severity</option>
-            <option value="high">High Risk</option>
-            <option value="medium">Medium Risk</option>
-            <option value="low">Low Risk</option>
-          </select>
+        <div className="flex flex-wrap gap-3 items-center flex-1">
+          <div className="search-5bloc flex-1 min-w-[200px] max-w-md">
+            <span className="material-icons-outlined">search</span>
+            <input
+              type="text"
+              placeholder="Search issues…"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+            />
+          </div>
 
-          <select
-            value={filterStatus}
-            onChange={e => setFilterStatus(e.target.value)}
-            className="input-5bloc py-2 text-xs w-32 font-medium"
-          >
-            <option value="all">All Status</option>
-            <option value="open">Open</option>
-            <option value="in_progress">In Progress</option>
-            <option value="resolved">Resolved</option>
-          </select>
+          <div className="select-5bloc">
+            <select value={filterSeverity} onChange={e => setFilterSeverity(e.target.value)}>
+              <option value="all">All Severity</option>
+              <option value="high">High Risk</option>
+              <option value="medium">Medium Risk</option>
+              <option value="low">Low Risk</option>
+            </select>
+            <span className="material-icons-outlined chevron">expand_more</span>
+          </div>
+
+          <div className="select-5bloc">
+            <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+              <option value="all">All Status</option>
+              <option value="open">Open</option>
+              <option value="in_progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+            </select>
+            <span className="material-icons-outlined chevron">expand_more</span>
+          </div>
         </div>
 
         <button onClick={() => setShowReportModal(true)} className="btn-primary py-2 text-xs font-bold">
@@ -300,14 +310,14 @@ export default function IssueTracker() {
                     <>
                       {activeIssue.status === 'open' && (
                         <button
-                          onClick={() => handleUpdateStatus(activeIssue.id, 'in_progress')}
+                          onClick={() => requestStatusUpdate(activeIssue.id, 'in_progress')}
                           className="btn-secondary py-1.5 px-3 text-[11px] font-bold flex-1"
                         >
                           START PROGRESS
                         </button>
                       )}
                       <button
-                        onClick={() => handleUpdateStatus(activeIssue.id, 'resolved')}
+                        onClick={() => requestStatusUpdate(activeIssue.id, 'resolved')}
                         className="btn-primary py-1.5 px-4 text-[11px] font-bold flex-1"
                       >
                         RESOLVE ISSUE
@@ -316,7 +326,7 @@ export default function IssueTracker() {
                   )}
                   {activeIssue.status === 'resolved' && (
                     <button
-                      onClick={() => handleUpdateStatus(activeIssue.id, 'open')}
+                      onClick={() => requestStatusUpdate(activeIssue.id, 'open')}
                       className="btn-secondary py-1.5 px-4 text-[11px] font-bold w-full text-error"
                     >
                       REOPEN ISSUE
@@ -417,6 +427,21 @@ export default function IssueTracker() {
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!pendingStatus}
+        title="Update issue status?"
+        message={
+          pendingStatus?.status === 'resolved'
+            ? 'Mark this issue as resolved? This will close it in the project log.'
+            : pendingStatus?.status === 'open'
+              ? 'Reopen this issue? It will appear as open again.'
+              : 'Move this issue to in progress?'
+        }
+        confirmLabel="Confirm"
+        onConfirm={() => pendingStatus && applyStatusUpdate(pendingStatus.id, pendingStatus.status)}
+        onCancel={() => setPendingStatus(null)}
+      />
     </div>
   )
 }

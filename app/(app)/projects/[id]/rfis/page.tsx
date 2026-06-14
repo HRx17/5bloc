@@ -1,8 +1,11 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import EmailComposer from '@/components/modals/EmailComposer'
+import { useToast } from '@/components/ui/Toast'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { StatCard } from '@/components/ui/StatCard'
 
 interface RFIItem {
  id: string
@@ -22,11 +25,14 @@ interface RFIItem {
 export default function RFILog() {
  const params = useParams()
  const projectId = params.id as string
+ const { toast } = useToast()
 
  const [rfis, setRfis] = useState<RFIItem[]>([])
  const [loading, setLoading] = useState(true)
  const [showCreateModal, setShowCreateModal] = useState(false)
  const [activeRfi, setActiveRfi] = useState<RFIItem | null>(null)
+ const [confirmSave, setConfirmSave] = useState(false)
+ const [confirmDiscard, setConfirmDiscard] = useState(false)
  const [emailComposerData, setEmailComposerData] = useState<{ to: string; subject: string; defaultBody: string } | null>(null)
  
  // Create Form State
@@ -143,6 +149,23 @@ export default function RFILog() {
  } : r)
  )
  setActiveRfi(null)
+ setConfirmSave(false)
+ toast('RFI response saved and marked answered', 'success')
+ }
+
+ const savedActive = activeRfi ? rfis.find(r => r.id === activeRfi.id) : null
+ const responseDirty = useMemo(() => {
+   if (!activeRfi || !savedActive) return false
+   return (
+     (activeRfi.response ?? '') !== (savedActive.response ?? '') ||
+     activeRfi.is_scope_change !== savedActive.is_scope_change ||
+     (activeRfi.scope_change_amount ?? 0) !== (savedActive.scope_change_amount ?? 0)
+   )
+ }, [activeRfi, savedActive])
+
+ const tryClosePanel = () => {
+   if (responseDirty) setConfirmDiscard(true)
+   else setActiveRfi(null)
  }
 
  const getStatusStyle = (status: RFIItem['status']): React.CSSProperties => {
@@ -161,17 +184,10 @@ export default function RFILog() {
  return (
  <div className="space-y-6 font-body select-none relative h-full">
  {/* Stats row widget */}
- <div className="grid grid-cols-3 gap-5">
- {[
- { label: 'Unresolved / Open', value: openCount, color: 'text-error' },
- { label: 'Under Review', value: reviewCount, color: 'text-amber' },
- { label: 'Answered / Resolved', value: answeredCount, color: 'text-success' },
- ].map((stat, idx) => (
- <div key={idx} className="card-5bloc p-4">
- <span className="text-xs text-stone font-medium">{stat.label}</span>
- <h4 className={`text-xl font-bold mt-1 ${stat.color}`}>{stat.value}</h4>
- </div>
- ))}
+ <div className="grid grid-cols-3 gap-3">
+ <StatCard variant="display" label="Unresolved / Open" value={openCount} icon="error_outline" color="var(--error)" />
+ <StatCard variant="display" label="Under Review" value={reviewCount} icon="schedule" color="var(--amber)" />
+ <StatCard variant="display" label="Answered / Resolved" value={answeredCount} icon="check_circle" color="var(--success)" />
  </div>
 
  {/* Main RFI table Card container */}
@@ -328,7 +344,7 @@ export default function RFILog() {
  {/* RFI Detail Slide-over */}
  {activeRfi && (
  <div className="fixed inset-0 z-50 flex justify-end select-none" style={{ background: 'rgba(12,14,14,0.60)', backdropFilter: 'blur(4px)' }}>
- <div className="fixed inset-0" onClick={() => setActiveRfi(null)} />
+ <div className="fixed inset-0" onClick={tryClosePanel} />
  <div className="relative w-full max-w-lg h-screen flex flex-col justify-between z-10 animate-slide-in" style={{ background: 'var(--surface-container)', boxShadow: 'var(--shadow-4)' }}>
  {/* Slide-over Header */}
  <div className="px-6 py-4 flex items-center justify-between" style={{ background: 'var(--surface-container-high)', boxShadow: '0 1px 0 rgba(159,142,122,0.10)' }}>
@@ -338,7 +354,7 @@ export default function RFILog() {
  </h3>
  <span className="text-[11px] block mt-0.5" style={{ color: 'var(--stone)' }}>Raised by: {activeRfi.raised_by}</span>
  </div>
- <button onClick={() => setActiveRfi(null)} style={{ color: 'var(--stone)' }}>
+ <button onClick={tryClosePanel} style={{ color: 'var(--stone)' }}>
  <span className="material-icons-outlined text-[20px]">close</span>
  </button>
  </div>
@@ -452,19 +468,25 @@ export default function RFILog() {
  </div>
  
  {/* Slide-over Footer */}
- <div className="px-6 py-4 flex justify-end gap-3 shrink-0" style={{ background: 'var(--surface-container-high)', boxShadow: '0 -1px 0 rgba(159,142,122,0.10)' }}>
+ <div className="px-6 py-4 flex justify-between items-center gap-3 shrink-0" style={{ background: 'var(--surface-container-high)', boxShadow: '0 -1px 0 rgba(159,142,122,0.10)' }}>
+ {responseDirty && (
+   <span className="text-[11px]" style={{ color: 'var(--amber)' }}>Unsaved changes</span>
+ )}
+ <div className="flex gap-3 ml-auto">
  <button 
- onClick={() => setActiveRfi(null)}
+ onClick={tryClosePanel}
  className="btn-secondary py-1.5 px-4 text-xs"
  >
  Cancel
  </button>
  <button 
- onClick={handleSaveResponse}
+ onClick={() => setConfirmSave(true)}
+ disabled={!activeRfi?.response?.trim()}
  className="btn-primary py-1.5 px-6 text-xs"
  >
  Save & Resolve RFI
  </button>
+ </div>
  </div>
  </div>
  </div>
@@ -477,6 +499,25 @@ export default function RFILog() {
  onClose={() => setEmailComposerData(null)}
  />
  )}
+
+ <ConfirmDialog
+   open={confirmSave}
+   title="Save RFI response?"
+   message="This will mark the RFI as answered and notify the assignee. Continue?"
+   confirmLabel="Save & resolve"
+   onConfirm={handleSaveResponse}
+   onCancel={() => setConfirmSave(false)}
+ />
+
+ <ConfirmDialog
+   open={confirmDiscard}
+   title="Discard unsaved changes?"
+   message="Your response edits will be lost."
+   confirmLabel="Discard"
+   variant="danger"
+   onConfirm={() => { setActiveRfi(null); setConfirmDiscard(false) }}
+   onCancel={() => setConfirmDiscard(false)}
+ />
  </div>
  )
 }

@@ -142,14 +142,13 @@ export default function CoordinationHub() {
         </div>
 
         {/* Search */}
-        <div className="relative shrink-0 w-full sm:w-[240px]">
-          <span className="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[15px] pointer-events-none" style={{ color: 'var(--stone)' }}>search</span>
+        <div className="search-5bloc shrink-0 w-full sm:w-[240px]">
+          <span className="material-icons-outlined">search</span>
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search…"
-            className="input-5bloc pl-9 py-2.5 text-[13px]"
           />
         </div>
       </motion.div>

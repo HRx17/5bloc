@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CalendarWidget } from '@/components/integrations/CalendarWidget'
+import { StatCard } from '@/components/ui/StatCard'
+import type { UserRole } from '@/lib/roles'
 
 interface Project {
   id: string; name: string; type: string; phase: string
@@ -24,6 +26,39 @@ const PHASES_ORDERED = [
   'pre_design','schematic_design','design_development',
   'construction_docs','bidding','construction_admin','closeout',
 ]
+
+const DASHBOARD_STATS: Record<UserRole, { label: string; value: string; icon: string; color: string; href: string }[]> = {
+  architect: [
+    { label: 'Active projects', value: '1', icon: 'space_dashboard', color: 'var(--amber)', href: '/projects' },
+    { label: 'Open RFIs', value: '3', icon: 'forum', color: 'var(--error)', href: '/coordination' },
+    { label: 'Invoices due', value: '₹4.1L', icon: 'receipt_long', color: 'var(--blue)', href: '/invoices' },
+    { label: 'Fees collected', value: '₹12.4L', icon: 'payments', color: 'var(--success)', href: '/invoices' },
+  ],
+  client: [
+    { label: 'Your projects', value: '1', icon: 'home_work', color: 'var(--blue)', href: '/projects' },
+    { label: 'Open RFIs', value: '3', icon: 'forum', color: 'var(--error)', href: '/coordination' },
+    { label: 'Pending approvals', value: '2', icon: 'pending_actions', color: 'var(--amber)', href: '/documents' },
+    { label: 'Documents', value: '24', icon: 'folder_open', color: 'var(--stone)', href: '/documents' },
+  ],
+  contractor: [
+    { label: 'Active sites', value: '1', icon: 'construction', color: 'var(--success)', href: '/projects' },
+    { label: 'Open RFIs', value: '3', icon: 'forum', color: 'var(--error)', href: '/coordination' },
+    { label: 'Submittals pending', value: '2', icon: 'fact_check', color: 'var(--amber)', href: '/projects/proj-1/submittals' },
+    { label: 'Site issues', value: '1', icon: 'report_problem', color: 'var(--error)', href: '/projects/proj-1/issues' },
+  ],
+  vendor: [
+    { label: 'Active deliveries', value: '4', icon: 'local_shipping', color: 'var(--purple)', href: '/marketplace' },
+    { label: 'Open RFQs', value: '2', icon: 'request_quote', color: 'var(--amber)', href: '/marketplace' },
+    { label: 'Projects supplied', value: '1', icon: 'inventory_2', color: 'var(--blue)', href: '/projects' },
+    { label: 'Documents', value: '8', icon: 'folder_open', color: 'var(--stone)', href: '/documents' },
+  ],
+  consultant: [
+    { label: 'Active reviews', value: '1', icon: 'engineering', color: 'var(--blue-lt)', href: '/projects' },
+    { label: 'Open RFIs', value: '3', icon: 'forum', color: 'var(--error)', href: '/coordination' },
+    { label: 'Submittals to review', value: '1', icon: 'fact_check', color: 'var(--amber)', href: '/projects/proj-1/submittals' },
+    { label: 'Documents', value: '18', icon: 'folder_open', color: 'var(--stone)', href: '/documents' },
+  ],
+}
 
 /* Onboarding steps from IA */
 const ONBOARDING_STEPS = [
@@ -219,8 +254,14 @@ function OnboardingCard() {
 export default function Dashboard() {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading,  setLoading]  = useState(true)
+  const [userRole, setUserRole] = useState<UserRole>('architect')
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+
+  useEffect(() => {
+    const demo = localStorage.getItem('5bloc_demo_role') as UserRole | null
+    if (demo && DASHBOARD_STATS[demo]) setUserRole(demo)
+  }, [])
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -240,6 +281,15 @@ export default function Dashboard() {
   ]
 
   const totalRfis = projects.reduce((s, p) => s + p.openRfis, 0)
+  const roleStats = DASHBOARD_STATS[userRole].map((stat) => {
+    if (stat.label === 'Active projects' || stat.label === 'Your projects' || stat.label === 'Active sites') {
+      return { ...stat, value: loading ? '—' : String(projects.length) }
+    }
+    if (stat.label === 'Open RFIs') {
+      return { ...stat, value: loading ? '—' : String(totalRfis) }
+    }
+    return { ...stat, value: loading ? '—' : stat.value }
+  })
 
   return (
     <div className="p-5 lg:p-7 space-y-7 max-w-[1240px] mx-auto">
@@ -262,13 +312,23 @@ export default function Dashboard() {
             Your workspace
           </h1>
           <p className="text-[13px] mt-1" style={{ color: 'var(--on-surface-variant)' }}>
-            {loading ? '…' : `${projects.length} active projects · ${totalRfis} open RFIs`}
+            {userRole === 'client'
+              ? 'Track your build progress, approvals and project updates'
+              : userRole === 'contractor'
+                ? 'Site coordination, RFIs and drawing access in one place'
+                : userRole === 'vendor'
+                  ? 'Manage supply schedules, RFQs and project deliveries'
+                  : userRole === 'consultant'
+                    ? 'Review submissions, RFIs and specialist coordination'
+                    : loading ? '…' : `${projects.length} active projects · ${totalRfis} open RFIs`}
           </p>
         </div>
+        {userRole === 'architect' && (
         <Link href="/projects/new" className="btn-primary shrink-0 text-[13px]">
           <span className="material-icons-outlined text-[15px]">add</span>
           New project
         </Link>
+        )}
       </motion.div>
 
       {/* ── At-a-glance stat row ── */}
@@ -278,34 +338,16 @@ export default function Dashboard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
       >
-        {[
-          { label: 'Active projects', value: loading ? '—' : String(projects.length),  icon: 'space_dashboard', color: 'var(--amber)',   href: '/projects' },
-          { label: 'Open RFIs',       value: loading ? '—' : String(totalRfis),         icon: 'forum',           color: 'var(--error)',   href: '/coordination' },
-          { label: 'Invoices due',    value: '₹4.1L',  icon: 'receipt_long',   color: 'var(--blue)',    href: '/invoices' },
-          { label: 'Fees collected',  value: '₹12.4L', icon: 'payments',       color: 'var(--success)', href: '/invoices' },
-        ].map((stat, i) => (
-          <Link
+        {roleStats.map((stat) => (
+          <StatCard
             key={stat.label}
+            variant="link"
+            label={stat.label}
+            value={stat.value}
+            icon={stat.icon}
+            color={stat.color}
             href={stat.href}
-          >
-            <motion.div
-              className="rounded-2xl p-4 cursor-pointer"
-              whileHover={{ y: -3, boxShadow: `inset 3px 0 0 ${stat.color}, 0 8px 24px rgba(0,0,0,0.2)` }}
-              transition={{ duration: 0.18 }}
-              style={{
-                background: 'var(--surface-container)',
-                boxShadow: `inset 3px 0 0 ${stat.color}`,
-              }}
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <span className="material-icons-outlined text-[16px]" style={{ color: stat.color }}>{stat.icon}</span>
-                <span className="text-[11px] font-medium" style={{ color: 'var(--stone)' }}>{stat.label}</span>
-              </div>
-              <p className="font-display font-bold text-[22px] leading-none" style={{ color: 'var(--on-surface)' }}>
-                {stat.value}
-              </p>
-            </motion.div>
-          </Link>
+          />
         ))}
       </motion.div>
 
@@ -362,7 +404,8 @@ export default function Dashboard() {
               {projects.map((proj, i) => (
                 <ProjectCard key={proj.id} proj={proj} delay={0.12 + 0.06 * i} />
               ))}
-              {/* Add new project card */}
+              {/* Add new project card — architects only */}
+              {userRole === 'architect' && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -387,6 +430,7 @@ export default function Dashboard() {
                   <span className="text-[12.5px] font-medium">New project</span>
                 </Link>
               </motion.div>
+              )}
             </div>
           )}
         </div>

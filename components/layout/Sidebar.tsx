@@ -1,11 +1,12 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Logo } from '../brand/LogoMark'
 import { createSupabaseClient } from '@/lib/supabase/client'
+import { canAccessNav, roleLabel, type UserRole } from '@/lib/roles'
 
 interface SidebarProps {
   userRole?: string
@@ -14,7 +15,17 @@ interface SidebarProps {
   onClose?: () => void
 }
 
-const NAV = [
+type NavItem = {
+  name: string
+  path: string
+  icon: string
+  desc: string
+  badge?: string
+}
+
+type NavGroup = { label: string | null; items: NavItem[] }
+
+const NAV: NavGroup[] = [
   {
     label: null,
     items: [
@@ -56,6 +67,12 @@ export default function Sidebar({
   const pathname  = usePathname()
   const router    = useRouter()
   const [loggingOut, setLoggingOut] = useState(false)
+  const [effectiveRole, setEffectiveRole] = useState(userRole)
+
+  useEffect(() => {
+    const demo = localStorage.getItem('5bloc_demo_role')
+    setEffectiveRole(demo || userRole)
+  }, [userRole])
 
   async function handleLogout() {
     setLoggingOut(true)
@@ -69,6 +86,12 @@ export default function Sidebar({
 
   const isActive = (path: string) =>
     path === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(path)
+
+  const role = (effectiveRole ?? 'architect') as UserRole
+  const filteredNav = NAV.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => canAccessNav(role, item.path)),
+  })).filter((group) => group.items.length > 0)
 
   const planLabel = plan.charAt(0).toUpperCase() + plan.slice(1)
   const planChip = {
@@ -124,7 +147,7 @@ export default function Sidebar({
 
       {/* ── Navigation ── */}
       <nav className="flex-1 overflow-y-auto px-2 py-1.5 space-y-0.5">
-        {NAV.map((group, gi) => (
+        {filteredNav.map((group, gi) => (
           <div key={gi} className={gi > 0 ? 'pt-2.5' : ''}>
             {group.label && (
               <p
@@ -173,7 +196,7 @@ export default function Sidebar({
 
                     <span className="flex-1 truncate">{item.name}</span>
 
-                    {'badge' in item && item.badge && (
+                    {item.badge && (
                       <span
                         className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full"
                         style={{ background: 'rgba(167,139,250,0.14)', color: 'var(--purple)' }}
@@ -186,7 +209,7 @@ export default function Sidebar({
               })}
             </div>
 
-            {gi < NAV.length - 1 && gi > 0 && (
+            {gi < filteredNav.length - 1 && gi > 0 && (
               <div className="mx-3 mt-2.5" style={{ height: '1px', background: 'var(--hairline)' }} />
             )}
           </div>
@@ -237,7 +260,7 @@ export default function Sidebar({
               {orgName}
             </p>
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] capitalize" style={{ color: 'var(--stone)' }}>{userRole}</span>
+              <span className="text-[10px] capitalize" style={{ color: 'var(--stone)' }}>{roleLabel(role)}</span>
               <span
                 className="text-[9px] px-1.5 py-0.5 rounded-full font-semibold"
                 style={{ background: planChip.bg, color: planChip.color }}

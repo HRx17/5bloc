@@ -1,270 +1,186 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Logo } from '@/components/brand/LogoMark'
+import { createSupabaseClient } from '@/lib/supabase/client'
+import { getRoleConfig, USER_ROLES, type UserRole } from '@/lib/roles'
 
 export default function Onboarding() {
- const router = useRouter()
- const [step, setStep] = useState(1)
- const [formData, setFormData] = useState({
- name: 'Parth Patel',
- email: 'architect@5bloc.com',
- firmName: '',
- city: '',
- state: '',
- firmType: 'both', // residential / commercial / both
- gstNumber: '',
- logoUrl: null,
- })
+  const router = useRouter()
+  const [step, setStep] = useState(1)
+  const [role, setRole] = useState<UserRole>('architect')
+  const [loading, setLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    orgName: '',
+    city: '',
+    state: '',
+    gstNumber: '',
+  })
 
- const [loading, setLoading] = useState(false)
+  const roleConfig = getRoleConfig(role)
 
- const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
- const { name, value } = e.target
- setFormData((prev) => ({ ...prev, [name]: value }))
- }
+  useEffect(() => {
+    const saved = localStorage.getItem('5bloc_signup_role') as UserRole | null
+    if (saved && USER_ROLES.some((r) => r.id === saved)) setRole(saved)
 
- const nextStep = () => setStep((s) => s + 1)
- const prevStep = () => setStep((s) => s - 1)
+    async function loadUser() {
+      try {
+        const supabase = createSupabaseClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const r = (user.user_metadata?.role ?? saved ?? 'architect') as UserRole
+          setRole(r)
+          setFormData((prev) => ({
+            ...prev,
+            name: user.user_metadata?.full_name ?? prev.name,
+            email: user.email ?? prev.email,
+          }))
+        }
+      } catch { /* demo mode */ }
+    }
+    loadUser()
+  }, [])
 
- const handleFinish = async () => {
- setLoading(true)
- 
- try {
- console.log('Submitting onboarding:', formData)
- 
- // Simulate API call for organisation & milestone creation
- await new Promise((resolve) => setTimeout(resolve, 1500))
- 
- // Initialize checklist state in localStorage
- localStorage.setItem('onboarding_checklist_v1', JSON.stringify({
- client: false,
- project: false,
- document: false,
- ai: false,
- invite: false
- }))
- 
- router.push('/dashboard')
- } catch (err) {
- console.error(err)
- } finally {
- setLoading(false)
- }
- }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
 
- return (
- <div className="min-h-screen bg-navy flex items-center justify-center px-4 relative overflow-hidden font-body text-white">
- {/* Visual Dot Grid Background Accent */}
- <div className="absolute inset-0 opacity-15 pointer-events-none">
- <div className="w-full h-full bg-[radial-gradient(#f5a623_1px,transparent_1px)] [background-size:24px_24px]" />
- </div>
+  const handleFinish = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/profile/onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          role,
+          full_name: formData.name,
+          org_name: formData.orgName,
+          city: formData.city,
+          state: formData.state,
+        }),
+      })
 
- <div className="w-full max-w-xl bg-navy-mid shadow-none overflow-hidden relative z-10">
- 
- {/* Step Indicator Header */}
- <div className="px-8 pt-8 flex items-center justify-between">
- <Logo size={32} showTagline={false} />
- <div className="flex items-center gap-1.5 font-mono text-[10px] text-stone">
- <span className={step >= 1 ? 'text-amber font-bold' : ''}>STEP 1</span>
- <span>•</span>
- <span className={step >= 2 ? 'text-amber font-bold' : ''}>STEP 2</span>
- <span>•</span>
- <span className={step >= 3 ? 'text-amber font-bold' : ''}>STEP 3</span>
- </div>
- </div>
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error ?? 'Setup failed')
+      }
 
- {/* Steps Content wrapping with Framer Motion AnimatePresence */}
- <div className="p-8 min-h-[360px] flex flex-col justify-between">
- <AnimatePresence mode="wait">
- {step === 1 && (
- <motion.div
- key="step1"
- initial={{ opacity: 0, x: 20 }}
- animate={{ opacity: 1, x: 0 }}
- exit={{ opacity: 0, x: -20 }}
- transition={{ duration: 0.2 }}
- className="space-y-5"
- >
- <div>
- <h1 className="text-xl font-bold mb-1.5">Welcome to 5Bloc</h1>
- <p className="text-xs text-stone">Let's verify your basic profile information to start.</p>
- </div>
- <div className="space-y-4 pt-2">
- <div>
- <label className="block text-stone text-xs font-bold uppercase tracking-wider mb-1.5 font-mono">Your Name</label>
- <input
- type="text"
- name="name"
- value={formData.name}
- onChange={handleInputChange}
- className="input-5bloc"
- placeholder="Enter your full name"
- />
- </div>
- <div>
- <label className="block text-stone text-xs font-bold uppercase tracking-wider mb-1.5 font-mono">Email Address</label>
- <input
- type="email"
- name="email"
- value={formData.email}
- onChange={handleInputChange}
- className="input-5bloc opacity-60 cursor-not-allowed"
- disabled
- />
- </div>
- </div>
- 
- <div className="pt-6 flex justify-end">
- <button onClick={nextStep} className="btn-primary px-8">
- CONTINUE <span className="material-icons-outlined text-[14px]">arrow_forward</span>
- </button>
- </div>
- </motion.div>
- )}
+      localStorage.removeItem('5bloc_signup_role')
+      localStorage.setItem('onboarding_checklist_v1', JSON.stringify({
+        client: false, project: false, document: false, ai: false, invite: false,
+      }))
+      router.push('/dashboard')
+      router.refresh()
+    } catch (err) {
+      console.error(err)
+      // Demo fallback — still proceed
+      localStorage.setItem('5bloc_demo_role', role)
+      localStorage.removeItem('5bloc_signup_role')
+      router.push('/dashboard')
+    } finally {
+      setLoading(false)
+    }
+  }
 
- {step === 2 && (
- <motion.div
- key="step2"
- initial={{ opacity: 0, x: 20 }}
- animate={{ opacity: 1, x: 0 }}
- exit={{ opacity: 0, x: -20 }}
- transition={{ duration: 0.2 }}
- className="space-y-5"
- >
- <div>
- <h1 className="text-xl font-bold mb-1.5">Set up your architecture firm</h1>
- <p className="text-xs text-stone">Enter details to brand your invoices and client portal.</p>
- </div>
- <div className="space-y-4 pt-1 max-h-[300px] overflow-y-auto pr-1">
- <div className="grid grid-cols-2 gap-4">
- <div className="col-span-2">
- <label className="block text-stone text-xs font-bold uppercase tracking-wider mb-1.5 font-mono">Firm Name *</label>
- <input
- type="text"
- name="firmName"
- required
- value={formData.firmName}
- onChange={handleInputChange}
- className="input-5bloc"
- placeholder="e.g. Apex Design Architects"
- />
- </div>
- <div>
- <label className="block text-stone text-xs font-bold uppercase tracking-wider mb-1.5 font-mono">City *</label>
- <input
- type="text"
- name="city"
- required
- value={formData.city}
- onChange={handleInputChange}
- className="input-5bloc"
- placeholder="e.g. Mumbai"
- />
- </div>
- <div>
- <label className="block text-stone text-xs font-bold uppercase tracking-wider mb-1.5 font-mono">State</label>
- <input
- type="text"
- name="state"
- value={formData.state}
- onChange={handleInputChange}
- className="input-5bloc"
- placeholder="e.g. Maharashtra"
- />
- </div>
- </div>
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4 py-10 font-body" style={{ background: 'var(--surface-canvas)' }}>
+      <div
+        className="w-full max-w-lg rounded-2xl overflow-hidden"
+        style={{ background: 'var(--surface-container)', boxShadow: 'inset 0 0 0 1px var(--hairline), var(--shadow-3)' }}
+      >
+        <div className="px-7 pt-7 flex items-center justify-between">
+          <Logo size={28} showTagline={false} />
+          <span className="font-mono text-[10px] tracking-widest" style={{ color: 'var(--stone)' }}>
+            STEP {step}/2
+          </span>
+        </div>
 
- <div>
- <label className="block text-stone text-xs font-bold uppercase tracking-wider mb-1.5 font-mono">Firm Specialisation</label>
- <select
- name="firmType"
- value={formData.firmType}
- onChange={handleInputChange}
- className="input-5bloc"
- >
- <option value="residential">Residential Projects Only</option>
- <option value="commercial">Commercial Projects Only</option>
- <option value="both">Both Residential & Commercial</option>
- </select>
- </div>
+        <div className="p-7 min-h-[380px] flex flex-col">
+          <AnimatePresence mode="wait">
+            {step === 1 ? (
+              <motion.div key="s1" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} className="flex-1 flex flex-col">
+                <h1 className="text-xl font-semibold mb-1" style={{ color: 'var(--on-surface)' }}>Welcome to 5BLOC</h1>
+                <p className="text-[13px] mb-5" style={{ color: 'var(--stone)' }}>Confirm your profile to get started.</p>
 
- <div>
- <label className="block text-stone text-xs font-bold uppercase tracking-wider mb-1.5 font-mono">GSTIN Number (Optional)</label>
- <input
- type="text"
- name="gstNumber"
- value={formData.gstNumber}
- onChange={handleInputChange}
- className="input-5bloc font-mono"
- placeholder="e.g. 27AAAAA1111A1Z1"
- />
- </div>
- </div>
+                <div
+                  className="flex items-start gap-3 p-4 rounded-xl mb-5"
+                  style={{ background: `${roleConfig.color}10`, boxShadow: `inset 0 0 0 1px ${roleConfig.color}30` }}
+                >
+                  <span className="material-icons-outlined text-[22px]" style={{ color: roleConfig.color }}>{roleConfig.icon}</span>
+                  <div>
+                    <p className="text-[13px] font-semibold" style={{ color: 'var(--on-surface)' }}>{roleConfig.label}</p>
+                    <p className="text-[11.5px] mt-0.5" style={{ color: 'var(--on-surface-variant)' }}>{roleConfig.signupDesc}</p>
+                  </div>
+                </div>
 
- <div className="pt-6 flex items-center justify-between ">
- <button onClick={prevStep} className="btn-secondary px-6">
- <span className="material-icons-outlined text-[14px]">arrow_back</span> BACK
- </button>
- <button 
- onClick={nextStep} 
- disabled={!formData.firmName || !formData.city}
- className="btn-primary px-8"
- >
- CONTINUE <span className="material-icons-outlined text-[14px]">arrow_forward</span>
- </button>
- </div>
- </motion.div>
- )}
+                <div className="space-y-3">
+                  <div>
+                    <label className="label-sm block mb-1.5" style={{ color: 'var(--stone)' }}>Your name</label>
+                    <input type="text" name="name" value={formData.name} onChange={handleInputChange} className="input-5bloc" placeholder="Full name" />
+                  </div>
+                  <div>
+                    <label className="label-sm block mb-1.5" style={{ color: 'var(--stone)' }}>Email</label>
+                    <input type="email" name="email" value={formData.email} disabled className="input-5bloc opacity-60" />
+                  </div>
+                </div>
 
- {step === 3 && (
- <motion.div
- key="step3"
- initial={{ opacity: 0, x: 20 }}
- animate={{ opacity: 1, x: 0 }}
- exit={{ opacity: 0, x: -20 }}
- transition={{ duration: 0.2 }}
- className="space-y-6"
- >
- <div>
- <h1 className="text-xl font-bold mb-1.5">You're all set!</h1>
- <p className="text-xs text-stone">5Bloc is customized to match your professional role.</p>
- </div>
+                <div className="mt-auto pt-6 flex justify-end">
+                  <button type="button" onClick={() => setStep(2)} disabled={!formData.name.trim()} className="btn-primary">
+                    Continue <span className="material-icons-outlined text-[15px]">arrow_forward</span>
+                  </button>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div key="s2" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} className="flex-1 flex flex-col">
+                <h1 className="text-xl font-semibold mb-1" style={{ color: 'var(--on-surface)' }}>{roleConfig.onboardingTitle}</h1>
+                <p className="text-[13px] mb-5" style={{ color: 'var(--stone)' }}>This appears on invoices, portals and project invites.</p>
 
- {/* Role Confirmation Card */}
- <div className="p-6 bg-navy flex items-start gap-4">
- <div className="w-12 h-12 bg-amber/10 border text-amber flex items-center justify-center shrink-0">
- <span className="material-icons-outlined text-[28px]">architecture</span>
- </div>
- <div>
- <h3 className="text-sm font-bold text-white mb-1">Configured as: Architect (Firm Owner)</h3>
- <p className="text-xs text-stone leading-relaxed">
- You will have owner access to the workspace. You can invite contractors, consultants, and clients to coordinate files and milestones.
- </p>
- </div>
- </div>
+                <div className="space-y-3">
+                  <div>
+                    <label className="label-sm block mb-1.5" style={{ color: 'var(--stone)' }}>{roleConfig.orgLabel} *</label>
+                    <input type="text" name="orgName" value={formData.orgName} onChange={handleInputChange} className="input-5bloc" placeholder={roleConfig.orgPlaceholder} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="label-sm block mb-1.5" style={{ color: 'var(--stone)' }}>City *</label>
+                      <input type="text" name="city" value={formData.city} onChange={handleInputChange} className="input-5bloc" placeholder="Mumbai" />
+                    </div>
+                    <div>
+                      <label className="label-sm block mb-1.5" style={{ color: 'var(--stone)' }}>State</label>
+                      <input type="text" name="state" value={formData.state} onChange={handleInputChange} className="input-5bloc" placeholder="MH" />
+                    </div>
+                  </div>
+                  {(role === 'architect' || role === 'contractor' || role === 'vendor') && (
+                    <div>
+                      <label className="label-sm block mb-1.5" style={{ color: 'var(--stone)' }}>GSTIN (optional)</label>
+                      <input type="text" name="gstNumber" value={formData.gstNumber} onChange={handleInputChange} className="input-5bloc font-mono" placeholder="27AAAAA1111A1Z1" />
+                    </div>
+                  )}
+                </div>
 
- <div className="pt-6 flex items-center justify-between ">
- <button onClick={prevStep} className="btn-secondary px-6" disabled={loading}>
- <span className="material-icons-outlined text-[14px]">arrow_back</span> BACK
- </button>
- <button 
- onClick={handleFinish} 
- disabled={loading}
- className="btn-primary px-8 py-3"
- >
- {loading ? 'SETTING UP WORKSPACE...' : 'SET UP MY WORKSPACE →'}
- </button>
- </div>
- </motion.div>
- )}
- </AnimatePresence>
- </div>
-
- </div>
- </div>
- )
+                <div className="mt-auto pt-6 flex items-center justify-between gap-3">
+                  <button type="button" onClick={() => setStep(1)} className="btn-secondary btn-sm">
+                    <span className="material-icons-outlined text-[14px]">arrow_back</span> Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleFinish}
+                    disabled={loading || !formData.orgName.trim() || !formData.city.trim()}
+                    className="btn-primary"
+                  >
+                    {loading ? 'Setting up…' : 'Launch workspace →'}
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </div>
+  )
 }
-

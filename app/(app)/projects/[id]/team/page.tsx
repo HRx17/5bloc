@@ -1,7 +1,10 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'next/navigation'
+import { useToast } from '@/components/ui/Toast'
+import { SaveBar } from '@/components/ui/SaveBar'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 interface Member {
  id: string
@@ -15,68 +18,44 @@ interface Member {
  status: 'active' | 'pending'
 }
 
+const MOCK_MEMBERS: Member[] = [
+  { id: 'mem-1', name: 'Parth Patel', email: 'parth@5bloc.com', role: 'architect', lastActive: 'Active now', can_upload: true, can_comment: true, can_approve: true, status: 'active' },
+  { id: 'mem-2', name: 'Aritro Roy', email: 'aritro@5bloc.com', role: 'consultant', lastActive: '2 hrs ago', can_upload: true, can_comment: true, can_approve: false, status: 'active' },
+  { id: 'mem-3', name: 'Amit Sharma', email: 'amit.civil@gmail.com', role: 'contractor', lastActive: '1 day ago', can_upload: true, can_comment: true, can_approve: false, status: 'active' },
+  { id: 'mem-4', name: 'Karan Shah (Builder)', email: 'karan@karanbuilders.com', role: 'builder', lastActive: 'Pending invite', can_upload: false, can_comment: true, can_approve: true, status: 'pending' },
+]
+
 export default function ProjectTeam() {
  const params = useParams()
  const projectId = params.id as string
+ const { toast } = useToast()
 
  const [members, setMembers] = useState<Member[]>([])
+ const [savedMembers, setSavedMembers] = useState<Member[]>([])
  const [loading, setLoading] = useState(true)
+ const [saving, setSaving] = useState(false)
  const [inviteEmail, setInviteEmail] = useState('')
  const [inviteRole, setInviteRole] = useState<'architect' | 'contractor' | 'builder' | 'consultant' | 'client'>('contractor')
  const [sendingInvite, setSendingInvite] = useState(false)
+ const [removeTarget, setRemoveTarget] = useState<Member | null>(null)
+ const [revokeTarget, setRevokeTarget] = useState<Member | null>(null)
+
+ const permKey = (m: Member) => `${m.id}:${m.can_upload}:${m.can_comment}:${m.can_approve}`
+ const isDirty = useMemo(() => {
+   const active = members.filter(m => m.status === 'active')
+   const saved = savedMembers.filter(m => m.status === 'active')
+   if (active.length !== saved.length) return true
+   return active.some((m, i) => permKey(m) !== permKey(saved[i]))
+ }, [members, savedMembers])
 
  useEffect(() => {
- // Mock load team members
- const timer = setTimeout(() => {
- setMembers([
- {
- id: 'mem-1',
- name: 'Parth Patel',
- email: 'parth@5bloc.com',
- role: 'architect',
- lastActive: 'Active now',
- can_upload: true,
- can_comment: true,
- can_approve: true,
- status: 'active',
- },
- {
- id: 'mem-2',
- name: 'Aritro Roy',
- email: 'aritro@5bloc.com',
- role: 'consultant',
- lastActive: '2 hrs ago',
- can_upload: true,
- can_comment: true,
- can_approve: false,
- status: 'active',
- },
- {
- id: 'mem-3',
- name: 'Amit Sharma',
- email: 'amit.civil@gmail.com',
- role: 'contractor',
- lastActive: '1 day ago',
- can_upload: true,
- can_comment: true,
- can_approve: false,
- status: 'active',
- },
- {
- id: 'mem-4',
- name: 'Karan Shah (Builder)',
- email: 'karan@karanbuilders.com',
- role: 'builder',
- lastActive: 'Pending invite',
- can_upload: false,
- can_comment: true,
- can_approve: true,
- status: 'pending',
- }
- ])
- setLoading(false)
- }, 300)
- return () => clearTimeout(timer)
+   const timer = setTimeout(() => {
+     const snapshot = JSON.parse(JSON.stringify(MOCK_MEMBERS)) as Member[]
+     setMembers(snapshot)
+     setSavedMembers(JSON.parse(JSON.stringify(snapshot)))
+     setLoading(false)
+   }, 300)
+   return () => clearTimeout(timer)
  }, [projectId])
 
  const handleInviteSubmit = async (e: React.FormEvent) => {
@@ -111,12 +90,25 @@ export default function ProjectTeam() {
  localStorage.setItem('onboarding_checklist_v1', JSON.stringify(parsed))
  }
 
- alert(`Invitation sent successfully to ${inviteEmail} via Resend.`)
+ toast(`Invitation sent to ${inviteEmail}`, 'success')
  } catch (err) {
  console.error(err)
  } finally {
  setSendingInvite(false)
  }
+ }
+
+ const handleSavePermissions = async () => {
+   setSaving(true)
+   await new Promise((r) => setTimeout(r, 600))
+   setSavedMembers(JSON.parse(JSON.stringify(members)))
+   setSaving(false)
+   toast('Team permissions saved', 'success')
+ }
+
+ const handleDiscardPermissions = () => {
+   setMembers(JSON.parse(JSON.stringify(savedMembers)))
+   toast('Changes discarded', 'info')
  }
 
  const handleToggleAccess = (memberId: string, field: 'can_upload' | 'can_comment' | 'can_approve') => {
@@ -125,10 +117,16 @@ export default function ProjectTeam() {
  )
  }
 
- const handleRemoveMember = (memberId: string) => {
- if (confirm('Are you sure you want to remove this member?')) {
- setMembers(prev => prev.filter(m => m.id !== memberId))
+ const handleRemoveMember = (member: Member) => {
+   setRemoveTarget(member)
  }
+
+ const confirmRemoveMember = () => {
+   if (!removeTarget) return
+   setMembers(prev => prev.filter(m => m.id !== removeTarget.id))
+   setSavedMembers(prev => prev.filter(m => m.id !== removeTarget.id))
+   toast(`${removeTarget.name} removed from project`, 'info')
+   setRemoveTarget(null)
  }
 
  const getRoleBadge = (role: Member['role']) => {
@@ -154,7 +152,7 @@ export default function ProjectTeam() {
  <div className="card-5bloc lg:col-span-2 space-y-4">
  <div>
  <h3 className="text-sm font-bold uppercase text-white font-mono">Project Members</h3>
- <p className="text-[11px] text-stone mt-0.5">Configure access roles and permissions per project collaborator.</p>
+ <p className="text-[11px] text-stone mt-0.5">Configure access roles and permissions. Changes require saving.</p>
  </div>
 
  {loading ? (
@@ -225,7 +223,7 @@ export default function ProjectTeam() {
  <td className="py-4 pr-2 text-right">
  {member.role !== 'architect' && (
  <button 
- onClick={() => handleRemoveMember(member.id)}
+ onClick={() => handleRemoveMember(member)}
  className="p-1 rounded text-stone hover:text-error hover:bg-navy-lt transition"
  title="Remove Member"
  >
@@ -312,13 +310,13 @@ export default function ProjectTeam() {
  </td>
  <td className="py-3 pr-2 text-right space-x-2">
  <button 
- onClick={() => alert(`Re-sent invitation email via Resend to ${invite.email}`)}
+ onClick={() => toast(`Invitation re-sent to ${invite.email}`, 'success')}
  className="btn-secondary py-1 px-3 text-[10px] font-semibold"
  >
  RESEND
  </button>
  <button 
- onClick={() => setMembers(prev => prev.filter(m => m.id !== invite.id))}
+ onClick={() => setRevokeTarget(invite)}
  className="text-stone hover:text-error transition font-semibold text-xs p-1"
  >
  REVOKE
@@ -331,6 +329,41 @@ export default function ProjectTeam() {
  </div>
  </div>
  )}
+
+ <SaveBar
+   visible={isDirty}
+   message="Unsaved permission changes"
+   saving={saving}
+   onSave={handleSavePermissions}
+   onDiscard={handleDiscardPermissions}
+ />
+
+ <ConfirmDialog
+   open={!!removeTarget}
+   title="Remove team member?"
+   message={`Remove ${removeTarget?.name ?? 'this member'} from the project? They will lose access immediately.`}
+   confirmLabel="Remove member"
+   variant="danger"
+   onConfirm={confirmRemoveMember}
+   onCancel={() => setRemoveTarget(null)}
+ />
+
+ <ConfirmDialog
+   open={!!revokeTarget}
+   title="Revoke invitation?"
+   message={`Cancel the pending invite for ${revokeTarget?.email}?`}
+   confirmLabel="Revoke invite"
+   variant="danger"
+   onConfirm={() => {
+     if (revokeTarget) {
+       setMembers(prev => prev.filter(m => m.id !== revokeTarget.id))
+       setSavedMembers(prev => prev.filter(m => m.id !== revokeTarget.id))
+       toast('Invitation revoked', 'info')
+     }
+     setRevokeTarget(null)
+   }}
+   onCancel={() => setRevokeTarget(null)}
+ />
 
  </div>
  )

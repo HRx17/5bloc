@@ -4,6 +4,8 @@ import React, { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Toggle } from '@/components/ui/Toggle'
 import { useToast } from '@/components/ui/Toast'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { SaveBar } from '@/components/ui/SaveBar'
 
 interface OrgMember {
  id: string
@@ -37,6 +39,8 @@ function SettingsInner() {
  phone: '9876543210',
  avatar: '',
  })
+ const [savedProfile, setSavedProfile] = useState(profile)
+ const [savingProfile, setSavingProfile] = useState(false)
 
  // Org settings
  const [org, setOrg] = useState({
@@ -46,6 +50,8 @@ function SettingsInner() {
  city: 'Mumbai',
  address: 'Bandra West, Linking Road',
  })
+ const [savedOrg, setSavedOrg] = useState(org)
+ const [savingOrg, setSavingOrg] = useState(false)
 
  // Team settings
  const [team, setTeam] = useState<OrgMember[]>([
@@ -62,16 +68,34 @@ function SettingsInner() {
  rfis: true,
  weekly_digest: false,
  })
+ const [savedNotifications, setSavedNotifications] = useState(notifications)
+ const [savingNotifications, setSavingNotifications] = useState(false)
+ const [removeTeamTarget, setRemoveTeamTarget] = useState<OrgMember | null>(null)
 
- const handleProfileSave = (e: React.FormEvent) => {
- e.preventDefault()
+ const notificationsDirty = JSON.stringify(notifications) !== JSON.stringify(savedNotifications)
+ const profileDirty = JSON.stringify(profile) !== JSON.stringify(savedProfile)
+ const orgDirty = JSON.stringify(org) !== JSON.stringify(savedOrg)
+
+ const handleProfileSave = async (e?: React.FormEvent) => {
+ e?.preventDefault()
+ setSavingProfile(true)
+ await new Promise(r => setTimeout(r, 400))
+ setSavedProfile({ ...profile })
+ setSavingProfile(false)
  toast('Profile saved successfully', 'success')
  }
 
- const handleOrgSave = (e: React.FormEvent) => {
- e.preventDefault()
+ const handleOrgSave = async (e?: React.FormEvent) => {
+ e?.preventDefault()
+ setSavingOrg(true)
+ await new Promise(r => setTimeout(r, 400))
+ setSavedOrg({ ...org })
+ setSavingOrg(false)
  toast('Organisation settings saved', 'success')
  }
+
+ const handleDiscardProfile = () => setProfile({ ...savedProfile })
+ const handleDiscardOrg = () => setOrg({ ...savedOrg })
 
  const handleInviteTeam = (e: React.FormEvent) => {
  e.preventDefault()
@@ -87,16 +111,36 @@ function SettingsInner() {
  toast(`Invite sent to ${newTeamEmail} — activate Resend to deliver email.`, 'info')
  }
 
- const handleRemoveTeam = (id: string) => {
- setTeam(prev => prev.filter(m => m.id !== id))
+ const handleRemoveTeam = (member: OrgMember) => {
+ setRemoveTeamTarget(member)
+ }
+
+ const confirmRemoveTeam = () => {
+ if (!removeTeamTarget) return
+ setTeam(prev => prev.filter(m => m.id !== removeTeamTarget.id))
  toast('Team member removed', 'info')
+ setRemoveTeamTarget(null)
  }
 
  const handleToggleNotification = (key: keyof typeof notifications) => {
  setNotifications(prev => ({ ...prev, [key]: !prev[key] }))
  }
 
+ const handleSaveNotifications = async () => {
+ setSavingNotifications(true)
+ await new Promise(r => setTimeout(r, 500))
+ setSavedNotifications({ ...notifications })
+ setSavingNotifications(false)
+ toast('Notification preferences saved', 'success')
+ }
+
+ const handleDiscardNotifications = () => {
+ setNotifications({ ...savedNotifications })
+ toast('Changes discarded', 'info')
+ }
+
  return (
+ <>
  <div className="p-6 font-body select-none max-w-5xl mx-auto space-y-6">
  
  {/* Header */}
@@ -188,11 +232,6 @@ function SettingsInner() {
  />
  </div>
 
- <div className="pt-2 flex justify-end">
- <button type="submit" className="btn-primary py-1.5 px-6 text-xs">
- Save profile
- </button>
- </div>
  </form>
  </div>
  )}
@@ -244,11 +283,6 @@ function SettingsInner() {
  </div>
  </div>
 
- <div className="pt-2 flex justify-end">
- <button type="submit" className="btn-primary py-1.5 px-6 text-xs">
- Save organisation
- </button>
- </div>
  </form>
  </div>
  )}
@@ -310,7 +344,7 @@ function SettingsInner() {
  <td className="py-3 pr-2 text-right">
  {member.role !== 'Owner' && (
  <button 
- onClick={() => handleRemoveTeam(member.id)}
+ onClick={() => handleRemoveTeam(member)}
  className="text-stone hover:text-error transition font-semibold"
  >
  Remove
@@ -388,7 +422,10 @@ function SettingsInner() {
 
  {activeTab === 'notifications' && (
  <div className="card-5bloc space-y-6">
- <h3 className="text-sm font-semibold text-amber pb-2.5">Email Notifications</h3>
+ <div className="flex items-center justify-between gap-3 pb-2.5" style={{ borderBottom: '1px solid var(--hairline)' }}>
+ <h3 className="text-sm font-semibold" style={{ color: 'var(--amber)' }}>Email Notifications</h3>
+ <span className="text-[11px]" style={{ color: 'var(--stone)' }}>Save to apply changes</span>
+ </div>
  
  <div className="space-y-4 text-xs">
  {[
@@ -530,6 +567,41 @@ function SettingsInner() {
 
   </div>
  </div>
+
+ <SaveBar
+   visible={activeTab === 'notifications' && notificationsDirty}
+   message="Unsaved notification preferences"
+   saving={savingNotifications}
+   onSave={handleSaveNotifications}
+   onDiscard={handleDiscardNotifications}
+ />
+
+ <SaveBar
+   visible={activeTab === 'profile' && profileDirty}
+   message="Unsaved profile changes"
+   saving={savingProfile}
+   onSave={() => handleProfileSave()}
+   onDiscard={handleDiscardProfile}
+ />
+
+ <SaveBar
+   visible={activeTab === 'organisation' && orgDirty}
+   message="Unsaved organisation changes"
+   saving={savingOrg}
+   onSave={() => handleOrgSave()}
+   onDiscard={handleDiscardOrg}
+ />
+
+ <ConfirmDialog
+   open={!!removeTeamTarget}
+   title="Remove team member?"
+   message={`Remove ${removeTeamTarget?.name ?? 'this member'} from your organisation?`}
+   confirmLabel="Remove"
+   variant="danger"
+   onConfirm={confirmRemoveTeam}
+   onCancel={() => setRemoveTeamTarget(null)}
+ />
+ </>
  )
 }
 

@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
+import { useToast } from '@/components/ui/Toast'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 interface SubmittalItem {
  id: string
@@ -20,11 +22,15 @@ interface SubmittalItem {
 export default function SubmittalsLog() {
  const params = useParams()
  const projectId = params.id as string
+ const { toast } = useToast()
 
  const [submittals, setSubmittals] = useState<SubmittalItem[]>([])
  const [loading, setLoading] = useState(true)
  const [showCreateModal, setShowCreateModal] = useState(false)
  const [activeSubmittal, setActiveSubmittal] = useState<SubmittalItem | null>(null)
+ const [savedReviewNote, setSavedReviewNote] = useState('')
+ const [pendingReviewAction, setPendingReviewAction] = useState<SubmittalItem['status'] | null>(null)
+ const [pendingClose, setPendingClose] = useState(false)
 
  const [newSubmittal, setNewSubmittal] = useState({
  title: '',
@@ -101,17 +107,39 @@ export default function SubmittalsLog() {
  setNewSubmittal({ title: '', spec_section: '', description: '', contractor: 'Amit Sharma (Civil Contractor)', due_date: '' })
  }
 
- const handleReviewAction = (status: SubmittalItem['status']) => {
- if (!activeSubmittal) return
+ const reviewDirty = activeSubmittal
+   ? (activeSubmittal.review_note ?? '') !== savedReviewNote
+   : false
 
- setSubmittals(prev => 
- prev.map(s => s.id === activeSubmittal.id ? { 
- ...s, 
- status, 
- review_note: activeSubmittal.review_note 
- } : s)
- )
- setActiveSubmittal(null)
+ const openSubmittal = (sub: SubmittalItem) => {
+   setActiveSubmittal(sub)
+   setSavedReviewNote(sub.review_note ?? '')
+ }
+
+ const requestClosePanel = () => {
+   if (reviewDirty) {
+     setPendingClose(true)
+     return
+   }
+   setActiveSubmittal(null)
+ }
+
+ const applyReviewAction = (status: SubmittalItem['status']) => {
+   if (!activeSubmittal) return
+
+   setSubmittals(prev =>
+     prev.map(s => s.id === activeSubmittal.id ? {
+       ...s,
+       status,
+       review_note: activeSubmittal.review_note,
+     } : s)
+   )
+   toast(
+     status === 'approved' ? 'Submittal approved' : 'Revision requested — contractor notified',
+     status === 'approved' ? 'success' : 'info'
+   )
+   setActiveSubmittal(null)
+   setPendingReviewAction(null)
  }
 
  const getStatusBadge = (status: SubmittalItem['status']) => {
@@ -167,7 +195,7 @@ export default function SubmittalsLog() {
  <tr 
  key={sub.id} 
  className="hover:bg-navy-lt/20 cursor-pointer transition-colors group"
- onClick={() => setActiveSubmittal(sub)}
+ onClick={() => openSubmittal(sub)}
  >
  <td className="py-4 pl-2 font-mono text-[10px] text-stone">SUB-{String(sub.submittal_number).padStart(3, '0')}</td>
  <td className="py-4 font-semibold pr-4">
@@ -292,7 +320,7 @@ export default function SubmittalsLog() {
  {/* Submittal review Slide-over */}
  {activeSubmittal && (
  <div className="fixed inset-0 z-50 flex justify-end bg-navy/60 backdrop-blur-xs select-none">
- <div className="fixed inset-0" onClick={() => setActiveSubmittal(null)} />
+ <div className="fixed inset-0" onClick={requestClosePanel} />
  <div className="relative w-full max-w-lg h-screen bg-navy-mid border-l shadow-none flex flex-col justify-between z-10 animate-slide-in">
  {/* Slide-over Header */}
  <div className="px-6 py-4 bg-navy border-b flex items-center justify-between">
@@ -302,7 +330,7 @@ export default function SubmittalsLog() {
  </h3>
  <span className="text-[10px] text-stone mt-0.5 block">Contractor: {activeSubmittal.contractor}</span>
  </div>
- <button onClick={() => setActiveSubmittal(null)} className="text-stone hover:text-white transition p-1 hover:bg-navy-lt rounded-md">
+ <button onClick={requestClosePanel} className="text-stone hover:text-white transition p-1 hover:bg-navy-lt rounded-md">
  <span className="material-icons-outlined text-[20px]">close</span>
  </button>
  </div>
@@ -352,14 +380,14 @@ export default function SubmittalsLog() {
  {/* Slide-over Footer controls */}
  <div className="px-6 py-4 bg-navy border-t flex flex-wrap gap-2.5 items-center justify-end shrink-0">
  <button 
- onClick={() => handleReviewAction('revise_resubmit')}
+ onClick={() => setPendingReviewAction('revise_resubmit')}
  className="btn-secondary btn-sm"
                       style={{ color: 'var(--error)' }}
  >
  Revise & Resubmit
  </button>
  <button 
- onClick={() => handleReviewAction('approved')}
+ onClick={() => setPendingReviewAction('approved')}
  className="btn-primary py-1.5 px-6 text-xs font-bold"
  >
  Approve Submittal
@@ -368,6 +396,33 @@ export default function SubmittalsLog() {
  </div>
  </div>
  )}
+
+ <ConfirmDialog
+   open={!!pendingReviewAction}
+   title={pendingReviewAction === 'approved' ? 'Approve submittal?' : 'Request revision?'}
+   message={
+     pendingReviewAction === 'approved'
+       ? 'Approve this submittal for procurement? The contractor will be notified.'
+       : 'Send this submittal back for revision? Your review note will be shared with the contractor.'
+   }
+   confirmLabel={pendingReviewAction === 'approved' ? 'Approve' : 'Request revision'}
+   variant={pendingReviewAction === 'approved' ? 'default' : 'danger'}
+   onConfirm={() => pendingReviewAction && applyReviewAction(pendingReviewAction)}
+   onCancel={() => setPendingReviewAction(null)}
+ />
+
+ <ConfirmDialog
+   open={pendingClose}
+   title="Discard review notes?"
+   message="You have unsaved review notes. Close without saving?"
+   confirmLabel="Discard"
+   variant="danger"
+   onConfirm={() => {
+     setPendingClose(false)
+     setActiveSubmittal(null)
+   }}
+   onCancel={() => setPendingClose(false)}
+ />
  </div>
  )
 }

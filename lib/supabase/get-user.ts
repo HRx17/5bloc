@@ -22,7 +22,7 @@ export async function getAuthUser() {
       auth_id: user.id,
       email: user.email,
       full_name: user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'User',
-      role: 'architect',
+      role: (user.user_metadata?.role as string) ?? 'architect',
       org_id: null,
       plan: 'free',
       ai_add_on: false,

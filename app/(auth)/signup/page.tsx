@@ -3,9 +3,10 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { Eye, EyeOff, AlertCircle, Check, Info } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Eye, EyeOff, AlertCircle, Check, Info, ArrowLeft, ArrowRight } from 'lucide-react'
 import { createSupabaseClient } from '@/lib/supabase/client'
+import { USER_ROLES, type UserRole } from '@/lib/roles'
 
 const SUPABASE_CONFIGURED =
   typeof process !== 'undefined' &&
@@ -26,28 +27,31 @@ function LogoMark({ size = 28 }: { size?: number }) {
 
 export default function Signup() {
   const router = useRouter()
-  const [name,         setName]         = useState('')
-  const [email,        setEmail]        = useState('')
-  const [password,     setPassword]     = useState('')
+  const [step, setStep]         = useState<1 | 2>(1)
+  const [role, setRole]         = useState<UserRole>('architect')
+  const [name, setName]         = useState('')
+  const [email, setEmail]       = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [loading,      setLoading]      = useState(false)
-  const [error,        setError]        = useState('')
-  const [done,         setDone]         = useState(false)
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState('')
+  const [done, setDone]         = useState(false)
+
+  const selectedRole = USER_ROLES.find((r) => r.id === role)!
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
-    if (!name.trim())         return setError('Please enter your full name.')
-    if (!email.trim())        return setError('Please enter your email address.')
-    if (password.length < 8)  return setError('Password must be at least 8 characters.')
+    if (!name.trim())        return setError('Please enter your full name.')
+    if (!email.trim())       return setError('Please enter your email address.')
+    if (password.length < 8) return setError('Password must be at least 8 characters.')
 
     setLoading(true)
-
     try {
       if (!SUPABASE_CONFIGURED) {
-        /* ── Demo mode — accounts not persisted ── */
-        await new Promise((r) => setTimeout(r, 700))
+        localStorage.setItem('5bloc_signup_role', role)
+        await new Promise((r) => setTimeout(r, 600))
         router.push('/onboarding')
         return
       }
@@ -57,7 +61,7 @@ export default function Signup() {
         email: email.trim().toLowerCase(),
         password,
         options: {
-          data: { full_name: name.trim() },
+          data: { full_name: name.trim(), role },
           emailRedirectTo: `${location.origin}/onboarding`,
         },
       })
@@ -70,8 +74,6 @@ export default function Signup() {
         }
         return
       }
-
-      /* Supabase sends a confirmation email — show the "check inbox" state */
       setDone(true)
     } catch {
       setError('Something went wrong. Please try again.')
@@ -82,268 +84,212 @@ export default function Signup() {
 
   const handleGoogle = async () => {
     if (!SUPABASE_CONFIGURED) {
-      setError('Google sign-up requires Supabase to be configured.')
+      localStorage.setItem('5bloc_signup_role', role)
+      router.push('/onboarding')
       return
     }
     const supabase = createSupabaseClient()
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${location.origin}/onboarding` },
+      options: {
+        redirectTo: `${location.origin}/onboarding`,
+        queryParams: { access_type: 'offline', prompt: 'consent' },
+      },
     })
+    await supabase.auth.updateUser({ data: { role } })
   }
 
   const pwStrong = password.length >= 8
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center px-4 py-10 relative overflow-hidden font-body dot-grid"
+      className="min-h-screen flex items-center justify-center px-4 py-10 relative overflow-hidden font-body"
       style={{ background: 'var(--surface-canvas)' }}
     >
-      {/* Ambient glow */}
-      <div
-        className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse at center, rgba(122,184,255,0.04) 0%, transparent 65%)' }}
-        aria-hidden
-      />
-
       <motion.div
-        className="w-full max-w-[400px] relative z-10"
-        initial={{ opacity: 0, y: 20 }}
+        className="w-full max-w-[480px] relative z-10"
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       >
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-[12px] font-medium mb-8 transition-colors"
+          className="inline-flex items-center gap-1.5 text-[12px] font-medium mb-6"
           style={{ color: 'var(--stone)' }}
-          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--on-surface)')}
-          onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--stone)')}
         >
           ← Back to site
         </Link>
 
         <div
-          className="rounded-2xl p-8"
+          className="rounded-2xl p-7 sm:p-8"
           style={{
             background: 'var(--surface-container)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), var(--shadow-3)',
+            boxShadow: 'inset 0 0 0 1px var(--hairline), var(--shadow-2)',
           }}
         >
-          {/* Logo */}
-          <div className="flex flex-col items-center mb-8">
-            <LogoMark size={40} />
-            <div className="mt-3">
-              <span
-                className="font-mono text-[16px] font-bold tracking-widest"
-                style={{ color: 'var(--on-surface)' }}
-              >
-                5BLOC
-              </span>
-            </div>
-            <p
-              className="mt-1.5 font-mono text-[10.5px] uppercase tracking-[0.16em]"
-              style={{ color: 'var(--stone)' }}
-            >
-              Create your workspace
+          {/* Header */}
+          <div className="flex flex-col items-center mb-6">
+            <LogoMark size={36} />
+            <span className="font-mono text-[15px] font-bold tracking-widest mt-2" style={{ color: 'var(--on-surface)' }}>
+              5BLOC
+            </span>
+            <p className="mt-1 text-[12px]" style={{ color: 'var(--stone)' }}>
+              {step === 1 ? 'Choose how you\'ll use 5BLOC' : `Create your ${selectedRole.label} account`}
             </p>
           </div>
 
-          {/* Demo mode banner */}
+          {/* Step indicator */}
+          <div className="flex items-center gap-2 mb-6">
+            {[1, 2].map((s) => (
+              <div
+                key={s}
+                className="h-1 flex-1 rounded-full transition-colors"
+                style={{ background: step >= s ? 'var(--amber)' : 'var(--hairline-strong)' }}
+              />
+            ))}
+          </div>
+
           {!SUPABASE_CONFIGURED && (
             <div
-              className="mb-5 flex items-start gap-2.5 rounded-xl px-4 py-3 text-[12.5px]"
-              style={{
-                background: 'rgba(122,184,255,0.08)',
-                color: 'var(--blue)',
-                boxShadow: 'inset 0 0 0 1px rgba(122,184,255,0.15)',
-              }}
+              className="mb-5 flex items-start gap-2.5 rounded-xl px-4 py-3 text-[12px]"
+              style={{ background: 'rgba(122,184,255,0.08)', color: 'var(--blue)', boxShadow: 'inset 0 0 0 1px rgba(122,184,255,0.15)' }}
             >
               <Info className="h-4 w-4 shrink-0 mt-0.5" />
-              <span><strong>Demo mode</strong> — accounts are not persisted. Connect Supabase to enable real sign-up.</span>
+              <span><strong>Demo mode</strong> — accounts are not persisted until Supabase is connected.</span>
             </div>
           )}
 
-          {/* Email verification sent state */}
           {done ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex flex-col items-center gap-4 py-6 text-center"
-            >
-              <div
-                className="h-14 w-14 rounded-full flex items-center justify-center"
-                style={{ background: 'rgba(100,220,150,0.12)', boxShadow: 'inset 0 0 0 1px rgba(100,220,150,0.25)' }}
-              >
-                <Check className="h-7 w-7" style={{ color: 'var(--success)' }} />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-4 py-6 text-center">
+              <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ background: 'rgba(46,204,138,0.12)' }}>
+                <Check className="h-6 w-6" style={{ color: 'var(--success)' }} />
               </div>
               <div>
                 <p className="font-semibold text-[15px]" style={{ color: 'var(--on-surface)' }}>Check your inbox</p>
                 <p className="mt-1 text-[13px]" style={{ color: 'var(--stone)' }}>
-                  We sent a confirmation link to <strong>{email}</strong>. Click it to activate your account.
+                  We sent a confirmation link to <strong>{email}</strong>.
                 </p>
               </div>
-              <Link href="/login" className="btn-secondary px-6 py-2 text-[13px]">Back to sign in</Link>
+              <Link href="/login" className="btn-secondary btn-sm">Back to sign in</Link>
             </motion.div>
           ) : (
-            <>
-          {error && (
-            <motion.div
-              key={error}
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-5 flex items-start gap-2.5 rounded-xl px-4 py-3 text-[13px]"
-              style={{
-                background: 'rgba(255,138,128,0.10)',
-                color: 'var(--error)',
-                boxShadow: 'inset 0 0 0 1px rgba(255,138,128,0.18)',
-              }}
-            >
-              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-              {error}
-            </motion.div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="label-sm block mb-2" style={{ color: 'var(--stone)' }}>
-                Full name
-              </label>
-              <input
-                type="text"
-                required
-                autoComplete="name"
-                placeholder="Parth Patel"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="input-5bloc"
-              />
-            </div>
-
-            <div>
-              <label className="label-sm block mb-2" style={{ color: 'var(--stone)' }}>
-                Email address
-              </label>
-              <input
-                type="email"
-                required
-                autoComplete="email"
-                placeholder="architect@firm.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input-5bloc"
-              />
-            </div>
-
-            <div>
-              <label className="label-sm block mb-2" style={{ color: 'var(--stone)' }}>
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  autoComplete="new-password"
-                  placeholder="Minimum 8 characters"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="input-5bloc pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                  style={{ color: 'var(--stone)' }}
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              {password.length > 0 && (
-                <div className="mt-2 flex items-center gap-1.5">
-                  <div
-                    className="h-1 flex-1 rounded-full transition-colors duration-300"
-                    style={{ background: pwStrong ? 'var(--success)' : 'var(--stone)', opacity: pwStrong ? 1 : 0.3 }}
-                  />
-                  <div
-                    className="h-1 flex-1 rounded-full transition-colors duration-300"
-                    style={{ background: pwStrong ? 'var(--success)' : 'var(--surface-container-high)' }}
-                  />
-                  <span className="text-[11px]" style={{ color: pwStrong ? 'var(--success)' : 'var(--stone)' }}>
-                    {pwStrong ? 'Strong' : 'Too short'}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary w-full mt-2 py-3"
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <motion.span
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
-                    className="block h-4 w-4 rounded-full"
-                    style={{ border: '2px solid rgba(0,0,0,0.2)', borderTopColor: 'var(--ink-black)' }}
-                  />
-                  Creating account…
-                </span>
+            <AnimatePresence mode="wait">
+              {step === 1 ? (
+                <motion.div key="step1" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }}>
+                  <div className="grid grid-cols-1 gap-2.5">
+                    {USER_ROLES.map((r) => {
+                      const selected = role === r.id
+                      return (
+                        <button
+                          key={r.id}
+                          type="button"
+                          onClick={() => setRole(r.id)}
+                          className="flex items-start gap-3 p-3.5 rounded-xl text-left transition-all"
+                          style={{
+                            background: selected ? 'rgba(245,166,35,0.08)' : 'var(--surface-container-low)',
+                            boxShadow: selected
+                              ? `inset 0 0 0 1.5px ${r.color}`
+                              : 'inset 0 0 0 1px var(--hairline)',
+                          }}
+                        >
+                          <div
+                            className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                            style={{ background: `${r.color}18`, color: r.color }}
+                          >
+                            <span className="material-icons-outlined text-[18px]">{r.icon}</span>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[13px] font-semibold" style={{ color: 'var(--on-surface)' }}>{r.label}</p>
+                            <p className="text-[11px] mt-0.5 leading-snug" style={{ color: 'var(--stone)' }}>{r.signupDesc}</p>
+                          </div>
+                          {selected && (
+                            <span className="material-icons-outlined text-[16px] ml-auto shrink-0" style={{ color: r.color }}>
+                              check_circle
+                            </span>
+                          )}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <button type="button" onClick={() => setStep(2)} className="btn-primary w-full mt-5">
+                    Continue as {selectedRole.label}
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                  <p className="mt-4 text-center text-[12px]" style={{ color: 'var(--stone)' }}>
+                    Already have an account?{' '}
+                    <Link href="/login" className="font-semibold" style={{ color: 'var(--amber)' }}>Sign in</Link>
+                  </p>
+                </motion.div>
               ) : (
-                'Create account'
+                <motion.div key="step2" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }}>
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="flex items-center gap-1 text-[12px] mb-4"
+                    style={{ color: 'var(--stone)' }}
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" /> Change role
+                  </button>
+
+                  {error && (
+                    <div
+                      className="mb-4 flex items-start gap-2 rounded-xl px-3 py-2.5 text-[12px]"
+                      style={{ background: 'rgba(255,138,128,0.10)', color: 'var(--error)', boxShadow: 'inset 0 0 0 1px rgba(255,138,128,0.18)' }}
+                    >
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      {error}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleSubmit} className="space-y-3.5">
+                    <div>
+                      <label className="label-sm block mb-1.5" style={{ color: 'var(--stone)' }}>Full name</label>
+                      <input type="text" required autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} className="input-5bloc" placeholder="Your name" />
+                    </div>
+                    <div>
+                      <label className="label-sm block mb-1.5" style={{ color: 'var(--stone)' }}>Email</label>
+                      <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input-5bloc" placeholder="you@company.com" />
+                    </div>
+                    <div>
+                      <label className="label-sm block mb-1.5" style={{ color: 'var(--stone)' }}>Password</label>
+                      <div className="relative">
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          required
+                          autoComplete="new-password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="input-5bloc pr-10"
+                          placeholder="Minimum 8 characters"
+                        />
+                        <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--stone)' }} tabIndex={-1}>
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                      {password.length > 0 && (
+                        <p className="text-[11px] mt-1" style={{ color: pwStrong ? 'var(--success)' : 'var(--stone)' }}>
+                          {pwStrong ? 'Password strength: good' : 'Use at least 8 characters'}
+                        </p>
+                      )}
+                    </div>
+                    <button type="submit" disabled={loading} className="btn-primary w-full mt-1">
+                      {loading ? 'Creating account…' : 'Create account'}
+                    </button>
+                  </form>
+
+                  <div className="my-5 flex items-center gap-3">
+                    <div className="ghost-cut flex-1" />
+                    <span className="font-mono text-[10px] uppercase tracking-widest" style={{ color: 'var(--stone)' }}>or</span>
+                    <div className="ghost-cut flex-1" />
+                  </div>
+
+                  <button type="button" onClick={handleGoogle} className="btn-secondary w-full flex items-center justify-center gap-2">
+                    Continue with Google
+                  </button>
+                </motion.div>
               )}
-            </button>
-          </form>
-
-          <div className="my-6 flex items-center gap-3">
-            <div className="ghost-cut flex-1" />
-            <span className="font-mono text-[10px] uppercase tracking-[0.16em]" style={{ color: 'var(--stone)' }}>
-              or
-            </span>
-            <div className="ghost-cut flex-1" />
-          </div>
-
-          <button
-            type="button"
-            onClick={handleGoogle}
-            className="btn-secondary w-full flex items-center justify-center gap-2.5"
-          >
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-            </svg>
-            Continue with Google
-          </button>
-
-          <p className="mt-6 text-center text-[13px]" style={{ color: 'var(--stone)' }}>
-            Already have an account?{' '}
-            <Link
-              href="/login"
-              className="font-semibold transition-colors"
-              style={{ color: 'var(--amber)' }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--amber-lt)')}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--amber)')}
-            >
-              Sign in →
-            </Link>
-          </p>
-            </>
+            </AnimatePresence>
           )}
-        </div>
-
-        {/* Trust badges */}
-        <div className="mt-6 flex items-center justify-center gap-5">
-          {['SOC 2 ready', 'Data in India', 'RERA compliant'].map((t) => (
-            <div key={t} className="flex items-center gap-1.5">
-              <Check className="h-3 w-3" style={{ color: 'var(--success)' }} />
-              <span className="font-mono text-[10px] uppercase tracking-wider" style={{ color: 'var(--stone)' }}>
-                {t}
-              </span>
-            </div>
-          ))}
         </div>
       </motion.div>
     </div>

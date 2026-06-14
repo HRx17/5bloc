@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useToast } from '@/components/ui/Toast'
 import { DrivePanel } from '@/components/integrations/DrivePanel'
+import { StatCard } from '@/components/ui/StatCard'
 
 interface Document {
   id: string
@@ -175,68 +176,76 @@ export default function DocumentVault() {
         />
       </motion.div>
 
-      {/* ── Stats ── */}
+      {/* ── Stats (click to filter) ── */}
       <motion.div
         className="grid grid-cols-2 lg:grid-cols-4 gap-3"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.08 }}
       >
-        {[
-          { label: 'Total files',      value: docs.length,                                       color: 'var(--amber)',   icon: 'folder_open'    },
-          { label: 'Pending review',   value: docs.filter(d => d.status === 'pending').length,   color: 'var(--amber)',   icon: 'schedule'       },
-          { label: 'Needs revision',   value: docs.filter(d => d.status === 'revision').length,  color: 'var(--error)',   icon: 'edit'           },
-          { label: 'Approved',         value: docs.filter(d => d.status === 'approved').length,  color: 'var(--success)', icon: 'verified'       },
-        ].map((s) => (
-          <div
-            key={s.label}
-            className="rounded-2xl p-4"
-            style={{ background: 'var(--surface-container)', boxShadow: `inset 3px 0 0 ${s.color}` }}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <span className="material-icons-outlined text-[15px]" style={{ color: s.color }}>{s.icon}</span>
-              <span className="text-[11px] font-medium" style={{ color: 'var(--stone)' }}>{s.label}</span>
-            </div>
-            <p className="font-display font-bold text-[24px]" style={{ color: 'var(--on-surface)' }}>
-              {loading ? '—' : s.value}
-            </p>
-          </div>
-        ))}
+        <StatCard
+          variant="filter"
+          label="Total files"
+          value={loading ? '—' : docs.length}
+          icon="folder_open"
+          color="var(--amber)"
+          active={status === 'all'}
+          onClick={() => setStatus('all')}
+        />
+        <StatCard
+          variant="filter"
+          label="Pending review"
+          value={loading ? '—' : docs.filter(d => d.status === 'pending').length}
+          icon="schedule"
+          color="var(--amber)"
+          active={status === 'pending'}
+          onClick={() => setStatus('pending')}
+        />
+        <StatCard
+          variant="filter"
+          label="Needs revision"
+          value={loading ? '—' : docs.filter(d => d.status === 'revision').length}
+          icon="edit"
+          color="var(--error)"
+          active={status === 'revision'}
+          onClick={() => setStatus('revision')}
+        />
+        <StatCard
+          variant="filter"
+          label="Approved"
+          value={loading ? '—' : docs.filter(d => d.status === 'approved').length}
+          icon="verified"
+          color="var(--success)"
+          active={status === 'approved'}
+          onClick={() => setStatus('approved')}
+        />
       </motion.div>
 
       {/* ── Filters ── */}
       <div className="flex flex-wrap gap-2 items-center">
-        {/* Search */}
-        <div className="relative flex-1 min-w-[200px] max-w-[280px]">
-          <span className="material-icons-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[15px] pointer-events-none" style={{ color: 'var(--stone)' }}>search</span>
+        <div className="search-5bloc flex-1 min-w-[200px] max-w-[280px]">
+          <span className="material-icons-outlined">search</span>
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search documents…"
-            className="input-5bloc pl-9 py-2 text-[13px]"
           />
         </div>
 
-        {/* Project filter */}
-        <select
-          value={project}
-          onChange={(e) => setProject(e.target.value)}
-          className="input-5bloc py-2 text-[12.5px] w-auto"
-          style={{ paddingRight: '36px', backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%238a8078' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center', backgroundSize: '14px', appearance: 'none' }}
-        >
-          {PROJECTS.map(p => <option key={p} value={p}>{p}</option>)}
-        </select>
+        <div className="select-5bloc">
+          <select value={project} onChange={(e) => setProject(e.target.value)}>
+            {PROJECTS.map(p => <option key={p} value={p}>{p}</option>)}
+          </select>
+          <span className="material-icons-outlined chevron">expand_more</span>
+        </div>
 
-        {/* Phase filter */}
-        <select
-          value={phase}
-          onChange={(e) => setPhase(e.target.value)}
-          className="input-5bloc py-2 text-[12.5px] w-auto"
-          style={{ paddingRight: '36px', backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%238a8078' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")", backgroundRepeat: 'no-repeat', backgroundPosition: 'right 10px center', backgroundSize: '14px', appearance: 'none' }}
-        >
-          {PHASES.map(p => <option key={p} value={p}>{p}</option>)}
-        </select>
+        <div className="select-5bloc">
+          <select value={phase} onChange={(e) => setPhase(e.target.value)}>
+            {PHASES.map(p => <option key={p} value={p}>{p}</option>)}
+          </select>
+          <span className="material-icons-outlined chevron">expand_more</span>
+        </div>
 
         {/* Status filter chips */}
         <div className="flex gap-1.5">
