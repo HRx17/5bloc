@@ -50,7 +50,11 @@ export async function GET(req: NextRequest) {
       `https://gmail.googleapis.com/gmail/v1/users/me/threads?${params}`,
       { headers: { Authorization: `Bearer ${token}` } }
     )
-    if (!listRes.ok) return NextResponse.json({ error: 'Gmail API error' }, { status: 502 })
+    if (!listRes.ok) {
+      const errBody = await listRes.text()
+      console.error('Gmail list error:', listRes.status, errBody)
+      return NextResponse.json({ error: `Gmail API error ${listRes.status}`, detail: errBody }, { status: 502 })
+    }
     const listData = await listRes.json()
     const rawThreads = listData.threads ?? []
 

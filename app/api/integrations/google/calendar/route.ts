@@ -28,7 +28,11 @@ export async function GET(req: NextRequest) {
       `https://www.googleapis.com/calendar/v3/calendars/primary/events?${params}`,
       { headers: { Authorization: `Bearer ${token}` } }
     )
-    if (!res.ok) return NextResponse.json({ error: 'Calendar API error' }, { status: 502 })
+    if (!res.ok) {
+      const errBody = await res.text()
+      console.error('Calendar API error:', res.status, errBody)
+      return NextResponse.json({ error: `Calendar API error ${res.status}`, detail: errBody }, { status: 502 })
+    }
     const data = await res.json()
 
     const events = (data.items ?? []).map((e: any) => ({
@@ -65,7 +69,11 @@ export async function POST(req: NextRequest) {
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body:    JSON.stringify(body),
     })
-    if (!res.ok) return NextResponse.json({ error: 'Calendar create failed' }, { status: 502 })
+    if (!res.ok) {
+      const errBody = await res.text()
+      console.error('Calendar create error:', res.status, errBody)
+      return NextResponse.json({ error: `Calendar create failed ${res.status}` }, { status: 502 })
+    }
     return NextResponse.json(await res.json())
   } catch (e) {
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })

@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
     const params = new URLSearchParams({
       pageSize: '30',
-      fields:   'files(id,name,mimeType,modifiedTime,size,webViewLink,iconLink,thumbnailLink,owners)',
+      fields:   'files(id,name,mimeType,modifiedTime,size,webViewLink)',
       q:        qParts.join(' and '),
       orderBy:  'modifiedTime desc',
     })
@@ -31,7 +31,11 @@ export async function GET(req: NextRequest) {
       `https://www.googleapis.com/drive/v3/files?${params}`,
       { headers: { Authorization: `Bearer ${token}` } }
     )
-    if (!res.ok) return NextResponse.json({ error: 'Drive API error' }, { status: 502 })
+    if (!res.ok) {
+      const errBody = await res.text()
+      console.error('Drive API error:', res.status, errBody)
+      return NextResponse.json({ error: `Drive API error ${res.status}`, detail: errBody }, { status: 502 })
+    }
     const data = await res.json()
     return NextResponse.json({ files: data.files ?? [] })
   } catch (e) {
