@@ -71,60 +71,22 @@ export default function ContractRiskScan() {
     setScanResult(null)
 
     try {
-      // Simulate analysis
-      await new Promise(resolve => setTimeout(resolve, 4500))
-
-      setScanResult({
-        score: 64,
-        risks: [
-          {
-            clauseNumber: 'Clause 12',
-            title: 'Unlimited Liability and Consequential Damages',
-            text: "The Architect's liability is unlimited and shall extend to consecutive damages, lost revenue, and site clean-up fees.",
-            riskLevel: 'high',
-            implication: 'Exposes the design firm to liabilities exceeding standard professional indemnity insurance caps. Insurance typically excludes consequential damages (lost revenue).',
-            remedy: 'Cap total liability at 100% of the architect fee or a fixed sum (e.g. ₹50 Lakhs) and explicitly exclude consequential damages.'
-          },
-          {
-            clauseNumber: 'Clause 14',
-            title: 'Excessive Delay Penalties (Liquidated Damages)',
-            text: 'Architect agrees to pay 0.5% of the total contract sum per calendar day of delay...',
-            riskLevel: 'high',
-            implication: '0.5% per day is extremely high (standard is 0.1% per week, capped at 5-10% total fee). Unrestricted liability for contractor/supplier delays is high-risk.',
-            remedy: 'Amend to cap liquidated damages at 5% of the Architect Fee, and specify that penalties only apply for delays solely attributable to the Architect.'
-          },
-          {
-            clauseNumber: 'Clause 22',
-            title: 'Broad Indemnification for Owner-Requested Design Revisions',
-            text: 'Architect agrees to defend, indemnify, and hold harmless the Owner from... design revisions requested by the Owner...',
-            riskLevel: 'medium',
-            implication: 'Requires the architect to indemnify the client for decisions the client forced. Typical professional indemnity policies do not cover indemnities where negligence is not proven.',
-            remedy: 'Indemnification should be reciprocal and limited to claims arising directly from proven professional negligence of the Architect.'
-          }
-        ],
-        missing: [
-          {
-            category: 'RERA Compliance',
-            description: 'No clause defining architect milestone certifications under RERA (Real Estate Regulation Act) Section 4(2)(l)(D).',
-            importance: 'critical',
-            suggestedText: 'The Architect shall issue Form-4 Certificates of Completion at each construction phase milestone to enable withdrawals from the promoter\'s designated RERA bank account in compliance with local regulations.'
-          },
-          {
-            category: 'Alternative Dispute Resolution',
-            description: 'Missing arbitration clause or reference to the Indian Arbitration & Conciliation Act 1996.',
-            importance: 'advised',
-            suggestedText: 'All disputes arising out of this Agreement shall be referred to arbitration in accordance with the Arbitration and Conciliation Act, 1996, with proceedings conducted in Mumbai by a sole arbitrator.'
-          },
-          {
-            category: 'Payment Escalation',
-            description: 'No terms governing fee adjustments in case of delayed municipal permits or extension of project timeline.',
-            importance: 'advised',
-            suggestedText: 'If the project duration is extended beyond 12 months due to delays in municipal permit clearance or builder financing, the Architect reserves the right to charge an additional fee of 5% per month of the remaining fee portion.'
-          }
-        ]
+      const res = await fetch('/api/ai/contract-scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contractText }),
       })
+      if (res.status === 429) {
+        const json = await res.json()
+        alert(json.error || 'Daily scan limit reached. Upgrade your plan.')
+        return
+      }
+      if (!res.ok) throw new Error('Scan failed')
+      const json = await res.json()
+      setScanResult(json.data)
     } catch (err) {
       console.error(err)
+      alert('Analysis failed. Please check your connection and try again.')
     } finally {
       setLoading(false)
     }

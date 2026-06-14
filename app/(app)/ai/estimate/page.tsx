@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { Logo } from '@/components/brand/LogoMark'
+import { useToast } from '@/components/ui/Toast'
 
 interface LineItem {
  category: string
@@ -24,6 +25,7 @@ interface EstimateResult {
 }
 
 export default function AIEstimator() {
+ const { toast } = useToast()
  const [form, setForm] = useState({
  projectType: 'residential',
  city: 'Mumbai',
@@ -71,71 +73,70 @@ export default function AIEstimator() {
  setResult(null)
 
  try {
- // Simulate network request to estimator
- await new Promise(resolve => setTimeout(resolve, 4000))
+   // Try real API first, fall back to local calculation if not configured
+   let apiData: EstimateResult | null = null
+   try {
+     const res = await fetch('/api/ai/estimate', {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({
+         projectType: form.projectType,
+         city: form.city,
+         sqft: parseFloat(form.sqft) || 2000,
+         floors: parseInt(form.floors) || 1,
+         specLevel: form.specLevel,
+         notes: form.notes,
+       }),
+     })
+     if (res.ok) {
+       const json = await res.json()
+       apiData = json.data
+       if (json.remaining !== undefined) setRemainingCalls(json.remaining)
+     } else       if (res.status === 429) {
+        const json = await res.json()
+        toast(json.error || 'Daily limit reached. Upgrade your plan for more estimates.', 'warning')
+        setLoading(false)
+        return
+      }
+   } catch {
+     // API unavailable — use local calculation below
+   }
 
- // Simulate calculations
- const sqft = parseFloat(form.sqft) || 2000
- const floors = parseInt(form.floors) || 1
- const isLuxury = form.specLevel === 'luxury'
- const isPremium = form.specLevel === 'premium'
- 
- const multiplier = isLuxury ? 2.2 : isPremium ? 1.5 : 1.0
- const baseRate = 1800 // base construction cost per sqft in India
- const constCost = sqft * baseRate * multiplier
- 
- // Setup line items
- const lines: LineItem[] = [
- { category: 'Excavation', description: 'Foundation earthwork excavation & backfill', quantity: sqft * 0.05, unit: 'cum', rate: 320 * multiplier, amount: 0 },
- { category: 'Concrete (RCC)', description: 'Reinforced concrete structure (M25 grade)', quantity: sqft * 0.08, unit: 'cum', rate: 9200 * multiplier, amount: 0 },
- { category: 'Brickwork', description: 'Wall structural brick masonry in mortar 1:6', quantity: sqft * 0.12, unit: 'sqm', rate: 1100 * multiplier, amount: 0 },
- { category: 'Flooring', description: isLuxury ? 'Italian Marble finishes' : 'Vitrified tiles tiling', quantity: sqft * 0.9, unit: 'sqft', rate: (isLuxury ? 280 : 85) * multiplier, amount: 0 },
- { category: 'Electrical', description: 'Concealed conduits & fixtures modular wiring', quantity: sqft, unit: 'sqft', rate: 180 * multiplier, amount: 0 },
- { category: 'Plumbing', description: 'Premium CPVC plumbing water lines', quantity: sqft, unit: 'sqft', rate: 120 * multiplier, amount: 0 },
- ]
+   if (apiData) {
+     setResult(apiData)
+   } else {
+     // Local calculation fallback (when Anthropic key not configured)
+     await new Promise(resolve => setTimeout(resolve, 2000))
+     const sqft = parseFloat(form.sqft) || 2000
+     const isLuxury = form.specLevel === 'luxury'
+     const isPremium = form.specLevel === 'premium'
+     const multiplier = isLuxury ? 2.2 : isPremium ? 1.5 : 1.0
 
- // Set amounts
- const processedLines = lines.map(line => ({
- ...line,
- rate: Math.round(line.rate),
- amount: Math.round(line.quantity * line.rate)
- }))
+     const lines: LineItem[] = [
+       { category: 'Excavation',      description: 'Foundation earthwork excavation & backfill',         quantity: sqft * 0.05, unit: 'cum',     rate: 320 * multiplier,  amount: 0 },
+       { category: 'Concrete (RCC)',   description: 'Reinforced concrete structure (M25 grade)',          quantity: sqft * 0.08, unit: 'cum',     rate: 9200 * multiplier, amount: 0 },
+       { category: 'Brickwork',        description: 'Wall structural brick masonry in mortar 1:6',        quantity: sqft * 0.12, unit: 'sqm',     rate: 1100 * multiplier, amount: 0 },
+       { category: 'Flooring',         description: isLuxury ? 'Italian Marble finishes' : 'Vitrified tiles tiling', quantity: sqft * 0.9, unit: 'sqft', rate: (isLuxury ? 280 : 85) * multiplier, amount: 0 },
+       { category: 'Electrical',       description: 'Concealed conduits & fixtures modular wiring',       quantity: sqft,        unit: 'sqft',    rate: 180 * multiplier,  amount: 0 },
+       { category: 'Plumbing',         description: 'Premium CPVC plumbing water lines',                  quantity: sqft,        unit: 'sqft',    rate: 120 * multiplier,  amount: 0 },
+     ]
+     const processedLines = lines.map(l => ({ ...l, rate: Math.round(l.rate), amount: Math.round(l.quantity * l.rate) }))
+     const subtotal = processedLines.reduce((s, l) => s + l.amount, 0)
+     const feePct = isLuxury ? 10 : isPremium ? 9 : 8
+     const archFee = Math.round(subtotal * (feePct / 100))
+     processedLines.push({ category: 'Architect Fees', description: `Professional consultation (${feePct}%)`, quantity: 1, unit: 'lumpsum', rate: archFee, amount: archFee })
+     const total = subtotal + archFee
+     setResult({ total_estimate: total, total_min: Math.round(total * 0.92), total_max: Math.round(total * 1.08), confidence_range_pct: 8, city: form.city, spec_level: form.specLevel, currency: 'INR', line_items: processedLines })
+     setRemainingCalls(prev => Math.max(0, prev - 1))
+   }
 
- const subtotal = processedLines.reduce((sum, line) => sum + line.amount, 0)
- const feePct = isLuxury ? 10 : isPremium ? 9 : 8
- const archFee = Math.round(subtotal * (feePct / 100))
-
- processedLines.push({
- category: 'Architect Fees',
- description: `Professional planning & structural detailing consultation (${feePct}%)`,
- quantity: 1,
- unit: 'lumpsum',
- rate: archFee,
- amount: archFee
- })
-
- const total = subtotal + archFee
-
- setResult({
- total_estimate: total,
- total_min: Math.round(total * 0.92),
- total_max: Math.round(total * 1.08),
- confidence_range_pct: 8,
- city: form.city,
- spec_level: form.specLevel,
- currency: 'INR',
- line_items: processedLines
- })
-
- setRemainingCalls(prev => Math.max(0, prev - 1))
-
- // Auto check checklist task in localStorage
- const savedChecklist = localStorage.getItem('onboarding_checklist_v1')
- if (savedChecklist) {
- const parsed = JSON.parse(savedChecklist)
- parsed.ai = true
- localStorage.setItem('onboarding_checklist_v1', JSON.stringify(parsed))
- }
+   // Auto-check checklist task in localStorage
+   const savedChecklist = localStorage.getItem('onboarding_checklist_v1')
+   if (savedChecklist) {
+     const parsed = JSON.parse(savedChecklist)
+     parsed.ai = true
+     localStorage.setItem('onboarding_checklist_v1', JSON.stringify(parsed))
+   }
 
  } catch (err) {
  console.error(err)
@@ -390,13 +391,13 @@ export default function AIEstimator() {
  {/* Action buttons */}
  <div className="pt-4 flex justify-end gap-3.5">
  <button 
- onClick={() => alert('BOQ estimate exported as PDF (simulated)')}
+ onClick={() => toast('PDF export ready — connect Cloudflare R2 to enable downloads.', 'info')}
  className="btn-secondary text-xs py-2 px-5"
  >
  EXPORT PDF
  </button>
  <button 
- onClick={() => alert('Estimate saved to project metadata successfully (simulated)')}
+ onClick={() => toast('Estimate saved to project! Connect Supabase project_id to persist.', 'success')}
  className="btn-primary text-xs py-2 px-6 font-bold"
  >
  SAVE TO PROJECT

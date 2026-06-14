@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useToast } from '@/components/ui/Toast'
 
 interface Invoice {
  id: string
@@ -18,6 +19,7 @@ interface Invoice {
 export default function InvoicesList() {
  const [invoices, setInvoices] = useState<Invoice[]>([])
  const [loading, setLoading] = useState(true)
+ const { toast } = useToast()
 
  useEffect(() => {
  // Mock load invoices
@@ -75,7 +77,7 @@ export default function InvoicesList() {
  setInvoices(prev => 
  prev.map(i => i.id === invId ? { ...i, status: 'paid', paid_at: new Date().toISOString().split('T')[0] } : i)
  )
- alert('Invoice marked as paid successfully (simulated)')
+ toast('Invoice marked as paid', 'success')
  }
 
  // Stats
@@ -178,7 +180,7 @@ export default function InvoicesList() {
  </button>
  )}
  <button
- onClick={() => alert(`Simulated downloading PDF for ${inv.invoice_number}`)}
+ onClick={() => toast(`PDF export for ${inv.invoice_number} — connect Cloudflare R2 to enable.`, 'info')}
  className="p-1 text-stone hover:text-white hover:bg-navy-lt transition"
  title="Download PDF Invoice"
  >

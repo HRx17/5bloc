@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useToast } from '@/components/ui/Toast'
 
 interface Document {
   id: string
@@ -49,13 +50,54 @@ function FileIcon({ type }: { type: string }) {
 }
 
 export default function DocumentVault() {
-  const [docs,    setDocs]    = useState<Document[]>([])
-  const [loading, setLoading] = useState(true)
-  const [search,  setSearch]  = useState('')
-  const [project, setProject] = useState('All Projects')
-  const [phase,   setPhase]   = useState('All Phases')
-  const [status,  setStatus]  = useState<string>('all')
-  const [view,    setView]    = useState<'grid' | 'list'>('list')
+  const [docs,       setDocs]       = useState<Document[]>([])
+  const [loading,    setLoading]    = useState(true)
+  const [search,     setSearch]     = useState('')
+  const [project,    setProject]    = useState('All Projects')
+  const [phase,      setPhase]      = useState('All Phases')
+  const [status,     setStatus]     = useState<string>('all')
+  const [view,       setView]       = useState<'grid' | 'list'>('list')
+  const [uploading,  setUploading]  = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { toast } = useToast()
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      form.append('phase', phase !== 'All Phases' ? phase : 'General')
+      const res = await fetch('/api/files/upload', { method: 'POST', body: form })
+      const json = await res.json()
+      if (!res.ok) {
+        toast(json.error || 'Upload failed', 'error')
+        return
+      }
+      toast(`${file.name} uploaded successfully`, 'success')
+      // Optimistically add to list
+      const newDoc: Document = {
+        id: json.document?.id || `d-${Date.now()}`,
+        name: file.name,
+        type: (file.name.endsWith('.dwg') ? 'dwg' : file.type.includes('pdf') ? 'pdf' : file.type.includes('sheet') ? 'xlsx' : file.type.includes('word') ? 'docx' : 'image') as Document['type'],
+        project: project !== 'All Projects' ? project : 'General',
+        project_id: '',
+        phase: phase !== 'All Phases' ? phase : 'General',
+        version: 'v1',
+        uploaded_by: 'You',
+        uploaded_at: new Date().toISOString().split('T')[0],
+        size_kb: Math.round(file.size / 1024),
+        status: 'pending',
+      }
+      setDocs(prev => [newDoc, ...prev])
+    } catch {
+      toast('Upload failed. Check your connection.', 'error')
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -111,10 +153,25 @@ export default function DocumentVault() {
             Every drawing, report and file — across all projects. One searchable archive.
           </p>
         </div>
-        <Link href="/projects" className="btn-primary shrink-0 text-[13px]">
-          <span className="material-icons-outlined text-[15px]">upload_file</span>
-          Upload document
-        </Link>
+        <button
+          className="btn-primary shrink-0 text-[13px]"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+        >
+          {uploading ? (
+            <span className="material-icons-outlined text-[15px] animate-spin">refresh</span>
+          ) : (
+            <span className="material-icons-outlined text-[15px]">upload_file</span>
+          )}
+          {uploading ? 'Uploading…' : 'Upload document'}
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          accept=".pdf,.dwg,.docx,.doc,.xlsx,.xls,.png,.jpg,.jpeg,.webp"
+          onChange={handleUpload}
+        />
       </motion.div>
 
       {/* ── Stats ── */}

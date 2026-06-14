@@ -1,8 +1,11 @@
 'use client'
 
 import React, { useState } from 'react'
+import { usePathname } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import Sidebar from './Sidebar'
 import TopNav from './TopNav'
+import { ToastProvider } from '@/components/ui/Toast'
 
 interface AppShellProps {
  children: React.ReactNode
@@ -19,6 +22,7 @@ interface AppShellProps {
 
 export default function AppShell({ children, userProfile }: AppShellProps) {
  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+ const pathname = usePathname()
 
  const profile = userProfile || {
  full_name: 'Parth Patel',
@@ -29,7 +33,8 @@ export default function AppShell({ children, userProfile }: AppShellProps) {
  }
 
  return (
- /* Root shell — flat surface, no overflow */
+ <ToastProvider>
+ {/* Root shell — flat surface, no overflow */}
  <div
  className="flex h-screen w-screen overflow-hidden"
  style={{ background: 'var(--surface)' }}
@@ -74,13 +79,24 @@ export default function AppShell({ children, userProfile }: AppShellProps) {
             style={{
               background: 'var(--surface)',
               color: 'var(--on-surface)',
-              /* Subtle blue diffuse light bleeding from the top right */
               backgroundImage: 'radial-gradient(ellipse 70% 40% at 80% 0%, rgba(40,120,255,0.055) 0%, transparent 60%)',
             }}
           >
- {children}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={pathname}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="h-full"
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
  </main>
  </div>
  </div>
+ </ToastProvider>
  )
 }

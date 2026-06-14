@@ -13,10 +13,11 @@ export const redis = hasRedis
   : null
 
 const LIMITS: Record<string, { free: number; paid: number }> = {
-  estimate:  { free: 3,  paid: Infinity },
-  rera:      { free: 0,  paid: Infinity },  // paid/add-on only
-  rfi_draft: { free: 5,  paid: Infinity },
-  spec:      { free: 10, paid: Infinity },
+  estimate:      { free: 3,  paid: Infinity },
+  contract_scan: { free: 2,  paid: Infinity },
+  rera:          { free: 0,  paid: Infinity },  // paid/add-on only
+  rfi_draft:     { free: 5,  paid: Infinity },
+  spec:          { free: 10, paid: Infinity },
 }
 
 // In-memory rate limiting cache fallback for local development

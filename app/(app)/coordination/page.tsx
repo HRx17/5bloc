@@ -73,6 +73,8 @@ export default function CoordinationHub() {
   const [meetings, setMeetings] = useState<Meeting[]>([])
   const [issues,   setIssues]   = useState<Issue[]>([])
   const [search, setSearch] = useState('')
+  const [selectedRfi, setSelectedRfi] = useState<RFI | null>(null)
+  const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null)
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -156,14 +158,17 @@ export default function CoordinationHub() {
         transition={{ duration: 0.45, delay: 0.08 }}
       >
         {[
-          { label: 'Open RFIs',        value: rfis.filter(r => r.status === 'open').length,     color: 'var(--amber)', icon: 'forum'         },
-          { label: 'Overdue RFIs',     value: rfis.filter(r => r.status === 'overdue').length,  color: 'var(--error)', icon: 'schedule'      },
-          { label: 'Upcoming meetings',value: meetings.filter(m => m.status === 'upcoming').length, color: 'var(--blue)', icon: 'event'       },
-          { label: 'Open issues',      value: issues.filter(i => i.status !== 'resolved').length,   color: 'var(--purple)', icon: 'warning_amber' },
+          { label: 'Open RFIs',         value: rfis.filter(r => r.status === 'open').length,        color: 'var(--amber)',  icon: 'forum',         tab: 'rfis'     as TabId },
+          { label: 'Overdue RFIs',      value: rfis.filter(r => r.status === 'overdue').length,     color: 'var(--error)',  icon: 'schedule',      tab: 'rfis'     as TabId },
+          { label: 'Upcoming meetings', value: meetings.filter(m => m.status === 'upcoming').length, color: 'var(--blue)',   icon: 'event',         tab: 'meetings' as TabId },
+          { label: 'Open issues',       value: issues.filter(i => i.status !== 'resolved').length,   color: 'var(--purple)', icon: 'warning_amber', tab: 'issues'   as TabId },
         ].map((s) => (
-          <div
+          <motion.button
             key={s.label}
-            className="rounded-2xl p-4"
+            onClick={() => setTab(s.tab)}
+            className="rounded-2xl p-4 text-left w-full"
+            whileHover={{ y: -3 }}
+            transition={{ duration: 0.18 }}
             style={{ background: 'var(--surface-container)', boxShadow: `inset 3px 0 0 ${s.color}` }}
           >
             <div className="flex items-center gap-2 mb-2">
@@ -173,7 +178,7 @@ export default function CoordinationHub() {
             <p className="font-display font-bold text-[24px]" style={{ color: 'var(--on-surface)' }}>
               {loading ? '—' : s.value}
             </p>
-          </div>
+          </motion.button>
         ))}
       </motion.div>
 
@@ -253,6 +258,7 @@ export default function CoordinationHub() {
                           key={rfi.id}
                           className="transition-colors cursor-pointer"
                           style={idx > 0 ? { boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' } : {}}
+                          onClick={() => setSelectedRfi(rfi)}
                           onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.025)')}
                           onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = '')}
                         >
@@ -288,8 +294,8 @@ export default function CoordinationHub() {
                 {messages
                   .filter(m => !filterText || m.content.toLowerCase().includes(filterText) || m.sender.toLowerCase().includes(filterText) || m.project.toLowerCase().includes(filterText))
                   .map((msg) => (
+                    <Link key={msg.id} href="/projects/proj-1">
                     <motion.div
-                      key={msg.id}
                       className="flex gap-4 rounded-2xl p-4 cursor-pointer transition-all"
                       style={{ background: 'var(--surface-container)' }}
                       whileHover={{ x: 2 }}
@@ -314,6 +320,7 @@ export default function CoordinationHub() {
                         </div>
                       </div>
                     </motion.div>
+                    </Link>
                   ))}
               </div>
             )
@@ -393,6 +400,7 @@ export default function CoordinationHub() {
                           key={issue.id}
                           className="transition-colors cursor-pointer"
                           style={idx > 0 ? { boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' } : {}}
+                          onClick={() => setSelectedIssue(issue)}
                           onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.025)')}
                           onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = '')}
                         >
@@ -414,6 +422,140 @@ export default function CoordinationHub() {
           )}
 
         </motion.div>
+      </AnimatePresence>
+
+      {/* ── RFI Detail Slide-over ── */}
+      <AnimatePresence>
+        {selectedRfi && (
+          <>
+            <motion.div
+              className="fixed inset-0 z-40"
+              style={{ background: 'rgba(0,0,0,0.5)' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedRfi(null)}
+            />
+            <motion.div
+              className="fixed top-0 right-0 bottom-0 z-50 w-full max-w-[420px] overflow-y-auto"
+              style={{ background: 'var(--surface-container-low)', boxShadow: '-8px 0 40px rgba(0,0,0,0.4)' }}
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            >
+              <div className="p-6 space-y-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-mono mb-1" style={{ color: 'var(--stone)' }}>{selectedRfi.number}</p>
+                    <h2 className="text-[17px] font-semibold leading-snug" style={{ color: 'var(--on-surface)' }}>{selectedRfi.title}</h2>
+                  </div>
+                  <button onClick={() => setSelectedRfi(null)} className="p-2 rounded-lg transition-colors" style={{ color: 'var(--stone)' }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')} onMouseLeave={e => (e.currentTarget.style.background = '')}>
+                    <span className="material-icons-outlined text-[18px]">close</span>
+                  </button>
+                </div>
+
+                <div className="flex gap-2 flex-wrap">
+                  <StatusBadge status={selectedRfi.status} />
+                  <StatusBadge status={selectedRfi.priority} />
+                </div>
+
+                <div className="space-y-3">
+                  {[
+                    { label: 'Project',    value: selectedRfi.project },
+                    { label: 'Raised by',  value: selectedRfi.raised_by },
+                    { label: 'Due date',   value: selectedRfi.due_date },
+                  ].map(row => (
+                    <div key={row.label} className="flex justify-between text-[13px]">
+                      <span style={{ color: 'var(--stone)' }}>{row.label}</span>
+                      <span className="font-medium" style={{ color: 'var(--on-surface)' }}>{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                  <p className="text-[12px] font-semibold mb-2" style={{ color: 'var(--stone)' }}>Description</p>
+                  <p className="text-[13px] leading-relaxed" style={{ color: 'var(--on-surface-variant)' }}>
+                    Site team requires clarification on specification detail for <strong style={{ color: 'var(--on-surface)' }}>{selectedRfi.title.toLowerCase()}</strong>. Please review current drawings and provide written response within {selectedRfi.status === 'overdue' ? 'the next 24 hours (overdue)' : '48 hours'}.
+                  </p>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button className="btn-primary flex-1 text-[13px]" onClick={() => setSelectedRfi(null)}>
+                    <span className="material-icons-outlined text-[15px]">reply</span>
+                    Respond
+                  </button>
+                  <Link href={`/projects/proj-1`} className="btn-ghost text-[13px]" onClick={() => setSelectedRfi(null)}>
+                    View project
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ── Issue Detail Slide-over ── */}
+      <AnimatePresence>
+        {selectedIssue && (
+          <>
+            <motion.div
+              className="fixed inset-0 z-40"
+              style={{ background: 'rgba(0,0,0,0.5)' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedIssue(null)}
+            />
+            <motion.div
+              className="fixed top-0 right-0 bottom-0 z-50 w-full max-w-[420px] overflow-y-auto"
+              style={{ background: 'var(--surface-container-low)', boxShadow: '-8px 0 40px rgba(0,0,0,0.4)' }}
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            >
+              <div className="p-6 space-y-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-medium uppercase tracking-wider mb-1" style={{ color: 'var(--stone)' }}>Site Issue</p>
+                    <h2 className="text-[17px] font-semibold leading-snug" style={{ color: 'var(--on-surface)' }}>{selectedIssue.title}</h2>
+                  </div>
+                  <button onClick={() => setSelectedIssue(null)} className="p-2 rounded-lg transition-colors" style={{ color: 'var(--stone)' }} onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')} onMouseLeave={e => (e.currentTarget.style.background = '')}>
+                    <span className="material-icons-outlined text-[18px]">close</span>
+                  </button>
+                </div>
+
+                <div className="flex gap-2">
+                  <StatusBadge status={selectedIssue.severity} />
+                  <StatusBadge status={selectedIssue.status} />
+                </div>
+
+                <div className="space-y-3">
+                  {[
+                    { label: 'Project',     value: selectedIssue.project },
+                    { label: 'Assigned to', value: selectedIssue.assigned_to },
+                  ].map(row => (
+                    <div key={row.label} className="flex justify-between text-[13px]">
+                      <span style={{ color: 'var(--stone)' }}>{row.label}</span>
+                      <span className="font-medium" style={{ color: 'var(--on-surface)' }}>{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button className="btn-primary flex-1 text-[13px]" onClick={() => setSelectedIssue(null)}>
+                    <span className="material-icons-outlined text-[15px]">check_circle</span>
+                    Mark resolved
+                  </button>
+                  <Link href={`/projects/proj-1`} className="btn-ghost text-[13px]" onClick={() => setSelectedIssue(null)}>
+                    View project
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
       </AnimatePresence>
     </div>
   )

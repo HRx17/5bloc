@@ -3,8 +3,9 @@ import { Resend } from 'resend'
 const hasResend = !!process.env.RESEND_API_KEY
 
 export const resend  = hasResend ? new Resend(process.env.RESEND_API_KEY!) : null
-export const FROM    = '5Bloc <no-reply@5bloc.com>'
-export const REPLY   = 'contact@5bloc.com'
+const fromEmail = process.env.RESEND_FROM_EMAIL || 'contact@5bloc.com'
+export const FROM    = `5Bloc <${fromEmail}>`
+export const REPLY   = fromEmail
 
 export async function send(to: string, subject: string, html: string) {
   if (!resend) {

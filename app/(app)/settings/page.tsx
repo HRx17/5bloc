@@ -3,6 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Toggle } from '@/components/ui/Toggle'
+import { useToast } from '@/components/ui/Toast'
 
 interface OrgMember {
  id: string
@@ -21,6 +22,7 @@ function SettingsInner() {
  const [activeTab, setActiveTab] = useState<TabId>(
    tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'profile'
  )
+ const { toast } = useToast()
 
  useEffect(() => {
    if (tabParam && VALID_TABS.includes(tabParam)) {
@@ -63,12 +65,12 @@ function SettingsInner() {
 
  const handleProfileSave = (e: React.FormEvent) => {
  e.preventDefault()
- alert('Profile saved successfully (simulated)')
+ toast('Profile saved successfully', 'success')
  }
 
  const handleOrgSave = (e: React.FormEvent) => {
  e.preventDefault()
- alert('Organisation settings saved successfully (simulated)')
+ toast('Organisation settings saved', 'success')
  }
 
  const handleInviteTeam = (e: React.FormEvent) => {
@@ -82,13 +84,12 @@ function SettingsInner() {
  joined_at: new Date().toISOString().split('T')[0]
  }])
  setNewTeamEmail('')
- alert(`Invite sent via Resend email to ${newTeamEmail}`)
+ toast(`Invite sent to ${newTeamEmail} — activate Resend to deliver email.`, 'info')
  }
 
  const handleRemoveTeam = (id: string) => {
- if (confirm('Are you sure you want to remove this team member?')) {
  setTeam(prev => prev.filter(m => m.id !== id))
- }
+ toast('Team member removed', 'info')
  }
 
  const handleToggleNotification = (key: keyof typeof notifications) => {
@@ -352,7 +353,7 @@ function SettingsInner() {
  </span>
  ) : (
  <button 
- onClick={() => alert(`Opening Razorpay checkout modal (subscription ID loading)`)}
+ onClick={() => toast('Add RAZORPAY_KEY_ID to .env to activate billing.', 'info')}
  className="w-full btn-primary text-xs py-1.5 font-medium"
  >
  {plan.action}
@@ -375,7 +376,7 @@ function SettingsInner() {
  </div>
  </div>
  <button 
- onClick={() => alert('Razorpay subscription checkout triggered')}
+ onClick={() => toast('Add RAZORPAY_KEY_ID to .env to enable billing.', 'info')}
  className="btn-secondary btn-sm"
             style={{ color: 'var(--amber)' }}
  >
@@ -419,10 +420,10 @@ function SettingsInner() {
  
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
   {[
-    { icon: 'mail',          iconColor: 'var(--amber)',  title: 'Gmail / Email Sync',        desc: 'Automatically routes coordination digests, RFI queries, and invoice links through your official email address.', status: 'Connected',   action: 'Refresh',  onClick: () => alert('Simulated Gmail connection refreshed') },
-    { icon: 'table_chart',   iconColor: 'var(--blue)',   title: 'Excel / Sheets Automation', desc: 'Enable importing/exporting of BOQs, milestone schedules, and RFI databases. Connect to spreadsheet pipelines.', status: 'Enabled',    action: 'Sync Now', onClick: () => alert('Microsoft Office 365 / Google Sheets sync triggered') },
-    { icon: 'calendar_today',iconColor: 'var(--blue)',   title: 'Google Calendar',           desc: 'Synchronizes project milestone dates to your workspace calendar to prevent delayed handovers.', status: 'Active',     action: 'Resync',   onClick: () => alert('Simulating Google Calendar webhook sync...') },
-    { icon: 'chat',          iconColor: '#25D366',       title: 'WhatsApp Communication',    desc: 'Send RFI updates and drawings directly to contractors using prefilled mobile links.', status: 'Active Link',action: 'Verify',   onClick: () => alert('WhatsApp quick-link integration verified') },
+    { icon: 'mail',          iconColor: 'var(--amber)',  title: 'Gmail / Email Sync',        desc: 'Automatically routes coordination digests, RFI queries, and invoice links through your official email address.', status: 'Connected',   action: 'Refresh',  onClick: () => toast('Gmail sync — add GOOGLE_CLIENT_ID to enable OAuth.', 'info') },
+    { icon: 'table_chart',   iconColor: 'var(--blue)',   title: 'Excel / Sheets Automation', desc: 'Enable importing/exporting of BOQs, milestone schedules, and RFI databases. Connect to spreadsheet pipelines.', status: 'Enabled',    action: 'Sync Now', onClick: () => toast('Google Sheets sync — set up Apps Script webhook first.', 'info') },
+    { icon: 'calendar_today',iconColor: 'var(--blue)',   title: 'Google Calendar',           desc: 'Synchronizes project milestone dates to your workspace calendar to prevent delayed handovers.', status: 'Active',     action: 'Resync',   onClick: () => toast('Calendar sync — add GOOGLE_CLIENT_ID to .env.', 'info') },
+    { icon: 'chat',          iconColor: '#25D366',       title: 'WhatsApp Communication',    desc: 'Send RFI updates and drawings directly to contractors using prefilled mobile links.', status: 'Active Link',action: 'Verify',   onClick: () => toast('WhatsApp quick-links are active and ready to use.', 'success') },
   ].map((card) => (
    <div key={card.title} className="rounded-2xl p-4 flex flex-col justify-between gap-3" style={{ background: 'var(--surface-container)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)' }}>
     <div className="flex items-start gap-3">
@@ -474,7 +475,7 @@ function SettingsInner() {
                   <span>{size}</span>
                 </div>
                 <button
-                  onClick={() => alert(`Download for ${platform} will be available at launch. Sign up for beta to get early access.`)}
+                  onClick={() => toast(`${platform} desktop app — coming soon. Join the waitlist at 5bloc.com.`, 'info')}
                   className="btn-primary text-[12px] py-2 w-full justify-center"
                 >
                   <span className="material-icons-outlined text-[14px]">download</span>

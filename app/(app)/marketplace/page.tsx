@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useToast } from '@/components/ui/Toast'
 
 interface Contractor {
  id: string
@@ -18,6 +19,7 @@ interface Contractor {
 }
 
 export default function Marketplace() {
+ const { toast } = useToast()
  const [contractors, setContractors] = useState<Contractor[]>([])
  const [searchQuery, setSearchQuery] = useState('')
  const [filterCity, setFilterCity] = useState('all')
@@ -247,7 +249,7 @@ export default function Marketplace() {
  VIEW PROFILE
  </Link>
  <button 
- onClick={() => alert(`Invited ${con.company_name} to bid on active projects (simulated)`)}
+ onClick={() => toast(`Invite sent to ${con.company_name} — connect Resend to deliver email.`, 'success')}
  className="btn-primary py-1.5 text-xs font-bold flex-1 md:flex-none"
  >
  INVITE TO BID

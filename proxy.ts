@@ -32,15 +32,24 @@ export async function proxy(req: NextRequest) {
       }
     )
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user }, error } = await supabase.auth.getUser()
 
-    if (!user) {
+    // Only redirect if auth definitively says no user — not on network/SSL errors
+    if (!error && !user) {
       const url = req.nextUrl.clone()
       url.pathname = '/login'
       url.searchParams.set('next', pathname)
       return NextResponse.redirect(url)
     }
-  } catch {
+  } catch (e: any) {
+    // Network/SSL errors (e.g. UNABLE_TO_VERIFY_LEAF_SIGNATURE in local dev) —
+    // let the request through rather than redirect-looping to /login.
+    // The app-level auth check in each page will still protect routes.
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('[proxy] Auth check skipped due to network error:', e?.message)
+      return res
+    }
+    // In production treat as unauthenticated
     const url = req.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)

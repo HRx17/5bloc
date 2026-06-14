@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useToast } from '@/components/ui/Toast'
 
 interface IntegrationItem {
   id: string
@@ -16,6 +17,7 @@ interface IntegrationItem {
 }
 
 export default function IntegrationsDashboard() {
+  const { toast } = useToast()
   const [integrations, setIntegrations] = useState<IntegrationItem[]>([
     {
       id: 'google-drive',
@@ -89,7 +91,7 @@ export default function IntegrationsDashboard() {
   }
 
   const triggerSync = (id: string) => {
-    alert(`Initiating synchronisation for ${id}...`)
+    toast(`Sync initiated for ${id} — configure API keys to enable live sync.`, 'info')
     setIntegrations(prev =>
       prev.map(item =>
         item.id === id ? { ...item, lastSync: 'Just now' } : item
@@ -106,7 +108,7 @@ export default function IntegrationsDashboard() {
           item.status === 'connected' ? { ...item, lastSync: 'Just now' } : item
         )
       )
-      alert('All active integrations successfully synchronised!')
+      toast('All integrations synced — add API keys to .env for live data.', 'success')
     }, 1500)
   }
 
@@ -451,7 +453,7 @@ export default function IntegrationsDashboard() {
               <button
                 onClick={() => {
                   setShowConfigModal(false)
-                  alert('Integration configurations updated successfully!')
+                  toast('Integration settings saved', 'success')
                 }}
                 className="btn-primary py-1.5 px-4 text-xs rounded-lg"
               >

@@ -26,10 +26,10 @@ const PHASES_ORDERED = [
 
 /* Onboarding steps from IA */
 const ONBOARDING_STEPS = [
-  { id: 'client',      label: 'Add your first client',     icon: 'contacts',       href: '/clients',        done: false },
-  { id: 'project',     label: 'Create your first project', icon: 'space_dashboard',href: '/projects/new',   done: true  },
-  { id: 'doc',         label: 'Upload a document',         icon: 'upload_file',    href: '/documents',      done: false },
-  { id: 'ai',          label: 'Try the AI cost estimator', icon: 'auto_awesome',   href: '/ai/estimate',    done: false },
+  { id: 'client',      label: 'Add your first client',     icon: 'contacts',       href: '/clients',           done: false },
+  { id: 'project',     label: 'Create your first project', icon: 'space_dashboard',href: '/projects',          done: true  },
+  { id: 'doc',         label: 'Upload a document',         icon: 'upload_file',    href: '/documents',         done: false },
+  { id: 'ai',          label: 'Try the AI cost estimator', icon: 'auto_awesome',   href: '/ai/estimate',       done: false },
   { id: 'collaborator',label: 'Invite a collaborator',     icon: 'group_add',      href: '/settings?tab=team', done: false },
 ]
 
@@ -234,10 +234,10 @@ export default function Dashboard() {
   }, [])
 
   const activities = [
-    { id: 1, icon: 'upload_file', accent: 'var(--blue)',    user: 'Aritro Roy',  action: 'uploaded structural column drawings',        project: 'Wadhwa',   time: '10m' },
-    { id: 2, icon: 'verified',    accent: 'var(--success)', user: 'Parth Patel', action: 'approved Electrical Submittal #4',           project: 'Lodha',    time: '1h'  },
-    { id: 3, icon: 'forum',       accent: 'var(--error)',   user: 'Amit Sharma', action: 'raised RFI #8',                              project: 'Wadhwa',   time: '3h'  },
-    { id: 4, icon: 'auto_awesome',accent: 'var(--amber)',   user: 'System',      action: 'phase updated to Construction Docs',         project: 'Gundecha', time: '1d'  },
+    { id: 1, icon: 'upload_file', accent: 'var(--blue)',    user: 'Aritro Roy',  action: 'uploaded structural column drawings',        project: 'Wadhwa',   time: '10m', href: '/projects/proj-1' },
+    { id: 2, icon: 'verified',    accent: 'var(--success)', user: 'Parth Patel', action: 'approved Electrical Submittal #4',           project: 'Lodha',    time: '1h',  href: '/projects/proj-2' },
+    { id: 3, icon: 'forum',       accent: 'var(--error)',   user: 'Amit Sharma', action: 'raised RFI #8',                              project: 'Wadhwa',   time: '3h',  href: '/coordination'    },
+    { id: 4, icon: 'auto_awesome',accent: 'var(--amber)',   user: 'System',      action: 'phase updated to Construction Docs',         project: 'Gundecha', time: '1d',  href: '/projects/proj-3' },
   ]
 
   const totalRfis = projects.reduce((s, p) => s + p.openRfis, 0)
@@ -280,29 +280,33 @@ export default function Dashboard() {
         transition={{ duration: 0.45, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
       >
         {[
-          { label: 'Active projects', value: loading ? '—' : String(projects.length),  icon: 'space_dashboard', color: 'var(--amber)' },
-          { label: 'Open RFIs',       value: loading ? '—' : String(totalRfis),         icon: 'forum',           color: 'var(--error)' },
-          { label: 'Invoices due',    value: '₹4.1L',  icon: 'receipt_long',   color: 'var(--blue)' },
-          { label: 'Fees collected',  value: '₹12.4L', icon: 'payments',       color: 'var(--success)' },
+          { label: 'Active projects', value: loading ? '—' : String(projects.length),  icon: 'space_dashboard', color: 'var(--amber)',   href: '/projects' },
+          { label: 'Open RFIs',       value: loading ? '—' : String(totalRfis),         icon: 'forum',           color: 'var(--error)',   href: '/coordination' },
+          { label: 'Invoices due',    value: '₹4.1L',  icon: 'receipt_long',   color: 'var(--blue)',    href: '/invoices' },
+          { label: 'Fees collected',  value: '₹12.4L', icon: 'payments',       color: 'var(--success)', href: '/invoices' },
         ].map((stat, i) => (
-          <motion.div
+          <Link
             key={stat.label}
-            className="rounded-2xl p-4"
-            whileHover={{ y: -2 }}
-            transition={{ duration: 0.18 }}
-            style={{
-              background: 'var(--surface-container)',
-              boxShadow: `inset 3px 0 0 ${stat.color}`,
-            }}
+            href={stat.href}
           >
-            <div className="flex items-center gap-2 mb-2">
-              <span className="material-icons-outlined text-[16px]" style={{ color: stat.color }}>{stat.icon}</span>
-              <span className="text-[11px] font-medium" style={{ color: 'var(--stone)' }}>{stat.label}</span>
-            </div>
-            <p className="font-display font-bold text-[22px] leading-none" style={{ color: 'var(--on-surface)' }}>
-              {stat.value}
-            </p>
-          </motion.div>
+            <motion.div
+              className="rounded-2xl p-4 cursor-pointer"
+              whileHover={{ y: -3, boxShadow: `inset 3px 0 0 ${stat.color}, 0 8px 24px rgba(0,0,0,0.2)` }}
+              transition={{ duration: 0.18 }}
+              style={{
+                background: 'var(--surface-container)',
+                boxShadow: `inset 3px 0 0 ${stat.color}`,
+              }}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <span className="material-icons-outlined text-[16px]" style={{ color: stat.color }}>{stat.icon}</span>
+                <span className="text-[11px] font-medium" style={{ color: 'var(--stone)' }}>{stat.label}</span>
+              </div>
+              <p className="font-display font-bold text-[22px] leading-none" style={{ color: 'var(--on-surface)' }}>
+                {stat.value}
+              </p>
+            </motion.div>
+          </Link>
         ))}
       </motion.div>
 
@@ -404,34 +408,39 @@ export default function Dashboard() {
               style={{ background: 'var(--surface-container)' }}
             >
               {activities.map((act, idx) => (
-                <motion.div
+                <Link
                   key={act.id}
-                  className="flex gap-3 px-4 py-3.5"
-                  initial={{ opacity: 0, x: -6 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: 0.2 + 0.06 * idx }}
-                  style={idx > 0 ? { boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' } : {}}
+                  href={act.href}
                 >
-                  <div
-                    className="w-7 h-7 shrink-0 flex items-center justify-center rounded-lg"
-                    style={{
-                      background: `color-mix(in srgb, ${act.accent} 12%, transparent)`,
-                      color: act.accent,
-                    }}
+                  <motion.div
+                    className="flex gap-3 px-4 py-3.5 cursor-pointer transition-colors"
+                    initial={{ opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: 0.2 + 0.06 * idx }}
+                    whileHover={{ backgroundColor: 'rgba(255,255,255,0.025)' }}
+                    style={idx > 0 ? { boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' } : {}}
                   >
-                    <span className="material-icons-outlined text-[14px]">{act.icon}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[12.5px] leading-snug" style={{ color: 'var(--on-surface)' }}>
-                      <span className="font-semibold">{act.user}</span>{' '}
-                      <span style={{ color: 'var(--on-surface-variant)' }}>{act.action}</span>
-                    </p>
-                    <div className="flex justify-between mt-1">
-                      <span className="text-[11px]" style={{ color: 'var(--stone)' }}>{act.project}</span>
-                      <span className="text-[10px] font-mono" style={{ color: 'var(--stone)', opacity: 0.5 }}>{act.time}</span>
+                    <div
+                      className="w-7 h-7 shrink-0 flex items-center justify-center rounded-lg"
+                      style={{
+                        background: `color-mix(in srgb, ${act.accent} 12%, transparent)`,
+                        color: act.accent,
+                      }}
+                    >
+                      <span className="material-icons-outlined text-[14px]">{act.icon}</span>
                     </div>
-                  </div>
-                </motion.div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12.5px] leading-snug" style={{ color: 'var(--on-surface)' }}>
+                        <span className="font-semibold">{act.user}</span>{' '}
+                        <span style={{ color: 'var(--on-surface-variant)' }}>{act.action}</span>
+                      </p>
+                      <div className="flex justify-between mt-1">
+                        <span className="text-[11px]" style={{ color: 'var(--stone)' }}>{act.project}</span>
+                        <span className="text-[10px] font-mono" style={{ color: 'var(--stone)', opacity: 0.5 }}>{act.time}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                </Link>
               ))}
             </div>
           </div>
