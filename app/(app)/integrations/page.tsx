@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
 
 interface IntegrationItem {
@@ -16,8 +17,42 @@ interface IntegrationItem {
   category: 'workspace' | 'communication' | 'engineering'
 }
 
+// Which integration IDs use real OAuth (others show "coming soon")
+const OAUTH_PROVIDERS: Record<string, string> = {
+  'google-drive': 'google',
+  'gmail':        'google',
+  'autodesk':     'autodesk',
+}
+
 export default function IntegrationsDashboard() {
   const { toast } = useToast()
+  const router = useRouter()
+  const [connectedProviders, setConnectedProviders] = useState<string[]>([])
+  const [disconnecting, setDisconnecting] = useState<string | null>(null)
+
+  // Load real connected status on mount + after OAuth redirect
+  useEffect(() => {
+    fetch('/api/integrations/status')
+      .then(r => r.json())
+      .then(({ connected }) => setConnectedProviders(connected ?? []))
+      .catch(() => {})
+
+    // Handle redirect back from OAuth
+    const params = new URLSearchParams(window.location.search)
+    const connected = params.get('connected')
+    const error     = params.get('error')
+    if (connected === 'google') toast('Google Drive, Gmail & Calendar connected!', 'success', 5000)
+    if (connected === 'autodesk') toast('Autodesk AutoCAD & Fusion 360 connected!', 'success', 5000)
+    if (error === 'google_denied') toast('Google connection cancelled.', 'info')
+    if (error === 'autodesk_denied') toast('Autodesk connection cancelled.', 'info')
+    if (error === 'google_callback_failed') toast('Google connection failed. Try again.', 'error')
+    if (error === 'autodesk_callback_failed') toast('Autodesk connection failed. Try again.', 'error')
+    if (connected || error) {
+      // Clean URL
+      router.replace('/integrations', { scroll: false })
+    }
+  }, [])
+
   const [integrations, setIntegrations] = useState<IntegrationItem[]>([
     {
       id: 'google-drive',
@@ -76,22 +111,32 @@ export default function IntegrationsDashboard() {
   const [whatsappPhone, setWhatsappPhone] = useState('9876543210')
   const [googleFolder, setGoogleFolder] = useState('5Bloc Project Files')
 
-  const CONNECT_INFO: Record<string, string> = {
-    'google-drive': 'Add GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET to your .env and configure OAuth in Google Cloud Console.',
-    'gmail':        'Add GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET to your .env — Gmail uses the same Google OAuth app.',
-    'whatsapp':     'WhatsApp Business API requires a Meta Business account and WHATSAPP_TOKEN in your .env.',
-    'autodesk':     'Autodesk Forge integration requires AUTODESK_CLIENT_ID + AUTODESK_CLIENT_SECRET from developer.autodesk.com.',
+  const handleConnect = (id: string) => {
+    const provider = OAUTH_PROVIDERS[id]
+    if (!provider) {
+      toast('This integration is coming soon.', 'info')
+      return
+    }
+    // Google Drive + Gmail share the same OAuth flow
+    if (provider === 'google') {
+      router.push('/api/integrations/google/connect')
+    } else if (provider === 'autodesk') {
+      router.push('/api/integrations/autodesk/connect')
+    }
   }
 
-  const toggleConnection = (id: string) => {
-    const item = integrations.find(i => i.id === id)
-    if (!item) return
-    if (item.status === 'connected') {
-      setIntegrations(prev => prev.map(i => i.id === id ? { ...i, status: 'disconnected', lastSync: 'Never', syncedItemsCount: 0 } : i))
-      toast(`${item.name} disconnected`, 'info')
-    } else {
-      // Not yet implemented — show setup info
-      toast(CONNECT_INFO[id] || `To connect ${item.name}, add the required API keys to your .env file.`, 'info', 7000)
+  const handleDisconnect = async (id: string, name: string) => {
+    const provider = OAUTH_PROVIDERS[id]
+    if (!provider) return
+    setDisconnecting(id)
+    try {
+      await fetch(`/api/integrations/${provider}/disconnect`, { method: 'POST' })
+      setConnectedProviders(prev => prev.filter(p => p !== provider))
+      toast(`${name} disconnected`, 'info')
+    } catch {
+      toast('Disconnect failed. Try again.', 'error')
+    } finally {
+      setDisconnecting(null)
     }
   }
 
@@ -206,85 +251,83 @@ export default function IntegrationsDashboard() {
       {/* ── Integrations Grid ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {filtered.map(item => {
-          const isConnected = item.status === 'connected'
+          const provider    = OAUTH_PROVIDERS[item.id]
+          const isConnected = provider
+            ? connectedProviders.includes(provider) &&
+              // Google Drive + Gmail both show connected when google token exists
+              (provider !== 'google' || connectedProviders.includes('google'))
+            : false
+          const hasOAuth    = !!provider
+          const isBusy      = disconnecting === item.id
+
           return (
             <div
               key={item.id}
               className="card-5bloc flex flex-col justify-between transition relative overflow-hidden group hover:scale-[1.01] duration-200"
               style={{
                 borderRadius: '16px',
-                border: '1px solid rgba(159,142,122,0.08)',
+                border: `1px solid ${isConnected ? `color-mix(in srgb, ${item.color} 20%, transparent)` : 'rgba(159,142,122,0.08)'}`,
                 boxShadow: 'var(--shadow-2)',
               }}
             >
               {/* Highlight bar */}
-              <div className="absolute top-0 left-0 right-0 h-1" style={{ background: item.color }} />
+              <div className="absolute top-0 left-0 right-0 h-1" style={{ background: isConnected ? item.color : 'rgba(255,255,255,0.06)' }} />
 
               <div className="space-y-4">
-                {/* Header detail */}
+                {/* Header */}
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <div
                       className="w-12 h-12 flex items-center justify-center rounded-xl"
                       style={{
-                        background: `color-mix(in srgb, ${item.color} 12%, transparent)`,
+                        background: `color-mix(in srgb, ${item.color} ${isConnected ? 18 : 10}%, transparent)`,
                         color: item.color,
-                        boxShadow: 'inset 0 0 12px rgba(255,255,255,0.05)',
                       }}
                     >
                       <span className="material-icons-outlined text-[24px]">{item.icon}</span>
                     </div>
                     <div>
-                      <h3 className="text-[14px] font-bold text-white leading-tight">
-                        {item.name}
-                      </h3>
-                      <p className="text-[10px] text-stone mt-0.5 font-semibold">
-                        Provider: {item.provider}
-                      </p>
+                      <h3 className="text-[14px] font-bold text-white leading-tight">{item.name}</h3>
+                      <p className="text-[10px] text-stone mt-0.5 font-semibold">Provider: {item.provider}</p>
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => toggleConnection(item.id)}
-                    className={`px-3 py-1 rounded-full text-[10px] font-bold font-mono transition-all uppercase ${
-                      isConnected
-                        ? 'bg-success/10 text-success border border-success/30 hover:bg-error/10 hover:text-error hover:border-error/30 group-hover:block'
-                        : 'bg-navy-lt text-stone hover:text-white border border-transparent'
-                    }`}
+                  {/* Status badge */}
+                  <span
+                    className="px-3 py-1 rounded-full text-[10px] font-bold uppercase"
+                    style={isConnected
+                      ? { background: 'rgba(46,204,138,0.12)', color: 'var(--success)', border: '1px solid rgba(46,204,138,0.25)' }
+                      : { background: 'rgba(255,255,255,0.05)', color: 'var(--stone)', border: '1px solid rgba(255,255,255,0.08)' }
+                    }
                   >
-                    {isConnected ? 'Connected' : 'Connect'}
-                  </button>
+                    {isConnected ? '● Connected' : hasOAuth ? 'Not connected' : 'Coming soon'}
+                  </span>
                 </div>
 
-                {/* Description */}
-                <p className="text-xs text-stone-300 leading-relaxed font-body">
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--on-surface-variant)' }}>
                   {item.description}
                 </p>
+
+                {/* Connected account info */}
+                {isConnected && (
+                  <p className="text-[11px]" style={{ color: 'var(--stone)' }}>
+                    <span className="material-icons-outlined text-[12px] mr-1" style={{ verticalAlign: 'middle' }}>account_circle</span>
+                    Connected via {item.provider} OAuth
+                  </p>
+                )}
               </div>
 
-              {/* Footer status row */}
-              <div
-                className="mt-6 pt-4 flex items-center justify-between text-[11px] border-t border-navy-lt/20"
-              >
+              {/* Footer */}
+              <div className="mt-6 pt-4 flex items-center justify-between text-[11px]" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                 <div className="space-y-0.5">
-                  <span className="text-[10px] text-stone block">LAST SYNC</span>
-                  <span className="font-mono text-white font-semibold flex items-center gap-1">
-                    <span className="material-icons-outlined text-[12px] text-stone">schedule</span>
-                    {item.lastSync}
+                  <span className="text-[10px] block" style={{ color: 'var(--stone)' }}>LAST SYNC</span>
+                  <span className="font-mono font-semibold" style={{ color: 'var(--on-surface)' }}>
+                    {isConnected ? 'Active' : 'Never'}
                   </span>
                 </div>
 
                 {isConnected ? (
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => {
-                        setSelectedIntegration(item)
-                        setShowConfigModal(true)
-                      }}
-                      className="btn-secondary py-1.5 px-3 text-[11px] font-bold rounded-lg"
-                    >
-                      Configure
-                    </button>
                     <button
                       onClick={() => triggerSync(item.id)}
                       className="btn-ghost-amber py-1.5 px-3 text-[11px] font-bold rounded-lg flex items-center gap-1"
@@ -292,14 +335,26 @@ export default function IntegrationsDashboard() {
                       <span className="material-icons-outlined text-[13px]">sync</span>
                       Sync
                     </button>
+                    <button
+                      onClick={() => handleDisconnect(item.id, item.name)}
+                      disabled={isBusy}
+                      className="py-1.5 px-3 text-[11px] font-bold rounded-lg transition-colors"
+                      style={{ color: 'var(--error)', background: 'rgba(255,138,128,0.08)' }}
+                    >
+                      {isBusy ? 'Disconnecting…' : 'Disconnect'}
+                    </button>
                   </div>
-                ) : (
+                ) : hasOAuth ? (
                   <button
-                    onClick={() => toggleConnection(item.id)}
+                    onClick={() => handleConnect(item.id)}
                     className="btn-primary py-1.5 px-4 text-[11px] font-bold rounded-lg"
                   >
-                    Setup Integration
+                    Connect {item.provider}
                   </button>
+                ) : (
+                  <span className="text-[11px] px-3 py-1.5 rounded-lg" style={{ color: 'var(--stone)', background: 'rgba(255,255,255,0.04)' }}>
+                    Coming soon
+                  </span>
                 )}
               </div>
             </div>
