@@ -61,14 +61,11 @@ export function WaitlistForm({
   source?: string
   compact?: boolean
 }) {
-  const [email,    setEmail]    = useState('')
-  const [name,     setName]     = useState('')
-  const [role,     setRole]     = useState('architect')
-  const [practice, setPractice] = useState('')
-  const [city,     setCity]     = useState('')
-  const [notes,    setNotes]    = useState('')
-  const [busy,     setBusy]     = useState(false)
-  const [done,     setDone]     = useState(false)
+  const [email, setEmail] = useState('')
+  const [name,  setName]  = useState('')
+  const [role,  setRole]  = useState('architect')
+  const [busy,  setBusy]  = useState(false)
+  const [done,  setDone]  = useState(false)
 
   const roles = [
     { key: 'architect',  label: 'Architect' },
@@ -89,10 +86,9 @@ export function WaitlistForm({
     try {
       const supabase = createSupabaseClient()
       const { error: dbError } = await supabase.from('waitlist').insert({
-        email:    email.trim().toLowerCase(),
-        name:     name.trim() || null,
+        email: email.trim().toLowerCase(),
+        name:  name.trim() || null,
         role,
-        firm:     practice.trim() || null,
       })
       if (dbError) {
         if (dbError.code === '23505') {
@@ -189,21 +185,22 @@ export function WaitlistForm({
         color: C.txt,
       }}
     >
+      <Field label="Work email" required>
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@studio.com"
+          className={inputCls}
+          style={inputStyle}
+          onFocus={focusStyle}
+          onBlur={blurStyle}
+        />
+      </Field>
+
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Work email" required>
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@studio.com"
-            className={inputCls}
-            style={inputStyle}
-            onFocus={focusStyle}
-            onBlur={blurStyle}
-          />
-        </Field>
-        <Field label="Full name">
+        <Field label="Your name">
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -214,9 +211,6 @@ export function WaitlistForm({
             onBlur={blurStyle}
           />
         </Field>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
         <Field label="I'm a">
           <select
             value={role}
@@ -233,45 +227,9 @@ export function WaitlistForm({
             ))}
           </select>
         </Field>
-        <Field label="Practice / company">
-          <input
-            value={practice}
-            onChange={(e) => setPractice(e.target.value)}
-            placeholder="Mehta + Rao Architects"
-            className={inputCls}
-            style={inputStyle}
-            onFocus={focusStyle}
-            onBlur={blurStyle}
-          />
-        </Field>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="City">
-          <input
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            placeholder="Bengaluru"
-            className={inputCls}
-            style={inputStyle}
-            onFocus={focusStyle}
-            onBlur={blurStyle}
-          />
-        </Field>
-        <Field label="First use case">
-          <input
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="RFI chaos on a project…"
-            className={inputCls}
-            style={inputStyle}
-            onFocus={focusStyle}
-            onBlur={blurStyle}
-          />
-        </Field>
-      </div>
-
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 pt-1">
         <button
           type="submit"
           disabled={busy}
@@ -283,7 +241,7 @@ export function WaitlistForm({
           {busy ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <>Request access <ArrowRight className="h-4 w-4" /></>
+            <>Get early access <ArrowRight className="h-4 w-4" /></>
           )}
         </button>
         {error && (
@@ -291,7 +249,7 @@ export function WaitlistForm({
         )}
         {!error && (
           <p className="text-xs" style={{ color: C.txtDim }}>
-            No spam. 10 practices onboarded per week.
+            No spam · 10 practices per week
           </p>
         )}
       </div>

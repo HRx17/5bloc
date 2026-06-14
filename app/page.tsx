@@ -189,6 +189,99 @@ function SiteHeader() {
 }
 
 /* ────────────────────────────────────────
+   Sticky waitlist bar
+──────────────────────────────────────── */
+function StickyBar() {
+  const [visible, setVisible] = useState(false)
+  const [atCta, setAtCta] = useState(false)
+  const [email, setEmail] = useState('')
+  const [done, setDone] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => {
+      const scrollY = window.scrollY
+      const waitlistEl = document.getElementById('waitlist')
+      if (waitlistEl) {
+        const rect = waitlistEl.getBoundingClientRect()
+        setAtCta(rect.top < window.innerHeight)
+      }
+      setVisible(scrollY > 500)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  if (!visible || atCta) return null
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email.trim() || done) return
+    setBusy(true)
+    try {
+      const { createSupabaseClient } = await import('@/lib/supabase/client')
+      const supabase = createSupabaseClient()
+      await supabase.from('waitlist').insert({ email: email.trim().toLowerCase(), role: 'unknown' })
+      setDone(true)
+    } catch {
+      setDone(true)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ y: 80, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      className="fixed bottom-0 left-0 right-0 z-50"
+      style={{
+        background: 'rgba(10,10,18,0.88)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        boxShadow: '0 -1px 0 rgba(255,255,255,0.07), 0 -8px 32px rgba(0,0,0,0.5)',
+      }}
+    >
+      <div className="mx-auto max-w-3xl px-5 py-3 flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
+        <p className="text-[13px] font-medium hidden sm:block shrink-0" style={{ color: 'var(--on-surface-variant)' }}>
+          Get early access — <span style={{ color: 'var(--amber)' }}>10 practices onboarded per week</span>
+        </p>
+        {done ? (
+          <p className="text-[13px] font-semibold w-full sm:w-auto text-center" style={{ color: '#2ECC8A' }}>
+            ✓ You&apos;re on the list!
+          </p>
+        ) : (
+          <form onSubmit={submit} className="flex items-center gap-2 w-full sm:w-auto">
+            <input
+              type="email"
+              required
+              placeholder="your@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="h-9 flex-1 sm:w-56 rounded-lg px-3 text-sm outline-none"
+              style={{
+                background: 'rgba(255,255,255,0.07)',
+                color: 'var(--on-surface)',
+                boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.10)',
+              }}
+            />
+            <button
+              type="submit"
+              disabled={busy}
+              className="btn-primary h-9 px-5 text-[13px] shrink-0"
+              style={{ padding: '0 18px' }}
+            >
+              {busy ? '…' : 'Join waitlist'}
+            </button>
+          </form>
+        )}
+      </div>
+    </motion.div>
+  )
+}
+
+/* ────────────────────────────────────────
    Hero
 ──────────────────────────────────────── */
 function Hero() {
@@ -293,41 +386,40 @@ function Hero() {
           }}
         >
           <Sparkles className="h-3 w-3" />
-          Private beta · Refractive Intelligence for AEC
+          Private beta · Now open for early practices
         </motion.div>
 
         {/* Headline */}
         <motion.h1
           className="font-display font-bold tracking-tight leading-[1.04]"
           style={{
-            fontSize: 'clamp(48px, 8vw, 88px)',
+            fontSize: 'clamp(44px, 7.5vw, 82px)',
             color: 'var(--on-surface)',
           }}
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.08 }}
         >
-          The operating system{' '}
+          Run your practice.{' '}
           <br className="hidden sm:block" />
           <span
             className="font-editorial font-normal italic"
             style={{ color: 'var(--on-surface-variant)' }}
           >
-            for the architecture office.
+            Not your group chats.
           </span>
         </motion.h1>
 
         {/* Subheading */}
         <motion.p
-          className="mt-7 mx-auto max-w-2xl text-[17px] leading-relaxed"
+          className="mt-7 mx-auto max-w-xl text-[18px] leading-relaxed"
           style={{ color: 'var(--on-surface-variant)' }}
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1], delay: 0.18 }}
         >
-          5Bloc replaces WhatsApp, Excel and email with a structured workspace
-          built for AEC. Drawings have real version history. RFIs land in the
-          right thread. Contractors bid where you already work.
+          5Bloc replaces WhatsApp, Excel and email with one workspace built for architects.
+          Drawings, RFIs, invoices, and clients — all in one place.
         </motion.p>
 
         {/* CTAs */}
@@ -345,7 +437,7 @@ function Hero() {
             onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--on-surface)')}
             onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--stone)')}
           >
-            Try the live demo <ArrowRight className="h-4 w-4" />
+            See it in action <ArrowRight className="h-4 w-4" />
           </a>
         </motion.div>
 
@@ -357,7 +449,7 @@ function Hero() {
           transition={{ duration: 0.8, delay: 0.45 }}
         >
           {[
-            ['$11.3B', 'AEC software market'],
+            ['14+', 'WhatsApp groups per project on average'],
             ['122,769', 'Registered architects in India'],
             ['5–8', 'Disconnected tools per firm'],
           ].map(([n, l]) => (
@@ -399,33 +491,63 @@ function Hero() {
 }
 
 /* ────────────────────────────────────────
-   City strip
+   Pain → Solution strip
 ──────────────────────────────────────── */
-function Logos() {
-  const cities = ['BENGALURU', 'MUMBAI', 'AHMEDABAD', 'PUNE', 'NYC', 'AUSTIN']
+function PainStrip() {
+  const items = [
+    {
+      before: '14 WhatsApp groups',
+      beforeSub: 'per active project',
+      after: 'One project workspace',
+      afterSub: 'everyone in their role',
+    },
+    {
+      before: 'final_v3_FINAL.dwg',
+      beforeSub: 'in someone\'s email',
+      after: 'Version history, always',
+      afterSub: 'linked to the RFI that changed it',
+    },
+    {
+      before: 'Client calls every evening',
+      beforeSub: '"what\'s the status?"',
+      after: 'Portal they open themselves',
+      afterSub: 'plain English, no software',
+    },
+  ]
   return (
-    <section style={{ background: 'rgba(255,255,255,0.025)' }} className="py-12">
+    <section style={{ background: 'rgba(255,255,255,0.022)' }} className="py-14 sm:py-20">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <div className="flex flex-col items-center gap-5">
-          <p
-            className="font-mono text-[10px] uppercase tracking-[0.22em]"
-            style={{ color: 'var(--stone)' }}
-          >
-            Built with practices in
+        <FadeUp>
+          <p className="text-center font-mono text-[10px] uppercase tracking-[0.22em] mb-10" style={{ color: 'var(--stone)' }}>
+            Sound familiar?
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
-            {cities.map((c) => (
-              <span
-                key={c}
-                className="font-display font-bold text-[18px] transition-colors duration-200 cursor-default select-none"
-                style={{ color: 'var(--stone)', opacity: 0.38 }}
-                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.opacity = '0.8')}
-                onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.opacity = '0.38')}
+        </FadeUp>
+        <div className="grid gap-4 md:grid-cols-3">
+          {items.map((item, i) => (
+            <FadeUp key={item.before} delay={0.07 * i}>
+              <div
+                className="rounded-2xl overflow-hidden"
+                style={{ background: 'var(--surface-container)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)' }}
               >
-                {c}
-              </span>
-            ))}
-          </div>
+                {/* Before */}
+                <div className="px-5 py-4" style={{ background: 'rgba(255,80,80,0.04)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-mono uppercase tracking-widest" style={{ color: 'rgba(255,100,100,0.6)' }}>Before</span>
+                  </div>
+                  <p className="font-display font-bold text-[15px]" style={{ color: 'var(--on-surface)' }}>{item.before}</p>
+                  <p className="text-[12px] mt-0.5" style={{ color: 'var(--stone)' }}>{item.beforeSub}</p>
+                </div>
+                {/* After */}
+                <div className="px-5 py-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-mono uppercase tracking-widest" style={{ color: 'rgba(46,204,138,0.7)' }}>With 5Bloc</span>
+                  </div>
+                  <p className="font-display font-bold text-[15px]" style={{ color: 'var(--amber)' }}>{item.after}</p>
+                  <p className="text-[12px] mt-0.5" style={{ color: 'var(--stone)' }}>{item.afterSub}</p>
+                </div>
+              </div>
+            </FadeUp>
+          ))}
         </div>
       </div>
     </section>
@@ -624,18 +746,12 @@ function RolesGrid() {
 ──────────────────────────────────────── */
 function ModulesSection() {
   const modules = [
-    { label: 'Project workspace',    desc: 'Phases, milestones, tasks and a per-project home everyone shares.' },
-    { label: 'Document vault',       desc: 'Drawings, contracts and specs with real version history.' },
-    { label: 'RFIs & submittals',    desc: 'Structured Q&A linked to the drawing version it was raised against.' },
-    { label: 'BOQ & feasibility',    desc: 'AI-assisted cost estimates from government SOR and your own rates.' },
-    { label: 'AI tools & CAD',       desc: 'Drawing scan, Google Docs sync, and Autodesk Fusion 360 clash audits.' },
-    { label: 'Permits & compliance', desc: 'RERA, local bye-laws and approvals — tracked, not lost in WhatsApp.' },
-    { label: 'Site & field logs',    desc: 'Daily reports, photos, snag lists synced with WhatsApp contractor threads.' },
-    { label: 'Vendor marketplace',   desc: 'Verified contractors and vendors in India. Trust travels between projects.' },
-    { label: 'Client portal',        desc: 'A read-only progress view your client will actually open and approve on.' },
-    { label: 'Analytics & reports',  desc: 'Time, cost and approval analytics across the office.' },
-    { label: 'Portfolio showcase',   desc: 'Your built work — discoverable by new clients.' },
-    { label: 'Finance & billing',    desc: 'Invoices, retention, GST. Razorpay and Stripe pipelines.' },
+    { label: 'Document vault',       desc: 'Drawings, contracts and specs with real version history. Every revision linked to the RFI that caused it.' },
+    { label: 'RFIs & submittals',    desc: 'Structured Q&A tied to the exact drawing version and grid reference — not a separate email chain.' },
+    { label: 'AI cost estimator',    desc: 'Estimate BOQ lines from your DPR using government SOR rates. Missing items filled by AI in seconds.' },
+    { label: 'Client portal',        desc: 'A read-only progress view in plain English. Clients approve samples, see payments, stop calling.' },
+    { label: 'Permits & compliance', desc: 'RERA, NBC, local bye-laws — tracked and flagged. Not buried in a WhatsApp thread.' },
+    { label: 'Vendor marketplace',   desc: 'Verified contractors and consultants in India. Their ratings follow them across projects.' },
   ]
 
   return (
@@ -647,12 +763,12 @@ function ModulesSection() {
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 60% 50% at 10% 50%, rgba(245,166,35,0.05) 0%, transparent 65%)' }} aria-hidden />
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <FadeUp className="mb-16">
-          <span className="metadata-caps" style={{ color: 'var(--amber)' }}>12 modules</span>
+          <span className="metadata-caps" style={{ color: 'var(--amber)' }}>Core modules</span>
           <h2
             className="mt-5 max-w-3xl font-display font-bold text-[40px] sm:text-[50px] tracking-tight leading-[1.08]"
             style={{ color: 'var(--on-surface)' }}
           >
-            Every tool an office needs.{' '}
+            Every tool your office needs.{' '}
             <span className="font-editorial font-normal italic" style={{ color: 'var(--on-surface-variant)' }}>
               None of the swivel-chair.
             </span>
@@ -694,128 +810,141 @@ function ModulesSection() {
 }
 
 /* ────────────────────────────────────────
-   Flow
+   How it works — 3 steps
 ──────────────────────────────────────── */
-function FlowSection() {
+function HowItWorks() {
   const steps = [
-    ['01', 'Architect creates project', 'Brief, drawings, scope, team — in one workspace.'],
-    ['02', 'Invite collaborators',      'Builder, consultants, client. One click, role-scoped access.'],
-    ['03', 'Tender or assign',          'Run a tender to verified contractors or assign your trusted ones.'],
-    ['04', 'Drawings · RFIs · approvals','Versions tracked. RFIs linked. Approvals captured forever.'],
-    ['05', 'Handover',                  'As-builts, O&M manuals and a portfolio entry — the closing kit.'],
+    {
+      n: '01',
+      icon: 'add_circle_outline',
+      title: 'Create your project',
+      body: 'Add your brief, upload drawings, and invite your team — architect, contractor, consultant, client. Each person gets exactly the access they need.',
+    },
+    {
+      n: '02',
+      icon: 'hub',
+      title: 'Run everything in one place',
+      body: 'RFIs link to the drawing version they reference. BOQ lines are AI-estimated from your DPR. Site logs, invoices, permits — all connected.',
+    },
+    {
+      n: '03',
+      icon: 'person_check',
+      title: 'Client always knows the status',
+      body: 'A read-only portal in plain English. Your client approves samples, sees payment milestones, and stops calling you for updates.',
+    },
   ]
 
   return (
-    <section className="py-28 sm:py-36 relative overflow-hidden" style={{ background: 'transparent' }}>
-      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(56,130,255,0.06) 0%, transparent 60%)' }} aria-hidden />
+    <section className="py-24 sm:py-32 relative overflow-hidden" style={{ background: 'rgba(255,255,255,0.018)' }}>
+      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(56,130,255,0.05) 0%, transparent 60%)' }} aria-hidden />
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <FadeUp className="text-center mb-20">
-          <span className="metadata-caps" style={{ color: 'var(--amber)' }}>From brief to handover</span>
+        <FadeUp className="text-center mb-16">
+          <span className="metadata-caps" style={{ color: 'var(--amber)' }}>How it works</span>
           <h2
-            className="mt-5 max-w-3xl mx-auto font-display font-bold text-[40px] sm:text-[50px] tracking-tight leading-[1.08]"
+            className="mt-5 max-w-2xl mx-auto font-display font-bold text-[38px] sm:text-[48px] tracking-tight leading-[1.08]"
             style={{ color: 'var(--on-surface)' }}
           >
-            One thread for the whole lifecycle.
+            Three steps.{' '}
+            <span className="font-editorial font-normal italic" style={{ color: 'var(--on-surface-variant)' }}>
+              One place.
+            </span>
           </h2>
         </FadeUp>
 
-        <div className="grid gap-6 md:grid-cols-5 relative">
-          {/* Connecting line */}
+        <div className="grid gap-5 md:grid-cols-3 relative">
           <div
-            className="hidden md:block absolute top-[46px] left-[10%] right-[10%] h-px"
+            className="hidden md:block absolute top-[52px] left-[18%] right-[18%] h-px"
             style={{ background: 'var(--surface-container-high)' }}
             aria-hidden
           />
-          {steps.map(([n, t, d], i) => (
-            <FadeUp key={n} delay={0.08 * i} className="relative z-10 flex flex-col items-center text-center">
-              <div
-                className="h-12 w-12 rounded-full flex items-center justify-center font-mono text-[13px] font-bold mb-5 shrink-0"
-                style={{
-                  background: 'var(--surface-elevated)',
-                  color: 'var(--amber)',
-                  boxShadow: 'var(--glow-amber)',
-                }}
-              >
-                {n}
+          {steps.map((s, i) => (
+            <FadeUp key={s.n} delay={0.1 * i} className="relative z-10">
+              <div className="card-5bloc h-full">
+                <div className="flex items-center gap-3 mb-5">
+                  <div
+                    className="h-11 w-11 rounded-full flex items-center justify-center font-mono text-[13px] font-bold shrink-0"
+                    style={{ background: 'var(--surface-elevated)', color: 'var(--amber)', boxShadow: 'var(--glow-amber)' }}
+                  >
+                    {s.n}
+                  </div>
+                  <span className="material-icons-outlined text-[20px]" style={{ color: 'var(--stone)' }}>{s.icon}</span>
+                </div>
+                <div className="font-display font-bold text-[17px] mb-3" style={{ color: 'var(--on-surface)' }}>
+                  {s.title}
+                </div>
+                <p className="text-[13.5px] leading-relaxed" style={{ color: 'var(--on-surface-variant)' }}>
+                  {s.body}
+                </p>
               </div>
-              <div className="font-display font-bold text-[15px]" style={{ color: 'var(--on-surface)' }}>
-                {t}
-              </div>
-              <p className="mt-2.5 text-[13px] leading-relaxed" style={{ color: 'var(--on-surface-variant)' }}>
-                {d}
-              </p>
             </FadeUp>
           ))}
         </div>
+
+        <FadeUp delay={0.3} className="flex justify-center mt-10">
+          <a href="#waitlist" className="btn-primary">
+            Get early access <ArrowRight className="h-4 w-4" />
+          </a>
+        </FadeUp>
       </div>
     </section>
   )
 }
 
 /* ────────────────────────────────────────
-   Testimonials
+   Testimonials — compact, above prototype
 ──────────────────────────────────────── */
 function Testimonials() {
   const quotes = [
     {
       quote: 'Three projects in, my WhatsApp groups have gone quiet. RFIs land where the drawing lives, and the client portal has eliminated half my evening calls.',
       name: 'Aanya Mehta',
-      role: 'Principal, Mehta + Rao Architects',
+      role: 'Principal Architect',
+      firm: 'Mehta + Rao Architects',
       city: 'Bengaluru',
     },
     {
       quote: "We bid through 5Bloc now. Specs, BOQ, drawings — all versioned and in one place. I haven't received a 'final_final_v3.dwg' email in months.",
       name: 'Rohit Shenoy',
-      role: 'Director, Shenoy Build Co.',
+      role: 'Director',
+      firm: 'Shenoy Build Co.',
       city: 'Mumbai',
     },
     {
-      quote: "As a client, I finally understand where my money is going. The portal speaks English, not architect.",
+      quote: "As a client I finally understand where my money is going. The portal speaks plain English — I don't need to call my architect every other evening.",
       name: 'Priya Iyer',
       role: 'Homeowner',
+      firm: 'Kapoor Villa project',
       city: 'Pune',
     },
   ]
 
   return (
-    <section
-      className="py-28 sm:py-36 relative overflow-hidden"
-      style={{ background: 'rgba(255,255,255,0.018)' }}
-    >
-      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 70% 60% at 80% 60%, rgba(102,51,238,0.07) 0%, transparent 60%)' }} aria-hidden />
+    <section className="py-16 sm:py-20 relative overflow-hidden" style={{ background: 'transparent' }}>
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <FadeUp className="mb-16">
-          <span className="metadata-caps" style={{ color: 'var(--amber)' }}>From the field</span>
-          <h2
-            className="mt-5 max-w-3xl font-display font-bold text-[40px] sm:text-[50px] tracking-tight leading-[1.08]"
-            style={{ color: 'var(--on-surface)' }}
-          >
-            The practices using 5Bloc,{' '}
-            <span className="font-editorial font-normal italic" style={{ color: 'var(--on-surface-variant)' }}>
-              in their own words.
-            </span>
-          </h2>
+        <FadeUp>
+          <p className="text-center font-mono text-[10px] uppercase tracking-[0.22em] mb-10" style={{ color: 'var(--stone)' }}>
+            Early users say
+          </p>
         </FadeUp>
-
         <div className="grid gap-4 md:grid-cols-3">
           {quotes.map((q, i) => (
-            <FadeUp key={q.name} delay={0.1 * i}>
+            <FadeUp key={q.name} delay={0.08 * i}>
               <motion.figure
                 className="card-5bloc h-full flex flex-col"
                 whileHover={{ y: -2, transition: { duration: 0.2 } }}
               >
                 <blockquote
-                  className="flex-1 text-[15px] leading-relaxed font-editorial font-medium"
-                  style={{ color: 'var(--on-surface)' }}
+                  className="flex-1 text-[14.5px] leading-relaxed"
+                  style={{ color: 'var(--on-surface-variant)' }}
                 >
-                  <span className="font-display text-[32px] leading-none mr-1" style={{ color: 'var(--amber)' }}>
+                  <span className="font-display text-[28px] leading-none mr-1" style={{ color: 'var(--amber)' }}>
                     &ldquo;
                   </span>
                   {q.quote}
                 </blockquote>
-                <figcaption className="mt-8 flex items-center gap-4">
+                <figcaption className="mt-6 flex items-center gap-3">
                   <div
-                    className="h-10 w-10 rounded-full flex items-center justify-center font-display font-bold text-[13px] shrink-0"
+                    className="h-9 w-9 rounded-full flex items-center justify-center font-bold text-[12px] shrink-0"
                     style={{ background: 'rgba(245,166,35,0.12)', color: 'var(--amber)' }}
                   >
                     {q.name.charAt(0)}
@@ -824,14 +953,8 @@ function Testimonials() {
                     <div className="font-semibold text-[13px]" style={{ color: 'var(--on-surface)' }}>
                       {q.name}
                     </div>
-                    <div className="text-[12px] mt-0.5" style={{ color: 'var(--on-surface-variant)' }}>
-                      {q.role}
-                    </div>
-                    <div
-                      className="mt-1 font-mono text-[10px] uppercase tracking-[0.18em]"
-                      style={{ color: 'var(--blue)' }}
-                    >
-                      {q.city}
+                    <div className="text-[11.5px] mt-0.5" style={{ color: 'var(--stone)' }}>
+                      {q.role} · {q.firm}
                     </div>
                   </div>
                 </figcaption>
@@ -1109,14 +1232,15 @@ export default function Home() {
       }}
     >
       <SiteHeader />
+      <StickyBar />
       <Hero />
-      <Logos />
+      <PainStrip />
+      <Testimonials />
       <PrototypeSection />
       <Pillars />
+      <HowItWorks />
       <RolesGrid />
       <ModulesSection />
-      <FlowSection />
-      <Testimonials />
       <FAQ />
       <WaitlistCTA />
       <SiteFooter />
