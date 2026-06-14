@@ -127,7 +127,8 @@ export default function Sidebar({
         )}
       </div>
 
-      {/* ── New Project quick action ── */}
+      {/* ── New Project quick action (architects only) ── */}
+      {role === 'architect' && (
       <div className="px-3 pt-2.5 pb-1 shrink-0">
         <Link
           href="/projects/new"
@@ -144,6 +145,7 @@ export default function Sidebar({
           New Project
         </Link>
       </div>
+      )}
 
       {/* ── Navigation ── */}
       <nav className="flex-1 overflow-y-auto px-2 py-1.5 space-y-0.5">

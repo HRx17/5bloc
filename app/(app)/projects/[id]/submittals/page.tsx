@@ -201,7 +201,7 @@ export default function SubmittalsLog() {
  <td className="py-4 font-semibold pr-4">
  <span className="text-white group-hover:text-amber transition-colors line-clamp-1">{sub.title}</span>
  {sub.file_name && (
- <span className="text-[10px] text-stone font-mono mt-0.5 block flex items-center gap-0.5">
+ <span className="text-[10px] text-stone font-mono mt-0.5 flex items-center gap-0.5">
  <span className="material-icons-outlined text-[13px] text-blue">attachment</span> {sub.file_name}
  </span>
  )}

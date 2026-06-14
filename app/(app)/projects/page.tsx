@@ -26,6 +26,13 @@ export default function ProjectsList() {
  const [filterCity, setFilterCity] = useState('all')
  const [searchQuery, setSearchQuery] = useState('')
  const [loading, setLoading] = useState(true)
+ const [role, setRole] = useState('architect')
+ const isArchitect = role === 'architect'
+
+ useEffect(() => {
+ const demo = localStorage.getItem('5bloc_demo_role')
+ if (demo) setRole(demo)
+ }, [])
 
  useEffect(() => {
  async function load() {
@@ -77,7 +84,9 @@ export default function ProjectsList() {
  Projects Registry
  </h1>
  <p className="text-[12px] mt-1" style={{ color: 'var(--on-surface-variant)' }}>
- Manage and track architectural workflows across all commissions.
+ {isArchitect
+ ? 'Manage and track architectural workflows across all commissions.'
+ : 'Projects you have access to, with documents, RFIs and updates.'}
  </p>
  </div>
  <div className="flex items-center gap-3 shrink-0">
@@ -85,10 +94,12 @@ export default function ProjectsList() {
  <span className="material-icons-outlined text-[15px]">file_download</span>
  Export CSV
  </button>
+ {isArchitect && (
  <Link href="/projects/new" className="btn-primary text-[12px]">
  <span className="material-icons-outlined text-[15px]">add</span>
  New Project
  </Link>
+ )}
  </div>
  </div>
 
@@ -103,13 +114,15 @@ export default function ProjectsList() {
  Starter template project
  </p>
  <p className="text-[11.5px]" style={{ color: 'var(--on-surface-variant)' }}>
- Explore <strong>Wadhwa Prime Plaza</strong> to learn the tool — every tab, document, RFI and workflow is fully interactive. Create your own project when you&apos;re ready.
+ Explore <strong>Wadhwa Prime Plaza</strong> to learn the tool — every tab, document, RFI and workflow is fully interactive.{isArchitect ? ' Create your own project when you\u2019re ready.' : ''}
  </p>
  </div>
+ {isArchitect && (
  <Link href="/projects/new" className="btn-ghost-amber btn-sm shrink-0 hidden sm:inline-flex">
  <span className="material-icons-outlined text-[14px]">add</span>
  New
  </Link>
+ )}
  </div>
 
  {/* ── Filters ── */}
