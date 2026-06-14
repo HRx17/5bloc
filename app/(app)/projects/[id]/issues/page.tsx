@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { supabaseClient } from '@/lib/supabase/client'
+import { getMyOrgId, hasSupabaseEnv } from '@/lib/data/client-data'
 
 interface Issue {
   id: string
@@ -43,55 +45,55 @@ export default function IssueTracker() {
   })
 
   useEffect(() => {
-    // Mock load issues
-    const timer = setTimeout(() => {
-      setIssues([
-        {
-          id: 'iss-1',
-          issue_number: 1,
-          title: 'Concrete honeycombing at Column C-2 base',
-          description: 'Visible honeycomb structure at the base of pour column C-2. Voids need grouting and verification.',
-          severity: 'high',
-          status: 'open',
-          assigned_to: 'Amit Sharma (Contractor)',
-          reported_by: 'Aritro Roy (Structural)',
-          date_reported: '2026-06-05',
-          photo_attached: 'column_honeycomb_c2.jpg'
-        },
-        {
-          id: 'iss-2',
-          issue_number: 2,
-          title: 'Delayed plumbing shaft bracket arrivals',
-          description: 'Heavy duty pipe mounting brackets for internal ducts are delayed. Structural bracing is pending.',
-          severity: 'medium',
-          status: 'in_progress',
-          assigned_to: 'Rohan Deshmukh (MEP)',
-          reported_by: 'Amit Sharma (Contractor)',
-          date_reported: '2026-06-03'
-        },
-        {
-          id: 'iss-3',
-          issue_number: 3,
-          title: 'Lobby tile layout alignment deviation',
-          description: 'Tile layout deviated by 12mm over 6 meters. Resolved by laying out a layout spacer boundary.',
-          severity: 'low',
-          status: 'resolved',
-          assigned_to: 'Amit Sharma (Contractor)',
-          reported_by: 'Parth Patel (Architect)',
-          date_reported: '2026-05-20'
+    let cancelled = false
+    async function load() {
+      try {
+        if (hasSupabaseEnv()) {
+          const { data, error } = await supabaseClient
+            .from('issues')
+            .select('*')
+            .eq('project_id', projectId)
+            .order('issue_number', { ascending: true })
+          if (!error && data) {
+            if (!cancelled) {
+              setIssues(data.map((i) => ({
+                id: i.id,
+                issue_number: i.issue_number,
+                title: i.title,
+                description: i.description ?? '',
+                severity: i.severity as Issue['severity'],
+                status: i.status as Issue['status'],
+                assigned_to: i.assigned_to ?? '',
+                reported_by: i.reported_by ?? '',
+                date_reported: i.date_reported ?? '',
+                photo_attached: i.photo_attached ?? undefined,
+              })))
+              setLoading(false)
+            }
+            return
+          }
         }
-      ])
-      setLoading(false)
-    }, 300)
-    return () => clearTimeout(timer)
+      } catch (e) { console.warn('Issues Supabase fallback:', e) }
+      if (!cancelled) {
+        setIssues([
+          { id: 'iss-1', issue_number: 1, title: 'Concrete honeycombing at Column C-2 base', description: 'Visible honeycomb structure at the base of pour column C-2. Voids need grouting and verification.', severity: 'high', status: 'open', assigned_to: 'Amit Sharma (Contractor)', reported_by: 'Aritro Roy (Structural)', date_reported: '2026-06-05', photo_attached: 'column_honeycomb_c2.jpg' },
+          { id: 'iss-2', issue_number: 2, title: 'Delayed plumbing shaft bracket arrivals', description: 'Heavy duty pipe mounting brackets for internal ducts are delayed. Structural bracing is pending.', severity: 'medium', status: 'in_progress', assigned_to: 'Rohan Deshmukh (MEP)', reported_by: 'Amit Sharma (Contractor)', date_reported: '2026-06-03' },
+          { id: 'iss-3', issue_number: 3, title: 'Lobby tile layout alignment deviation', description: 'Tile layout deviated by 12mm over 6 meters. Resolved by laying out a layout spacer boundary.', severity: 'low', status: 'resolved', assigned_to: 'Amit Sharma (Contractor)', reported_by: 'Parth Patel (Architect)', date_reported: '2026-05-20' },
+        ])
+        setLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
   }, [projectId])
 
-  const handleReportIssue = (e: React.FormEvent) => {
+  const handleReportIssue = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    const nextNumber = issues.length + 1
     const issueRecord: Issue = {
       id: `iss-${Date.now()}`,
-      issue_number: issues.length + 1,
+      issue_number: nextNumber,
       title: newIssue.title,
       description: newIssue.description,
       severity: newIssue.severity,
@@ -104,9 +106,28 @@ export default function IssueTracker() {
     setIssues(prev => [issueRecord, ...prev])
     setShowReportModal(false)
     setNewIssue({ title: '', description: '', severity: 'medium', assigned_to: 'Amit Sharma' })
+
+    try {
+      const orgId = await getMyOrgId()
+      if (orgId) {
+        const { data } = await supabaseClient.from('issues').insert({
+          org_id: orgId,
+          project_id: projectId,
+          issue_number: nextNumber,
+          title: issueRecord.title,
+          description: issueRecord.description,
+          severity: issueRecord.severity,
+          status: 'open',
+          assigned_to: issueRecord.assigned_to,
+          reported_by: issueRecord.reported_by,
+          date_reported: issueRecord.date_reported,
+        }).select('id').single()
+        if (data?.id) setIssues(prev => prev.map(i => i.id === issueRecord.id ? { ...i, id: data.id } : i))
+      }
+    } catch (e) { console.warn('Issue insert skipped:', e) }
   }
 
-  const applyStatusUpdate = (issueId: string, status: Issue['status']) => {
+  const applyStatusUpdate = async (issueId: string, status: Issue['status']) => {
     setIssues(prev => 
       prev.map(i => i.id === issueId ? { ...i, status } : i)
     )
@@ -115,6 +136,15 @@ export default function IssueTracker() {
     }
     toast(`Issue marked as ${status.replace('_', ' ')}`, 'success')
     setPendingStatus(null)
+
+    try {
+      if (hasSupabaseEnv() && !issueId.startsWith('iss-')) {
+        await supabaseClient.from('issues').update({
+          status,
+          updated_at: new Date().toISOString(),
+        }).eq('id', issueId)
+      }
+    } catch (e) { console.warn('Issue update skipped:', e) }
   }
 
   const requestStatusUpdate = (issueId: string, status: Issue['status']) => {

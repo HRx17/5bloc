@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { CalendarWidget } from '@/components/integrations/CalendarWidget'
 import { StatCard } from '@/components/ui/StatCard'
 import type { UserRole } from '@/lib/roles'
+import { supabaseClient } from '@/lib/supabase/client'
+import { hasSupabaseEnv, phaseKeyFromNumber } from '@/lib/data/client-data'
 
 interface Project {
   id: string; name: string; type: string; phase: string
@@ -264,13 +266,51 @@ export default function Dashboard() {
   }, [])
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      setProjects([
-        { id: 'proj-1', name: 'Wadhwa Prime Plaza', type: 'Commercial', phase: 'construction_docs', status: 'active', city: 'Mumbai', openRfis: 3 },
-      ])
-      setLoading(false)
-    }, 500)
-    return () => clearTimeout(t)
+    let cancelled = false
+    async function load() {
+      try {
+        if (hasSupabaseEnv()) {
+          const { data, error } = await supabaseClient
+            .from('projects')
+            .select('id, name, type, phase, phase_key, status, city')
+            .order('is_template', { ascending: false })
+            .order('created_at', { ascending: false })
+          if (!error && data && data.length > 0) {
+            const ids = data.map((p) => p.id)
+            const { data: rfiRows } = await supabaseClient
+              .from('rfis')
+              .select('project_id, status')
+              .in('project_id', ids)
+              .in('status', ['open', 'in_review'])
+            const openByProject: Record<string, number> = {}
+            ;(rfiRows ?? []).forEach((r) => {
+              openByProject[r.project_id] = (openByProject[r.project_id] ?? 0) + 1
+            })
+            if (!cancelled) {
+              setProjects(data.map((p) => ({
+                id: p.id,
+                name: p.name,
+                type: p.type ?? 'Commercial',
+                phase: p.phase_key ?? phaseKeyFromNumber(p.phase),
+                status: p.status,
+                city: p.city ?? '—',
+                openRfis: openByProject[p.id] ?? 0,
+              })))
+              setLoading(false)
+            }
+            return
+          }
+        }
+      } catch (e) { console.warn('Dashboard Supabase fallback:', e) }
+      if (!cancelled) {
+        setProjects([
+          { id: 'proj-1', name: 'Wadhwa Prime Plaza', type: 'Commercial', phase: 'construction_docs', status: 'active', city: 'Mumbai', openRfis: 3 },
+        ])
+        setLoading(false)
+      }
+    }
+    load()
+    return () => { cancelled = true }
   }, [])
 
   const activities = [

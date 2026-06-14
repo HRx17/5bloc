@@ -6,6 +6,8 @@ import EmailComposer from '@/components/modals/EmailComposer'
 import { useToast } from '@/components/ui/Toast'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { StatCard } from '@/components/ui/StatCard'
+import { supabaseClient } from '@/lib/supabase/client'
+import { getMyOrgId, hasSupabaseEnv } from '@/lib/data/client-data'
 
 interface RFIItem {
  id: string
@@ -49,59 +51,57 @@ export default function RFILog() {
  const [aiDraftText, setAiDraftText] = useState('')
 
  useEffect(() => {
- // Mock load RFIs
- const timer = setTimeout(() => {
- setRfis([
- {
- id: 'rfi-1',
- rfi_number: 1,
- title: 'Beam Reinforcement Revision at Grid B-4',
- description: 'Slab reinforcement details do not match the column layout grid drawings. Please confirm spacing constraints.',
- drawing_ref: 'S-201 (Rev 2)',
- status: 'open',
- raised_by: 'Amit Sharma (Contractor)',
- assigned_to: 'Parth Patel (Architect)',
- due_date: '2026-06-15',
- is_scope_change: false,
- },
- {
- id: 'rfi-2',
- rfi_number: 2,
- title: 'HVAC Duct Clearance in Lobby',
- description: 'Clear ceiling height drops below 2.4m if duct runs according to services layouts. Need structural review.',
- drawing_ref: 'M-104',
- status: 'in_review',
- raised_by: 'Rohan Deshmukh (MEP)',
- assigned_to: 'Aritro Roy (Consultant)',
- due_date: '2026-06-18',
- is_scope_change: true,
- scope_change_amount: 125000,
- },
- {
- id: 'rfi-3',
- rfi_number: 3,
- title: 'Sanitary fittings brand selection',
- description: 'Premium specification calls for Kohler, but local inventory is delayed by 6 weeks. Recommend alternative.',
- drawing_ref: 'A-402',
- status: 'answered',
- raised_by: 'Karan Shah (Builder)',
- assigned_to: 'Parth Patel (Architect)',
- due_date: '2026-05-30',
- response: 'Approved alternate sanitary selection to Toto brand. Premium grade models only.',
- is_scope_change: false,
+ let cancelled = false
+ async function load() {
+ try {
+ if (hasSupabaseEnv()) {
+ const { data, error } = await supabaseClient
+ .from('rfis')
+ .select('*')
+ .eq('project_id', projectId)
+ .order('rfi_number', { ascending: true })
+ if (!error && data) {
+ if (!cancelled) {
+ setRfis(data.map((r) => ({
+ id: r.id,
+ rfi_number: r.rfi_number,
+ title: r.title,
+ description: r.description ?? '',
+ drawing_ref: r.drawing_ref ?? undefined,
+ status: r.status as RFIItem['status'],
+ raised_by: r.raised_by ?? '',
+ assigned_to: r.assigned_to ?? '',
+ due_date: r.due_date ?? '',
+ response: r.response ?? undefined,
+ is_scope_change: !!r.is_scope_change,
+ scope_change_amount: r.scope_change_amount ?? undefined,
+ })))
+ setLoading(false)
  }
+ return
+ }
+ }
+ } catch (e) { console.warn('RFIs Supabase fallback:', e) }
+ if (!cancelled) {
+ setRfis([
+ { id: 'rfi-1', rfi_number: 1, title: 'Beam Reinforcement Revision at Grid B-4', description: 'Slab reinforcement details do not match the column layout grid drawings. Please confirm spacing constraints.', drawing_ref: 'S-201 (Rev 2)', status: 'open', raised_by: 'Amit Sharma (Contractor)', assigned_to: 'Parth Patel (Architect)', due_date: '2026-06-15', is_scope_change: false },
+ { id: 'rfi-2', rfi_number: 2, title: 'HVAC Duct Clearance in Lobby', description: 'Clear ceiling height drops below 2.4m if duct runs according to services layouts. Need structural review.', drawing_ref: 'M-104', status: 'in_review', raised_by: 'Rohan Deshmukh (MEP)', assigned_to: 'Aritro Roy (Consultant)', due_date: '2026-06-18', is_scope_change: true, scope_change_amount: 125000 },
+ { id: 'rfi-3', rfi_number: 3, title: 'Sanitary fittings brand selection', description: 'Premium specification calls for Kohler, but local inventory is delayed by 6 weeks. Recommend alternative.', drawing_ref: 'A-402', status: 'answered', raised_by: 'Karan Shah (Builder)', assigned_to: 'Parth Patel (Architect)', due_date: '2026-05-30', response: 'Approved alternate sanitary selection to Toto brand. Premium grade models only.', is_scope_change: false },
  ])
  setLoading(false)
- }, 400)
- return () => clearTimeout(timer)
+ }
+ }
+ load()
+ return () => { cancelled = true }
  }, [projectId])
 
- const handleCreateRfi = (e: React.FormEvent) => {
+ const handleCreateRfi = async (e: React.FormEvent) => {
  e.preventDefault()
- 
+
+ const nextNumber = rfis.length + 1
  const rfiRecord: RFIItem = {
  id: `rfi-${Date.now()}`,
- rfi_number: rfis.length + 1,
+ rfi_number: nextNumber,
  title: newRfi.title,
  description: newRfi.description,
  drawing_ref: newRfi.drawing_ref,
@@ -115,6 +115,27 @@ export default function RFILog() {
  setRfis(prev => [rfiRecord, ...prev])
  setShowCreateModal(false)
  setNewRfi({ title: '', description: '', drawing_ref: '', assigned_to: 'Amit Sharma', due_date: '' })
+
+ // Best-effort persist (succeeds for your own projects; template stays read-only)
+ try {
+ const orgId = await getMyOrgId()
+ if (orgId) {
+ const { data } = await supabaseClient.from('rfis').insert({
+ org_id: orgId,
+ project_id: projectId,
+ rfi_number: nextNumber,
+ title: rfiRecord.title,
+ description: rfiRecord.description,
+ drawing_ref: rfiRecord.drawing_ref || null,
+ status: 'open',
+ raised_by: rfiRecord.raised_by,
+ assigned_to: rfiRecord.assigned_to,
+ due_date: rfiRecord.due_date || null,
+ is_scope_change: false,
+ }).select('id').single()
+ if (data?.id) setRfis(prev => prev.map(r => r.id === rfiRecord.id ? { ...r, id: data.id } : r))
+ }
+ } catch (e) { console.warn('RFI insert skipped:', e) }
  }
 
  const handleRequestAIDraft = async () => {
@@ -136,21 +157,34 @@ export default function RFILog() {
  }
  }
 
- const handleSaveResponse = () => {
+ const handleSaveResponse = async () => {
  if (!activeRfi) return
- 
+ const target = activeRfi
+
  setRfis(prev => 
- prev.map(r => r.id === activeRfi.id ? { 
+ prev.map(r => r.id === target.id ? { 
  ...r, 
  status: 'answered', 
- response: activeRfi.response,
- is_scope_change: activeRfi.is_scope_change,
- scope_change_amount: activeRfi.scope_change_amount
+ response: target.response,
+ is_scope_change: target.is_scope_change,
+ scope_change_amount: target.scope_change_amount
  } : r)
  )
  setActiveRfi(null)
  setConfirmSave(false)
  toast('RFI response saved and marked answered', 'success')
+
+ try {
+ if (hasSupabaseEnv() && !target.id.startsWith('rfi-')) {
+ await supabaseClient.from('rfis').update({
+ status: 'answered',
+ response: target.response ?? null,
+ is_scope_change: target.is_scope_change,
+ scope_change_amount: target.scope_change_amount ?? null,
+ updated_at: new Date().toISOString(),
+ }).eq('id', target.id)
+ }
+ } catch (e) { console.warn('RFI update skipped:', e) }
  }
 
  const savedActive = activeRfi ? rfis.find(r => r.id === activeRfi.id) : null

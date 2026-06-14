@@ -3,12 +3,13 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabaseClient } from '@/lib/supabase/client'
+import { hasSupabaseEnv, phaseKeyFromNumber } from '@/lib/data/client-data'
 
 interface Project {
  id: string; name: string; type: string; phase: string
  status: string; city: string; state: string
  total_sqft: number; construction_cost: number
- is_rera_registered: boolean
+ is_rera_registered: boolean; is_template: boolean
 }
 
 const phaseStyle = (phase: string): React.CSSProperties => {
@@ -37,15 +38,34 @@ export default function ProjectsList() {
  useEffect(() => {
  async function load() {
  try {
- const hasKeys = !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
- if (hasKeys) {
- const { data, error } = await supabaseClient.from('projects').select('*').order('created_at', { ascending: false })
- if (!error && data && data.length > 0) { setProjects(data as unknown as Project[]); setLoading(false); return }
+ if (hasSupabaseEnv()) {
+ const { data, error } = await supabaseClient
+ .from('projects')
+ .select('*')
+ .order('is_template', { ascending: false })
+ .order('created_at', { ascending: false })
+ if (!error && data && data.length > 0) {
+ setProjects(data.map((p) => ({
+ id: p.id,
+ name: p.name,
+ type: p.type ?? 'commercial',
+ phase: p.phase_key ?? phaseKeyFromNumber(p.phase),
+ status: p.status,
+ city: p.city ?? '—',
+ state: p.state ?? '',
+ total_sqft: Number(p.total_sqft ?? 0),
+ construction_cost: Number(p.construction_cost ?? 0),
+ is_rera_registered: !!p.is_rera_registered,
+ is_template: !!p.is_template,
+ })))
+ setLoading(false)
+ return
+ }
  }
  } catch (e) { console.warn('Supabase fallback:', e) }
 
  setProjects([
- { id: 'proj-1', name: 'Wadhwa Prime Plaza', type: 'commercial', phase: 'construction_docs', status: 'active', city: 'Mumbai', state: 'MH', total_sqft: 45000, construction_cost: 120000000, is_rera_registered: true },
+ { id: 'proj-1', name: 'Wadhwa Prime Plaza', type: 'commercial', phase: 'construction_docs', status: 'active', city: 'Mumbai', state: 'MH', total_sqft: 45000, construction_cost: 120000000, is_rera_registered: true, is_template: true },
  ])
  setLoading(false)
  }
@@ -205,9 +225,11 @@ export default function ProjectsList() {
  <div className="flex justify-between items-start gap-2 mb-3">
  <span className="label-sm flex items-center gap-1.5" style={{ color: 'var(--stone)' }}>
  {proj.type}
+ {proj.is_template && (
  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(245,166,35,0.14)', color: 'var(--amber)' }}>
  TEMPLATE
  </span>
+ )}
  </span>
  <span className="chip shrink-0" style={phaseStyle(proj.phase)}>
  {getPhaseLabel(proj.phase)}

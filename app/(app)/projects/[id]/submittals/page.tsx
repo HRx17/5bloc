@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { supabaseClient } from '@/lib/supabase/client'
+import { getMyOrgId, hasSupabaseEnv } from '@/lib/data/client-data'
 
 interface SubmittalItem {
  id: string
@@ -41,57 +43,56 @@ export default function SubmittalsLog() {
  })
 
  useEffect(() => {
- // Mock load submittals
- const timer = setTimeout(() => {
- setSubmittals([
- {
- id: 'sub-1',
- submittal_number: 1,
- title: 'Vitrified Tiles Shop Drawings',
- spec_section: 'Section 09 30 00 - Tiling',
- contractor: 'Amit Sharma (Civil)',
- status: 'approved',
- due_date: '2026-05-10',
- revision: 1,
- description: 'Joint layouts and adhesive details for the main reception lobby vitrified flooring.',
- file_name: 'tiles_lobby_det_v2.pdf',
- },
- {
- id: 'sub-2',
- submittal_number: 2,
- title: 'Exterior Paint Product Data Sheet',
- spec_section: 'Section 09 90 00 - Painting',
- contractor: 'Amit Sharma (Civil)',
- status: 'pending',
- due_date: '2026-06-20',
- revision: 0,
- description: 'Weatherproof external paint tech sheets confirming UV resistance ratings.',
- file_name: 'asian_paints_apex_data.pdf',
- },
- {
- id: 'sub-3',
- submittal_number: 3,
- title: 'Glass Facade structural calculations',
- spec_section: 'Section 08 44 00 - Glazing',
- contractor: 'Rajesh Glass Works (Glass)',
- status: 'under_review',
- due_date: '2026-06-16',
- revision: 0,
- description: 'Wind pressure load calculations for structural double-glazing frames.',
- file_name: 'facade_wind_loads.pdf',
+ let cancelled = false
+ async function load() {
+ try {
+ if (hasSupabaseEnv()) {
+ const { data, error } = await supabaseClient
+ .from('submittals')
+ .select('*')
+ .eq('project_id', projectId)
+ .order('submittal_number', { ascending: true })
+ if (!error && data) {
+ if (!cancelled) {
+ setSubmittals(data.map((s) => ({
+ id: s.id,
+ submittal_number: s.submittal_number,
+ title: s.title,
+ spec_section: s.spec_section ?? '',
+ contractor: s.contractor ?? '',
+ status: s.status as SubmittalItem['status'],
+ due_date: s.due_date ?? '',
+ revision: s.revision ?? 0,
+ description: s.description ?? undefined,
+ file_name: s.file_name ?? undefined,
+ review_note: s.review_note ?? undefined,
+ })))
+ setLoading(false)
  }
+ return
+ }
+ }
+ } catch (e) { console.warn('Submittals Supabase fallback:', e) }
+ if (!cancelled) {
+ setSubmittals([
+ { id: 'sub-1', submittal_number: 1, title: 'Vitrified Tiles Shop Drawings', spec_section: 'Section 09 30 00 - Tiling', contractor: 'Amit Sharma (Civil)', status: 'approved', due_date: '2026-05-10', revision: 1, description: 'Joint layouts and adhesive details for the main reception lobby vitrified flooring.', file_name: 'tiles_lobby_det_v2.pdf' },
+ { id: 'sub-2', submittal_number: 2, title: 'Exterior Paint Product Data Sheet', spec_section: 'Section 09 90 00 - Painting', contractor: 'Amit Sharma (Civil)', status: 'pending', due_date: '2026-06-20', revision: 0, description: 'Weatherproof external paint tech sheets confirming UV resistance ratings.', file_name: 'asian_paints_apex_data.pdf' },
+ { id: 'sub-3', submittal_number: 3, title: 'Glass Facade structural calculations', spec_section: 'Section 08 44 00 - Glazing', contractor: 'Rajesh Glass Works (Glass)', status: 'under_review', due_date: '2026-06-16', revision: 0, description: 'Wind pressure load calculations for structural double-glazing frames.', file_name: 'facade_wind_loads.pdf' },
  ])
  setLoading(false)
- }, 300)
- return () => clearTimeout(timer)
+ }
+ }
+ load()
+ return () => { cancelled = true }
  }, [projectId])
 
- const handleCreateSubmittal = (e: React.FormEvent) => {
+ const handleCreateSubmittal = async (e: React.FormEvent) => {
  e.preventDefault()
- 
+
+ const nextNumber = submittals.length + 1
  const subRecord: SubmittalItem = {
  id: `sub-${Date.now()}`,
- submittal_number: submittals.length + 1,
+ submittal_number: nextNumber,
  title: newSubmittal.title,
  spec_section: newSubmittal.spec_section,
  contractor: newSubmittal.contractor,
@@ -105,6 +106,26 @@ export default function SubmittalsLog() {
  setSubmittals(prev => [subRecord, ...prev])
  setShowCreateModal(false)
  setNewSubmittal({ title: '', spec_section: '', description: '', contractor: 'Amit Sharma (Civil Contractor)', due_date: '' })
+
+ try {
+ const orgId = await getMyOrgId()
+ if (orgId) {
+ const { data } = await supabaseClient.from('submittals').insert({
+ org_id: orgId,
+ project_id: projectId,
+ submittal_number: nextNumber,
+ title: subRecord.title,
+ spec_section: subRecord.spec_section || null,
+ contractor: subRecord.contractor || null,
+ status: 'pending',
+ due_date: subRecord.due_date || null,
+ revision: 0,
+ description: subRecord.description || null,
+ file_name: subRecord.file_name || null,
+ }).select('id').single()
+ if (data?.id) setSubmittals(prev => prev.map(s => s.id === subRecord.id ? { ...s, id: data.id } : s))
+ }
+ } catch (e) { console.warn('Submittal insert skipped:', e) }
  }
 
  const reviewDirty = activeSubmittal
@@ -124,14 +145,15 @@ export default function SubmittalsLog() {
    setActiveSubmittal(null)
  }
 
- const applyReviewAction = (status: SubmittalItem['status']) => {
+ const applyReviewAction = async (status: SubmittalItem['status']) => {
    if (!activeSubmittal) return
+   const target = activeSubmittal
 
    setSubmittals(prev =>
-     prev.map(s => s.id === activeSubmittal.id ? {
+     prev.map(s => s.id === target.id ? {
        ...s,
        status,
-       review_note: activeSubmittal.review_note,
+       review_note: target.review_note,
      } : s)
    )
    toast(
@@ -140,6 +162,16 @@ export default function SubmittalsLog() {
    )
    setActiveSubmittal(null)
    setPendingReviewAction(null)
+
+   try {
+     if (hasSupabaseEnv() && !target.id.startsWith('sub-')) {
+       await supabaseClient.from('submittals').update({
+         status,
+         review_note: target.review_note ?? null,
+         updated_at: new Date().toISOString(),
+       }).eq('id', target.id)
+     }
+   } catch (e) { console.warn('Submittal update skipped:', e) }
  }
 
  const getStatusBadge = (status: SubmittalItem['status']) => {
