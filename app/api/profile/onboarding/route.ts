@@ -20,15 +20,13 @@ export async function POST(req: NextRequest) {
 
     const fullName = body.full_name ?? user.user_metadata?.full_name ?? user.email?.split('@')[0]
     const orgName  = body.org_name ?? `${fullName}'s Workspace`
-    const city     = body.city ?? null
-    const state    = body.state ?? null
 
-    // Update auth metadata
+    // Update auth metadata (always succeeds; powers the demo experience)
     await supabase.auth.updateUser({
       data: { full_name: fullName, role, onboarding_complete: true },
     })
 
-    // Try to persist profile (table may not exist in all envs)
+    // Persist profile (matches public.profiles schema)
     const profilePayload = {
       auth_id: user.id,
       email: user.email,
@@ -44,19 +42,24 @@ export async function POST(req: NextRequest) {
       .eq('auth_id', user.id)
       .maybeSingle()
 
+    let profileId: string | undefined = existing?.id
     if (existing) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase.from('profiles') as any).update(profilePayload).eq('auth_id', user.id)
     } else {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase.from('profiles') as any).insert(profilePayload)
+      const { data: inserted } = await (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        supabase.from('profiles') as any
+      ).insert(profilePayload).select('id').single()
+      profileId = inserted?.id
     }
 
-    // Try org creation
-    if (orgName) {
+    // Create the organisation owned by this profile, then link it back.
+    // organisations columns: name, plan, owner_id (FK -> profiles.id)
+    if (orgName && profileId) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: org } = await (supabase.from('organisations') as any)
-        .insert({ name: orgName, city, state, owner_id: user.id })
+        .insert({ name: orgName, plan: 'free', owner_id: profileId })
         .select('id')
         .single()
 
