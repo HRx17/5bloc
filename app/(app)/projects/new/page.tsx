@@ -4,6 +4,19 @@ import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Toggle } from '@/components/ui/Toggle'
+import { supabaseClient } from '@/lib/supabase/client'
+import { getMyOrgId, hasSupabaseEnv } from '@/lib/data/client-data'
+
+const DEFAULT_MILESTONES: { phase_key: string; label: string }[] = [
+ { phase_key: 'pre_design', label: 'Pre-Design' },
+ { phase_key: 'schematic_design', label: 'Schematic Design' },
+ { phase_key: 'design_development', label: 'Design Development' },
+ { phase_key: 'construction_docs', label: 'Construction Docs' },
+ { phase_key: 'bidding', label: 'Bidding & Tender' },
+ { phase_key: 'permits', label: 'Permits & Approvals' },
+ { phase_key: 'construction_admin', label: 'Construction Admin' },
+ { phase_key: 'complete', label: 'Close Out & Handover' },
+]
 
 export default function NewProject() {
  const router = useRouter()
@@ -40,16 +53,54 @@ export default function NewProject() {
  setLoading(true)
 
  try {
- console.log('Creating project:', formData)
- 
- // Simulate API call
- await new Promise((resolve) => setTimeout(resolve, 1000))
- 
- // In a real database this creates the record and generates default milestones.
- // Redirect back to projects registry
+ if (hasSupabaseEnv()) {
+ const orgId = await getMyOrgId()
+ if (orgId) {
+ const { data: proj, error } = await supabaseClient.from('projects').insert({
+ org_id: orgId,
+ name: formData.name,
+ client_name: null,
+ type: formData.type,
+ status: 'active',
+ phase: 1,
+ phase_key: 'pre_design',
+ city: formData.city || null,
+ state: formData.state || null,
+ address: formData.address || null,
+ total_sqft: formData.sqft ? Number(formData.sqft) : null,
+ floors: formData.floors ? Number(formData.floors) : null,
+ construction_cost: formData.constructionCost ? Number(formData.constructionCost) : null,
+ is_rera_registered: formData.isRera,
+ brief: formData.brief || null,
+ start_date: formData.startDate || null,
+ end_date: formData.endDate || null,
+ is_template: false,
+ }).select('id').single()
+
+ if (!error && proj?.id) {
+ await supabaseClient.from('phase_milestones').insert(
+ DEFAULT_MILESTONES.map((m) => ({
+ org_id: orgId,
+ project_id: proj.id,
+ phase_key: m.phase_key,
+ label: m.label,
+ completion: 0,
+ fee: 0,
+ paid: false,
+ is_template: false,
+ }))
+ )
+ router.push(`/projects/${proj.id}`)
+ return
+ }
+ }
+ }
+ // Fallback when Supabase is unavailable or no org yet
+ await new Promise((resolve) => setTimeout(resolve, 600))
  router.push('/projects')
  } catch (err) {
  console.error(err)
+ router.push('/projects')
  } finally {
  setLoading(false)
  }

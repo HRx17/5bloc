@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GmailPanel } from '@/components/integrations/GmailPanel'
 import { WhatsAppPanel } from '@/components/integrations/WhatsAppPanel'
+import { supabaseClient } from '@/lib/supabase/client'
+import { hasSupabaseEnv } from '@/lib/data/client-data'
 
 type TabId = 'rfis' | 'messages' | 'meetings' | 'issues' | 'gmail' | 'whatsapp'
 
@@ -79,8 +81,43 @@ export default function CoordinationHub() {
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null)
 
   useEffect(() => {
+    let cancelled = false
+    async function loadLive() {
+      try {
+        if (hasSupabaseEnv()) {
+          const [{ data: rfiRows }, { data: issueRows }] = await Promise.all([
+            supabaseClient.from('rfis').select('*, projects(name)').order('rfi_number', { ascending: true }),
+            supabaseClient.from('issues').select('*, projects(name)').order('issue_number', { ascending: true }),
+          ])
+          if (rfiRows && rfiRows.length > 0 && !cancelled) {
+            setRfis(rfiRows.map((r) => ({
+              id: r.id,
+              number: `RFI-${String(r.rfi_number).padStart(3, '0')}`,
+              title: r.title,
+              project: (r as { projects?: { name?: string } | null }).projects?.name ?? '—',
+              raised_by: r.raised_by ?? '—',
+              status: (r.status === 'in_review' ? 'open' : r.status === 'answered' ? 'answered' : r.status === 'closed' ? 'closed' : 'open') as RFI['status'],
+              due_date: r.due_date ?? '',
+              priority: (r.is_scope_change ? 'high' : 'medium') as RFI['priority'],
+            })))
+          }
+          if (issueRows && issueRows.length > 0 && !cancelled) {
+            setIssues(issueRows.map((i) => ({
+              id: i.id,
+              title: i.title,
+              project: (i as { projects?: { name?: string } | null }).projects?.name ?? '—',
+              severity: (['critical','high','medium','low'].includes(i.severity) ? i.severity : 'medium') as Issue['severity'],
+              status: (i.status as Issue['status']),
+              assigned_to: i.assigned_to ?? '—',
+            })))
+          }
+        }
+      } catch (e) { console.warn('Coordination live load skipped:', e) }
+    }
+    loadLive()
+
     const t = setTimeout(() => {
-      setRfis([
+      setRfis((prev) => prev.length > 0 ? prev : [
         { id: 'r1', number: 'RFI-008', title: 'Slab reinforcement bar dia clarification', project: 'Wadhwa Prime Plaza',          raised_by: 'Amit Sharma',  status: 'overdue',  due_date: '2026-06-10', priority: 'high'   },
         { id: 'r2', number: 'RFI-012', title: 'Column footing depth at grid B3',          project: 'Lodha Signature Residences',  raised_by: 'Ravi Gupta',   status: 'open',     due_date: '2026-06-18', priority: 'medium' },
         { id: 'r3', number: 'RFI-003', title: 'Electrical conduit routing in basement',   project: 'Wadhwa Prime Plaza',          raised_by: 'Priya Mehta',  status: 'answered', due_date: '2026-06-20', priority: 'low'    },
@@ -99,7 +136,7 @@ export default function CoordinationHub() {
         { id: 'mt3', title: 'Site Inspection — Foundation Progress', project: 'Wadhwa Prime Plaza',         date: '2026-06-10 09:00', attendees: ['Parth', 'Suresh', 'Contractor'],  status: 'done' },
         { id: 'mt4', title: 'Pre-Design Kickoff',                    project: 'Gundecha Industrial Park',   date: '2026-06-08 11:00', attendees: ['Parth', 'Developer Team'],         status: 'done' },
       ])
-      setIssues([
+      setIssues((prev) => prev.length > 0 ? prev : [
         { id: 'i1', title: 'Cracked plaster panel near stairwell B2', project: 'Wadhwa Prime Plaza',         severity: 'high',     status: 'open',        assigned_to: 'Amit Sharma' },
         { id: 'i2', title: 'Missing expansion joint at podium slab',   project: 'Lodha Signature Residences', severity: 'critical', status: 'in_progress', assigned_to: 'Ravi Gupta'  },
         { id: 'i3', title: 'Incorrect tile grout colour — lobby',      project: 'Lodha Signature Residences', severity: 'medium',   status: 'open',        assigned_to: 'Site Foreman'},
