@@ -78,19 +78,19 @@ export function getRoleConfig(role: string | undefined | null): RoleConfig {
 export const ROLE_NAV: Record<UserRole, string[]> = {
   architect: ['*'],
   client: [
-    '/dashboard', '/projects', '/coordination', '/documents', '/cad',
+    '/dashboard', '/projects', '/coordination', '/messages', '/documents', '/cad',
     '/projects/new', '/settings',
   ],
   contractor: [
-    '/dashboard', '/projects', '/coordination', '/documents', '/cad',
+    '/dashboard', '/projects', '/coordination', '/messages', '/documents', '/cad',
     '/marketplace', '/settings',
   ],
   vendor: [
-    '/dashboard', '/projects', '/coordination', '/documents',
+    '/dashboard', '/projects', '/coordination', '/messages', '/documents',
     '/marketplace', '/settings',
   ],
   consultant: [
-    '/dashboard', '/projects', '/coordination', '/documents', '/cad',
+    '/dashboard', '/projects', '/coordination', '/messages', '/documents', '/cad',
     '/marketplace', '/ai/estimate', '/settings',
   ],
 }

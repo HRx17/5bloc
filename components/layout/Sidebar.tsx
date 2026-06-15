@@ -7,6 +7,7 @@ import { motion } from 'framer-motion'
 import { Logo } from '../brand/LogoMark'
 import { createSupabaseClient } from '@/lib/supabase/client'
 import { canAccessNav, roleLabel, type UserRole } from '@/lib/roles'
+import { useMessages } from '@/components/messages/MessagesProvider'
 
 interface SidebarProps {
   userRole?: string
@@ -36,7 +37,8 @@ const NAV: NavGroup[] = [
   {
     label: 'Coordination',
     items: [
-      { name: 'Coordination', path: '/coordination', icon: 'forum',             desc: 'RFIs, messages & meetings' },
+      { name: 'Messages',     path: '/messages',     icon: 'chat',              desc: 'Team chat & DMs' },
+      { name: 'Coordination', path: '/coordination', icon: 'forum',             desc: 'RFIs & meetings' },
       { name: 'Documents',    path: '/documents',    icon: 'folder_open',       desc: 'Drawing vault & approvals' },
       { name: 'CAD Viewer',   path: '/cad',          icon: 'view_in_ar',        desc: 'View DWG & 3D models' },
     ],
@@ -66,6 +68,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname  = usePathname()
   const router    = useRouter()
+  const { unreadCount } = useMessages()
   const [loggingOut, setLoggingOut] = useState(false)
   const [effectiveRole, setEffectiveRole] = useState(userRole)
 
@@ -197,6 +200,15 @@ export default function Sidebar({
                     </span>
 
                     <span className="flex-1 truncate">{item.name}</span>
+
+                    {item.path === '/messages' && unreadCount > 0 && (
+                      <span
+                        className="text-[9px] font-mono font-bold min-w-[16px] h-[16px] px-1 flex items-center justify-center rounded-full"
+                        style={{ background: 'var(--error)', color: '#fff' }}
+                      >
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
 
                     {item.badge && (
                       <span

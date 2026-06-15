@@ -130,7 +130,25 @@ function SiteHeader() {
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-5">
+          <Link
+            href="/list-your-business"
+            className="text-[13.5px] font-medium transition-colors"
+            style={{ color: scrolled ? 'var(--on-surface-variant)' : 'var(--stone)' }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--amber)')}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = scrolled ? 'var(--on-surface-variant)' : 'var(--stone)')}
+          >
+            Contractors
+          </Link>
+          <Link
+            href="/join-as-vendor"
+            className="text-[13.5px] font-medium transition-colors"
+            style={{ color: scrolled ? 'var(--on-surface-variant)' : 'var(--stone)' }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--blue)')}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = scrolled ? 'var(--on-surface-variant)' : 'var(--stone)')}
+          >
+            Vendors
+          </Link>
           <a href="#waitlist" className="btn-primary text-[13px] px-5 py-2.5">
             Join waitlist
           </a>
@@ -173,6 +191,20 @@ function SiteHeader() {
             </nav>
             <div className="ghost-cut my-4" />
             <div className="flex flex-col gap-3">
+              <Link
+                href="/list-your-business"
+                onClick={() => setOpen(false)}
+                className="btn-secondary w-full text-center"
+              >
+                List as Contractor (free)
+              </Link>
+              <Link
+                href="/join-as-vendor"
+                onClick={() => setOpen(false)}
+                className="btn-secondary w-full text-center"
+              >
+                List as Vendor (free)
+              </Link>
               <a
                 href="#waitlist"
                 onClick={() => setOpen(false)}
@@ -1153,6 +1185,8 @@ function SiteFooter() {
     {
       title: 'Company',
       links: [
+        { href: '/list-your-business',    label: 'List as Contractor (free)' },
+        { href: '/join-as-vendor',        label: 'List as Vendor (free)' },
         { href: 'mailto:contact@5bloc.com', label: 'Contact us' },
         { href: '#waitlist',              label: 'Join the beta' },
       ],

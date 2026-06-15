@@ -55,6 +55,243 @@ export type Database = {
           },
         ]
       }
+      contractor_signups: {
+        Row: {
+          bio: string | null
+          business_name: string
+          city: string
+          contact_name: string
+          country: string
+          created_at: string
+          email: string
+          id: string
+          phone: string | null
+          photos: string[]
+          source: string | null
+          specializations: string[]
+          state: string | null
+          status: string
+          team_size: string | null
+          website: string | null
+          years_experience: number | null
+        }
+        Insert: {
+          bio?: string | null
+          business_name: string
+          city: string
+          contact_name: string
+          country?: string
+          created_at?: string
+          email: string
+          id?: string
+          phone?: string | null
+          photos?: string[]
+          source?: string | null
+          specializations?: string[]
+          state?: string | null
+          status?: string
+          team_size?: string | null
+          website?: string | null
+          years_experience?: number | null
+        }
+        Update: {
+          bio?: string | null
+          business_name?: string
+          city?: string
+          contact_name?: string
+          country?: string
+          created_at?: string
+          email?: string
+          id?: string
+          phone?: string | null
+          photos?: string[]
+          source?: string | null
+          specializations?: string[]
+          state?: string | null
+          status?: string
+          team_size?: string | null
+          website?: string | null
+          years_experience?: number | null
+        }
+        Relationships: []
+      }
+      vendor_signups: {
+        Row: {
+          bio: string | null
+          business_name: string
+          categories: string[]
+          city: string
+          contact_name: string
+          country: string
+          created_at: string
+          email: string
+          id: string
+          phone: string | null
+          photos: string[]
+          source: string | null
+          state: string | null
+          status: string
+          team_size: string | null
+          website: string | null
+          years_experience: number | null
+        }
+        Insert: {
+          bio?: string | null
+          business_name: string
+          categories?: string[]
+          city: string
+          contact_name: string
+          country?: string
+          created_at?: string
+          email: string
+          id?: string
+          phone?: string | null
+          photos?: string[]
+          source?: string | null
+          state?: string | null
+          status?: string
+          team_size?: string | null
+          website?: string | null
+          years_experience?: number | null
+        }
+        Update: {
+          bio?: string | null
+          business_name?: string
+          categories?: string[]
+          city?: string
+          contact_name?: string
+          country?: string
+          created_at?: string
+          email?: string
+          id?: string
+          phone?: string | null
+          photos?: string[]
+          source?: string | null
+          state?: string | null
+          status?: string
+          team_size?: string | null
+          website?: string | null
+          years_experience?: number | null
+        }
+        Relationships: []
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          last_message_at: string
+          org_id: string | null
+          project_id: string | null
+          title: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_message_at?: string
+          org_id?: string | null
+          project_id?: string | null
+          title?: string | null
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_message_at?: string
+          org_id?: string | null
+          project_id?: string | null
+          title?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
+      conversation_members: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          id: string
+          last_read_at: string
+          profile_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          id?: string
+          last_read_at?: string
+          profile_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          last_read_at?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_members_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          attachment_name: string | null
+          attachment_url: string | null
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          sender_id: string | null
+        }
+        Insert: {
+          attachment_name?: string | null
+          attachment_url?: string | null
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          sender_id?: string | null
+        }
+        Update: {
+          attachment_name?: string | null
+          attachment_url?: string | null
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          sender_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           created_at: string

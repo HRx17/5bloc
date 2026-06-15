@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Sidebar from './Sidebar'
 import TopNav from './TopNav'
 import { ToastProvider } from '@/components/ui/Toast'
+import { MessagesProvider } from '@/components/messages/MessagesProvider'
 
 interface AppShellProps {
  children: React.ReactNode
@@ -32,13 +33,14 @@ export default function AppShell({ children, userProfile }: AppShellProps) {
  organisations: { name: 'Apex Architects' },
  }
 
- return (
- <ToastProvider>
- {/* Root shell — flat surface, no overflow */}
- <div
- className="flex h-screen w-screen overflow-hidden"
- style={{ background: 'var(--surface)' }}
- >
+  return (
+    <ToastProvider>
+      <MessagesProvider>
+      {/* Root shell — flat surface, no overflow */}
+      <div
+        className="flex h-screen w-screen overflow-hidden"
+        style={{ background: 'var(--surface)' }}
+      >
  {/* Desktop Sidebar */}
  <div className="hidden lg:flex shrink-0">
  <Sidebar
@@ -93,9 +95,10 @@ export default function AppShell({ children, userProfile }: AppShellProps) {
             {children}
           </motion.div>
         </AnimatePresence>
- </main>
- </div>
- </div>
- </ToastProvider>
- )
+        </main>
+      </div>
+    </div>
+      </MessagesProvider>
+    </ToastProvider>
+  )
 }
