@@ -61,7 +61,7 @@ function StatusBadge({ status }: { status: string }) {
 function EmptyState({ icon, title, sub }: { icon: string; title: string; sub: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <span className="material-icons-outlined text-[42px] mb-4" style={{ color: 'var(--stone)', opacity: 0.3 }}>{icon}</span>
+      <span className="material-icons-outlined text-[28px] mb-4" style={{ color: 'var(--stone)', opacity: 0.3 }}>{icon}</span>
       <h3 className="text-[15px] font-semibold mb-1" style={{ color: 'var(--on-surface)' }}>{title}</h3>
       <p className="text-[13px]" style={{ color: 'var(--stone)' }}>{sub}</p>
     </div>
@@ -168,7 +168,7 @@ export default function CoordinationHub() {
       >
         <div>
           <p className="text-[12px] mb-1" style={{ color: 'var(--stone)' }}>All projects</p>
-          <h1 className="font-display font-bold text-[28px] lg:text-[34px] leading-tight" style={{ color: 'var(--on-surface)' }}>
+          <h1 className="font-display text-[22px] lg:text-[26px] leading-tight" style={{ color: 'var(--on-surface)' }}>
             Coordination
           </h1>
           <p className="text-[13px] mt-1" style={{ color: 'var(--on-surface-variant)' }}>
@@ -213,7 +213,7 @@ export default function CoordinationHub() {
               <span className="material-icons-outlined text-[15px]" style={{ color: s.color }}>{s.icon}</span>
               <span className="text-[11px] font-medium" style={{ color: 'var(--stone)' }}>{s.label}</span>
             </div>
-            <p className="font-display font-bold text-[24px]" style={{ color: 'var(--on-surface)' }}>
+            <p className="font-display text-[20px]" style={{ color: 'var(--on-surface)' }}>
               {loading ? '—' : s.value}
             </p>
           </motion.button>

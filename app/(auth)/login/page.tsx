@@ -148,7 +148,7 @@ function LoginInner() {
           <div className="flex flex-col items-center mb-8">
             <LogoMark size={40} />
             <span
-              className="mt-3 font-mono text-[16px] font-bold tracking-widest"
+              className="mt-3 font-body text-[15px] font-semibold tracking-wide"
               style={{ color: 'var(--on-surface)' }}
             >
               5BLOC

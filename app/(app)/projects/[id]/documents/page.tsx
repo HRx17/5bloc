@@ -351,7 +351,7 @@ export default function DocumentVault() {
  </div>
  ) : filteredDocs.length === 0 ? (
  <div className="py-16 flex flex-col items-center justify-center text-center text-stone flex-1">
- <span className="material-icons-outlined text-[48px] text-stone/30 mb-3">folder_open</span>
+ <span className="material-icons-outlined text-[28px] text-stone/30 mb-3">folder_open</span>
  <h4 className="text-sm font-bold text-white">Folder is empty</h4>
  <p className="text-xs max-w-xs mt-1">Upload CAD sheets or regulatory documents to get started.</p>
  </div>
@@ -493,7 +493,7 @@ export default function DocumentVault() {
       {viewingDoc.extension === 'pdf' ? (
         /* Mock PDF preview container */
         <div className="w-full h-full min-h-[300px] border bg-navy/70 rounded-md flex flex-col items-center justify-center text-center p-6 text-stone">
-          <span className="material-icons-outlined text-[48px] text-amber mb-2">picture_as_pdf</span>
+          <span className="material-icons-outlined text-[28px] text-amber mb-2">picture_as_pdf</span>
           <span className="text-xs font-semibold text-white">Integrated PDF Canvas Viewer (pdfjs-dist)</span>
           <span className="text-[10px] mt-1">Simulated display buffer. Actual files downloaded securely.</span>
           <button className="btn-secondary py-1 px-4 mt-4 text-xs">Page 1 of 4</button>

@@ -943,6 +943,7 @@ export type Database = {
           provider: string
           provider_email: string | null
           provider_name: string | null
+          metadata: Json | null
           refresh_token: string | null
           scope: string | null
           user_id: string
@@ -955,6 +956,7 @@ export type Database = {
           provider: string
           provider_email?: string | null
           provider_name?: string | null
+          metadata?: Json | null
           refresh_token?: string | null
           scope?: string | null
           user_id: string
@@ -967,6 +969,7 @@ export type Database = {
           provider?: string
           provider_email?: string | null
           provider_name?: string | null
+          metadata?: Json | null
           refresh_token?: string | null
           scope?: string | null
           user_id?: string

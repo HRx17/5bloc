@@ -104,6 +104,12 @@
   --glow-blue:   0 0 0 1px rgba(122,184,255,.18), 0 4px 24px rgba(122,184,255,.24);
   --glow-active: 0 0 0 1px rgba(255,255,255,.07), 0 2px 8px rgba(255,255,255,.04);
   --shadow-amber: 0 0 0 1px rgba(245,166,35,.18), 0 8px 32px rgba(245,166,35,.20);  /* ← was missing */
+
+  /* Typography + icon scale */
+  --icon-weight:      200;
+  --icon-opsz:        18;
+  --heading-weight:   500;
+  --label-weight:     500;
 }
 
 /* ══════════════════════════════════
@@ -208,10 +214,11 @@
   /* text-white override — softer off-white instead of #fff */
   --color-white:            var(--on-surface);
 
-  --font-display:   'Syne', ui-sans-serif, sans-serif;
-  --font-editorial: 'Fraunces', ui-serif, serif;
+  --font-display:   'DM Sans', system-ui, sans-serif;
+  --font-editorial: 'DM Sans', system-ui, sans-serif;
   --font-body:      'DM Sans', system-ui, sans-serif;
   --font-mono:      'JetBrains Mono', ui-monospace, monospace;
+  --font-brand:     'Syne', ui-sans-serif, sans-serif;
 }
 
 /* ══════════════════════════════════
@@ -223,10 +230,17 @@ body {
   background-color: var(--surface-canvas);
   color: var(--on-surface);
   font-family: 'DM Sans', system-ui, sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.011em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   margin: 0;
   padding: 0;
+}
+
+h1, h2, h3, h4 {
+  font-weight: var(--heading-weight);
+  letter-spacing: -0.02em;
 }
 
 /* ── Smooth theme switch ──
@@ -260,26 +274,49 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
   box-shadow: 0 0 0 2px var(--amber) !important;
 }
 
-/* Material Icons — force inline vertical centering */
+/* Material Symbols — light stroke weight, backward-compat with material-icons-outlined class */
 .material-icons,
 .material-icons-outlined,
 .material-icons-round,
 .material-icons-sharp,
 .material-symbols-outlined {
+  font-family: 'Material Symbols Outlined' !important;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 18px;
+  line-height: 1 !important;
+  letter-spacing: normal;
+  text-transform: none;
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
   vertical-align: middle;
-  line-height: 1 !important;
   user-select: none;
   flex-shrink: 0;
+  white-space: nowrap;
+  font-variation-settings:
+    'FILL' 0,
+    'wght' var(--icon-weight),
+    'GRAD' 0,
+    'opsz' var(--icon-opsz);
+  -webkit-font-smoothing: antialiased;
 }
 
 /* ── Typography helpers ── */
-.font-display   { font-family: 'Syne', sans-serif; }
-.font-editorial { font-family: 'Fraunces', serif; }
-.font-body      { font-family: 'DM Sans', sans-serif; }
+.font-display   { font-family: 'DM Sans', system-ui, sans-serif; font-weight: 500; letter-spacing: -0.02em; }
+.font-brand     { font-family: 'Syne', ui-sans-serif, sans-serif; font-weight: 500; letter-spacing: -0.01em; }
+.font-editorial { font-family: 'DM Sans', system-ui, sans-serif; }
+.font-body      { font-family: 'DM Sans', system-ui, sans-serif; }
 .font-mono      { font-family: 'JetBrains Mono', monospace; }
+
+/* Softer Tailwind weight mapping */
+.font-bold { font-weight: 500; }
+.font-semibold { font-weight: 500; }
+
+/* Lucide — thinner strokes app-wide */
+svg.lucide {
+  stroke-width: 1.5;
+}
 
 /* ══════════════════════════════════
    DOT GRID BACKGROUND
@@ -422,8 +459,8 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
    STAT CARDS — overview metrics
 ══════════════════════════════════ */
 .stat-card {
-  border-radius: 16px;
-  padding: 18px 20px;
+  border-radius: 14px;
+  padding: 14px 16px;
   background: var(--surface-container);
   box-shadow: inset 0 0 0 1px var(--hairline);
   transition: box-shadow 0.18s ease, transform 0.18s ease, background 0.18s ease;
@@ -462,7 +499,7 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
   background: var(--amber);
   color: var(--ink-black);
   font-family: 'DM Sans', sans-serif;
-  font-weight: 600;
+  font-weight: 500;
   font-size: 13px;
   padding: 8px 18px;
   border-radius: 9999px;
@@ -583,9 +620,9 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   color: var(--stone);
   cursor: pointer;
   transition: color 0.15s ease, background 0.15s ease;
@@ -606,7 +643,7 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
   background: rgba(122,184,255, 0.08);
   color: var(--tertiary-container);
   font-family: 'DM Sans', sans-serif;
-  font-weight: 600;
+  font-weight: 500;
   font-size: 13px;
   padding: 8px 18px;
   border-radius: 9999px;
@@ -631,8 +668,8 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
 .card-5bloc,
 .card-glass {
   background: var(--card-bg);
-  border-radius: 18px;
-  padding: 20px;
+  border-radius: 16px;
+  padding: 18px;
   box-shadow: inset 0 1px 0 var(--card-top-glow), inset 0 0 0 1px var(--hairline), var(--shadow-1);
   position: relative;
   overflow: hidden;
@@ -668,8 +705,8 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
   border-radius: 9999px;
   font-family: 'DM Sans', sans-serif;
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   white-space: nowrap;
   background: var(--surface-container-high);
   color: var(--on-surface-variant);
@@ -682,9 +719,9 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
   padding: 4px 9px;
   border-radius: 5px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.10em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   background: var(--overlay-hover);
 }
@@ -735,7 +772,7 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
   font-family: 'DM Sans', sans-serif;
   font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--stone);
 }
@@ -849,17 +886,17 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
    (₹47.2L, 60%, Phase 3, etc.)
 ══════════════════════════════════ */
 .display-number {
-  font-family: 'Syne', ui-sans-serif, sans-serif;
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: -0.02em;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-weight: 500;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
   color: var(--amber);
   font-variant-numeric: tabular-nums;
 }
-.display-number-sm { font-size: 2rem; }
-.display-number-md { font-size: clamp(2.5rem, 5vw, 3.5rem); }
-.display-number-lg { font-size: clamp(3rem, 7vw, 4.5rem); }
-.display-number-xl { font-size: clamp(3.5rem, 9vw, 5.5rem); }
+.display-number-sm { font-size: 1.5rem; }
+.display-number-md { font-size: clamp(1.75rem, 4vw, 2.375rem); }
+.display-number-lg { font-size: clamp(2rem, 5vw, 2.75rem); }
+.display-number-xl { font-size: clamp(2.25rem, 6vw, 3.25rem); }
 
 /* ══════════════════════════════════
    PHASE STEPPER — numbered circles
@@ -879,7 +916,7 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
 .phase-step:not(:last-child)::after {
   content: '';
   position: absolute;
-  top: 15px;
+  top: 13px;
   left: calc(50% + 17px);
   right: calc(-50% + 17px);
   height: 2px;
@@ -893,15 +930,15 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
   background: rgba(196,125,18,0.32);
 }
 .phase-step-circle {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'JetBrains Mono', monospace;
-  font-weight: 700;
-  font-size: 12px;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 11px;
   position: relative;
   z-index: 1;
   flex-shrink: 0;
@@ -967,10 +1004,10 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
   gap: 6px;
   padding: 7px 14px;
   border-radius: 9999px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   background: rgba(245,166,35,0.08);
   color: var(--amber);
@@ -1001,10 +1038,10 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
   border-collapse: collapse;
 }
 .data-table thead th {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-weight: 500;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--stone);
   padding: 10px 14px;
@@ -1066,8 +1103,8 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
   background: var(--amber);
   color: var(--ink-black);
   font-family: 'DM Sans', sans-serif;
-  font-weight: 700;
-  font-size: 16px;
+  font-weight: 600;
+  font-size: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1086,10 +1123,10 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
    ("LATEST DRAWING", "AI COST ESTIMATOR")
 ══════════════════════════════════ */
 .section-eyebrow {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
+  font-weight: 500;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--stone);
 }
@@ -1101,8 +1138,8 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
 ══════════════════════════════════ */
 .app-card {
   background: var(--surface-container);
-  border-radius: 18px;
-  padding: 20px;
+  border-radius: 16px;
+  padding: 18px;
   box-shadow: inset 0 0 0 1px var(--hairline);
   transition: box-shadow 0.18s ease, transform 0.18s ease, background 0.18s ease;
 }
@@ -1121,10 +1158,10 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
    KICKER — category / type label
 ══════════════════════════════════ */
 .kicker {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'DM Sans', system-ui, sans-serif;
   font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-weight: 500;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--stone);
 }

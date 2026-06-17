@@ -6,13 +6,30 @@
 const CLIENT_ID     = process.env.GOOGLE_CLIENT_ID!
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!
 
-export const GOOGLE_SCOPES = [
-  'https://www.googleapis.com/auth/drive.readonly',
+/** Scopes requested at OAuth connect — must match Google Cloud Console consent screen. */
+export const GOOGLE_SCOPE_LIST = [
+  'https://www.googleapis.com/auth/drive.file',
   'https://www.googleapis.com/auth/gmail.readonly',
   'https://www.googleapis.com/auth/calendar.readonly',
   'openid',
   'email',
-].join(' ')
+] as const
+
+export const GOOGLE_SCOPES = GOOGLE_SCOPE_LIST.join(' ')
+
+/** Non-sensitive; users pick files/folders via Google Picker. */
+export const GOOGLE_DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file'
+
+/** Cloud project number — first segment of the OAuth client ID. Used by Google Picker. */
+export function getGoogleAppId(): string {
+  if (process.env.NEXT_PUBLIC_GOOGLE_APP_ID) return process.env.NEXT_PUBLIC_GOOGLE_APP_ID
+  const match = CLIENT_ID.match(/^(\d+)-/)
+  return match?.[1] ?? ''
+}
+
+export function getGooglePickerApiKey(): string | undefined {
+  return process.env.NEXT_PUBLIC_GOOGLE_API_KEY
+}
 
 export function getGoogleRedirectUri(baseUrl: string) {
   return `${baseUrl}/api/integrations/google/callback`
@@ -78,14 +95,45 @@ export async function getGoogleUserInfo(accessToken: string) {
   return res.json() as Promise<{ email: string; name: string; picture: string }>
 }
 
-// ── Drive ────────────────────────────────────────────────────────────────────
+// ── Drive (drive.file — user-selected files/folders only) ───────────────────
 
-export async function listDriveFiles(accessToken: string, query?: string) {
-  const q = query ? encodeURIComponent(query) : ''
-  const url = `https://www.googleapis.com/drive/v3/files?pageSize=20&fields=files(id,name,mimeType,modifiedTime,size,webViewLink)${q ? `&q=${q}` : ''}`
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } })
-  if (!res.ok) throw new Error('Drive files fetch failed')
-  return res.json() as Promise<{ files: { id: string; name: string; mimeType: string; modifiedTime: string; size: string; webViewLink: string }[] }>
+export type DriveFileMeta = {
+  id: string
+  name: string
+  mimeType: string
+  modifiedTime: string
+  size?: string
+  webViewLink: string
+}
+
+const DRIVE_FIELDS = 'id,name,mimeType,modifiedTime,size,webViewLink'
+
+export async function getDriveFile(accessToken: string, fileId: string): Promise<DriveFileMeta | null> {
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${fileId}?fields=${DRIVE_FIELDS}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  )
+  if (!res.ok) return null
+  return res.json() as Promise<DriveFileMeta>
+}
+
+export async function listDriveFolderChildren(accessToken: string, folderId: string, query?: string) {
+  const qParts = [`'${folderId}' in parents`, 'trashed=false']
+  if (query) qParts.push(`name contains '${query.replace(/'/g, "\\'")}'`)
+
+  const params = new URLSearchParams({
+    pageSize: '50',
+    fields:   `files(${DRIVE_FIELDS})`,
+    q:        qParts.join(' and '),
+    orderBy:  'modifiedTime desc',
+  })
+
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files?${params}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+  if (!res.ok) throw new Error('Drive folder listing failed')
+  const data = await res.json() as { files?: DriveFileMeta[] }
+  return data.files ?? []
 }
 
 export async function uploadToDrive(accessToken: string, filename: string, content: Blob, mimeType: string, folderId?: string) {

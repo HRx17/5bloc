@@ -258,7 +258,7 @@ function Messenger() {
       <section className={`${activeId ? 'flex' : 'hidden md:flex'} flex-1 flex-col min-w-0`}>
         {!active ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-            <span className="material-icons-outlined text-[44px] mb-3" style={{ color: 'var(--stone)', opacity: 0.4 }}>chat</span>
+            <span className="material-icons-outlined text-[28px] mb-3" style={{ color: 'var(--stone)', opacity: 0.4 }}>chat</span>
             <p className="text-[15px] font-semibold" style={{ color: 'var(--on-surface-variant)' }}>Your messages</p>
             <p className="text-[13px] mt-1 max-w-xs" style={{ color: 'var(--stone)' }}>
               Select a conversation or start a new one to chat in real time.

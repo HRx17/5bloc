@@ -223,7 +223,7 @@ export default function ProjectMessages() {
             <>
               {filtered.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center text-stone text-xs">
-                  <span className="material-icons-outlined text-[36px] text-stone/20 mb-2">forum</span>
+                  <span className="material-icons-outlined text-[26px] text-stone/20 mb-2">forum</span>
                   <p>No messages in #{activeChannel}. Say hi to start the conversation!</p>
                 </div>
               ) : (

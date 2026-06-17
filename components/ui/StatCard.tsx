@@ -32,23 +32,23 @@ export function StatCard(props: StatCardProps) {
       ].filter(Boolean).join(' ')}
       style={{ '--stat-accent': color } as React.CSSProperties}
     >
-      <div className="flex items-center gap-2 mb-3">
+      <div className="flex items-center gap-2 mb-2">
         <span
-          className="material-icons-outlined text-[18px] stat-card-icon"
+          className="material-icons-outlined text-[14px] stat-card-icon"
           style={{ color }}
         >
           {icon}
         </span>
-        <span className="text-[11px] font-medium uppercase tracking-wider" style={{ color: 'var(--stone)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em' }}>
+        <span className="text-[10px] font-normal uppercase tracking-wide" style={{ color: 'var(--stone)', letterSpacing: '0.04em' }}>
           {label}
         </span>
         {props.variant === 'link' && (
-          <span className="material-icons-outlined text-[13px] ml-auto opacity-35" style={{ color: 'var(--stone)' }}>
+          <span className="material-icons-outlined text-[11px] ml-auto opacity-30" style={{ color: 'var(--stone)' }}>
             arrow_forward
           </span>
         )}
       </div>
-      <p className="font-display font-bold leading-none tabular-nums" style={{ color: 'var(--on-surface)', fontSize: '2rem' }}>
+      <p className="font-display leading-none tabular-nums" style={{ color: 'var(--on-surface)', fontSize: '1.375rem', fontWeight: 500 }}>
         {value}
       </p>
     </div>

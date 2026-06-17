@@ -203,7 +203,7 @@ export default function SubmittalsLog() {
  <div className="p-8 text-center text-stone animate-pulse">Loading submittal files...</div>
  ) : submittals.length === 0 ? (
  <div className="py-16 text-center text-stone flex flex-col items-center">
- <span className="material-icons-outlined text-[48px] text-stone/30 mb-3">fact_check</span>
+ <span className="material-icons-outlined text-[28px] text-stone/30 mb-3">fact_check</span>
  <h4 className="text-sm font-bold text-white">No submittals logged</h4>
  <p className="text-xs max-w-xs mt-1">Logged submittals must be verified before material procurement.</p>
  </div>

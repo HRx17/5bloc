@@ -13,6 +13,7 @@
  *   scope           text,
  *   provider_email  text,
  *   provider_name   text,
+ *   metadata        jsonb default '{}'::jsonb,
  *   connected_at    timestamptz default now(),
  *   unique(user_id, provider)
  * );
@@ -33,6 +34,7 @@ export interface TokenRecord {
   scope?:         string | null
   provider_email?: string | null
   provider_name?:  string | null
+  metadata?:      Record<string, unknown> | null
 }
 
 export async function saveToken(userId: string, record: TokenRecord) {

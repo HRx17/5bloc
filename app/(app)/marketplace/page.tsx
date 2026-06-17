@@ -583,7 +583,7 @@ function VendorCard({ vendor, onContact }: { vendor: Vendor; onContact: () => vo
 function EmptyState({ type, onClear }: { type: string; onClear: () => void }) {
   return (
     <div className="card-5bloc py-16 flex flex-col items-center justify-center text-center">
-      <span className="material-icons-outlined text-[48px] mb-3" style={{ color: 'var(--stone)', opacity: 0.2 }}>
+      <span className="material-icons-outlined text-[28px] mb-3" style={{ color: 'var(--stone)', opacity: 0.2 }}>
         {type === 'vendors' ? 'storefront' : 'engineering'}
       </span>
       <h4 className="text-sm font-bold" style={{ color: 'var(--on-surface)' }}>No {type} match your filters</h4>

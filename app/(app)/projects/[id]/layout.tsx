@@ -188,7 +188,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
               </div>
 
               <h1
-                className="font-display font-bold text-[26px] leading-tight line-clamp-2"
+                className="font-display text-[22px] leading-tight line-clamp-2"
                 style={{ color: 'var(--on-surface)' }}
               >
                 {project.name}

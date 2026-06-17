@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
 
@@ -69,7 +70,7 @@ export default function IntegrationsDashboard() {
       provider: 'Google',
       icon: 'cloud_queue',
       color: '#4285F4',
-      description: 'Sync design sheets, municipal bye-laws, rates comparisons, and project files directly with Google Drive.',
+      description: 'Link a project folder from Google Drive — browse drawings, specs, and sheets in your vault. Gmail & Calendar read-only.',
       status: 'disconnected',
       lastSync: 'Never',
       syncedItemsCount: 0,
@@ -168,7 +169,7 @@ export default function IntegrationsDashboard() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <p className="label-sm mb-1" style={{ color: 'var(--stone)' }}>System Automation</p>
-          <h1 className="font-display text-[36px] leading-[40px]" style={{ color: 'var(--on-surface)' }}>
+          <h1 className="font-display text-[22px] lg:text-[26px] leading-[30px]" style={{ color: 'var(--on-surface)' }}>
             Enterprise Integrations
           </h1>
           <p className="text-[12px] mt-1" style={{ color: 'var(--on-surface-variant)' }}>
@@ -193,7 +194,7 @@ export default function IntegrationsDashboard() {
         <div className="card-glass border border-navy-lt/20" style={{ padding: '16px 20px', borderRadius: '12px' }}>
           <p className="label-sm text-[10px]" style={{ color: 'var(--stone)' }}>Linked Applications</p>
           <div className="flex items-center gap-2.5 mt-2">
-            <span className="text-[26px] font-bold" style={{ color: 'var(--on-surface)' }}>
+            <span className="text-[22px] font-medium" style={{ color: 'var(--on-surface)' }}>
               {integrations.filter(i => i.status === 'connected').length} / {integrations.length}
             </span>
             <span className="chip" style={{ background: 'rgba(111,220,140,.12)', color: 'var(--success)' }}>Active</span>
@@ -203,7 +204,7 @@ export default function IntegrationsDashboard() {
         <div className="card-glass border border-navy-lt/20" style={{ padding: '16px 20px', borderRadius: '12px' }}>
           <p className="label-sm text-[10px]" style={{ color: 'var(--stone)' }}>Synced Assets Registry</p>
           <div className="flex items-center gap-2.5 mt-2">
-            <span className="text-[26px] font-bold" style={{ color: 'var(--on-surface)' }}>
+            <span className="text-[22px] font-medium" style={{ color: 'var(--on-surface)' }}>
               {integrations.reduce((acc, curr) => acc + (curr.status === 'connected' ? curr.syncedItemsCount : 0), 0)}
             </span>
             <span className="chip" style={{ background: 'rgba(122,184,255,.12)', color: 'var(--blue)' }}>Items Online</span>
@@ -282,11 +283,11 @@ export default function IntegrationsDashboard() {
                         color: item.color,
                       }}
                     >
-                      <span className="material-icons-outlined text-[24px]">{item.icon}</span>
+                      <span className="material-icons-outlined text-[18px]">{item.icon}</span>
                     </div>
                     <div>
-                      <h3 className="text-[14px] font-bold text-white leading-tight">{item.name}</h3>
-                      <p className="text-[10px] text-stone mt-0.5 font-semibold">Provider: {item.provider}</p>
+                      <h3 className="text-[14px] font-medium text-white leading-tight">{item.name}</h3>
+                      <p className="text-[10px] text-stone mt-0.5 font-normal">Provider: {item.provider}</p>
                     </div>
                   </div>
 
@@ -400,15 +401,14 @@ export default function IntegrationsDashboard() {
               {selectedIntegration.id === 'google-drive' && (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-stone text-xs font-medium mb-1.5">Linked Target Folder Name *</label>
-                    <input
-                      type="text"
-                      value={googleFolder}
-                      onChange={(e) => setGoogleFolder(e.target.value)}
-                      className="input-5bloc py-2 text-xs"
-                      style={{ borderRadius: '8px' }}
-                    />
-                    <p className="text-[10px] text-stone mt-1">This folder in your Google Drive will sync to your Document Vault.</p>
+                    <label className="block text-stone text-xs font-medium mb-1.5">Project folder vault</label>
+                    <p className="text-[11px] text-stone mb-3">
+                      In <strong>Documents</strong>, click <strong>Link project folder</strong> to connect your Drive folder. 5Bloc then browses everything inside it.
+                    </p>
+                    <Link href="/documents" className="btn-secondary py-2 px-3 text-[11px] inline-flex items-center gap-1">
+                      <span className="material-icons-outlined text-[13px]">folder_open</span>
+                      Open Documents
+                    </Link>
                   </div>
                   <div>
                     <label className="block text-stone text-xs font-medium mb-1.5">Auto-Sync Intervals</label>

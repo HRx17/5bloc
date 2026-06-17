@@ -132,7 +132,7 @@ export default function Signup() {
           {/* Header */}
           <div className="flex flex-col items-center mb-6">
             <LogoMark size={36} />
-            <span className="font-mono text-[15px] font-bold tracking-widest mt-2" style={{ color: 'var(--on-surface)' }}>
+            <span className="font-body text-[15px] font-semibold tracking-wide mt-2" style={{ color: 'var(--on-surface)' }}>
               5BLOC
             </span>
             <p className="mt-1 text-[12px]" style={{ color: 'var(--stone)' }}>

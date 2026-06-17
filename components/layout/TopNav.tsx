@@ -184,7 +184,7 @@ export default function TopNav({
                 }}
               >
                 <div className="flex items-center justify-between px-4 py-3" style={{ boxShadow: '0 1px 0 var(--hairline)' }}>
-                  <span className="text-[13px] font-semibold" style={{ color: 'var(--on-surface)' }}>Messages</span>
+                  <span className="text-[12px] font-medium" style={{ color: 'var(--on-surface)' }}>Messages</span>
                   {unreadCount > 0 && (
                     <span className="font-mono text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: 'rgba(245,166,35,0.14)', color: 'var(--amber)' }}>
                       {unreadCount} unread
@@ -258,7 +258,7 @@ export default function TopNav({
           onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
         >
           <div className="hidden sm:flex flex-col items-end">
-            <span className="text-[12px] font-semibold leading-tight" style={{ color: 'var(--on-surface)' }}>
+            <span className="text-[12px] font-medium leading-tight" style={{ color: 'var(--on-surface)' }}>
               {userName.split(' ')[0]}
             </span>
             <span className="font-mono text-[9.5px] uppercase tracking-wider" style={{ color: 'var(--stone)' }}>
@@ -274,7 +274,7 @@ export default function TopNav({
             />
           ) : (
             <div
-              className="w-7 h-7 flex items-center justify-center text-[10px] font-bold rounded-full shrink-0"
+              className="w-7 h-7 flex items-center justify-center text-[10px] font-medium rounded-full shrink-0"
               style={{
                 background: 'rgba(245,166,35,0.15)',
                 color: 'var(--amber)',

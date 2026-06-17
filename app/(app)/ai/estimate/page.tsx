@@ -179,7 +179,7 @@ export default function AIEstimator() {
       {/* Page Title */}
       <div>
         <p className="section-eyebrow-amber mb-2">AI Cost Estimator</p>
-        <h1 className="font-display font-bold text-[28px] leading-tight" style={{ color: 'var(--on-surface)' }}>
+        <h1 className="font-display text-[22px] lg:text-[26px] leading-tight" style={{ color: 'var(--on-surface)' }}>
           Full BOQ in 4 seconds.
         </h1>
         <p className="text-[13px] mt-1.5" style={{ color: 'var(--stone)' }}>
@@ -311,7 +311,7 @@ export default function AIEstimator() {
               className="w-16 h-16 flex items-center justify-center rounded-2xl"
               style={{ background: 'rgba(245,166,35,0.08)', boxShadow: 'var(--glow-amber)' }}
             >
-              <span className="material-icons-outlined text-[32px] animate-spin" style={{ color: 'var(--amber)' }}>sync</span>
+              <span className="material-icons-outlined text-[24px] animate-spin" style={{ color: 'var(--amber)' }}>sync</span>
             </div>
             <div className="space-y-1">
               <h4 className="section-eyebrow-amber">Running Quantity Estimator</h4>
@@ -436,7 +436,7 @@ export default function AIEstimator() {
           /* Idle placeholder */
           <div className="card-5bloc flex flex-col items-center justify-center text-center h-[450px] gap-4">
             <div className="w-16 h-16 flex items-center justify-center rounded-2xl" style={{ background: 'rgba(245,166,35,0.06)', boxShadow: 'inset 0 0 0 1px rgba(245,166,35,0.14)' }}>
-              <span className="material-icons-outlined text-[36px]" style={{ color: 'var(--amber)', opacity: 0.5 }}>auto_awesome</span>
+              <span className="material-icons-outlined text-[26px]" style={{ color: 'var(--amber)', opacity: 0.5 }}>auto_awesome</span>
             </div>
             <div>
               <h4 className="font-display font-bold text-[16px] mb-1" style={{ color: 'var(--on-surface)' }}>Ready to estimate</h4>

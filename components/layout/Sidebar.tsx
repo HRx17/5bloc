@@ -136,7 +136,7 @@ export default function Sidebar({
         <Link
           href="/projects/new"
           onClick={onClose}
-          className="flex items-center gap-2 w-full px-3 py-2 rounded-xl font-semibold text-[12px]"
+          className="flex items-center gap-2 w-full px-3 py-1.5 rounded-xl text-[12px] font-medium"
           style={{
             background: 'rgba(245,166,35,0.10)',
             color: 'var(--amber)',
@@ -144,7 +144,7 @@ export default function Sidebar({
           onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'rgba(245,166,35,0.17)')}
           onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = 'rgba(245,166,35,0.10)')}
         >
-          <span className="material-icons-outlined text-[15px]">add_circle</span>
+          <span className="material-icons-outlined text-[14px]">add_circle</span>
           New Project
         </Link>
       </div>
@@ -156,8 +156,8 @@ export default function Sidebar({
           <div key={gi} className={gi > 0 ? 'pt-2.5' : ''}>
             {group.label && (
               <p
-                className="px-3 pb-1 font-mono text-[9px] uppercase tracking-[0.16em] font-semibold"
-                style={{ color: 'var(--stone)', opacity: 0.5 }}
+                className="px-3 pb-1 text-[9px] uppercase tracking-[0.08em] font-medium"
+                style={{ color: 'var(--stone)', opacity: 0.55 }}
               >
                 {group.label}
               </p>
@@ -170,7 +170,7 @@ export default function Sidebar({
                     key={item.path}
                     href={item.path}
                     onClick={onClose}
-                    className="relative flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] font-normal"
+                    className="relative flex items-center gap-2 px-3 py-1.5 rounded-xl text-[12.5px]"
                     style={{
                       background: active ? 'rgba(245,166,35,0.08)' : 'transparent',
                       color: active ? 'var(--on-surface)' : 'var(--on-surface-variant)',
@@ -194,7 +194,7 @@ export default function Sidebar({
                     )}
 
                     <span
-                      className="material-icons-outlined text-[16px] shrink-0"
+                      className="material-icons-outlined text-[14px] shrink-0"
                       style={{ color: active ? 'var(--amber)' : 'var(--stone)' }}
                     >
                       {item.icon}
@@ -265,13 +265,13 @@ export default function Sidebar({
           style={{ background: 'var(--overlay-hover)' }}
         >
           <div
-            className="w-6 h-6 flex items-center justify-center text-[10px] font-bold shrink-0 rounded-lg"
+            className="w-6 h-6 flex items-center justify-center text-[10px] font-medium shrink-0 rounded-lg"
             style={{ background: 'rgba(245,166,35,0.14)', color: 'var(--amber)' }}
           >
             {orgName.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[12px] font-semibold truncate" style={{ color: 'var(--on-surface)' }}>
+            <p className="text-[12px] font-medium truncate" style={{ color: 'var(--on-surface)' }}>
               {orgName}
             </p>
             <div className="flex items-center gap-1.5">

@@ -47,7 +47,7 @@ export default function PrivacyPolicy() {
             <h2 className="text-xl font-semibold mb-3" style={{ color: '#F7F5F0' }}>3. Google User Data</h2>
             <p className="mb-3">If you connect your Google account, 5BLOC accesses the following data solely to provide in-app functionality:</p>
             <ul className="list-disc pl-6 space-y-1">
-              <li><strong>Google Drive</strong> (read-only): List and display your Drive files within the Documents section of the platform.</li>
+              <li><strong>Google Drive</strong> (<code>drive.file</code>): Access only files and folders you explicitly select via the Google Picker in the Documents section.</li>
               <li><strong>Gmail</strong> (read-only): Display your email threads within the Coordination section of the platform.</li>
               <li><strong>Google Calendar</strong> (read-only): Display your upcoming calendar events on the Dashboard.</li>
             </ul>

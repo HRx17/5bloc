@@ -201,7 +201,7 @@ export default function DocumentVault() {
       >
         <div>
           <p className="text-[12px] mb-1" style={{ color: 'var(--stone)' }}>All projects</p>
-          <h1 className="font-display font-bold text-[28px] lg:text-[34px] leading-tight" style={{ color: 'var(--on-surface)' }}>
+          <h1 className="font-display text-[22px] lg:text-[26px] leading-tight" style={{ color: 'var(--on-surface)' }}>
             Document Vault
           </h1>
           <p className="text-[13px] mt-1" style={{ color: 'var(--on-surface-variant)' }}>
@@ -348,7 +348,7 @@ export default function DocumentVault() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-center">
-              <span className="material-icons-outlined text-[42px] mb-4" style={{ color: 'var(--stone)', opacity: 0.3 }}>folder_open</span>
+              <span className="material-icons-outlined text-[28px] mb-4" style={{ color: 'var(--stone)', opacity: 0.3 }}>folder_open</span>
               <h3 className="text-[15px] font-semibold mb-1" style={{ color: 'var(--on-surface)' }}>No documents found</h3>
               <p className="text-[13px]" style={{ color: 'var(--stone)' }}>Try adjusting the filters or upload a document from a project.</p>
             </div>
@@ -477,7 +477,7 @@ export default function DocumentVault() {
           </div>
           <div>
             <h3 className="text-[13px] font-bold" style={{ color: 'var(--on-surface)' }}>Google Drive</h3>
-            <p className="text-[11px]" style={{ color: 'var(--stone)' }}>Browse your connected Drive files</p>
+            <p className="text-[11px]" style={{ color: 'var(--stone)' }}>Project folder vault — link once, browse everything inside</p>
           </div>
         </div>
         <DrivePanel className="h-[400px]" />

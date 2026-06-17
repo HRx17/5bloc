@@ -133,7 +133,7 @@ export default function InvoicesList() {
  <div className="p-8 text-center text-stone animate-pulse">Loading invoices directory...</div>
  ) : invoices.length === 0 ? (
  <div className="py-16 text-center text-stone flex flex-col items-center">
- <span className="material-icons-outlined text-[48px] text-stone/30 mb-3">receipt_long</span>
+ <span className="material-icons-outlined text-[28px] text-stone/30 mb-3">receipt_long</span>
  <h4 className="text-sm font-bold text-white">No invoice records logged</h4>
  <p className="text-xs max-w-xs mt-1">Generate your first fee invoice to release project milestone payments.</p>
  </div>

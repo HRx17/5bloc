@@ -241,7 +241,7 @@ export default function RFILog() {
  <div className="p-8 text-center text-stone animate-pulse">Loading RFI log...</div>
  ) : rfis.length === 0 ? (
  <div className="py-16 text-center text-stone flex flex-col items-center">
- <span className="material-icons-outlined text-[48px] text-stone/30 mb-3">forum</span>
+ <span className="material-icons-outlined text-[28px] text-stone/30 mb-3">forum</span>
  <h4 className="text-sm font-bold text-white">No RFIs logged</h4>
  <p className="text-xs max-w-xs mt-1">Contractors can raise RFIs to clarify drawing specifications.</p>
  </div>

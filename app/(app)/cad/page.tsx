@@ -250,7 +250,7 @@ export default function CadViewerPage() {
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center" style={{ minHeight: 540 }}>
-                <span className="material-icons-outlined text-[40px] mb-3" style={{ color: 'var(--stone)', opacity: 0.4 }}>view_in_ar</span>
+                <span className="material-icons-outlined text-[28px] mb-3" style={{ color: 'var(--stone)', opacity: 0.4 }}>view_in_ar</span>
                 <p className="text-sm font-semibold" style={{ color: 'var(--on-surface)' }}>No model selected</p>
                 <p className="text-xs mt-1" style={{ color: 'var(--stone)' }}>Upload a CAD file to view it here</p>
               </div>
@@ -268,7 +268,7 @@ function PageHeader() {
       initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}>
       <p className="text-[12px] mb-1" style={{ color: 'var(--stone)' }}>Autodesk Platform Services</p>
-      <h1 className="font-display font-bold text-[28px] lg:text-[34px] leading-tight" style={{ color: 'var(--on-surface)' }}>
+      <h1 className="font-display text-[22px] lg:text-[26px] leading-tight" style={{ color: 'var(--on-surface)' }}>
         CAD Plan Viewer
       </h1>
       <p className="text-[13px] mt-1" style={{ color: 'var(--on-surface-variant)' }}>

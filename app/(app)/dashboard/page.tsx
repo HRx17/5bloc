@@ -118,7 +118,7 @@ function ProjectCard({ proj, delay }: { proj: Project; delay: number }) {
         </div>
 
         {/* Name + city */}
-        <h3 className="font-display font-bold text-[18px] leading-snug mb-1" style={{ color: 'var(--on-surface)' }}>
+        <h3 className="font-semibold text-[16px] leading-snug mb-1" style={{ color: 'var(--on-surface)' }}>
           {proj.name}
         </h3>
         <p className="text-[12px] mb-3" style={{ color: 'var(--stone)' }}>{proj.city}</p>
@@ -328,7 +328,7 @@ export default function Dashboard() {
             {greeting}, Raj
           </p>
           <h1
-            className="font-display font-bold text-[28px] lg:text-[34px] leading-tight"
+            className="font-display text-[22px] lg:text-[26px] leading-tight"
             style={{ color: 'var(--on-surface)' }}
           >
             Your workspace
@@ -406,7 +406,7 @@ export default function Dashboard() {
               className="rounded-2xl p-10 flex flex-col items-center text-center"
               style={{ background: 'var(--surface-container)' }}
             >
-              <span className="material-icons-outlined text-[40px] mb-4" style={{ color: 'var(--stone)', opacity: 0.3 }}>
+              <span className="material-icons-outlined text-[28px] mb-4" style={{ color: 'var(--stone)', opacity: 0.3 }}>
                 space_dashboard
               </span>
               <h3 className="text-[15px] font-semibold mb-1" style={{ color: 'var(--on-surface)' }}>
@@ -446,7 +446,7 @@ export default function Dashboard() {
                     t.style.color = 'var(--stone)'
                   }}
                 >
-                  <span className="material-icons-outlined text-[22px]">add_circle_outline</span>
+                  <span className="material-icons-outlined text-[18px]">add_circle_outline</span>
                   <span className="text-[12.5px] font-medium">New project</span>
                 </Link>
               </motion.div>
@@ -552,7 +552,7 @@ export default function Dashboard() {
                 style={{ background: 'rgba(66,133,244,0.12)', color: '#4285F4' }}>
                 <span className="material-icons-outlined text-[15px]">event</span>
               </div>
-              <h3 className="text-[12px] font-bold" style={{ color: 'var(--on-surface)' }}>Calendar</h3>
+              <h3 className="text-[12px] font-medium" style={{ color: 'var(--on-surface)' }}>Calendar</h3>
             </div>
             <CalendarWidget compact className="max-h-[320px]" />
           </motion.div>

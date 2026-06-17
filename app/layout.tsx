@@ -28,11 +28,11 @@ export default function RootLayout({
  <head>
  {/* Load Google Fonts & Material Icons Outlined precisely as per design specification */}
  <link 
- href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" 
+ href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400&family=Syne:wght@500;600&display=swap" 
  rel="stylesheet"
  />
  <link 
- href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" 
+ href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" 
  rel="stylesheet"
  />
  </head>

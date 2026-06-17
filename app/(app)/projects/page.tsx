@@ -100,7 +100,7 @@ export default function ProjectsList() {
  <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
  <div>
  <p className="label-sm mb-1" style={{ color: 'var(--stone)' }}>Projects</p>
- <h1 className="font-display text-[36px] leading-[40px]" style={{ color: 'var(--on-surface)' }}>
+ <h1 className="font-display text-[22px] lg:text-[26px] leading-tight" style={{ color: 'var(--on-surface)' }}>
  Projects Registry
  </h1>
  <p className="text-[12px] mt-1" style={{ color: 'var(--on-surface-variant)' }}>
@@ -205,7 +205,7 @@ export default function ProjectsList() {
  </div>
  ) : filtered.length === 0 ? (
  <div className="card-5bloc py-16 flex flex-col items-center text-center">
- <span className="material-icons-outlined text-[48px] mb-3" style={{ color: 'var(--stone)' }}>folder_off</span>
+ <span className="material-icons-outlined text-[28px] mb-3" style={{ color: 'var(--stone)' }}>folder_off</span>
  <h3 className="text-[13px] font-semibold mb-1" style={{ color: 'var(--on-surface)' }}>No projects found</h3>
  <p className="text-[12px]" style={{ color: 'var(--stone)' }}>Try modifying your search or filter criteria.</p>
  </div>

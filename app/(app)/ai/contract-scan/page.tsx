@@ -267,7 +267,7 @@ export default function ContractRiskScan() {
           ) : (
             /* Idle screen placeholder */
             <div className="card-5bloc flex flex-col items-center justify-center text-center h-[520px] text-stone">
-              <span className="material-icons-outlined text-[48px] text-stone/20 mb-3">gavel</span>
+              <span className="material-icons-outlined text-[28px] text-stone/20 mb-3">gavel</span>
               <h4 className="text-sm font-bold text-white">AI Contract Scan Engine Idle</h4>
               <p className="text-xs max-w-sm mt-1">
                 Upload a document or paste terms in the left panel to trigger the professional design liability audit.

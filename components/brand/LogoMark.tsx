@@ -22,11 +22,11 @@ export function Logo({ size = 40, showTagline = false }: { size?: number; showTa
  <div style={{ display: 'inline-flex', alignItems: 'center', gap: Math.round(size * 0.28) }}>
  <LogoMark size={size}/>
  <div style={{ lineHeight: 1 }}>
- <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: size * 0.52, letterSpacing: '0.10em', color: 'var(--on-surface)' }}>
+ <div style={{ fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: size * 0.48, letterSpacing: '0.06em', color: 'var(--on-surface)' }}>
  5BLOC
  </div>
  {showTagline && size >= 36 && (
- <div style={{ fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: size * 0.215, letterSpacing: '0.18em', color: 'var(--amber)', textTransform: 'uppercase', marginTop: 2 }}>
+ <div style={{ fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: size * 0.2, letterSpacing: '0.12em', color: 'var(--amber)', textTransform: 'uppercase', marginTop: 2 }}>
  Build Together
  </div>
  )}

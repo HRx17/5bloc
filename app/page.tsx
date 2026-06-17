@@ -72,7 +72,7 @@ function Wordmark() {
     <Link href="/" className="flex items-center gap-2.5 select-none">
       <LogoMark size={26} />
       <span
-        className="font-mono text-[17px] font-bold tracking-widest"
+        className="font-body text-[17px] font-semibold tracking-wide"
         style={{ color: 'var(--on-surface)' }}
       >
         5BLOC
@@ -423,7 +423,7 @@ function Hero() {
 
         {/* Headline */}
         <motion.h1
-          className="font-display font-bold tracking-tight leading-[1.04]"
+          className="font-brand tracking-tight leading-[1.04]"
           style={{
             fontSize: 'clamp(44px, 7.5vw, 82px)',
             color: 'var(--on-surface)',
@@ -566,7 +566,7 @@ function PainStrip() {
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-[10px] font-mono uppercase tracking-widest" style={{ color: 'rgba(255,100,100,0.6)' }}>Before</span>
                   </div>
-                  <p className="font-display font-bold text-[15px]" style={{ color: 'var(--on-surface)' }}>{item.before}</p>
+                  <p className="font-brand text-[15px]" style={{ color: 'var(--on-surface)' }}>{item.before}</p>
                   <p className="text-[12px] mt-0.5" style={{ color: 'var(--stone)' }}>{item.beforeSub}</p>
                 </div>
                 {/* After */}
@@ -574,7 +574,7 @@ function PainStrip() {
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-[10px] font-mono uppercase tracking-widest" style={{ color: 'rgba(46,204,138,0.7)' }}>With 5Bloc</span>
                   </div>
-                  <p className="font-display font-bold text-[15px]" style={{ color: 'var(--amber)' }}>{item.after}</p>
+                  <p className="font-brand text-[15px]" style={{ color: 'var(--amber)' }}>{item.after}</p>
                   <p className="text-[12px] mt-0.5" style={{ color: 'var(--stone)' }}>{item.afterSub}</p>
                 </div>
               </div>
@@ -600,7 +600,7 @@ function PrototypeSection() {
                 ⚡ Try it · no signup required
               </span>
               <h2
-                className="mt-5 font-display font-bold text-[42px] sm:text-[52px] tracking-tight leading-[1.08]"
+                className="mt-5 font-brand text-[42px] sm:text-[52px] tracking-tight leading-[1.08]"
                 style={{ color: 'var(--on-surface)' }}
               >
                 A working slice of 5Bloc.
@@ -663,7 +663,7 @@ function Pillars() {
           <FadeUp>
             <span className="metadata-caps" style={{ color: 'var(--amber)' }}>Why 5Bloc</span>
             <h2
-              className="mt-5 font-display font-bold text-[40px] sm:text-[50px] tracking-tight leading-[1.08]"
+              className="mt-5 font-brand text-[40px] sm:text-[50px] tracking-tight leading-[1.08]"
               style={{ color: 'var(--on-surface)' }}
             >
               Architecture deserves better than a group chat.
@@ -692,7 +692,7 @@ function Pillars() {
                   >
                     <p.icon className="h-5 w-5" />
                   </div>
-                  <div className="font-display font-bold text-[17px]" style={{ color: 'var(--on-surface)' }}>
+                  <div className="font-brand text-[17px]" style={{ color: 'var(--on-surface)' }}>
                     {p.title}
                   </div>
                   <p className="mt-3 text-[13.5px] leading-relaxed" style={{ color: 'var(--on-surface-variant)' }}>
@@ -727,7 +727,7 @@ function RolesGrid() {
         <FadeUp className="text-center mb-16">
           <span className="metadata-caps" style={{ color: 'var(--amber)' }}>Five roles · one project</span>
           <h2
-            className="mt-5 max-w-2xl mx-auto font-display font-bold text-[40px] sm:text-[50px] tracking-tight leading-[1.08]"
+            className="mt-5 max-w-2xl mx-auto font-brand text-[40px] sm:text-[50px] tracking-tight leading-[1.08]"
             style={{ color: 'var(--on-surface)' }}
           >
             Architect pays.{' '}
@@ -747,7 +747,7 @@ function RolesGrid() {
                   whileHover={{ y: -4, boxShadow: `0 0 0 1px ${accent}22, var(--shadow-3)`, transition: { duration: 0.2 } }}
                 >
                   <r.icon className="h-5 w-5 mb-5" style={{ color: accent }} />
-                  <div className="font-display font-bold text-[16px]" style={{ color: 'var(--on-surface)' }}>
+                  <div className="font-brand text-[16px]" style={{ color: 'var(--on-surface)' }}>
                     {r.title}
                   </div>
                   <p className="mt-2 text-[13px] leading-relaxed flex-1" style={{ color: 'var(--on-surface-variant)' }}>
@@ -797,7 +797,7 @@ function ModulesSection() {
         <FadeUp className="mb-16">
           <span className="metadata-caps" style={{ color: 'var(--amber)' }}>Core modules</span>
           <h2
-            className="mt-5 max-w-3xl font-display font-bold text-[40px] sm:text-[50px] tracking-tight leading-[1.08]"
+            className="mt-5 max-w-3xl font-brand text-[40px] sm:text-[50px] tracking-tight leading-[1.08]"
             style={{ color: 'var(--on-surface)' }}
           >
             Every tool your office needs.{' '}
@@ -816,7 +816,7 @@ function ModulesSection() {
               >
                 <div className="flex items-baseline justify-between mb-4">
                   <div
-                    className="font-display font-bold text-[16px]"
+                    className="font-brand text-[16px]"
                     style={{ color: 'var(--on-surface)' }}
                   >
                     {m.label}
@@ -873,7 +873,7 @@ function HowItWorks() {
         <FadeUp className="text-center mb-16">
           <span className="metadata-caps" style={{ color: 'var(--amber)' }}>How it works</span>
           <h2
-            className="mt-5 max-w-2xl mx-auto font-display font-bold text-[38px] sm:text-[48px] tracking-tight leading-[1.08]"
+            className="mt-5 max-w-2xl mx-auto font-brand text-[38px] sm:text-[48px] tracking-tight leading-[1.08]"
             style={{ color: 'var(--on-surface)' }}
           >
             Three steps.{' '}
@@ -901,7 +901,7 @@ function HowItWorks() {
                   </div>
                   <span className="material-icons-outlined text-[20px]" style={{ color: 'var(--stone)' }}>{s.icon}</span>
                 </div>
-                <div className="font-display font-bold text-[17px] mb-3" style={{ color: 'var(--on-surface)' }}>
+                <div className="font-brand text-[17px] mb-3" style={{ color: 'var(--on-surface)' }}>
                   {s.title}
                 </div>
                 <p className="text-[13.5px] leading-relaxed" style={{ color: 'var(--on-surface-variant)' }}>
@@ -1022,7 +1022,7 @@ function FAQ() {
           <FadeUp>
             <span className="metadata-caps" style={{ color: 'var(--amber)' }}>Frequently asked</span>
             <h2
-              className="mt-5 font-display font-bold text-[40px] sm:text-[50px] tracking-tight leading-[1.08]"
+              className="mt-5 font-brand text-[40px] sm:text-[50px] tracking-tight leading-[1.08]"
               style={{ color: 'var(--on-surface)' }}
             >
               Questions practices ask in the first call.
@@ -1050,7 +1050,7 @@ function FAQ() {
                   onClick={() => setOpen(open === i ? null : i)}
                 >
                   <dt className="flex items-center justify-between gap-4">
-                    <span className="font-display font-bold text-[16px]" style={{ color: 'var(--on-surface)' }}>
+                    <span className="font-brand text-[16px]" style={{ color: 'var(--on-surface)' }}>
                       {f.q}
                     </span>
                     <motion.span
@@ -1121,7 +1121,7 @@ function WaitlistCTA() {
                     Private beta · invite-only
                   </span>
                   <h2
-                    className="mt-6 font-display font-bold leading-[1.06] tracking-tight"
+                    className="mt-6 font-brand leading-[1.06] tracking-tight"
                     style={{ fontSize: 'clamp(36px, 5vw, 58px)', color: 'var(--on-surface)' }}
                   >
                     Bring your next project to 5Bloc.
