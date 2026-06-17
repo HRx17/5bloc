@@ -63,7 +63,7 @@ const NAV: NavGroup[] = [
 export default function Sidebar({
   userRole = 'architect',
   plan = 'free',
-  orgName = 'Apex Architects',
+  orgName = 'Workspace',
   onClose,
 }: SidebarProps) {
   const pathname  = usePathname()

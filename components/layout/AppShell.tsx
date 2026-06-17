@@ -25,12 +25,12 @@ export default function AppShell({ children, userProfile }: AppShellProps) {
  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
  const pathname = usePathname()
 
- const profile = userProfile || {
- full_name: 'Parth Patel',
+ const profile = userProfile ?? {
+ full_name: 'User',
  role: 'architect',
  avatar_url: undefined,
  plan: 'free',
- organisations: { name: 'Apex Architects' },
+ organisations: { name: 'Workspace' },
  }
 
   return (
@@ -72,6 +72,7 @@ export default function AppShell({ children, userProfile }: AppShellProps) {
  <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
  <TopNav
  userName={profile.full_name}
+ userRole={profile.role}
  avatarUrl={profile.avatar_url}
  onMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)}
  />

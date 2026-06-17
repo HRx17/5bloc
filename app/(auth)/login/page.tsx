@@ -43,8 +43,19 @@ function LoginInner() {
   React.useEffect(() => {
     if (!SUPABASE_CONFIGURED) return
     const supabase = createSupabaseClient()
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) router.replace(nextPath)
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) return
+      try {
+        const res = await fetch('/api/profile/me')
+        if (res.ok) {
+          const data = await res.json()
+          if (!data.user?.onboarding_complete) {
+            router.replace('/onboarding')
+            return
+          }
+        }
+      } catch { /* fall through to dashboard */ }
+      router.replace(nextPath)
     })
   }, [router, nextPath])
 

@@ -1,4 +1,5 @@
 import React from 'react'
+import { redirect } from 'next/navigation'
 import AppShell from '@/components/layout/AppShell'
 import { getAuthUser } from '@/lib/supabase/get-user'
 
@@ -9,32 +10,32 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode
 }) {
-  let profileShape: {
-    full_name?: string
-    role?: string
-    avatar_url?: string
-    plan?: string
-    organisations?: { name?: string }
-  } | undefined = undefined
+  const { profile, needsOnboarding: incomplete } = await getAuthUser()
 
-  try {
-    const { profile } = await getAuthUser()
-    const p = profile as any
-    profileShape = {
-      full_name:     p.full_name  ?? undefined,
-      role:          p.role       ?? undefined,
-      avatar_url:    p.avatar_url ?? undefined,
-      plan:          p.plan       ?? undefined,
-      organisations: p.organisations
-        ? { name: p.organisations?.name ?? undefined }
-        : undefined,
-    }
-  } catch (e) {
-    console.warn('AppLayout profile fetch failed:', e)
+  if (incomplete) {
+    redirect('/onboarding')
+  }
+
+  const p = profile as {
+    full_name?: string | null
+    role?: string | null
+    avatar_url?: string | null
+    plan?: string | null
+    organisations?: { name?: string | null } | null
   }
 
   return (
-    <AppShell userProfile={profileShape}>
+    <AppShell
+      userProfile={{
+        full_name: p.full_name ?? undefined,
+        role: p.role ?? undefined,
+        avatar_url: p.avatar_url ?? undefined,
+        plan: p.plan ?? undefined,
+        organisations: p.organisations?.name
+          ? { name: p.organisations.name }
+          : undefined,
+      }}
+    >
       {children}
     </AppShell>
   )

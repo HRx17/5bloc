@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { needsOnboarding } from '@/lib/auth/onboarding'
 
 async function resolvePostAuthPath(
   supabase: ReturnType<typeof createServerClient>,
@@ -7,9 +8,6 @@ async function resolvePostAuthPath(
   requestedNext: string
 ) {
   const { data: { user } } = await supabase.auth.getUser()
-  if (user?.user_metadata?.onboarding_complete === true) {
-    return requestedNext
-  }
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -17,11 +15,11 @@ async function resolvePostAuthPath(
     .eq('auth_id', userId)
     .maybeSingle()
 
-  if (profile?.org_id) {
-    return requestedNext
+  if (needsOnboarding(user, profile?.org_id)) {
+    return '/onboarding'
   }
 
-  return '/onboarding'
+  return requestedNext
 }
 
 export async function GET(req: NextRequest) {

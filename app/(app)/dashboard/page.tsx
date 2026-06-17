@@ -239,12 +239,21 @@ export default function Dashboard() {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading,  setLoading]  = useState(true)
   const [userRole, setUserRole] = useState<UserRole>('architect')
+  const [firstName, setFirstName] = useState('')
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
   useEffect(() => {
-    const demo = localStorage.getItem('5bloc_demo_role') as UserRole | null
-    if (demo && DASHBOARD_STATS[demo]) setUserRole(demo)
+    fetch('/api/profile/me')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data?.user) return
+        const role = data.user.role as UserRole
+        if (DASHBOARD_STATS[role]) setUserRole(role)
+        const name = data.user.full_name ?? data.user.email?.split('@')[0] ?? ''
+        setFirstName(name.split(/\s+/)[0] ?? name)
+      })
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -325,7 +334,7 @@ export default function Dashboard() {
       >
         <div>
           <p className="text-[12px] mb-1" style={{ color: 'var(--stone)' }}>
-            {greeting}, Raj
+            {greeting}{firstName ? `, ${firstName}` : ''}
           </p>
           <h1
             className="font-display text-[22px] lg:text-[26px] leading-tight"

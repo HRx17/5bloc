@@ -7,15 +7,18 @@ import { Logo } from '../brand/LogoMark'
 import { Search, Bell, Sun, Moon, X, Menu, MessageSquare } from 'lucide-react'
 import { useMessages } from '@/components/messages/MessagesProvider'
 import { relativeTime, initialsOf } from '@/lib/data/messages'
+import { roleLabel } from '@/lib/roles'
 
 interface TopNavProps {
   userName?: string
+  userRole?: string
   avatarUrl?: string
   onMenuToggle?: () => void
 }
 
 export default function TopNav({
-  userName = 'Parth Patel',
+  userName = 'User',
+  userRole = 'architect',
   avatarUrl,
   onMenuToggle,
 }: TopNavProps) {
@@ -262,7 +265,7 @@ export default function TopNav({
               {userName.split(' ')[0]}
             </span>
             <span className="font-mono text-[9.5px] uppercase tracking-wider" style={{ color: 'var(--stone)' }}>
-              Architect
+              {roleLabel(userRole)}
             </span>
           </div>
           {avatarUrl ? (

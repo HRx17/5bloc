@@ -23,7 +23,14 @@ export async function POST(req: NextRequest) {
 
     // Update auth metadata (always succeeds; powers the demo experience)
     await supabase.auth.updateUser({
-      data: { full_name: fullName, role, onboarding_complete: true },
+      data: {
+        full_name: fullName,
+        role,
+        onboarding_complete: true,
+        city: body.city ?? null,
+        state: body.state ?? null,
+        gst_number: body.gst_number ?? null,
+      },
     })
 
     // Persist profile (matches public.profiles schema)

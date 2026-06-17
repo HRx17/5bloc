@@ -9,13 +9,13 @@ export function appOrigin(): string {
   return process.env.NEXT_PUBLIC_APP_URL ?? APP_DEV_ORIGIN
 }
 
-/** Build the Supabase OAuth callback URL (PKCE code exchange on the server). */
+/** Build the Supabase OAuth callback URL — shows loading UI, then exchanges session server-side. */
 export function authCallbackUrl(nextPath = '/dashboard') {
   const next = nextPath.startsWith('/') ? nextPath : `/${nextPath}`
   const origin = typeof window !== 'undefined'
     ? (process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin)
     : (process.env.NEXT_PUBLIC_APP_URL ?? APP_DEV_ORIGIN)
-  return `${origin}/api/auth/callback?next=${encodeURIComponent(next)}`
+  return `${origin}/auth/callback?next=${encodeURIComponent(next)}`
 }
 
 /** Redirect URIs that must be registered in Google Cloud Console. */

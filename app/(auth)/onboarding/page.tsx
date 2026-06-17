@@ -4,14 +4,19 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Logo } from '@/components/brand/LogoMark'
+import { AuthLoadingScreen } from '@/components/auth/AuthLoadingScreen'
 import { createSupabaseClient } from '@/lib/supabase/client'
 import { getRoleConfig, USER_ROLES, type UserRole } from '@/lib/roles'
 
+type Step = 1 | 2 | 3
+
 export default function Onboarding() {
   const router = useRouter()
-  const [step, setStep] = useState(1)
+  const [step, setStep] = useState<Step>(1)
   const [role, setRole] = useState<UserRole>('architect')
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -24,26 +29,55 @@ export default function Onboarding() {
   const roleConfig = getRoleConfig(role)
 
   useEffect(() => {
-    const saved = localStorage.getItem('5bloc_signup_role') as UserRole | null
-    if (saved && USER_ROLES.some((r) => r.id === saved)) setRole(saved)
-
-    async function loadUser() {
+    async function init() {
       try {
         const supabase = createSupabaseClient()
         const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          const r = (user.user_metadata?.role ?? saved ?? 'architect') as UserRole
+
+        if (!user) {
+          router.replace('/login')
+          return
+        }
+
+        const saved = localStorage.getItem('5bloc_signup_role') as UserRole | null
+        if (saved && USER_ROLES.some((r) => r.id === saved)) setRole(saved)
+
+        const res = await fetch('/api/profile/me')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.user?.onboarding_complete) {
+            router.replace('/dashboard')
+            return
+          }
+          const r = (data.user?.role ?? saved ?? 'architect') as UserRole
           setRole(r)
+          setFormData((prev) => ({
+            ...prev,
+            name: data.user?.full_name ?? user.user_metadata?.full_name ?? prev.name,
+            email: data.user?.email ?? user.email ?? prev.email,
+            orgName: data.organisation?.name ?? prev.orgName,
+            city: data.metadata?.city ?? prev.city,
+            state: data.metadata?.state ?? prev.state,
+            gstNumber: data.metadata?.gst_number ?? prev.gstNumber,
+          }))
+          if (data.user?.onboarding_complete === false && data.user?.full_name) {
+            setStep(2)
+          }
+        } else {
           setFormData((prev) => ({
             ...prev,
             name: user.user_metadata?.full_name ?? prev.name,
             email: user.email ?? prev.email,
           }))
         }
-      } catch { /* demo mode */ }
+      } catch {
+        router.replace('/login')
+      } finally {
+        setLoading(false)
+      }
     }
-    loadUser()
-  }, [])
+    init()
+  }, [router])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -51,7 +85,8 @@ export default function Onboarding() {
   }
 
   const handleFinish = async () => {
-    setLoading(true)
+    setSubmitting(true)
+    setError('')
     try {
       const res = await fetch('/api/profile/onboarding', {
         method: 'POST',
@@ -62,6 +97,7 @@ export default function Onboarding() {
           org_name: formData.orgName,
           city: formData.city,
           state: formData.state,
+          gst_number: formData.gstNumber || undefined,
         }),
       })
 
@@ -71,20 +107,21 @@ export default function Onboarding() {
       }
 
       localStorage.removeItem('5bloc_signup_role')
+      localStorage.removeItem('5bloc_demo_role')
       localStorage.setItem('onboarding_checklist_v1', JSON.stringify({
         client: false, project: false, document: false, ai: false, invite: false,
       }))
       router.push('/dashboard')
       router.refresh()
     } catch (err) {
-      console.error(err)
-      // Demo fallback — still proceed
-      localStorage.setItem('5bloc_demo_role', role)
-      localStorage.removeItem('5bloc_signup_role')
-      router.push('/dashboard')
+      setError(err instanceof Error ? err.message : 'Setup failed. Please try again.')
     } finally {
-      setLoading(false)
+      setSubmitting(false)
     }
+  }
+
+  if (loading) {
+    return <AuthLoadingScreen message="Preparing your workspace…" submessage="One moment" />
   }
 
   return (
@@ -96,16 +133,82 @@ export default function Onboarding() {
         <div className="px-7 pt-7 flex items-center justify-between">
           <Logo size={28} showTagline={false} />
           <span className="font-mono text-[10px] tracking-widest" style={{ color: 'var(--stone)' }}>
-            STEP {step}/2
+            STEP {step}/3
           </span>
         </div>
 
-        <div className="p-7 min-h-[380px] flex flex-col">
+        <div className="px-7 pt-4">
+          <div className="flex items-center gap-2">
+            {[1, 2, 3].map((s) => (
+              <div
+                key={s}
+                className="h-1 flex-1 rounded-full transition-colors"
+                style={{ background: step >= s ? 'var(--amber)' : 'var(--hairline-strong)' }}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="p-7 min-h-[420px] flex flex-col">
+          {error && (
+            <div
+              className="mb-4 rounded-xl px-4 py-3 text-[12px]"
+              style={{ background: 'rgba(255,138,128,0.10)', color: 'var(--error)' }}
+            >
+              {error}
+            </div>
+          )}
+
           <AnimatePresence mode="wait">
-            {step === 1 ? (
+            {step === 1 && (
               <motion.div key="s1" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} className="flex-1 flex flex-col">
-                <h1 className="text-xl font-semibold mb-1" style={{ color: 'var(--on-surface)' }}>Welcome to 5BLOC</h1>
-                <p className="text-[13px] mb-5" style={{ color: 'var(--stone)' }}>Confirm your profile to get started.</p>
+                <h1 className="text-xl font-semibold mb-1" style={{ color: 'var(--on-surface)' }}>How will you use 5Bloc?</h1>
+                <p className="text-[13px] mb-5" style={{ color: 'var(--stone)' }}>Choose your role — we&apos;ll tailor your workspace.</p>
+
+                <div className="grid grid-cols-1 gap-2.5">
+                  {USER_ROLES.map((r) => {
+                    const selected = role === r.id
+                    return (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => setRole(r.id)}
+                        className="flex items-start gap-3 p-3.5 rounded-xl text-left transition-all"
+                        style={{
+                          background: selected ? 'rgba(245,166,35,0.08)' : 'var(--surface-container-low)',
+                          boxShadow: selected
+                            ? 'inset 0 0 0 1.5px var(--amber)'
+                            : 'inset 0 0 0 1px var(--hairline)',
+                        }}
+                      >
+                        <div
+                          className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                          style={{ background: `${r.color}18`, color: r.color }}
+                        >
+                          <span className="material-icons-outlined text-[18px]">{r.icon}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[13px] font-semibold" style={{ color: 'var(--on-surface)' }}>{r.label}</p>
+                          <p className="text-[11px] mt-0.5 leading-snug" style={{ color: 'var(--stone)' }}>{r.signupDesc}</p>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                <div className="mt-auto pt-6 flex justify-end">
+                  <button type="button" onClick={() => setStep(2)} className="btn-primary">
+                    Continue as {roleConfig.label}
+                    <span className="material-icons-outlined text-[15px]">arrow_forward</span>
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {step === 2 && (
+              <motion.div key="s2" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} className="flex-1 flex flex-col">
+                <h1 className="text-xl font-semibold mb-1" style={{ color: 'var(--on-surface)' }}>Your profile</h1>
+                <p className="text-[13px] mb-5" style={{ color: 'var(--stone)' }}>Confirm the name and email shown across the app.</p>
 
                 <div
                   className="flex items-start gap-3 p-4 rounded-xl mb-5"
@@ -129,14 +232,19 @@ export default function Onboarding() {
                   </div>
                 </div>
 
-                <div className="mt-auto pt-6 flex justify-end">
-                  <button type="button" onClick={() => setStep(2)} disabled={!formData.name.trim()} className="btn-primary">
+                <div className="mt-auto pt-6 flex items-center justify-between gap-3">
+                  <button type="button" onClick={() => setStep(1)} className="btn-secondary btn-sm">
+                    <span className="material-icons-outlined text-[14px]">arrow_back</span> Back
+                  </button>
+                  <button type="button" onClick={() => setStep(3)} disabled={!formData.name.trim()} className="btn-primary">
                     Continue <span className="material-icons-outlined text-[15px]">arrow_forward</span>
                   </button>
                 </div>
               </motion.div>
-            ) : (
-              <motion.div key="s2" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} className="flex-1 flex flex-col">
+            )}
+
+            {step === 3 && (
+              <motion.div key="s3" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} className="flex-1 flex flex-col">
                 <h1 className="text-xl font-semibold mb-1" style={{ color: 'var(--on-surface)' }}>{roleConfig.onboardingTitle}</h1>
                 <p className="text-[13px] mb-5" style={{ color: 'var(--stone)' }}>This appears on invoices, portals and project invites.</p>
 
@@ -164,16 +272,16 @@ export default function Onboarding() {
                 </div>
 
                 <div className="mt-auto pt-6 flex items-center justify-between gap-3">
-                  <button type="button" onClick={() => setStep(1)} className="btn-secondary btn-sm">
+                  <button type="button" onClick={() => setStep(2)} className="btn-secondary btn-sm">
                     <span className="material-icons-outlined text-[14px]">arrow_back</span> Back
                   </button>
                   <button
                     type="button"
                     onClick={handleFinish}
-                    disabled={loading || !formData.orgName.trim() || !formData.city.trim()}
+                    disabled={submitting || !formData.orgName.trim() || !formData.city.trim()}
                     className="btn-primary"
                   >
-                    {loading ? 'Setting up…' : 'Launch workspace →'}
+                    {submitting ? 'Setting up…' : 'Launch workspace →'}
                   </button>
                 </div>
               </motion.div>

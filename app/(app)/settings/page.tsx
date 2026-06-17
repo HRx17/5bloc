@@ -6,6 +6,7 @@ import { Toggle } from '@/components/ui/Toggle'
 import { useToast } from '@/components/ui/Toast'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { SaveBar } from '@/components/ui/SaveBar'
+import { initialsOf } from '@/lib/data/messages'
 
 interface OrgMember {
  id: string
@@ -31,12 +32,47 @@ function SettingsInner() {
      setActiveTab(tabParam)
    }
  }, [tabParam])
+
+ useEffect(() => {
+   fetch('/api/profile/me')
+     .then((res) => (res.ok ? res.json() : null))
+     .then((data) => {
+       if (!data?.user) return
+       const nextProfile = {
+         name: data.user.full_name ?? '',
+         email: data.user.email ?? '',
+         phone: '',
+         avatar: data.user.avatar_url ?? '',
+       }
+       const nextOrg = {
+         name: data.organisation?.name ?? '',
+         logo: '',
+         gst: data.metadata?.gst_number ?? '',
+         city: data.metadata?.city ?? '',
+         address: '',
+       }
+       setProfile(nextProfile)
+       setSavedProfile(nextProfile)
+       setOrg(nextOrg)
+       setSavedOrg(nextOrg)
+       setTeam([{
+         id: data.user.id,
+         name: nextProfile.name || nextProfile.email.split('@')[0],
+         email: nextProfile.email,
+         role: 'Owner',
+         joined_at: new Date().toISOString().split('T')[0],
+       }])
+     })
+     .catch(() => {})
+     .finally(() => setProfileLoading(false))
+ }, [])
  
  // Profile settings
+ const [profileLoading, setProfileLoading] = useState(true)
  const [profile, setProfile] = useState({
- name: 'Parth Patel',
- email: 'parth@5bloc.com',
- phone: '9876543210',
+ name: '',
+ email: '',
+ phone: '',
  avatar: '',
  })
  const [savedProfile, setSavedProfile] = useState(profile)
@@ -44,20 +80,17 @@ function SettingsInner() {
 
  // Org settings
  const [org, setOrg] = useState({
- name: 'Apex Architects',
+ name: '',
  logo: '',
- gst: '27AAAAA1111A1Z1',
- city: 'Mumbai',
- address: 'Bandra West, Linking Road',
+ gst: '',
+ city: '',
+ address: '',
  })
  const [savedOrg, setSavedOrg] = useState(org)
  const [savingOrg, setSavingOrg] = useState(false)
 
  // Team settings
- const [team, setTeam] = useState<OrgMember[]>([
- { id: 'tm-1', name: 'Parth Patel', email: 'parth@5bloc.com', role: 'Owner', joined_at: '2026-01-15' },
- { id: 'tm-2', name: 'Aritro Roy', email: 'aritro@5bloc.com', role: 'Admin', joined_at: '2026-02-10' }
- ])
+ const [team, setTeam] = useState<OrgMember[]>([])
  const [newTeamEmail, setNewTeamEmail] = useState('')
 
  // Notifications settings
@@ -79,19 +112,43 @@ function SettingsInner() {
  const handleProfileSave = async (e?: React.FormEvent) => {
  e?.preventDefault()
  setSavingProfile(true)
- await new Promise(r => setTimeout(r, 400))
- setSavedProfile({ ...profile })
+ try {
+   const res = await fetch('/api/profile/me', {
+     method: 'PATCH',
+     headers: { 'Content-Type': 'application/json' },
+     body: JSON.stringify({ full_name: profile.name }),
+   })
+   if (!res.ok) throw new Error('Save failed')
+   setSavedProfile({ ...profile })
+   toast('Profile saved successfully', 'success')
+ } catch {
+   toast('Could not save profile', 'error')
+ } finally {
  setSavingProfile(false)
- toast('Profile saved successfully', 'success')
+ }
  }
 
  const handleOrgSave = async (e?: React.FormEvent) => {
  e?.preventDefault()
  setSavingOrg(true)
- await new Promise(r => setTimeout(r, 400))
- setSavedOrg({ ...org })
+ try {
+   const res = await fetch('/api/profile/me', {
+     method: 'PATCH',
+     headers: { 'Content-Type': 'application/json' },
+     body: JSON.stringify({
+       org_name: org.name,
+       city: org.city,
+       gst_number: org.gst,
+     }),
+   })
+   if (!res.ok) throw new Error('Save failed')
+   setSavedOrg({ ...org })
+   toast('Organisation settings saved', 'success')
+ } catch {
+   toast('Could not save organisation settings', 'error')
+ } finally {
  setSavingOrg(false)
- toast('Organisation settings saved', 'success')
+ }
  }
 
  const handleDiscardProfile = () => setProfile({ ...savedProfile })
@@ -186,13 +243,16 @@ function SettingsInner() {
  {activeTab === 'profile' && (
  <div className="card-5bloc space-y-6">
  <h3 className="text-sm font-semibold text-amber pb-2.5">User Profile</h3>
+ {profileLoading ? (
+   <p className="text-[12px] text-stone">Loading profile…</p>
+ ) : (
  <form onSubmit={handleProfileSave} className="space-y-4">
  <div className="flex items-center gap-4 pb-2">
  <div
     className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-lg shrink-0"
     style={{ background: 'rgba(245,166,35,0.12)', color: 'var(--amber)' }}
    >
-    PP
+    {initialsOf(profile.name, profile.email)}
    </div>
  <div>
  <button type="button" className="btn-secondary py-1 px-3 text-xs">Upload avatar</button>
@@ -233,6 +293,7 @@ function SettingsInner() {
  </div>
 
  </form>
+ )}
  </div>
  )}
 
