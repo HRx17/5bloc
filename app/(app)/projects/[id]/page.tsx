@@ -221,8 +221,8 @@ export default function ProjectOverview() {
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
  
  {/* Specifications Card */}
- <div className="card-5bloc space-y-3 md:col-span-2">
- <h3 className="text-xs font-semibold text-amber">Project Specifications</h3>
+<div className="card-5bloc space-y-3 md:col-span-2">
+<h3 className="section-eyebrow-amber">Project Specifications</h3>
  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-1.5">
  <div>
  <p className="text-[11px] font-medium text-stone">Total Built Area</p>
@@ -250,8 +250,8 @@ export default function ProjectOverview() {
  </div>
 
  {/* Schedule timeline card */}
- <div className="card-5bloc flex flex-col justify-between">
- <h3 className="text-xs font-semibold text-amber">Project Schedule</h3>
+<div className="card-5bloc flex flex-col justify-between">
+<h3 className="section-eyebrow-amber">Project Schedule</h3>
  <div className="space-y-3.5 my-3">
  <div className="flex items-center justify-between text-xs">
  <span className="text-stone">Start Date:</span>
@@ -273,7 +273,7 @@ export default function ProjectOverview() {
  {/* Interactive Phase Stepper Checklist */}
  <div className="space-y-4">
  <div className="flex items-center justify-between">
- <h2 className="text-base font-bold text-white tracking-wide">Phase Milestones & Deliverables</h2>
+ <h2 className="font-display font-bold text-[18px]" style={{ color: 'var(--on-surface)' }}>Phase Milestones & Deliverables</h2>
  <div className="flex items-center gap-3">
  <button 
  onClick={exportMilestonesToCSV}
@@ -293,32 +293,33 @@ export default function ProjectOverview() {
  const isCompleted = m.completion === 100
 
  return (
- <div 
- key={m.phase} 
- className={`border rounded-md overflow-hidden transition-all bg-navy-mid ${
- isExpanded ? '' : ''
- }`}
- >
+<div
+key={m.phase}
+className="app-card overflow-hidden"
+style={{ padding: 0, borderRadius: 16 }}
+>
  {/* Stepper Card Header */}
  <div 
  onClick={() => toggleExpand(m.phase)}
- className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer hover:bg-navy-lt/40 transition-colors"
+            className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer transition-colors"
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'var(--overlay-hover)')}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
  >
  <div className="flex items-center gap-3.5">
- {/* Visual Check/Indicator number */}
- <div className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
- isCompleted 
- ? 'bg-success/20 text-success border ' 
- : isActive 
- ? 'bg-amber/20 text-amber border animate-pulse'
- : 'bg-navy border text-stone'
- }`}>
- {isCompleted ? (
- <span className="material-icons-outlined text-[16px]">check</span>
- ) : (
- <span>{index + 1}</span>
- )}
- </div>
+                {/* Visual Check/Indicator number */}
+                <div className={`phase-step-circle ${
+                  isCompleted ? 'is-done' : isActive ? 'is-active' : 'is-pending'
+                }`} style={{
+                  background: isCompleted ? 'var(--success)' : isActive ? 'var(--amber)' : 'var(--surface-container-high)',
+                  color: isCompleted || isActive ? '#1c1000' : 'var(--stone)',
+                  boxShadow: isActive ? '0 0 0 4px rgba(245,166,35,0.15), var(--glow-amber)' : isCompleted ? '0 0 0 3px rgba(46,204,138,0.15)' : 'inset 0 0 0 1.5px var(--hairline-strong)',
+                }}>
+                {isCompleted ? (
+                <span className="material-icons-outlined" style={{ fontSize: 14 }}>check</span>
+                ) : (
+                <span>{index + 1}</span>
+                )}
+                </div>
  
  <div>
  <h4 className="text-sm font-semibold text-white">{m.label}</h4>
@@ -356,15 +357,15 @@ export default function ProjectOverview() {
  {m.paid ? 'Fee paid' : 'Fee unpaid'}
  </span>
 
- {/* Progress Slider Display */}
- <div className="flex items-center gap-2">
- <span className="text-xs font-semibold text-white w-8 text-right">{m.completion}%</span>
- <div className="w-16 bg-navy h-1.5 rounded-full overflow-hidden border ">
- <div 
- className={`h-full rounded-full ${isCompleted ? 'bg-success' : 'bg-amber'}`}
- style={{ width: `${m.completion}%` }}
- />
- </div>
+                {/* Progress Slider Display */}
+                <div className="flex items-center gap-2">
+                <span className="text-[12px] font-bold w-9 text-right" style={{ color: isCompleted ? 'var(--success)' : 'var(--amber)' }}>{m.completion}%</span>
+                <div className="progress-track w-16">
+                <div
+                className={`progress-fill ${isCompleted ? 'progress-fill-success' : ''}`}
+                style={{ width: `${m.completion}%` }}
+                />
+                </div>
  </div>
 
  <span className={`material-icons-outlined text-stone transition-transform duration-200 ${

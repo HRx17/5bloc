@@ -211,12 +211,14 @@ export default function ListYourBusiness() {
         source: 'list-your-business',
       })
       if (dbError) {
-        setError('Something went wrong. Please try again.')
+        console.error('contractor_signups insert error:', dbError)
+        setError(dbError.message || 'Something went wrong. Please try again.')
       } else {
         setDone(true)
         window.scrollTo({ top: 0, behavior: 'smooth' })
       }
-    } catch {
+    } catch (err) {
+      console.error('contractor signup submit error:', err)
       setError('Something went wrong. Please try again.')
     } finally {
       setBusy(false)

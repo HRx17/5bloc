@@ -74,20 +74,20 @@ const ONBOARDING_STEPS = [
 function PhaseBar({ phase }: { phase: string }) {
   const currentStep = PHASE_META[phase]?.step ?? 1
   return (
-    <div className="flex items-center gap-1 mt-2">
-      {PHASES_ORDERED.map((p, i) => {
+    <div className="phase-stepper mt-3 mb-1">
+      {PHASES_ORDERED.map((p) => {
         const meta = PHASE_META[p]
         const isActive = p === phase
         const isDone = (meta?.step ?? 0) < currentStep
+        const stateClass = isActive ? 'is-active' : isDone ? 'is-done' : 'is-pending'
         return (
-          <div
-            key={p}
-            title={PHASE_META[p]?.label}
-            className="h-1.5 flex-1 rounded-full transition-all"
-            style={{
-              background: isActive ? meta?.color : isDone ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
-            }}
-          />
+          <div key={p} className={`phase-step ${stateClass}`}>
+            <div className="phase-step-circle">
+              {isDone
+                ? <span className="material-icons-outlined" style={{ fontSize: 13 }}>check</span>
+                : meta?.step}
+            </div>
+          </div>
         )
       })}
     </div>
@@ -101,23 +101,12 @@ function ProjectCard({ proj, delay }: { proj: Project; delay: number }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ y: -2 }}
+      whileHover={{ y: -3 }}
     >
-      <Link
-        href={`/projects/${proj.id}`}
-        className="block rounded-2xl p-5 transition-all"
-        style={{
-          background: 'var(--surface-container)',
-          boxShadow: '0 1px 0 rgba(255,255,255,0.04)',
-        }}
-        onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.boxShadow = 'var(--shadow-amber)')}
-        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.boxShadow = '0 1px 0 rgba(255,255,255,0.04)')}
-      >
-        {/* Project type + RFI alert */}
-        <div className="flex items-start justify-between gap-2 mb-3">
-          <span className="text-[11px] font-medium uppercase tracking-wider" style={{ color: 'var(--stone)' }}>
-            {proj.type}
-          </span>
+      <Link href={`/projects/${proj.id}`} className="block app-card app-card-interactive">
+        {/* Type chip + RFI badge */}
+        <div className="flex items-center justify-between gap-2 mb-4">
+          <span className="kicker">{proj.type || 'Project'}</span>
           {proj.openRfis > 0 && (
             <span
               className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
@@ -128,29 +117,25 @@ function ProjectCard({ proj, delay }: { proj: Project; delay: number }) {
           )}
         </div>
 
-        <h3
-          className="font-semibold text-[14px] leading-snug"
-          style={{ color: 'var(--on-surface)' }}
-        >
+        {/* Name + city */}
+        <h3 className="font-display font-bold text-[18px] leading-snug mb-1" style={{ color: 'var(--on-surface)' }}>
           {proj.name}
         </h3>
+        <p className="text-[12px] mb-3" style={{ color: 'var(--stone)' }}>{proj.city}</p>
 
-        <p className="text-[12px] mt-1" style={{ color: 'var(--stone)' }}>
-          {proj.city}
-        </p>
-
-        {/* Phase progress bar */}
+        {/* Phase circles */}
         <PhaseBar phase={proj.phase} />
 
-        <div className="flex items-center justify-between mt-2.5">
+        {/* Footer row */}
+        <div className="flex items-center justify-between mt-3 pt-3" style={{ borderTop: '1px solid var(--hairline)' }}>
           <span
-            className="text-[11px] px-2 py-0.5 rounded-full"
+            className="text-[11px] font-semibold px-2.5 py-1 rounded-full"
             style={{ background: meta.bg, color: meta.color }}
           >
             {meta.label}
           </span>
-          <span className="flex items-center gap-1 text-[11px]" style={{ color: 'var(--success)' }}>
-            <span className="h-1.5 w-1.5 rounded-full" style={{ background: 'var(--success)', boxShadow: '0 0 0 3px rgba(46,204,138,.18)' }} />
+          <span className="flex items-center gap-1.5 text-[11px] font-medium" style={{ color: 'var(--success)' }}>
+            <span className="h-1.5 w-1.5 rounded-full pulse-dot" style={{ background: 'var(--success)', boxShadow: '0 0 0 3px rgba(46,204,138,.18)' }} />
             Active
           </span>
         </div>
@@ -203,11 +188,8 @@ function OnboardingCard() {
       </div>
 
       {/* Progress bar */}
-      <div className="h-1 rounded-full mb-4 overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-        <div
-          className="h-full rounded-full transition-all duration-700"
-          style={{ width: `${pct}%`, background: 'var(--amber)' }}
-        />
+      <div className="progress-track mb-4">
+        <div className="progress-fill" style={{ width: `${pct}%` }} />
       </div>
 
       {/* Step list */}
@@ -218,13 +200,13 @@ function OnboardingCard() {
             href={step.done ? '#' : step.href}
             className="flex items-center gap-3 p-3 rounded-xl transition-all"
             style={{ opacity: step.done ? 0.5 : 1 }}
-            onMouseEnter={(e) => { if (!step.done) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)' }}
+            onMouseEnter={(e) => { if (!step.done) (e.currentTarget as HTMLElement).style.background = 'var(--overlay-hover)' }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
           >
             <div
               className="w-7 h-7 flex items-center justify-center rounded-lg shrink-0"
               style={{
-                background: step.done ? 'rgba(46,204,138,.12)' : 'rgba(255,255,255,.05)',
+                background: step.done ? 'rgba(46,204,138,.12)' : 'var(--overlay-hover)',
                 color: step.done ? 'var(--success)' : 'var(--stone)',
               }}
             >
@@ -397,9 +379,7 @@ export default function Dashboard() {
         {/* Projects list — 2/3 */}
         <div className="lg:col-span-2 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-[13px] font-semibold uppercase tracking-wider" style={{ color: 'var(--stone)', opacity: 0.6 }}>
-              Active Projects
-            </h2>
+            <h2 className="section-eyebrow">Active Projects</h2>
             <Link
               href="/projects"
               className="text-[12px] transition-colors"
@@ -454,7 +434,7 @@ export default function Dashboard() {
                 <Link
                   href="/projects/new"
                   className="flex flex-col items-center justify-center gap-2 rounded-2xl p-5 h-full min-h-[120px] text-center transition-all"
-                  style={{ background: 'transparent', border: '1.5px dashed rgba(255,255,255,0.08)', color: 'var(--stone)' }}
+                  style={{ background: 'transparent', border: '1.5px dashed var(--hairline-strong)', color: 'var(--stone)' }}
                   onMouseEnter={(e) => {
                     const t = e.currentTarget as HTMLElement
                     t.style.borderColor = 'rgba(245,166,35,0.30)'
@@ -462,7 +442,7 @@ export default function Dashboard() {
                   }}
                   onMouseLeave={(e) => {
                     const t = e.currentTarget as HTMLElement
-                    t.style.borderColor = 'rgba(255,255,255,0.08)'
+                    t.style.borderColor = 'var(--hairline-strong)'
                     t.style.color = 'var(--stone)'
                   }}
                 >
@@ -483,9 +463,7 @@ export default function Dashboard() {
 
           {/* Activity feed */}
           <div>
-            <h2 className="text-[13px] font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--stone)', opacity: 0.6 }}>
-              Recent Activity
-            </h2>
+            <h2 className="section-eyebrow mb-3">Recent Activity</h2>
             <div
               className="rounded-2xl overflow-hidden"
               style={{ background: 'var(--surface-container)' }}
@@ -501,7 +479,7 @@ export default function Dashboard() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.3, delay: 0.2 + 0.06 * idx }}
                     whileHover={{ backgroundColor: 'rgba(255,255,255,0.025)' }}
-                    style={idx > 0 ? { boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' } : {}}
+                    style={idx > 0 ? { boxShadow: 'inset 0 1px 0 var(--hairline)' } : {}}
                   >
                     <div
                       className="w-7 h-7 shrink-0 flex items-center justify-center rounded-lg"
@@ -530,9 +508,7 @@ export default function Dashboard() {
 
           {/* Quick actions */}
           <div>
-            <h2 className="text-[13px] font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--stone)', opacity: 0.6 }}>
-              Quick Actions
-            </h2>
+            <h2 className="section-eyebrow mb-3">Quick Actions</h2>
             <div className="space-y-1.5">
               {[
               { label: 'New RFI',          icon: 'forum',         href: '/coordination', color: 'var(--error)'   },
@@ -569,7 +545,7 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.4 }}
             className="rounded-2xl p-4 relative"
-            style={{ background: 'var(--surface-container)', border: '1px solid rgba(255,255,255,0.06)' }}
+            style={{ background: 'var(--surface-container)', boxShadow: 'inset 0 0 0 1px var(--hairline)' }}
           >
             <div className="flex items-center gap-2 mb-3">
               <div className="w-7 h-7 flex items-center justify-center rounded-lg"

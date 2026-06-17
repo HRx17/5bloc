@@ -176,11 +176,16 @@ export default function AIEstimator() {
 
  return (
  <div className="p-6 space-y-6 font-body select-none max-w-7xl mx-auto">
- {/* Page Title */}
- <div>
- <h1 className="text-2xl font-bold tracking-wide">AI Cost Estimator</h1>
- <p className="text-xs text-stone mt-1">Generate highly accurate quantity surveys and editable BOQ estimates using Claude AI.</p>
- </div>
+      {/* Page Title */}
+      <div>
+        <p className="section-eyebrow-amber mb-2">AI Cost Estimator</p>
+        <h1 className="font-display font-bold text-[28px] leading-tight" style={{ color: 'var(--on-surface)' }}>
+          Full BOQ in 4 seconds.
+        </h1>
+        <p className="text-[13px] mt-1.5" style={{ color: 'var(--stone)' }}>
+          Generate highly accurate quantity surveys and editable BOQ estimates using Claude AI.
+        </p>
+      </div>
 
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
  
@@ -299,119 +304,160 @@ export default function AIEstimator() {
 
  {/* Right Column details results / loading progress states */}
  <div className="lg:col-span-2 min-h-[400px]">
- {loading ? (
- /* Loading State card container */
- <div className="card-5bloc flex flex-col items-center justify-center text-center h-[450px] space-y-6 animate-pulse ">
- <div className="w-16 h-16 bg-amber/5 border flex items-center justify-center text-amber animate-spin">
- <span className="material-icons-outlined text-[32px]">sync</span>
- </div>
- <div className="space-y-1">
- <h4 className="text-sm font-bold text-white uppercase tracking-wider font-mono">Running Quantity Estimator</h4>
- <p className="text-xs text-stone">{loadingMessages[loadingStep]}</p>
- </div>
- {/* Progress Bar */}
- <div className="w-64 bg-navy h-1.5 overflow-hidden ">
- <div 
- className="bg-amber h-full transition-all duration-1000"
- style={{ width: `${(loadingStep + 1) * 20}%` }}
- />
- </div>
- </div>
- ) : result ? (
- /* Output Estimate card container */
- <div className="card-5bloc space-y-6 animate-fade-in">
- <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4">
- <div>
- <h3 className="text-base font-bold text-white font-mono uppercase tracking-wider">Bill of Quantities (Estimate)</h3>
- <p className="text-[10px] text-stone font-mono mt-0.5">Confidence Delta: ±{result.confidence_range_pct}%</p>
- </div>
- {/* Highlight total pricing */}
- <div className="text-right">
- <h2 className="text-2xl font-bold text-amber">{formatLakhs(result.total_estimate)}</h2>
- <p className="text-[10px] text-stone font-mono mt-0.5">
- Range: {formatLakhs(result.total_min)} - {formatLakhs(result.total_max)}
- </p>
- </div>
- </div>
+        {loading ? (
+          /* Loading State */
+          <div className="card-5bloc flex flex-col items-center justify-center text-center h-[450px] gap-6">
+            <div
+              className="w-16 h-16 flex items-center justify-center rounded-2xl"
+              style={{ background: 'rgba(245,166,35,0.08)', boxShadow: 'var(--glow-amber)' }}
+            >
+              <span className="material-icons-outlined text-[32px] animate-spin" style={{ color: 'var(--amber)' }}>sync</span>
+            </div>
+            <div className="space-y-1">
+              <h4 className="section-eyebrow-amber">Running Quantity Estimator</h4>
+              <p className="text-[13px] mt-2" style={{ color: 'var(--stone)' }}>{loadingMessages[loadingStep]}</p>
+            </div>
+            <div className="progress-track w-64">
+              <div className="progress-fill transition-all duration-1000" style={{ width: `${(loadingStep + 1) * 20}%` }} />
+            </div>
+          </div>
+        ) : result ? (
+          /* Result card — matches image 1 design */
+          <div className="card-5bloc animate-fade-in space-y-0">
 
- {/* Editable BOQ Table */}
- <div className="overflow-x-auto">
- <table className="w-full text-left text-xs ">
- <thead>
- <tr className="text-stone font-mono uppercase text-[9px] tracking-wider pb-2">
- <th className="pb-2 pl-2">Category</th>
- <th className="pb-2">Description</th>
- <th className="pb-2 text-right">Quantity</th>
- <th className="pb-2">Unit</th>
- <th className="pb-2 text-right">Unit Rate (₹)</th>
- <th className="pb-2 text-right pr-2">Amount (₹)</th>
- </tr>
- </thead>
- <tbody className="divide-y divide-navy-lt/40">
- {result.line_items.map((line, idx) => (
- <tr key={idx} className="hover:bg-navy-lt/10 transition-colors">
-              <td className="py-3 pl-2 font-semibold" style={{ color: 'var(--on-surface)' }}><span className="line-clamp-1">{line.category}</span></td>
-              <td className="py-3" style={{ color: 'var(--stone)' }} title={line.description}><span className="line-clamp-2">{line.description}</span></td>
- 
- {/* Quantity editable input */}
- <td className="py-3 text-right">
- {line.unit !== 'lumpsum' ? (
- <input
- type="number"
- value={line.quantity}
- onChange={(e) => handleCellChange(idx, 'quantity', parseFloat(e.target.value) || 0)}
- className="bg-navy px-1.5 py-0.5 text-xs text-white font-mono w-16 text-right focus: focus:outline-none"
- />
- ) : (
- <span className="font-mono text-stone">1</span>
- )}
- </td>
+            {/* ── Total cost hero ── */}
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-5 mb-2"
+              style={{ borderBottom: '1px solid var(--hairline)' }}>
+              <div>
+                <p className="section-eyebrow mb-3">Total Estimated Cost</p>
+                <div className="display-number display-number-lg">
+                  {formatLakhs(result.total_estimate)}
+                </div>
+                <p className="text-[12px] mt-2" style={{ color: 'var(--stone)' }}>
+                  Inclusive of all taxes &amp; fees
+                </p>
+              </div>
+              <div className="flex flex-col gap-2 sm:items-end">
+                <button
+                  onClick={() => toast('PDF export ready — connect Cloudflare R2 to enable downloads.', 'info')}
+                  className="btn-secondary text-[12px]"
+                >
+                  <span className="material-icons-outlined text-[15px]">download</span>
+                  Export BOQ
+                </button>
+                <div className="flex flex-wrap gap-2 sm:justify-end mt-1">
+                  <span className="feature-pill">
+                    <span className="material-icons-outlined" style={{ fontSize: 12 }}>auto_awesome</span>
+                    AI-powered
+                  </span>
+                  <span className="feature-pill-success feature-pill">
+                    <span className="material-icons-outlined" style={{ fontSize: 12 }}>currency_rupee</span>
+                    Indian rates
+                  </span>
+                  <span className="feature-pill-blue feature-pill">
+                    <span className="material-icons-outlined" style={{ fontSize: 12 }}>gps_fixed</span>
+                    ±{result.confidence_range_pct}% accurate
+                  </span>
+                </div>
+              </div>
+            </div>
 
- <td className="py-3 font-mono text-[10px] text-stone pl-2">{line.unit}</td>
- 
- {/* Rate editable input */}
- <td className="py-3 text-right">
- <input
- type="number"
- value={line.rate}
- onChange={(e) => handleCellChange(idx, 'rate', parseInt(e.target.value) || 0)}
- className="bg-navy px-1.5 py-0.5 text-xs text-white font-mono w-20 text-right focus: focus:outline-none"
- />
- </td>
- 
- <td className="py-3 text-right font-mono pr-2 font-semibold text-white">
- {line.amount.toLocaleString()}
- </td>
- </tr>
- ))}
- </tbody>
- </table>
- </div>
+            {/* ── Editable BOQ Table ── */}
+            <div className="overflow-x-auto">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th>Description</th>
+                    <th style={{ textAlign: 'right' }}>Qty</th>
+                    <th>Unit</th>
+                    <th style={{ textAlign: 'right' }}>Rate (₹)</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.line_items.map((line, idx) => (
+                    <tr key={idx}>
+                      <td style={{ fontWeight: 600, minWidth: 120 }}>
+                        <span className="line-clamp-1">{line.category}</span>
+                      </td>
+                      <td className="muted-cell" title={line.description} style={{ minWidth: 180 }}>
+                        <span className="line-clamp-2">{line.description}</span>
+                      </td>
+                      <td className="edit-cell" style={{ textAlign: 'right' }}>
+                        {line.unit !== 'lumpsum' ? (
+                          <input
+                            type="number"
+                            value={line.quantity}
+                            onChange={(e) => handleCellChange(idx, 'quantity', parseFloat(e.target.value) || 0)}
+                          />
+                        ) : (
+                          <span className="mono-cell">1</span>
+                        )}
+                      </td>
+                      <td className="mono-cell">{line.unit}</td>
+                      <td className="edit-cell" style={{ textAlign: 'right' }}>
+                        <input
+                          type="number"
+                          value={line.rate}
+                          onChange={(e) => handleCellChange(idx, 'rate', parseInt(e.target.value) || 0)}
+                        />
+                      </td>
+                      <td className="amount-cell">₹{line.amount.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
- {/* Action buttons */}
- <div className="pt-4 flex justify-end gap-3.5">
- <button 
- onClick={() => toast('PDF export ready — connect Cloudflare R2 to enable downloads.', 'info')}
- className="btn-secondary text-xs py-2 px-5"
- >
- EXPORT PDF
- </button>
- <button 
- onClick={() => toast('Estimate saved to project! Connect Supabase project_id to persist.', 'success')}
- className="btn-primary text-xs py-2 px-6 font-bold"
- >
- SAVE TO PROJECT
- </button>
- </div>
- </div>
- ) : (
- /* Idle Screen / Placeholder container */
- <div className="card-5bloc flex flex-col items-center justify-center text-center h-[450px] text-stone">
- <span className="material-icons-outlined text-[48px] text-stone/20 mb-3">auto_awesome</span>
- <h4 className="text-sm font-bold text-white">Quantity Surveyor Engine Idle</h4>
- <p className="text-xs max-w-sm mt-1">Configure parameters in the left panel to execute the cost estimation.</p>
- </div>
- )}
+            {/* Footer */}
+            <div className="flex items-center justify-between pt-4 mt-1" style={{ borderTop: '1px solid var(--hairline)' }}>
+              <p className="text-[11px] font-mono flex items-center gap-1.5" style={{ color: 'var(--stone)' }}>
+                <span className="h-1.5 w-1.5 rounded-full" style={{ background: 'var(--amber)', display: 'inline-block' }} />
+                Based on {result.city} rates · {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}
+              </p>
+              <p className="text-[11px] font-mono" style={{ color: 'var(--stone)' }}>
+                ±{result.confidence_range_pct}% Accuracy Range
+              </p>
+            </div>
+
+            {/* Save action */}
+            <div className="flex justify-end pt-2">
+              <button
+                onClick={() => toast('Estimate saved to project! Connect Supabase project_id to persist.', 'success')}
+                className="btn-primary text-[12px]"
+              >
+                <span className="material-icons-outlined text-[14px]">bookmark_add</span>
+                Save to Project
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* Idle placeholder */
+          <div className="card-5bloc flex flex-col items-center justify-center text-center h-[450px] gap-4">
+            <div className="w-16 h-16 flex items-center justify-center rounded-2xl" style={{ background: 'rgba(245,166,35,0.06)', boxShadow: 'inset 0 0 0 1px rgba(245,166,35,0.14)' }}>
+              <span className="material-icons-outlined text-[36px]" style={{ color: 'var(--amber)', opacity: 0.5 }}>auto_awesome</span>
+            </div>
+            <div>
+              <h4 className="font-display font-bold text-[16px] mb-1" style={{ color: 'var(--on-surface)' }}>Ready to estimate</h4>
+              <p className="text-[13px] max-w-sm" style={{ color: 'var(--stone)' }}>Configure parameters on the left to generate your full Bill of Quantities.</p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-2 mt-2">
+              <span className="feature-pill">
+                <span className="material-icons-outlined" style={{ fontSize: 12 }}>auto_awesome</span>
+                AI-powered
+              </span>
+              <span className="feature-pill-success feature-pill">
+                <span className="material-icons-outlined" style={{ fontSize: 12 }}>currency_rupee</span>
+                Indian rates
+              </span>
+              <span className="feature-pill-blue feature-pill">
+                <span className="material-icons-outlined" style={{ fontSize: 12 }}>gps_fixed</span>
+                ±8% accurate
+              </span>
+            </div>
+          </div>
+        )}
  </div>
 
  </div>

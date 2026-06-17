@@ -201,12 +201,14 @@ export default function JoinAsVendor() {
         source: 'join-as-vendor',
       })
       if (dbError) {
-        setError('Something went wrong. Please try again.')
+        console.error('vendor_signups insert error:', dbError)
+        setError(dbError.message || 'Something went wrong. Please try again.')
       } else {
         setDone(true)
         window.scrollTo({ top: 0, behavior: 'smooth' })
       }
-    } catch {
+    } catch (err) {
+      console.error('vendor signup submit error:', err)
       setError('Something went wrong. Please try again.')
     } finally {
       setBusy(false)

@@ -120,7 +120,7 @@
   --surface-container:        #ffffff;
   --surface-container-high:   #f3f1ec;
   --surface-container-highest:#ebe8e2;
-  --surface-canvas:           #f4f2ee;
+  --surface-canvas:           #f8f5f0;
   --surface-recessed:         #eeece7;
   --surface-elevated:         #ffffff;
 
@@ -422,11 +422,17 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
    STAT CARDS — overview metrics
 ══════════════════════════════════ */
 .stat-card {
-  border-radius: 12px;
-  padding: 14px 16px;
+  border-radius: 16px;
+  padding: 18px 20px;
   background: var(--surface-container);
   box-shadow: inset 0 0 0 1px var(--hairline);
   transition: box-shadow 0.18s ease, transform 0.18s ease, background 0.18s ease;
+}
+.light .stat-card {
+  box-shadow: var(--shadow-1), inset 0 0 0 1px var(--hairline);
+}
+.light .stat-card-interactive:hover {
+  box-shadow: var(--shadow-2), inset 0 0 0 1px var(--hairline-strong);
 }
 .stat-card-display {
   /* purely informational — no hover lift */
@@ -625,11 +631,15 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
 .card-5bloc,
 .card-glass {
   background: var(--card-bg);
-  border-radius: 14px;
-  padding: 16px;
+  border-radius: 18px;
+  padding: 20px;
   box-shadow: inset 0 1px 0 var(--card-top-glow), inset 0 0 0 1px var(--hairline), var(--shadow-1);
   position: relative;
   overflow: hidden;
+}
+.light .card-5bloc,
+.light .card-glass {
+  box-shadow: var(--shadow-2), inset 0 0 0 1px var(--hairline);
 }
 .card-glass {
   background: var(--glass-bg);
@@ -833,3 +843,302 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
 ::-webkit-scrollbar-track     { background: transparent; }
 ::-webkit-scrollbar-thumb     { background: var(--hairline-strong); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover{ background: var(--stone); }
+
+/* ══════════════════════════════════
+   DISPLAY NUMBERS — hero metric typography
+   (₹47.2L, 60%, Phase 3, etc.)
+══════════════════════════════════ */
+.display-number {
+  font-family: 'Syne', ui-sans-serif, sans-serif;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--amber);
+  font-variant-numeric: tabular-nums;
+}
+.display-number-sm { font-size: 2rem; }
+.display-number-md { font-size: clamp(2.5rem, 5vw, 3.5rem); }
+.display-number-lg { font-size: clamp(3rem, 7vw, 4.5rem); }
+.display-number-xl { font-size: clamp(3.5rem, 9vw, 5.5rem); }
+
+/* ══════════════════════════════════
+   PHASE STEPPER — numbered circles
+   (Kickoff → Planning → Design → …)
+══════════════════════════════════ */
+.phase-stepper {
+  display: flex;
+  align-items: flex-start;
+}
+.phase-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+}
+.phase-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 15px;
+  left: calc(50% + 17px);
+  right: calc(-50% + 17px);
+  height: 2px;
+  background: var(--hairline-strong);
+  z-index: 0;
+}
+.phase-step.is-done:not(:last-child)::after {
+  background: rgba(245,166,35,0.38);
+}
+.light .phase-step.is-done:not(:last-child)::after {
+  background: rgba(196,125,18,0.32);
+}
+.phase-step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 12px;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  transition: box-shadow 0.2s ease;
+}
+.phase-step.is-done .phase-step-circle,
+.phase-step.is-active .phase-step-circle {
+  background: var(--amber);
+  color: #1c1000;
+}
+.phase-step.is-active .phase-step-circle {
+  box-shadow: 0 0 0 4px rgba(245,166,35,0.18), var(--glow-amber);
+}
+.phase-step.is-pending .phase-step-circle {
+  background: var(--surface-container);
+  color: var(--stone);
+  box-shadow: inset 0 0 0 1.5px var(--hairline-strong);
+}
+.phase-step-label {
+  font-size: 10px;
+  font-weight: 500;
+  margin-top: 6px;
+  text-align: center;
+  color: var(--stone);
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+}
+.phase-step.is-done .phase-step-label,
+.phase-step.is-active .phase-step-label {
+  color: var(--amber);
+}
+
+/* ══════════════════════════════════
+   PROGRESS BARS — thick, rounded
+══════════════════════════════════ */
+.progress-track {
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--surface-container-high);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  overflow: hidden;
+}
+.light .progress-track {
+  background: var(--surface-container-highest);
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: var(--amber);
+  transition: width 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.progress-fill-success { background: var(--success); }
+.progress-fill-blue    { background: var(--blue); }
+.progress-fill-error   { background: var(--error); }
+
+/* ══════════════════════════════════
+   FEATURE PILLS — glow badge chips
+   ("AI-powered", "Indian rates", "±8% accurate")
+══════════════════════════════════ */
+.feature-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 9999px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(245,166,35,0.08);
+  color: var(--amber);
+  box-shadow: inset 0 0 0 1.5px rgba(245,166,35,0.24), var(--glow-amber);
+  white-space: nowrap;
+}
+.feature-pill-blue {
+  background: rgba(122,184,255,0.08);
+  color: var(--blue);
+  box-shadow: inset 0 0 0 1.5px rgba(122,184,255,0.24), var(--glow-blue);
+}
+.feature-pill-success {
+  background: rgba(46,204,138,0.08);
+  color: var(--success);
+  box-shadow: inset 0 0 0 1.5px rgba(46,204,138,0.24);
+}
+.feature-pill-purple {
+  background: rgba(167,139,250,0.08);
+  color: var(--purple);
+  box-shadow: inset 0 0 0 1.5px rgba(167,139,250,0.24);
+}
+
+/* ══════════════════════════════════
+   DATA TABLE — BOQ / estimate tables
+══════════════════════════════════ */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.data-table thead th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--stone);
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--hairline-strong);
+}
+.data-table thead th:last-child { text-align: right; padding-right: 16px; }
+.data-table tbody td {
+  font-size: 13px;
+  padding: 12px 14px;
+  color: var(--on-surface);
+  border-bottom: 1px solid var(--hairline);
+  vertical-align: middle;
+}
+.data-table tbody td:first-child { font-weight: 500; }
+.data-table tbody td:last-child  { text-align: right; padding-right: 16px; }
+.data-table tbody tr:last-child td { border-bottom: none; }
+.data-table tbody tr:hover td { background: var(--overlay-hover); }
+.data-table .amount-cell {
+  color: var(--amber);
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+}
+.data-table .muted-cell {
+  color: var(--stone);
+  font-size: 12px;
+}
+.data-table .mono-cell {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--on-surface-variant);
+}
+.data-table .edit-cell input {
+  background: var(--surface-container);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px var(--hairline-strong);
+  padding: 4px 8px;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--on-surface);
+  text-align: right;
+  width: 72px;
+  transition: box-shadow 0.15s ease;
+}
+.data-table .edit-cell input:focus {
+  box-shadow: inset 0 0 0 1.5px var(--amber);
+  background: var(--surface-elevated);
+}
+
+/* ══════════════════════════════════
+   FULL-WIDTH CTA BUTTON
+   ("Pay now", "Generate estimate")
+══════════════════════════════════ */
+.btn-cta {
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--amber);
+  color: var(--ink-black);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  box-shadow: var(--shadow-amber);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+.btn-cta:hover  { background: var(--amber-lt); transform: translateY(-2px); }
+.btn-cta:active { transform: translateY(0); }
+.btn-cta:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+/* ══════════════════════════════════
+   SECTION EYEBROW
+   ("LATEST DRAWING", "AI COST ESTIMATOR")
+══════════════════════════════════ */
+.section-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--stone);
+}
+.section-eyebrow-amber { color: var(--amber); }
+
+/* ══════════════════════════════════
+   APP CARD — solid surface card
+   (project tiles, team cards, etc.)
+══════════════════════════════════ */
+.app-card {
+  background: var(--surface-container);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  transition: box-shadow 0.18s ease, transform 0.18s ease, background 0.18s ease;
+}
+.app-card-interactive:hover {
+  background: var(--surface-container-high);
+  box-shadow: inset 0 0 0 1px var(--hairline-strong), var(--shadow-1);
+}
+.light .app-card {
+  box-shadow: var(--shadow-1), inset 0 0 0 1px var(--hairline);
+}
+.light .app-card-interactive:hover {
+  box-shadow: var(--shadow-2), inset 0 0 0 1px var(--hairline-strong);
+}
+
+/* ══════════════════════════════════
+   KICKER — category / type label
+══════════════════════════════════ */
+.kicker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--stone);
+}
+
+/* ══════════════════════════════════
+   MISSING ANIMATIONS
+══════════════════════════════════ */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-in   { animation: slideIn   0.30s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-slide-down { animation: slideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) both; }

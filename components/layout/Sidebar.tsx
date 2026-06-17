@@ -170,10 +170,11 @@ export default function Sidebar({
                     key={item.path}
                     href={item.path}
                     onClick={onClose}
-                    className="relative flex items-center gap-2 px-3 py-2 rounded-xl text-[12.5px] font-normal"
+                    className="relative flex items-center gap-2 px-3 py-2 rounded-xl text-[13px] font-normal"
                     style={{
-                      background: active ? 'var(--overlay-active)' : 'transparent',
+                      background: active ? 'rgba(245,166,35,0.08)' : 'transparent',
                       color: active ? 'var(--on-surface)' : 'var(--on-surface-variant)',
+                      fontWeight: active ? 500 : 400,
                     }}
                     onMouseEnter={(e) => {
                       if (!active) (e.currentTarget as HTMLElement).style.background = 'var(--overlay-hover)'

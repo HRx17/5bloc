@@ -169,6 +169,9 @@ export default function Marketplace() {
 
       if (cancelled) return
 
+      if (cRes.error) console.error('contractor_signups fetch error:', cRes.error)
+      if (vRes.error) console.error('vendor_signups fetch error:', vRes.error)
+
       // Map contractor_signups → Contractor
       const liveContractors: Contractor[] = (cRes.data || []).map((row) => ({
         id: row.id,

@@ -178,8 +178,8 @@ export default function TopNav({
               <div
                 className="absolute right-0 mt-2 w-[320px] rounded-2xl overflow-hidden z-50"
                 style={{
-                  background: 'var(--surface-container-high)',
-                  boxShadow: '0 12px 40px rgba(0,0,0,0.45), inset 0 0 0 1px var(--hairline)',
+                  background: 'var(--surface-elevated)',
+                  boxShadow: 'var(--shadow-4), inset 0 0 0 1px var(--hairline)',
                   backdropFilter: 'blur(20px)',
                 }}
               >
