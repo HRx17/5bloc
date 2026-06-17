@@ -39,6 +39,20 @@ function LoginInner() {
   const [loading,      setLoading]      = useState(false)
   const [error,        setError]        = useState('')
 
+  React.useEffect(() => {
+    const code = searchParams.get('error') ?? searchParams.get('error_code')
+    if (!code) return
+    if (code === 'flow_state_already_used') {
+      setError('Sign-in session expired (often caused by wrong port or stale tabs). Use http://localhost:3001, close extra tabs, and try again.')
+    } else if (code === 'auth_callback_failed') {
+      setError('Google sign-in failed. Please try again.')
+    } else if (code === 'missing_code') {
+      setError('Sign-in was interrupted. Please try again.')
+    } else {
+      setError('Google sign-in failed. Please try again.')
+    }
+  }, [searchParams])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')

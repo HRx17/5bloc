@@ -6,6 +6,13 @@ const PUBLIC_PATHS = ['/', '/login', '/signup', '/forgot-password', '/onboarding
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
 
+  // OAuth misconfig sometimes lands on Site URL (/) with error params — send to login
+  if (pathname === '/' && req.nextUrl.searchParams.get('error_code')) {
+    const url = req.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
   // Pass through for public pages — no Supabase call needed
   if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
     return NextResponse.next({ request: req })

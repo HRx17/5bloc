@@ -1,8 +1,21 @@
+/** Dev server port — keep in sync with package.json `next dev --port`. */
+export const APP_DEV_ORIGIN = 'http://localhost:3001'
+
+/** Canonical app origin for OAuth redirects (set on Vercel/production). */
+export function appOrigin(): string {
+  if (typeof window !== 'undefined') {
+    return process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin
+  }
+  return process.env.NEXT_PUBLIC_APP_URL ?? APP_DEV_ORIGIN
+}
+
 /** Build the Supabase OAuth callback URL (PKCE code exchange on the server). */
 export function authCallbackUrl(nextPath = '/dashboard') {
-  if (typeof window === 'undefined') return '/api/auth/callback'
   const next = nextPath.startsWith('/') ? nextPath : `/${nextPath}`
-  return `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(next)}`
+  const origin = typeof window !== 'undefined'
+    ? (process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin)
+    : (process.env.NEXT_PUBLIC_APP_URL ?? APP_DEV_ORIGIN)
+  return `${origin}/api/auth/callback?next=${encodeURIComponent(next)}`
 }
 
 /** Redirect URIs that must be registered in Google Cloud Console. */
