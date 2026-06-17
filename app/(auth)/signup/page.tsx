@@ -89,16 +89,21 @@ export default function Signup() {
       router.push('/onboarding')
       return
     }
+    setLoading(true)
+    setError('')
     const supabase = createSupabaseClient()
     localStorage.setItem('5bloc_signup_role', role)
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: authCallbackUrl('/onboarding'),
-        queryParams: { access_type: 'offline', prompt: 'consent' },
+        queryParams: { access_type: 'offline', prompt: 'select_account' },
       },
     })
-    if (oauthError) setError(oauthError.message)
+    if (oauthError) {
+      setError(oauthError.message)
+      setLoading(false)
+    }
   }
 
   const pwStrong = password.length >= 8

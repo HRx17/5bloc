@@ -1,6 +1,29 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+async function resolvePostAuthPath(
+  supabase: ReturnType<typeof createServerClient>,
+  userId: string,
+  requestedNext: string
+) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user?.user_metadata?.onboarding_complete === true) {
+    return requestedNext
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('org_id')
+    .eq('auth_id', userId)
+    .maybeSingle()
+
+  if (profile?.org_id) {
+    return requestedNext
+  }
+
+  return '/onboarding'
+}
+
 export async function GET(req: NextRequest) {
   const requestUrl = new URL(req.url)
   const code = requestUrl.searchParams.get('code')
@@ -20,7 +43,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL('/login?error=missing_code', req.url))
   }
 
-  let response = NextResponse.redirect(new URL(next, req.url))
+  let redirectPath = next
+  let response = NextResponse.redirect(new URL(redirectPath, req.url))
 
   try {
     const supabase = createServerClient(
@@ -33,7 +57,7 @@ export async function GET(req: NextRequest) {
           },
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value }) => req.cookies.set(name, value))
-            response = NextResponse.redirect(new URL(next, req.url))
+            response = NextResponse.redirect(new URL(redirectPath, req.url))
             cookiesToSet.forEach(({ name, value, options }) =>
               response.cookies.set(name, value, options)
             )
@@ -42,10 +66,20 @@ export async function GET(req: NextRequest) {
       }
     )
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (error) {
-      console.error('Auth callback code exchange error:', error.message)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+    if (error || !data.user) {
+      console.error('Auth callback code exchange error:', error?.message)
       return NextResponse.redirect(new URL('/login?error=auth_callback_failed', req.url))
+    }
+
+    redirectPath = await resolvePostAuthPath(supabase, data.user.id, next)
+
+    if (redirectPath !== next) {
+      const final = NextResponse.redirect(new URL(redirectPath, req.url))
+      response.cookies.getAll().forEach((cookie) => {
+        final.cookies.set(cookie.name, cookie.value)
+      })
+      response = final
     }
   } catch (e) {
     console.error('Auth callback error:', e)
