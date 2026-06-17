@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Eye, EyeOff, AlertCircle, Info } from 'lucide-react'
 import { createSupabaseClient } from '@/lib/supabase/client'
+import { authCallbackUrl } from '@/lib/auth/oauth-redirect'
 
 const SUPABASE_CONFIGURED =
   typeof process !== 'undefined' &&
@@ -96,10 +97,11 @@ function LoginInner() {
       return
     }
     const supabase = createSupabaseClient()
-    await supabase.auth.signInWithOAuth({
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${location.origin}/dashboard` },
+      options: { redirectTo: authCallbackUrl(nextPath) },
     })
+    if (oauthError) setError(oauthError.message)
   }
 
   return (

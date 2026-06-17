@@ -756,13 +756,6 @@ export default function DocumentVault() {
                     >
                       Convert to RFI
                     </button>
-                    <button 
-                      onClick={() => alert('Prefilled WhatsApp link generated: "Clash alert on Grid C4..."')}
-                      className="w-full btn-secondary btn-xs flex items-center justify-center gap-1"
-                    >
-                      <span className="material-icons-outlined text-[12px]" style={{ color: '#25D366' }}>chat</span>
-                      WhatsApp Site
-                    </button>
                   </div>
                 </div>
               )}

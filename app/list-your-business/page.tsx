@@ -367,7 +367,7 @@ export default function ListYourBusiness() {
                       value={email} onChange={(e) => setEmail(e.target.value)}
                       placeholder="you@business.com" required />
                   </Field>
-                  <Field label="Phone / WhatsApp" hint={phoneHint}>
+                  <Field label="Phone" hint={phoneHint}>
                     <input className={inputCls} style={inputStyle} onFocus={onFocus} onBlur={onBlur}
                       value={phone} onChange={(e) => setPhone(e.target.value)}
                       placeholder={phoneHint} />

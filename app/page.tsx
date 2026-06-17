@@ -450,7 +450,7 @@ function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1], delay: 0.18 }}
         >
-          5Bloc replaces WhatsApp, Excel and email with one workspace built for architects.
+          5Bloc replaces scattered chats, Excel and email with one workspace built for architects.
           Drawings, RFIs, invoices, and clients — all in one place.
         </motion.p>
 
@@ -481,7 +481,7 @@ function Hero() {
           transition={{ duration: 0.8, delay: 0.45 }}
         >
           {[
-            ['14+', 'WhatsApp groups per project on average'],
+            ['14+', 'Group chats per project on average'],
             ['122,769', 'Registered architects in India'],
             ['5–8', 'Disconnected tools per firm'],
           ].map(([n, l]) => (
@@ -528,7 +528,7 @@ function Hero() {
 function PainStrip() {
   const items = [
     {
-      before: '14 WhatsApp groups',
+      before: '14 group chats',
       beforeSub: 'per active project',
       after: 'One project workspace',
       afterSub: 'everyone in their role',
@@ -669,7 +669,7 @@ function Pillars() {
               Architecture deserves better than a group chat.
             </h2>
             <p className="mt-6 text-[16px] leading-relaxed" style={{ color: 'var(--on-surface-variant)' }}>
-              98% of Indian projects miss quality standards. Most run on WhatsApp,
+              98% of Indian projects miss quality standards. Most run on group chats,
               Excel and Gmail. 5Bloc gives every stakeholder one place to do their
               job — without learning new software.
             </p>
@@ -782,7 +782,7 @@ function ModulesSection() {
     { label: 'RFIs & submittals',    desc: 'Structured Q&A tied to the exact drawing version and grid reference — not a separate email chain.' },
     { label: 'AI cost estimator',    desc: 'Estimate BOQ lines from your DPR using government SOR rates. Missing items filled by AI in seconds.' },
     { label: 'Client portal',        desc: 'A read-only progress view in plain English. Clients approve samples, see payments, stop calling.' },
-    { label: 'Permits & compliance', desc: 'RERA, NBC, local bye-laws — tracked and flagged. Not buried in a WhatsApp thread.' },
+    { label: 'Permits & compliance', desc: 'RERA, NBC, local bye-laws — tracked and flagged. Not buried in an email thread.' },
     { label: 'Vendor marketplace',   desc: 'Verified contractors and consultants in India. Their ratings follow them across projects.' },
   ]
 
@@ -928,7 +928,7 @@ function HowItWorks() {
 function Testimonials() {
   const quotes = [
     {
-      quote: 'Three projects in, my WhatsApp groups have gone quiet. RFIs land where the drawing lives, and the client portal has eliminated half my evening calls.',
+      quote: 'Three projects in, my group chats have gone quiet. RFIs land where the drawing lives, and the client portal has eliminated half my evening calls.',
       name: 'Aanya Mehta',
       role: 'Principal Architect',
       firm: 'Mehta + Rao Architects',
@@ -1009,8 +1009,8 @@ function FAQ() {
     { q: 'When does the beta open?', a: "We onboard 10 practices a week, in cohorts of architects + their teams. Sign up and we'll email you when your slot opens — usually within 2–3 weeks of joining the list." },
     { q: 'Who actually pays for 5Bloc?', a: "The architect's practice. Builders, contractors, consultants and clients join the projects you invite them to — free, with role-scoped access." },
     { q: 'Do we need to migrate our existing projects?', a: 'No. Most firms start with one new project, then add older ones as they reach a milestone. Drawings, RFIs and documents import via drag-and-drop.' },
-    { q: 'How is this different from Procore or ACC?', a: "Those are excellent for large GCs. 5Bloc is built for the architect-led project — the kind that runs on WhatsApp today. It's lighter, faster to adopt, and priced for Indian and emerging-market practices." },
-    { q: 'Does the AI link with tools like AutoCAD?', a: 'Yes, 5Bloc maps straight to Google Drive folders, syncs with WhatsApp site channels, and embeds a fully interactive CAD & Autodesk Fusion 360 viewer directly in the vault.' },
+    { q: 'How is this different from Procore or ACC?', a: "Those are excellent for large GCs. 5Bloc is built for the architect-led project — the kind that runs on spreadsheets and group chats today. It's lighter, faster to adopt, and priced for Indian and emerging-market practices." },
+    { q: 'Does the AI link with tools like AutoCAD?', a: 'Yes, 5Bloc maps straight to Google Drive folders, includes built-in team messaging, and embeds a fully interactive CAD & Autodesk Fusion 360 viewer directly in the vault.' },
     { q: 'Does the AI just write fluff?', a: "No. It estimates BOQ line items from a DPR, summarises bye-laws, drafts RFI responses, and answers questions grounded in the project's own files. Always editable, always cited." },
   ]
 

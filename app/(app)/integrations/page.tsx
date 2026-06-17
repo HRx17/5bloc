@@ -25,7 +25,7 @@ const OAUTH_PROVIDERS: Record<string, string> = {
 }
 
 // Integrations that are always "active" via env vars (no OAuth flow)
-const ENV_CONFIGURED = ['whatsapp']
+const ENV_CONFIGURED: string[] = []
 
 export default function IntegrationsDashboard() {
   const { toast } = useToast()
@@ -88,18 +88,6 @@ export default function IntegrationsDashboard() {
       category: 'communication',
     },
     {
-      id: 'whatsapp',
-      name: 'WhatsApp Site Channel',
-      provider: 'WhatsApp',
-      icon: 'chat',
-      color: '#25D366',
-      description: 'Link site supervisor chats. Log snags and defect issues instantly from photo messages. Prefill PDF drawing shares.',
-      status: 'disconnected',
-      lastSync: 'Never',
-      syncedItemsCount: 0,
-      category: 'communication',
-    },
-    {
       id: 'autodesk',
       name: 'Autodesk AutoCAD & Fusion 360',
       provider: 'Autodesk',
@@ -117,7 +105,6 @@ export default function IntegrationsDashboard() {
   const [activeCategory, setActiveCategory] = useState<'all' | 'workspace' | 'communication' | 'engineering'>('all')
   const [selectedIntegration, setSelectedIntegration] = useState<IntegrationItem | null>(null)
   const [showConfigModal, setShowConfigModal] = useState(false)
-  const [whatsappPhone, setWhatsappPhone] = useState('9876543210')
   const [googleFolder, setGoogleFolder] = useState('5Bloc Project Files')
 
   const handleConnect = (id: string) => {
@@ -434,35 +421,6 @@ export default function IntegrationsDashboard() {
                       <option value="hourly">Every Hour</option>
                       <option value="daily">Daily digest</option>
                     </select>
-                  </div>
-                </div>
-              )}
-
-              {selectedIntegration.id === 'whatsapp' && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-stone text-xs font-medium mb-1.5">Contractor Group Phone Number (with Country Code) *</label>
-                    <input
-                      type="text"
-                      value={whatsappPhone}
-                      onChange={(e) => setWhatsappPhone(e.target.value)}
-                      className="input-5bloc py-2 text-xs font-mono"
-                      style={{ borderRadius: '8px' }}
-                    />
-                    <p className="text-[10px] text-stone mt-1">Foreman alert logs and RFI photo snags sync from this number.</p>
-                  </div>
-                  <div>
-                    <label className="block text-stone text-xs font-medium mb-1.5">Media Auto-Import Settings</label>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-2.5 text-xs text-stone-300">
-                        <input type="checkbox" defaultChecked className="rounded bg-navy focus:ring-0 text-amber" />
-                        <span>Auto-log photos as High-Priority snags</span>
-                      </label>
-                      <label className="flex items-center gap-2.5 text-xs text-stone-300">
-                        <input type="checkbox" defaultChecked className="rounded bg-navy focus:ring-0 text-amber" />
-                        <span>Send automated SMS fallback if offline</span>
-                      </label>
-                    </div>
                   </div>
                 </div>
               )}

@@ -60,7 +60,7 @@ export default function TermsOfService() {
 
           <section>
             <h2 className="text-xl font-semibold mb-3" style={{ color: '#F7F5F0' }}>5. Third-Party Integrations</h2>
-            <p>The Platform allows you to connect third-party services (Google Drive, Gmail, Google Calendar, Autodesk, WhatsApp). By connecting these services, you authorise 5BLOC to access your data from these services on your behalf as described in our Privacy Policy. 5BLOC is not responsible for the availability, accuracy, or content of third-party services.</p>
+            <p>The Platform allows you to connect third-party services (Google Drive, Gmail, Google Calendar, Autodesk). By connecting these services, you authorise 5BLOC to access your data from these services on your behalf as described in our Privacy Policy. 5BLOC is not responsible for the availability, accuracy, or content of third-party services.</p>
           </section>
 
           <section>

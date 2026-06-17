@@ -418,14 +418,6 @@ export default function RFILog() {
  <span className="material-icons-outlined text-[15px]">mail</span>
  Email Assignee
  </button>
- <a
- href={`https://wa.me/?text=${encodeURIComponent(`RFI Alert: Project ID: ${projectId}\nRFI #${activeRfi.rfi_number} - ${activeRfi.title}\nDue: ${activeRfi.due_date}\nAssigned: ${activeRfi.assigned_to}\nDetails: http://app.5bloc.com/projects/${projectId}/rfis`)}`}
- target="_blank" rel="noopener noreferrer"
- className="btn-secondary py-1.5 px-3 text-xs"
- >
- <span className="material-icons-outlined text-[15px]" style={{ color: '#25D366' }}>chat</span>
- Share via WhatsApp
- </a>
  </div>
  </div>
  

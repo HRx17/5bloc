@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Eye, EyeOff, AlertCircle, Check, Info, ArrowLeft, ArrowRight } from 'lucide-react'
 import { createSupabaseClient } from '@/lib/supabase/client'
+import { authCallbackUrl } from '@/lib/auth/oauth-redirect'
 import { USER_ROLES, type UserRole } from '@/lib/roles'
 
 const SUPABASE_CONFIGURED =
@@ -89,14 +90,15 @@ export default function Signup() {
       return
     }
     const supabase = createSupabaseClient()
-    await supabase.auth.signInWithOAuth({
+    localStorage.setItem('5bloc_signup_role', role)
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${location.origin}/onboarding`,
+        redirectTo: authCallbackUrl('/onboarding'),
         queryParams: { access_type: 'offline', prompt: 'consent' },
       },
     })
-    await supabase.auth.updateUser({ data: { role } })
+    if (oauthError) setError(oauthError.message)
   }
 
   const pwStrong = password.length >= 8

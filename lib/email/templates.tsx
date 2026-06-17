@@ -57,7 +57,7 @@ function buildEmailHtml(contentHtml: string) {
 export function WelcomeEmail(userName: string) {
  return buildEmailHtml(`
  <h2 style="${styles.headline}">Welcome to 5Bloc, ${userName}!</h2>
- <p style="${styles.text}">You have successfully registered your firm. Get ready to eliminate the chaos of WhatsApp groups, Excel trackers, and scattered blueprints.</p>
+ <p style="${styles.text}">You have successfully registered your firm. Get ready to eliminate the chaos of scattered chats, Excel trackers, and scattered blueprints.</p>
  <p style="${styles.text}">Here is how to set up your workspace in under 3 minutes:</p>
  <table style="${styles.table}">
  <tr>
