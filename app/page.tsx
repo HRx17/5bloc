@@ -8,7 +8,10 @@ import { WaitlistForm } from '@/components/site/WaitlistForm'
 import { InteractivePrototype } from '@/components/site/InteractivePrototype'
 import { HowItWorksFlow } from '@/components/site/HowItWorksFlow'
 import { Logo } from '@/components/brand/LogoMark'
+import { createSupabaseClient } from '@/lib/supabase/client'
 import './landing.css'
+
+const WAITLIST_COUNT = '400+'
 
 /* ── Apple-style scroll reveal ── */
 function Reveal({
@@ -201,14 +204,14 @@ function AppleHero() {
   return (
     <section className="pt-24 pb-12 sm:pt-36 sm:pb-24 text-center" style={{ background: 'var(--lp-bg)' }}>
       <div className="mx-auto max-w-[980px] px-5 sm:px-6">
-        <motion.p
-          className="lp-eyebrow mb-4"
+        <motion.div
+          className="mb-5 flex justify-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
         >
-          Private beta · Free to join
-        </motion.p>
+          <span className="lp-scarcity-pill">Private beta · 10 practices onboarded per week</span>
+        </motion.div>
 
         <motion.h1
           className="lp-headline"
@@ -216,18 +219,28 @@ function AppleHero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1], delay: 0.05 }}
         >
-          One workspace.
+          Construction runs on 15 WhatsApp groups.
           <br />
-          Every role on the project.
+          <span className="lp-headline-amber">There&apos;s a better way.</span>
         </motion.h1>
 
         <motion.p
-          className="lp-subhead mt-5 max-w-[680px] mx-auto"
+          className="lp-subhead mt-5 max-w-[560px] mx-auto"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, delay: 0.15 }}
         >
-          Drawings, RFIs, approvals, and client updates — for architects, contractors, vendors, and clients.
+          One workspace where architects coordinate, contractors bid and deliver, vendors get discovered, and clients see progress — without another app to install.
+        </motion.p>
+
+        <motion.p
+          className="mt-4 text-[12px] text-center"
+          style={{ color: '#8C8680' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          Join {WAITLIST_COUNT} people already on the waitlist across Mumbai, Delhi &amp; Bangalore
         </motion.p>
 
         <motion.div
@@ -241,16 +254,6 @@ function AppleHero() {
 
         <HeroRoleCards />
 
-        <motion.p
-          className="mt-8 text-[14px]"
-          style={{ color: 'var(--lp-text-secondary)' }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.35 }}
-        >
-          Architects — leave your email below.
-        </motion.p>
-
         <motion.div
           id="architect-waitlist"
           className="mt-12 max-w-md mx-auto scroll-mt-24"
@@ -260,6 +263,106 @@ function AppleHero() {
         >
           <WaitlistForm compact source="hero" theme="apple" />
         </motion.div>
+      </div>
+    </section>
+  )
+}
+
+function MidPageWaitlistCTA() {
+  const [email, setEmail] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [done, setDone] = useState(false)
+  const [error, setError] = useState('')
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!email.trim()) {
+      const el = document.querySelector<HTMLInputElement>('#waitlist input[type="email"]')
+      document.getElementById('waitlist')?.scrollIntoView({ behavior: 'smooth' })
+      el?.focus()
+      return
+    }
+    setBusy(true)
+    setError('')
+    try {
+      const supabase = createSupabaseClient()
+      const { error: dbError } = await supabase.from('waitlist').insert({
+        email: email.trim().toLowerCase(),
+        role: 'architect',
+        name: null,
+        firm: null,
+      })
+      if (dbError && dbError.code !== '23505') {
+        setError('Something went wrong. Please try again.')
+      } else {
+        setDone(true)
+      }
+    } catch {
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className="lp-mid-cta py-12">
+      <div className="mx-auto max-w-[680px] px-5 sm:px-6 text-center">
+        <h2 className="text-[20px] font-semibold" style={{ color: '#0C1220' }}>
+          Liked what you saw? You&apos;re a few clicks from using it on a real project.
+        </h2>
+        <p className="mt-3 text-[14px] mx-auto max-w-[480px]" style={{ color: '#5C5750' }}>
+          First 3 projects are free. No credit card. We onboard 10 practices per week.
+        </p>
+        {done ? (
+          <p className="mt-6 text-[14px] font-medium" style={{ color: '#2ECC8A' }}>
+            You&apos;re on the list — we&apos;ll be in touch.
+          </p>
+        ) : (
+          <form
+            onSubmit={submit}
+            className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3"
+          >
+            <input
+              type="email"
+              required
+              placeholder="your@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="lp-mid-cta-input mx-auto sm:mx-0"
+            />
+            <button type="submit" disabled={busy} className="lp-mid-cta-btn w-full sm:w-auto">
+              {busy ? 'Joining…' : 'Join waitlist →'}
+            </button>
+          </form>
+        )}
+        {error && (
+          <p className="mt-3 text-[13px]" style={{ color: '#E84545' }}>{error}</p>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function TestimonialSection() {
+  return (
+    <section className="pt-[60px] pb-10" style={{ background: 'var(--lp-bg)' }}>
+      <div className="mx-auto max-w-[640px] px-5 sm:px-6 text-center">
+        <span
+          className="block text-[80px] leading-none mb-[-16px]"
+          style={{ color: '#F5A623', fontFamily: 'var(--lp-font)' }}
+          aria-hidden
+        >
+          &ldquo;
+        </span>
+        <blockquote
+          className="text-[20px] italic leading-[1.6]"
+          style={{ color: '#0C1220', fontFamily: 'var(--lp-font)' }}
+        >
+          I&apos;ve managed 14 projects. Every single one ran on WhatsApp groups I couldn&apos;t search and Excel sheets nobody trusted. 5Bloc is what I wished existed when I started my practice.
+        </blockquote>
+        <p className="mt-4 text-[14px]" style={{ color: '#5C5750' }}>
+          — Practicing architect, Mumbai · Early access user
+        </p>
       </div>
     </section>
   )
@@ -429,9 +532,9 @@ function AppleWaitlist() {
     <section id="waitlist" className="py-20 sm:py-28 scroll-mt-20" style={{ background: 'var(--lp-bg)' }}>
       <div className="mx-auto max-w-[680px] px-5 sm:px-6 text-center">
         <Reveal>
-          <h2 className="lp-section-title">Join the waitlist.</h2>
-          <p className="lp-subhead mt-4">
-            Free to list. We onboard a small batch each week.
+          <h2 className="lp-section-title">One workspace. For everyone on the build.</h2>
+          <p className="lp-subhead mt-4 max-w-lg mx-auto">
+            Architects, contractors, vendors — all on the same project, each in their role.
           </p>
         </Reveal>
         <Reveal delay={0.1} className="mt-10 text-left">
@@ -519,8 +622,10 @@ export default function Home() {
       <AppleHero />
       <HowItWorksFlow />
       <AppleDemo />
+      <MidPageWaitlistCTA />
       <AppleFeatures />
       <AppleFAQ />
+      <TestimonialSection />
       <AppleWaitlist />
       <PartnerStrip />
       <AppleFooter />

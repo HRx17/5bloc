@@ -25,7 +25,7 @@ const APPLE = {
   txtDim: '#86868b',
   accent: '#f5a623',
   accentHover: '#ffb94a',
-  btnText: '#1d1d1f',
+  btnText: '#0C1220',
   focusRing: 'rgba(245,166,35,0.55)',
   focusGlow: 'rgba(245,166,35,0.14)',
 }
@@ -276,12 +276,11 @@ export function WaitlistForm({
           <p className="text-[13px]" style={{ color: '#ff6b6b' }}>
             {error}
           </p>
-        ) : (
-          <p className="text-[13px]" style={{ color: P.txtDim }}>
-            No spam · 10 practices per week
-          </p>
-        )}
+        ) : null}
       </div>
+      <p className="text-[11px]" style={{ color: theme === 'apple' ? '#8C8680' : P.txtDim }}>
+        No spam · Unsubscribe anytime · 10 practices onboarded per week
+      </p>
     </form>
   )
 }

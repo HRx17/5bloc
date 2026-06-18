@@ -1,22 +1,22 @@
 /* Apple-inspired landing page — scoped via .landing-apple */
 
 .landing-apple {
-  --lp-bg: #fbfbfd;
-  --lp-bg-alt: #f5f5f7;
-  --lp-bg-dark: #000000;
-  --lp-text: #1d1d1f;
-  --lp-text-secondary: #6e6e73;
-  --lp-text-tertiary: #86868b;
-  --lp-brand: #f5a623;
+  --lp-bg: #FAFAF8;
+  --lp-bg-alt: #F5F5F7;
+  --lp-bg-dark: #0C1220;
+  --lp-text: #0C1220;
+  --lp-text-secondary: #5C5750;
+  --lp-text-tertiary: #8C8680;
+  --lp-brand: #F5A623;
   --lp-brand-hover: #ffb94a;
-  --lp-brand-dk: #d4891a;
-  --lp-on-brand: #1d1d1f;
+  --lp-brand-dk: #CC7A00;
+  --lp-on-brand: #0C1220;
   --lp-link: var(--lp-brand);
   --lp-link-hover: var(--lp-brand-dk);
-  --lp-border: rgba(0, 0, 0, 0.08);
-  --lp-nav-bg: rgba(251, 251, 253, 0.72);
-  --lp-nav-bg-scrolled: rgba(251, 251, 253, 0.88);
-  --lp-font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --lp-border: #E5E1D8;
+  --lp-nav-bg: rgba(250, 250, 248, 0.72);
+  --lp-nav-bg-scrolled: rgba(250, 250, 248, 0.92);
+  --lp-font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
   font-family: var(--lp-font);
   background: var(--lp-bg);
@@ -119,6 +119,112 @@
 
 .landing-apple .lp-btn-outline:hover {
   background: rgba(245, 166, 35, 0.08);
+}
+
+.landing-apple .lp-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0 1.125rem;
+  border-radius: 980px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  font-family: var(--lp-font);
+  background: transparent;
+  color: var(--lp-text);
+  box-shadow: inset 0 0 0 1px var(--lp-border);
+}
+
+.landing-apple .lp-btn-ghost:hover {
+  background: rgba(245, 166, 35, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(245, 166, 35, 0.45);
+}
+
+.landing-apple .lp-scarcity-pill {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 99px;
+  font-family: var(--lp-font);
+  font-size: 12px;
+  font-weight: 500;
+  background: #FEF3E0;
+  color: #CC7A00;
+  border: 1px solid rgba(245, 166, 35, 0.4);
+}
+
+.landing-apple .lp-section-label {
+  font-family: var(--lp-font);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lp-brand);
+  text-align: center;
+}
+
+.landing-apple .lp-screenshot {
+  border-radius: 12px;
+  border: 1px solid #E5E1D8;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  background: #141E30;
+}
+
+.landing-apple .lp-screenshot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  display: block;
+}
+
+.landing-apple .lp-screenshot-placeholder {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 1.5rem;
+  text-align: center;
+  background: #141E30;
+  color: #F7F5F0;
+}
+
+.landing-apple .lp-mid-cta {
+  background: #FEF3E0;
+  border-top: 1px solid rgba(245, 166, 35, 0.3);
+  border-bottom: 1px solid rgba(245, 166, 35, 0.3);
+}
+
+.landing-apple .lp-mid-cta-input {
+  width: 280px;
+  max-width: 100%;
+  background: #FFFFFF;
+  border: 1px solid #D0CBC0;
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-family: var(--lp-font);
+  font-size: 14px;
+  color: var(--lp-text);
+  outline: none;
+}
+
+.landing-apple .lp-mid-cta-btn {
+  background: #F5A623;
+  color: #0C1220;
+  font-family: var(--lp-font);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+}
+
+.landing-apple .lp-headline-amber {
+  color: var(--lp-brand);
 }
 
 .landing-apple .lp-btn-sm {

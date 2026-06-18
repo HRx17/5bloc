@@ -8,6 +8,7 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
+    "screenshots": "node scripts/take-screenshots.js",
     "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3001 && electron .\"",
     "electron:build": "next build --webpack && electron-builder",
     "electron:pack": "electron-builder --dir"
@@ -43,6 +44,7 @@
     "electron-builder": "^24.13.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
+    "puppeteer": "^25.1.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "wait-on": "^7.2.0"
