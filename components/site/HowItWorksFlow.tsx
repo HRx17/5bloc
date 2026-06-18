@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState, useEffect } from 'react'
-import { motion, AnimatePresence, useInView } from 'framer-motion'
+import { motion, AnimatePresence, useInView, type UseInViewOptions } from 'framer-motion'
 import { CheckCircle2, Circle, FileText, Users } from 'lucide-react'
 
 const STEPS = [
@@ -58,30 +58,35 @@ const UI = {
 function AppScreen({
   title,
   children,
+  compact = false,
 }: {
   title: string
   children: React.ReactNode
+  compact?: boolean
 }) {
   return (
     <div
-      className="overflow-hidden rounded-[1.125rem]"
+      className={`overflow-hidden ${compact ? 'rounded-[0.875rem]' : 'rounded-[1.125rem]'}`}
       style={{
         background: UI.surface,
         boxShadow: '0 2px 8px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.06)',
       }}
     >
       <div
-        className="flex items-center justify-between px-4 py-3"
+        className={`flex items-center justify-between ${compact ? 'px-3 py-2' : 'px-4 py-3'}`}
         style={{ background: UI.bg, borderBottom: `1px solid ${UI.border}` }}
       >
-        <span className="text-[13px] font-semibold tracking-tight" style={{ color: UI.text }}>
+        <span
+          className={`font-semibold tracking-tight ${compact ? 'text-[11px]' : 'text-[13px]'}`}
+          style={{ color: UI.text }}
+        >
           {title}
         </span>
-        <span className="text-[11px]" style={{ color: UI.muted }}>
+        <span className={compact ? 'text-[10px]' : 'text-[11px]'} style={{ color: UI.muted }}>
           5Bloc
         </span>
       </div>
-      <div className="p-4 sm:p-5">{children}</div>
+      <div className={compact ? 'p-3' : 'p-4 sm:p-5'}>{children}</div>
     </div>
   )
 }
@@ -312,22 +317,30 @@ function ClientScreen() {
   )
 }
 
-function StepPreview({ step }: { step: Step }) {
+function StepPreview({ step, compact = false }: { step: Step; compact?: boolean }) {
   const Screen = step.Screen
-  return <Screen />
+  return (
+    <div className={compact ? 'lp-flow-mockup-compact' : undefined}>
+      <Screen />
+    </div>
+  )
 }
 
 function FlowStep({
   step,
+  index,
   active,
   onActivate,
+  observeMargin,
 }: {
   step: Step
+  index: number
   active: boolean
   onActivate: () => void
+  observeMargin: UseInViewOptions['margin']
 }) {
   const ref = useRef<HTMLDivElement>(null)
-  const inView = useInView(ref, { margin: '-40% 0px -40% 0px' })
+  const inView = useInView(ref, { margin: observeMargin })
 
   useEffect(() => {
     if (inView) onActivate()
@@ -336,7 +349,8 @@ function FlowStep({
   return (
     <div
       ref={ref}
-      className="relative flex flex-col justify-center py-14 sm:py-16 min-h-[52vh] lg:min-h-[62vh] lg:pl-10"
+      className="relative flex flex-col justify-center py-8 sm:py-14 lg:py-16 min-h-[calc(100dvh-280px)] sm:min-h-[68dvh] lg:min-h-[62vh] lg:pl-10"
+      data-flow-step={index}
     >
       <motion.span
         className="absolute left-0 top-1/2 hidden lg:block h-2 w-2 -translate-x-[5px] -translate-y-1/2 rounded-full"
@@ -348,26 +362,36 @@ function FlowStep({
         aria-hidden
       />
 
+      <motion.span
+        className="absolute left-0 top-8 lg:hidden h-1.5 w-1.5 rounded-full"
+        animate={{
+          scale: active ? 1.2 : 0.9,
+          backgroundColor: active ? 'var(--lp-brand)' : '#d2d2d7',
+        }}
+        transition={{ duration: 0.4 }}
+        aria-hidden
+      />
+
       <motion.div
         initial={false}
-        animate={{ opacity: active ? 1 : 0.22, y: active ? 0 : 12 }}
+        animate={{ opacity: active ? 1 : 0.2, y: active ? 0 : 10 }}
         transition={{ duration: 0.55, ease: [0.25, 0.1, 0.25, 1] }}
       >
-        <p className="text-[13px] font-medium" style={{ color: active ? UI.text : UI.muted }}>
+        <p className="text-[12px] sm:text-[13px] font-medium" style={{ color: active ? UI.text : UI.muted }}>
           {step.phase}
         </p>
         <h3
-          className="mt-2 text-[clamp(1.625rem,2.8vw,2.125rem)] font-semibold tracking-tight leading-tight max-w-md"
+          className="mt-2 text-[clamp(1.375rem,5.5vw,2.125rem)] font-semibold tracking-tight leading-tight max-w-md"
           style={{ color: UI.text }}
         >
           {step.title}
         </h3>
-        <p className="mt-3 text-[17px] leading-relaxed max-w-md" style={{ color: UI.secondary }}>
+        <p className="mt-2.5 sm:mt-3 text-[15px] sm:text-[17px] leading-relaxed max-w-md" style={{ color: UI.secondary }}>
           {step.body}
         </p>
-        <ul className="mt-5 space-y-2 max-w-md">
+        <ul className="mt-4 sm:mt-5 space-y-1.5 sm:space-y-2 max-w-md">
           {step.bullets.map((b) => (
-            <li key={b} className="flex items-start gap-2.5 text-[14px]" style={{ color: UI.secondary }}>
+            <li key={b} className="flex items-start gap-2 text-[13px] sm:text-[14px]" style={{ color: UI.secondary }}>
               <span
                 className="mt-[7px] h-1 w-1 shrink-0 rounded-full"
                 style={{ background: active ? 'var(--lp-brand)' : '#c7c7cc' }}
@@ -377,45 +401,54 @@ function FlowStep({
           ))}
         </ul>
       </motion.div>
-
-      <motion.div
-        className="lg:hidden mt-8"
-        initial={false}
-        animate={{ opacity: active ? 1 : 0.35 }}
-        transition={{ duration: 0.5 }}
-      >
-        <StepPreview step={step} />
-      </motion.div>
     </div>
   )
 }
 
-function StickyPreview({ step, activeIndex }: { step: Step; activeIndex: number }) {
+function FlowProgress({ activeIndex, compact = false }: { activeIndex: number; compact?: boolean }) {
   return (
-    <div className="sticky top-28">
+    <div className={`flex items-center gap-1.5 ${compact ? 'justify-center' : ''}`}>
+      {STEPS.map((s, i) => (
+        <div
+          key={s.id}
+          className="h-1 rounded-full transition-all duration-500"
+          style={{
+            width: i === activeIndex ? (compact ? 22 : 28) : 6,
+            background: i <= activeIndex ? 'var(--lp-brand)' : '#d2d2d7',
+          }}
+        />
+      ))}
+      {!compact && (
+        <span className="ml-2 text-[12px]" style={{ color: UI.muted }}>
+          Scroll
+        </span>
+      )}
+    </div>
+  )
+}
+
+function StickyPreview({
+  step,
+  activeIndex,
+  compact = false,
+}: {
+  step: Step
+  activeIndex: number
+  compact?: boolean
+}) {
+  return (
+    <div className={compact ? '' : 'sticky top-28'}>
       <AnimatePresence mode="wait">
         <motion.div
           key={step.id}
-          initial={{ opacity: 0, y: 28 }}
+          initial={{ opacity: 0, y: compact ? 16 : 28 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
+          exit={{ opacity: 0, y: compact ? -12 : -20 }}
           transition={{ duration: 0.55, ease: [0.25, 0.1, 0.25, 1] }}
         >
-          <StepPreview step={step} />
-          <div className="mt-5 flex items-center gap-1.5">
-            {STEPS.map((s, i) => (
-              <div
-                key={s.id}
-                className="h-1 rounded-full transition-all duration-500"
-                style={{
-                  width: i === activeIndex ? 28 : 6,
-                  background: i <= activeIndex ? 'var(--lp-brand)' : '#d2d2d7',
-                }}
-              />
-            ))}
-            <span className="ml-2 text-[12px]" style={{ color: UI.muted }}>
-              Scroll
-            </span>
+          <StepPreview step={step} compact={compact} />
+          <div className={compact ? 'mt-3' : 'mt-5'}>
+            <FlowProgress activeIndex={activeIndex} compact={compact} />
           </div>
         </motion.div>
       </AnimatePresence>
@@ -423,41 +456,86 @@ function StickyPreview({ step, activeIndex }: { step: Step; activeIndex: number 
   )
 }
 
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(false)
+
+  useEffect(() => {
+    const mq = window.matchMedia(query)
+    const update = () => setMatches(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [query])
+
+  return matches
+}
+
 export function HowItWorksFlow() {
   const [active, setActive] = useState(0)
   const headerRef = useRef<HTMLDivElement>(null)
+  const mobilePreviewRef = useRef<HTMLDivElement>(null)
+  const [mobilePreviewH, setMobilePreviewH] = useState(260)
   const headerInView = useInView(headerRef, { once: true, margin: '-60px' })
+  const isMobileFlow = useMediaQuery('(max-width: 1023px)')
+
+  useEffect(() => {
+    if (!isMobileFlow || !mobilePreviewRef.current) return
+    const el = mobilePreviewRef.current
+    const ro = new ResizeObserver(() => setMobilePreviewH(el.offsetHeight))
+    ro.observe(el)
+    setMobilePreviewH(el.offsetHeight)
+    return () => ro.disconnect()
+  }, [isMobileFlow, active])
+
+  const observeMargin: UseInViewOptions['margin'] = isMobileFlow
+    ? (`-${Math.max(mobilePreviewH + 8, 200)}px 0px -36% 0px` as UseInViewOptions['margin'])
+    : '-40% 0px -40% 0px'
 
   return (
-    <section id="flow" className="py-20 sm:py-28 scroll-mt-16" style={{ background: '#fff' }}>
+    <section id="flow" className="py-14 sm:py-20 lg:py-28 scroll-mt-16" style={{ background: '#fff' }}>
       <div className="mx-auto max-w-[980px] px-5 sm:px-6">
         <motion.div
           ref={headerRef}
-          className="text-center max-w-2xl mx-auto mb-10 sm:mb-14"
+          className="text-center max-w-2xl mx-auto mb-8 sm:mb-10 lg:mb-14"
           initial={{ opacity: 0, y: 24 }}
           animate={headerInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
         >
           <p className="lp-eyebrow">How it works</p>
-          <h2 className="lp-section-title mt-3">From brief to client sign-off.</h2>
-          <p className="lp-subhead mt-3">
+          <h2 className="lp-section-title mt-2 sm:mt-3">From brief to client sign-off.</h2>
+          <p className="lp-subhead mt-2 sm:mt-3 text-[1.0625rem] sm:text-[inherit]">
             Four phases you already run — now in one workspace.
           </p>
         </motion.div>
 
-        <div className="lg:grid lg:grid-cols-2 lg:gap-14 xl:gap-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 lg:gap-14 xl:gap-20">
           <div className="relative">
+            {/* Sticky mockup on mobile — stays pinned while step copy scrolls (same as desktop) */}
+            <div
+              ref={mobilePreviewRef}
+              className="lg:hidden sticky top-[3.25rem] z-20 lp-flow-sticky-preview mb-3 sm:mb-4"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              <p className="mb-2 text-[11px] font-medium text-center" style={{ color: UI.muted }}>
+                {STEPS[active].phase}
+              </p>
+              <StickyPreview step={STEPS[active]} activeIndex={active} compact />
+            </div>
+
             <div
               className="absolute left-0 top-0 bottom-0 w-px hidden lg:block"
               style={{ background: '#d2d2d7' }}
               aria-hidden
             />
-            {STEPS.map((step) => (
+            {STEPS.map((step, index) => (
               <FlowStep
                 key={step.id}
                 step={step}
-                active={active === STEPS.indexOf(step)}
-                onActivate={() => setActive(STEPS.indexOf(step))}
+                index={index}
+                active={active === index}
+                onActivate={() => setActive(index)}
+                observeMargin={observeMargin}
               />
             ))}
           </div>

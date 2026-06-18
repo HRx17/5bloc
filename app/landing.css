@@ -185,3 +185,62 @@
     0 24px 64px rgba(0, 0, 0, 0.45),
     0 0 0 1px rgba(255, 255, 255, 0.08);
 }
+
+/* ── How it works: mobile sticky scroll ── */
+.landing-apple .lp-flow-sticky-preview {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  border-bottom: 1px solid var(--lp-border);
+  padding-bottom: 0.75rem;
+  margin-left: -0.25rem;
+  margin-right: -0.25rem;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
+.landing-apple .lp-flow-mockup-compact {
+  max-height: min(34dvh, 280px);
+  overflow: hidden;
+}
+
+.landing-apple .lp-flow-mockup-compact > div {
+  transform: scale(0.97);
+  transform-origin: top center;
+}
+
+@media (max-width: 639px) {
+  .landing-apple .lp-headline {
+    font-size: clamp(2rem, 9.5vw, 2.625rem);
+    letter-spacing: -0.022em;
+  }
+
+  .landing-apple .lp-section-title {
+    font-size: clamp(1.625rem, 7.5vw, 2.125rem);
+  }
+
+  .landing-apple .lp-subhead {
+    font-size: 1.0625rem;
+    line-height: 1.45;
+  }
+
+  .landing-apple .lp-btn {
+    min-height: 2.5rem;
+    padding: 0 1.125rem;
+    font-size: 1rem;
+  }
+
+  .landing-apple .lp-feature-item {
+    padding: 1.25rem 1.25rem;
+  }
+
+  .landing-apple .lp-flow-mockup-compact {
+    max-height: min(32dvh, 252px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-apple .lp-flow-mockup-compact > div {
+    transform: none;
+  }
+}

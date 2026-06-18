@@ -165,7 +165,7 @@ function HeroRoleCards() {
 
   return (
     <motion.div
-      className="mt-12 max-w-3xl mx-auto"
+      className="mt-10 sm:mt-12 max-w-3xl mx-auto"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, delay: 0.28 }}
@@ -181,7 +181,7 @@ function HeroRoleCards() {
           <Link
             key={card.label}
             href={card.href}
-            className="lp-tile block px-5 py-8 sm:py-9 text-center transition-colors"
+            className="lp-tile block px-4 py-6 sm:px-5 sm:py-9 text-center transition-colors"
           >
             <p className="text-[19px] sm:text-[21px] font-semibold tracking-tight" style={{ color: 'var(--lp-text)' }}>
               {card.label}
@@ -199,7 +199,7 @@ function HeroRoleCards() {
 
 function AppleHero() {
   return (
-    <section className="pt-28 pb-16 sm:pt-36 sm:pb-24 text-center" style={{ background: 'var(--lp-bg)' }}>
+    <section className="pt-24 pb-12 sm:pt-36 sm:pb-24 text-center" style={{ background: 'var(--lp-bg)' }}>
       <div className="mx-auto max-w-[980px] px-5 sm:px-6">
         <motion.p
           className="lp-eyebrow mb-4"
