@@ -3,32 +3,15 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { motion, useInView } from 'framer-motion'
-import {
-  ArrowRight,
-  Check,
-  Layers,
-  MessagesSquare,
-  Sparkles,
-  FileText,
-  Compass,
-  HardHat,
-  UserRound,
-  Wrench,
-  Package,
-  Menu,
-  X,
-  Shield,
-  Network,
-  ChevronDown,
-} from 'lucide-react'
+import { ChevronDown, Menu, X } from 'lucide-react'
 import { WaitlistForm } from '@/components/site/WaitlistForm'
 import { InteractivePrototype } from '@/components/site/InteractivePrototype'
 import { HowItWorksFlow } from '@/components/site/HowItWorksFlow'
+import { Logo } from '@/components/brand/LogoMark'
+import './landing.css'
 
-/* ────────────────────────────────────────
-   Animation helpers
-──────────────────────────────────────── */
-function FadeUp({
+/* ── Apple-style scroll reveal ── */
+function Reveal({
   children,
   delay = 0,
   className = '',
@@ -38,214 +21,122 @@ function FadeUp({
   className?: string
 }) {
   const ref = useRef(null)
-  const inView = useInView(ref, { once: true, margin: '-60px' })
+  const inView = useInView(ref, { once: true, margin: '-8%' })
   return (
     <motion.div
       ref={ref}
       className={className}
-      initial={{ opacity: 0, y: 22, filter: 'blur(4px)' }}
-      animate={inView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
-      transition={{ duration: 0.72, ease: [0.16, 1, 0.3, 1], delay }}
+      initial={{ opacity: 0, y: 36 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.9, ease: [0.25, 0.1, 0.25, 1], delay }}
     >
       {children}
     </motion.div>
   )
 }
 
-/* ────────────────────────────────────────
-   Logo
-──────────────────────────────────────── */
-function LogoMark({ size = 26 }: { size?: number }) {
-  const a = 'var(--amber)'
-  return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" aria-hidden>
-      <rect x="6" y="6"  width="28" height="5.5" rx="1.5" fill={a} />
-      <rect x="6" y="15" width="22" height="5.5" rx="1.5" fill={a} opacity="0.72" />
-      <rect x="6" y="24" width="16" height="5.5" rx="1.5" fill={a} opacity="0.44" />
-      <rect x="6" y="33" width="10" height="4.5" rx="1.5" fill={a} opacity="0.22" />
-    </svg>
-  )
-}
-
-function Wordmark() {
-  return (
-    <Link href="/" className="flex items-center gap-2.5 select-none">
-      <LogoMark size={26} />
-      <span
-        className="font-body text-[17px] font-semibold tracking-wide"
-        style={{ color: 'var(--on-surface)' }}
-      >
-        5BLOC
-      </span>
-    </Link>
-  )
-}
-
-/* ────────────────────────────────────────
-   Site Header
-──────────────────────────────────────── */
-function SiteHeader() {
+function AppleNav() {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10)
+    const onScroll = () => setScrolled(window.scrollY > 8)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  const nav = [
-    { href: '#flow',      label: 'How it works' },
-    { href: '#prototype', label: 'Live demo' },
-    { href: '#features',  label: 'Features' },
-    { href: '#faq',       label: 'FAQ' },
+  const links = [
+    { href: '#flow', label: 'How it works' },
+    { href: '#prototype', label: 'Demo' },
+    { href: '#features', label: 'Features' },
+    { href: '#faq', label: 'FAQ' },
   ]
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
       style={{
-        background: scrolled ? 'rgba(8,8,16,0.82)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(24px) saturate(160%)' : 'none',
-        WebkitBackdropFilter: scrolled ? 'blur(24px) saturate(160%)' : 'none',
-        boxShadow: scrolled ? '0 1px 0 rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.4)' : 'none',
+        background: scrolled ? 'var(--lp-nav-bg-scrolled)' : 'var(--lp-nav-bg)',
+        backdropFilter: 'saturate(180%) blur(20px)',
+        WebkitBackdropFilter: 'saturate(180%) blur(20px)',
+        borderBottom: scrolled ? '1px solid var(--lp-border)' : '1px solid transparent',
       }}
     >
-      <div className="mx-auto flex h-[60px] max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-10">
-        <Wordmark />
+      <div className="mx-auto flex h-11 max-w-[980px] items-center justify-between px-5 sm:px-6">
+        <Link href="/" className="opacity-90 hover:opacity-100 transition-opacity select-none">
+          <Logo size={22} showTagline={false} color="var(--lp-text)" />
+        </Link>
 
-        {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-8 text-[13.5px] font-medium">
-          {nav.map((n) => (
-            <Link
-              key={n.href}
-              href={n.href}
-              className="transition-colors duration-150"
-              style={{ color: scrolled ? 'var(--on-surface-variant)' : 'var(--stone)' }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--on-surface)')}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = scrolled ? 'var(--on-surface-variant)' : 'var(--stone)')}
-            >
-              {n.label}
+        <nav className="hidden md:flex items-center gap-7">
+          {links.map((l) => (
+            <Link key={l.href} href={l.href} className="lp-nav-link">
+              {l.label}
             </Link>
           ))}
         </nav>
 
         <div className="hidden md:flex items-center gap-2.5">
-          <a
-            href="#architect-waitlist"
-            className="inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-[12.5px] font-semibold transition-all"
-            style={{
-              background: 'rgba(245,166,35,0.10)',
-              color: 'var(--amber)',
-              boxShadow: 'inset 0 0 0 1px rgba(245,166,35,0.35)',
-            }}
-          >
-            <Compass className="h-3.5 w-3.5" />
-            Architects (free)
-          </a>
-          <Link
-            href="/list-your-business"
-            className="inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-[12.5px] font-semibold transition-all"
-            style={{
-              background: 'rgba(122,184,255,0.10)',
-              color: 'var(--blue)',
-              boxShadow: 'inset 0 0 0 1px rgba(122,184,255,0.35)',
-            }}
-          >
-            <HardHat className="h-3.5 w-3.5" />
+          <a href="#architect-waitlist" className="lp-nav-link hidden lg:inline">Architects</a>
+          <Link href="/list-your-business" className="lp-btn lp-btn-nav">
             Contractors (free)
           </Link>
-          <Link
-            href="/join-as-vendor"
-            className="inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-[12.5px] font-semibold transition-all"
-            style={{
-              background: 'rgba(167,139,250,0.10)',
-              color: 'var(--purple)',
-              boxShadow: 'inset 0 0 0 1px rgba(167,139,250,0.35)',
-            }}
-          >
-            <Package className="h-3.5 w-3.5" />
+          <Link href="/join-as-vendor" className="lp-btn lp-btn-nav">
             Vendors (free)
           </Link>
         </div>
 
-        {/* Mobile toggle */}
         <button
-          className="md:hidden w-9 h-9 flex items-center justify-center rounded-xl transition-colors"
-          style={{ background: 'var(--surface-container)', color: 'var(--on-surface)' }}
+          type="button"
+          className="md:hidden p-2 -mr-2"
           onClick={() => setOpen((v) => !v)}
-          aria-label="Toggle menu"
+          aria-label="Menu"
         >
-          {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
 
-      {/* Mobile drawer */}
       {open && (
         <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.22 }}
-          style={{ background: 'var(--surface-container-low)', boxShadow: 'var(--shadow-3)' }}
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          className="md:hidden border-t"
+          style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-nav-bg-scrolled)' }}
         >
-          <div className="mx-auto max-w-7xl px-5 py-5">
-            <nav className="grid gap-1">
-              {nav.map((n) => (
-                <Link
-                  key={n.href}
-                  href={n.href}
-                  onClick={() => setOpen(false)}
-                  className="rounded-xl px-4 py-3 text-[14px] font-medium transition-all"
-                  style={{ color: 'var(--on-surface-variant)' }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--surface-container)' }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
-                >
-                  {n.label}
-                </Link>
-              ))}
-            </nav>
-            <div className="ghost-cut my-4" />
-            <div className="flex flex-col gap-3">
-              <a
-                href="#architect-waitlist"
-                onClick={() => setOpen(false)}
-                className="w-full text-center inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-[13.5px] font-semibold"
-                style={{
-                  background: 'rgba(245,166,35,0.12)',
-                  color: 'var(--amber)',
-                  boxShadow: 'inset 0 0 0 1px rgba(245,166,35,0.35)',
-                }}
-              >
-                <Compass className="h-4 w-4" />
-                Architects — join waitlist (free)
-              </a>
+          <div className="px-5 py-4 space-y-1">
+            <div className="pb-4 mb-2 space-y-2 border-b" style={{ borderColor: 'var(--lp-border)' }}>
               <Link
                 href="/list-your-business"
                 onClick={() => setOpen(false)}
-                className="w-full text-center inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-[13.5px] font-semibold"
-                style={{
-                  background: 'rgba(122,184,255,0.12)',
-                  color: 'var(--blue)',
-                  boxShadow: 'inset 0 0 0 1px rgba(122,184,255,0.35)',
-                }}
+                className="lp-btn w-full text-[14px] min-h-[2.75rem]"
               >
-                <HardHat className="h-4 w-4" />
                 Contractors — join waitlist (free)
               </Link>
               <Link
                 href="/join-as-vendor"
                 onClick={() => setOpen(false)}
-                className="w-full text-center inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-[13.5px] font-semibold"
-                style={{
-                  background: 'rgba(167,139,250,0.12)',
-                  color: 'var(--purple)',
-                  boxShadow: 'inset 0 0 0 1px rgba(167,139,250,0.35)',
-                }}
+                className="lp-btn lp-btn-outline w-full text-[14px] min-h-[2.75rem]"
               >
-                <Package className="h-4 w-4" />
                 Vendors — join waitlist (free)
               </Link>
+              <a
+                href="#architect-waitlist"
+                onClick={() => setOpen(false)}
+                className="block text-center py-2.5 text-[15px] lp-link"
+              >
+                Architects — join waitlist (free)
+              </a>
             </div>
+            {[...links, { href: '#waitlist', label: 'Full signup form' }].map((l) => (
+              <Link
+                key={l.label}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                className="block py-2.5 text-[17px]"
+                style={{ color: 'var(--lp-text)' }}
+              >
+                {l.label}
+              </Link>
+            ))}
           </div>
         </motion.div>
       )}
@@ -253,363 +144,220 @@ function SiteHeader() {
   )
 }
 
-/* ────────────────────────────────────────
-   Sticky waitlist bar
-──────────────────────────────────────── */
-function StickyBar() {
-  const [visible, setVisible] = useState(false)
-  const [atCta, setAtCta] = useState(false)
-  const [email, setEmail] = useState('')
-  const [done, setDone] = useState(false)
-  const [busy, setBusy] = useState(false)
-
-  useEffect(() => {
-    const onScroll = () => {
-      const scrollY = window.scrollY
-      const waitlistEl = document.getElementById('waitlist')
-      if (waitlistEl) {
-        const rect = waitlistEl.getBoundingClientRect()
-        setAtCta(rect.top < window.innerHeight)
-      }
-      setVisible(scrollY > 500)
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
-  if (!visible || atCta) return null
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!email.trim() || done) return
-    setBusy(true)
-    try {
-      const { createSupabaseClient } = await import('@/lib/supabase/client')
-      const supabase = createSupabaseClient()
-      await supabase.from('waitlist').insert({ email: email.trim().toLowerCase(), role: 'unknown' })
-      setDone(true)
-    } catch {
-      setDone(true)
-    } finally {
-      setBusy(false)
-    }
-  }
+function HeroRoleCards() {
+  const cards = [
+    {
+      label: 'Architects',
+      sub: 'Free waitlist',
+      href: '#architect-waitlist',
+    },
+    {
+      label: 'Contractors',
+      sub: 'Free listing',
+      href: '/list-your-business',
+    },
+    {
+      label: 'Vendors',
+      sub: 'Free listing',
+      href: '/join-as-vendor',
+    },
+  ] as const
 
   return (
     <motion.div
-      initial={{ y: 80, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed bottom-0 left-0 right-0 z-50"
-      style={{
-        background: 'rgba(10,10,18,0.88)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        boxShadow: '0 -1px 0 rgba(255,255,255,0.07), 0 -8px 32px rgba(0,0,0,0.5)',
-      }}
+      className="mt-12 max-w-3xl mx-auto"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.7, delay: 0.28 }}
     >
-      <div className="mx-auto max-w-3xl px-5 py-3 flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
-        <p className="text-[13px] font-medium hidden sm:block shrink-0" style={{ color: 'var(--on-surface-variant)' }}>
-          Get early access — <span style={{ color: 'var(--amber)' }}>10 practices onboarded per week</span>
-        </p>
-        {done ? (
-          <p className="text-[13px] font-semibold w-full sm:w-auto text-center" style={{ color: '#2ECC8A' }}>
-            ✓ You&apos;re on the list!
-          </p>
-        ) : (
-          <form onSubmit={submit} className="flex items-center gap-2 w-full sm:w-auto">
-            <input
-              type="email"
-              required
-              placeholder="your@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="h-9 flex-1 sm:w-56 rounded-lg px-3 text-sm outline-none"
-              style={{
-                background: 'rgba(255,255,255,0.07)',
-                color: 'var(--on-surface)',
-                boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.10)',
-              }}
-            />
-            <button
-              type="submit"
-              disabled={busy}
-              className="btn-primary h-9 px-5 text-[13px] shrink-0"
-              style={{ padding: '0 18px' }}
-            >
-              {busy ? '…' : 'Join waitlist'}
-            </button>
-          </form>
-        )}
+      <p className="text-[14px] mb-6" style={{ color: 'var(--lp-text-secondary)' }}>
+        Free to list — choose your role
+      </p>
+      <div
+        className="grid sm:grid-cols-3 rounded-2xl overflow-hidden lp-tile-row"
+        style={{ background: 'var(--lp-border)' }}
+      >
+        {cards.map((card) => (
+          <Link
+            key={card.label}
+            href={card.href}
+            className="lp-tile block px-5 py-8 sm:py-9 text-center transition-colors"
+          >
+            <p className="text-[19px] sm:text-[21px] font-semibold tracking-tight" style={{ color: 'var(--lp-text)' }}>
+              {card.label}
+            </p>
+            <p className="mt-1 text-[14px]" style={{ color: 'var(--lp-text-secondary)' }}>
+              {card.sub}
+            </p>
+            <p className="mt-4 lp-link text-[15px]">Join waitlist ›</p>
+          </Link>
+        ))}
       </div>
     </motion.div>
   )
 }
 
-/* ────────────────────────────────────────
-   Hero
-──────────────────────────────────────── */
-function Hero() {
-  const roles = [
-    { icon: Compass,  label: 'Architects',   color: 'var(--amber)' },
-    { icon: HardHat,  label: 'Contractors',  color: 'var(--blue)' },
-    { icon: Package,  label: 'Vendors',      color: 'var(--purple)' },
-    { icon: UserRound, label: 'Clients',     color: 'var(--success)' },
-  ]
-
+function AppleHero() {
   return (
-    <section className="relative overflow-hidden pt-24 pb-12 sm:pt-28 sm:pb-16">
-      {/* Background — same atmosphere, less height */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage: 'radial-gradient(rgba(255,255,255,0.045) 1px, transparent 1px)',
-          backgroundSize: '24px 24px',
-        }}
-        aria-hidden
-      />
-      <div
-        className="absolute inset-x-0 bottom-0 pointer-events-none"
-        style={{
-          height: '80%',
-          background: 'radial-gradient(ellipse 100% 70% at 50% 110%, rgba(102,51,238,0.28) 0%, rgba(71,36,180,0.14) 35%, transparent 65%)',
-        }}
-        aria-hidden
-      />
-      <div
-        className="absolute pointer-events-none"
-        style={{
-          top: '-10%', right: '-8%', width: '65%', height: '70%',
-          background: 'radial-gradient(ellipse at top right, rgba(56,130,255,0.26) 0%, rgba(30,80,220,0.14) 40%, transparent 70%)',
-        }}
-        aria-hidden
-      />
-
-      <div className="relative z-10 mx-auto max-w-5xl px-5 sm:px-8 text-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-6 font-mono text-[10.5px] uppercase tracking-[0.18em]"
-          style={{
-            background: 'rgba(245,166,35,0.08)',
-            color: 'var(--amber)',
-            boxShadow: 'inset 0 0 0 1px rgba(245,166,35,0.18)',
-          }}
+    <section className="pt-28 pb-16 sm:pt-36 sm:pb-24 text-center" style={{ background: 'var(--lp-bg)' }}>
+      <div className="mx-auto max-w-[980px] px-5 sm:px-6">
+        <motion.p
+          className="lp-eyebrow mb-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8 }}
         >
-          <Sparkles className="h-3 w-3" />
-          Architects · contractors · vendors · clients
-        </motion.div>
+          Private beta · Free to join
+        </motion.p>
 
         <motion.h1
-          className="font-brand tracking-tight leading-[1.06]"
-          style={{ fontSize: 'clamp(34px, 6vw, 60px)', color: 'var(--on-surface)' }}
-          initial={{ opacity: 0, y: 20 }}
+          className="lp-headline"
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1], delay: 0.06 }}
+          transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1], delay: 0.05 }}
         >
-          Everyone on the project,{' '}
-          <span className="font-editorial font-normal italic" style={{ color: 'var(--amber)' }}>
-            one workspace
-          </span>
+          One workspace.
+          <br />
+          Every role on the project.
         </motion.h1>
 
         <motion.p
-          className="mt-5 mx-auto max-w-2xl text-[17px] sm:text-[18px] leading-relaxed"
-          style={{ color: 'var(--on-surface-variant)' }}
-          initial={{ opacity: 0, y: 14 }}
+          className="lp-subhead mt-5 max-w-[680px] mx-auto"
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.14 }}
+          transition={{ duration: 0.9, delay: 0.15 }}
         >
-          Whether you design, build, supply, or own the project — 5Bloc keeps drawings, RFIs,
-          approvals, and updates in one place instead of WhatsApp and email.
+          Drawings, RFIs, approvals, and client updates — for architects, contractors, vendors, and clients.
         </motion.p>
 
         <motion.div
-          className="mt-7 flex flex-wrap items-center justify-center gap-2"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.65, delay: 0.22 }}
+          className="mt-8 flex justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
         >
-          {roles.map((r) => (
-            <span
-              key={r.label}
-              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium"
-              style={{
-                background: 'rgba(255,255,255,0.04)',
-                color: 'var(--on-surface-variant)',
-                boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.07)',
-              }}
-            >
-              <r.icon className="h-3.5 w-3.5" style={{ color: r.color }} />
-              {r.label}
-            </span>
-          ))}
+          <a href="#prototype" className="lp-btn">Try the demo</a>
         </motion.div>
 
-        {/* Waitlist CTAs — free for all */}
-        <motion.div
-          className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-3 max-w-3xl mx-auto text-left"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.65, delay: 0.26 }}
+        <HeroRoleCards />
+
+        <motion.p
+          className="mt-8 text-[14px]"
+          style={{ color: 'var(--lp-text-secondary)' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.35 }}
         >
-          <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
-            <a
-              href="#architect-waitlist"
-              className="group flex items-start gap-3 rounded-2xl p-4 h-full transition-all"
-              style={{
-                background: 'rgba(245,166,35,0.08)',
-                boxShadow: 'inset 0 0 0 1.5px rgba(245,166,35,0.35), 0 8px 32px rgba(245,166,35,0.08)',
-              }}
-            >
-              <div
-                className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: 'rgba(245,166,35,0.15)', color: 'var(--amber)' }}
-              >
-                <Compass className="h-5 w-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-mono uppercase tracking-widest" style={{ color: 'var(--amber)' }}>
-                  Free for architects
-                </p>
-                <p className="font-brand text-[15px] mt-0.5" style={{ color: 'var(--on-surface)' }}>
-                  Join the architect waitlist
-                </p>
-                <p className="text-[12px] mt-1 flex items-center gap-1 font-semibold" style={{ color: 'var(--amber)' }}>
-                  Run projects in one place
-                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-                </p>
-              </div>
-            </a>
-          </motion.div>
-
-          <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
-            <Link
-              href="/list-your-business"
-              className="group flex items-start gap-3 rounded-2xl p-4 h-full transition-all"
-              style={{
-                background: 'rgba(122,184,255,0.08)',
-                boxShadow: 'inset 0 0 0 1.5px rgba(122,184,255,0.35), 0 8px 32px rgba(56,130,255,0.08)',
-              }}
-            >
-              <div
-                className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: 'rgba(122,184,255,0.15)', color: 'var(--blue)' }}
-              >
-                <HardHat className="h-5 w-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-mono uppercase tracking-widest" style={{ color: 'var(--blue)' }}>
-                  Free for contractors
-                </p>
-                <p className="font-brand text-[15px] mt-0.5" style={{ color: 'var(--on-surface)' }}>
-                  Join the contractor waitlist
-                </p>
-                <p className="text-[12px] mt-1 flex items-center gap-1 font-semibold" style={{ color: 'var(--blue)' }}>
-                  Get listed & win projects
-                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-                </p>
-              </div>
-            </Link>
-          </motion.div>
-
-          <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
-            <Link
-              href="/join-as-vendor"
-              className="group flex items-start gap-3 rounded-2xl p-4 h-full transition-all"
-              style={{
-                background: 'rgba(167,139,250,0.08)',
-                boxShadow: 'inset 0 0 0 1.5px rgba(167,139,250,0.35), 0 8px 32px rgba(167,139,250,0.08)',
-              }}
-            >
-              <div
-                className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: 'rgba(167,139,250,0.15)', color: 'var(--purple)' }}
-              >
-                <Package className="h-5 w-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-mono uppercase tracking-widest" style={{ color: 'var(--purple)' }}>
-                  Free for vendors
-                </p>
-                <p className="font-brand text-[15px] mt-0.5" style={{ color: 'var(--on-surface)' }}>
-                  Join the vendor waitlist
-                </p>
-                <p className="text-[12px] mt-1 flex items-center gap-1 font-semibold" style={{ color: 'var(--purple)' }}>
-                  List your catalogue & RFQs
-                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-                </p>
-              </div>
-            </Link>
-          </motion.div>
-        </motion.div>
+          Architects — leave your email below.
+        </motion.p>
 
         <motion.div
           id="architect-waitlist"
-          className="mt-8 max-w-md mx-auto scroll-mt-28"
+          className="mt-12 max-w-md mx-auto scroll-mt-24"
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.65, delay: 0.32 }}
+          transition={{ delay: 0.4 }}
         >
-          <p className="text-[11px] font-mono uppercase tracking-widest mb-3" style={{ color: 'var(--amber)' }}>
-            Free for architects & design studios
-          </p>
-          <WaitlistForm compact source="hero" />
-        </motion.div>
-
-        <motion.div
-          className="mt-5"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.65, delay: 0.38 }}
-        >
-          <a
-            href="#flow"
-            className="inline-flex items-center gap-2 text-[13.5px] font-semibold transition-colors"
-            style={{ color: 'var(--stone)' }}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--on-surface)')}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--stone)')}
-          >
-            See how it works <ArrowRight className="h-4 w-4" />
-          </a>
+          <WaitlistForm compact source="hero" theme="apple" />
         </motion.div>
       </div>
     </section>
   )
 }
 
-/* ────────────────────────────────────────
-   Pain → Solution strip
-──────────────────────────────────────── */
-function PainStrip() {
+function PartnerStrip() {
   const items = [
-    { problem: '14 group chats per project', solution: 'One project workspace' },
-    { problem: 'Drawings lost in email', solution: 'Version history on every file' },
-    { problem: 'Clients call every evening', solution: 'Portal they check themselves' },
+    { label: 'Contractors', sub: 'List your firm free', href: '/list-your-business' },
+    { label: 'Vendors', sub: 'List your catalogue free', href: '/join-as-vendor' },
   ]
+
   return (
-    <section style={{ background: 'rgba(255,255,255,0.022)' }} className="py-10 sm:py-12">
-      <div className="mx-auto max-w-5xl px-5 sm:px-8">
-        <p className="text-center text-[13px] mb-6" style={{ color: 'var(--stone)' }}>
-          Today most projects run on chats and spreadsheets. 5Bloc fixes that.
-        </p>
-        <div className="grid gap-3 sm:grid-cols-3">
+    <section id="partner-waitlist" style={{ background: 'var(--lp-bg-alt)' }}>
+      <div className="mx-auto max-w-[980px] px-5 sm:px-6 py-12 sm:py-14">
+        <Reveal className="text-center mb-8">
+          <h2 className="text-[21px] sm:text-[24px] font-semibold tracking-tight" style={{ color: 'var(--lp-text)' }}>
+            Contractors and vendors
+          </h2>
+          <p className="lp-subhead mt-2 max-w-md mx-auto text-[17px]">
+            Join the waitlist — no fees to get listed.
+          </p>
+        </Reveal>
+        <div className="grid sm:grid-cols-2 gap-px rounded-2xl overflow-hidden max-w-2xl mx-auto lp-tile-row" style={{ background: 'var(--lp-border)' }}>
           {items.map((item, i) => (
-            <FadeUp key={item.problem} delay={0.05 * i}>
-              <div
-                className="rounded-xl px-4 py-3.5 text-center"
-                style={{ background: 'var(--surface-container)', boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.05)' }}
-              >
-                <p className="text-[12px] line-through" style={{ color: 'rgba(255,120,120,0.75)' }}>
-                  {item.problem}
+            <Reveal key={item.label} delay={0.05 * i}>
+              <Link href={item.href} className="lp-tile block px-6 py-8 text-center">
+                <p className="text-[19px] font-semibold tracking-tight" style={{ color: 'var(--lp-text)' }}>
+                  {item.label}
                 </p>
-                <p className="mt-1.5 text-[14px] font-semibold flex items-center justify-center gap-1.5" style={{ color: 'var(--amber)' }}>
-                  <ArrowRight className="h-3.5 w-3.5 opacity-60" />
-                  {item.solution}
+                <p className="mt-1 text-[14px]" style={{ color: 'var(--lp-text-secondary)' }}>
+                  {item.sub}
+                </p>
+                <p className="mt-4 lp-link text-[15px]">Join waitlist ›</p>
+              </Link>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function AppleDemo() {
+  return (
+    <section id="prototype" className="py-20 sm:py-28" style={{ background: 'var(--lp-bg-dark)' }}>
+      <div className="mx-auto max-w-[1200px] px-5 sm:px-6">
+        <Reveal className="text-center mb-12 sm:mb-16">
+          <h2 className="lp-section-title lp-headline-dark">See it yourself.</h2>
+          <p className="lp-subhead lp-subhead-dark mt-4 max-w-xl mx-auto">
+            A live project workspace. No signup required.
+          </p>
+          <a href="#prototype-demo" className="lp-link lp-link-dark inline-block mt-5">
+            Explore the demo ›
+          </a>
+        </Reveal>
+
+        <Reveal delay={0.1}>
+          <div id="prototype-demo" className="lp-device lp-device-dark scroll-mt-24">
+            <InteractivePrototype />
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  )
+}
+
+function AppleFeatures() {
+  const features = [
+    { title: 'Document vault', body: 'Every drawing version, saved and searchable.' },
+    { title: 'RFIs & submittals', body: 'Tied to the plan they refer to — not lost in email.' },
+    { title: 'AI cost estimator', body: 'BOQ lines from your DPR, in seconds.' },
+    { title: 'Client portal', body: 'Plain-English progress. No app to install.' },
+    { title: 'Permits & RERA', body: 'Compliance tracked inside the project.' },
+    { title: 'Trusted network', body: 'Contractors and consultants you already work with.' },
+  ]
+
+  return (
+    <section id="features" className="py-20 sm:py-28" style={{ background: 'var(--lp-bg)' }}>
+      <div className="mx-auto max-w-[980px] px-5 sm:px-6">
+        <Reveal className="text-center mb-14 sm:mb-20">
+          <h2 className="lp-section-title">Built for how projects actually run.</h2>
+          <p className="lp-subhead mt-4 max-w-lg mx-auto">
+            One place instead of chats, spreadsheets, and scattered files.
+          </p>
+        </Reveal>
+
+        <div className="grid sm:grid-cols-2 gap-4 sm:gap-5">
+          {features.map((f, i) => (
+            <Reveal key={f.title} delay={0.04 * i}>
+              <div className="lp-feature-item h-full">
+                <h3 className="text-[21px] font-semibold tracking-tight" style={{ color: 'var(--lp-text)' }}>
+                  {f.title}
+                </h3>
+                <p className="mt-2 text-[17px] leading-relaxed" style={{ color: 'var(--lp-text-secondary)' }}>
+                  {f.body}
                 </p>
               </div>
-            </FadeUp>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -617,361 +365,124 @@ function PainStrip() {
   )
 }
 
-/* ────────────────────────────────────────
-   Prototype section
-──────────────────────────────────────── */
-function PrototypeSection() {
-  return (
-    <section id="prototype" className="relative py-16 sm:py-24" style={{ background: 'var(--surface-canvas)' }}>
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <FadeUp>
-          <div className="text-center max-w-2xl mx-auto mb-10">
-            <span className="metadata-caps" style={{ color: 'var(--amber)' }}>
-              Live demo · no signup
-            </span>
-            <h2
-              className="mt-4 font-brand text-[32px] sm:text-[40px] tracking-tight leading-[1.1]"
-              style={{ color: 'var(--on-surface)' }}
-            >
-              Click around a real project
-            </h2>
-            <p className="mt-3 text-[15px] leading-relaxed" style={{ color: 'var(--on-surface-variant)' }}>
-              Browse drawings, reply to an RFI, run an AI estimate, or approve a sample as the client.
-            </p>
-          </div>
-        </FadeUp>
-
-        <FadeUp delay={0.1}>
-          <div
-            className="relative rounded-2xl p-2 sm:p-3"
-            style={{
-              background: 'var(--surface-container)',
-              boxShadow: 'var(--glow-amber), var(--shadow-4)',
-            }}
-          >
-            <div
-              className="relative rounded-xl overflow-hidden"
-              style={{ background: 'var(--surface-recessed)' }}
-            >
-              <InteractivePrototype />
-            </div>
-          </div>
-        </FadeUp>
-      </div>
-    </section>
-  )
-}
-
-/* ────────────────────────────────────────
-   Features — everything in one place
-──────────────────────────────────────── */
-function FeaturesSection() {
-  const items = [
-    { icon: Layers,         title: 'Document vault',      body: 'Drawings and specs with version history on every file.' },
-    { icon: MessagesSquare, title: 'RFIs & submittals',   body: 'Questions stay on the drawing — not in email chains.' },
-    { icon: Sparkles,       title: 'AI cost estimator',   body: 'Estimate BOQ lines from your DPR in seconds.' },
-    { icon: FileText,       title: 'Client portal',       body: 'Clients see progress in plain English. No app to install.' },
-    { icon: Shield,         title: 'Permits & RERA',      body: 'Compliance tracked in the project, not buried in email.' },
-    { icon: Network,        title: 'Trusted network',     body: 'Invite contractors and consultants. Ratings follow them.' },
-  ]
-
-  return (
-    <section id="features" className="py-16 sm:py-24 relative overflow-hidden" style={{ background: 'rgba(255,255,255,0.018)' }}>
-      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 60% 50% at 10% 50%, rgba(245,166,35,0.05) 0%, transparent 65%)' }} aria-hidden />
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <FadeUp className="text-center max-w-2xl mx-auto mb-10">
-          <span className="metadata-caps" style={{ color: 'var(--amber)' }}>What you get</span>
-          <h2
-            className="mt-4 font-brand text-[32px] sm:text-[40px] tracking-tight leading-[1.1]"
-            style={{ color: 'var(--on-surface)' }}
-          >
-            Everything your office needs
-          </h2>
-          <p className="mt-3 text-[15px]" style={{ color: 'var(--on-surface-variant)' }}>
-            One workspace instead of five different tools.
-          </p>
-        </FadeUp>
-
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((item, i) => (
-            <FadeUp key={item.title} delay={0.04 * i}>
-              <motion.div className="card-5bloc h-full" whileHover={{ y: -3, transition: { duration: 0.2 } }}>
-                <div
-                  className="h-10 w-10 rounded-xl flex items-center justify-center mb-4"
-                  style={{ background: 'var(--surface-elevated)', color: 'var(--amber)' }}
-                >
-                  <item.icon className="h-[18px] w-[18px]" />
-                </div>
-                <p className="font-brand text-[16px]" style={{ color: 'var(--on-surface)' }}>{item.title}</p>
-                <p className="mt-2 text-[13px] leading-relaxed" style={{ color: 'var(--on-surface-variant)' }}>{item.body}</p>
-              </motion.div>
-            </FadeUp>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-/* ────────────────────────────────────────
-   Roles Grid
-──────────────────────────────────────── */
-function RolesGrid() {
-  const list = [
-    { icon: Compass,   title: 'Architect',  tagline: 'Runs the project',  price: 'Free',  accentVar: '--amber',  href: '#architect-waitlist', cta: 'Join waitlist →' },
-    { icon: HardHat,   title: 'Contractor', tagline: 'Site & submittals', price: 'Free',  accentVar: '--blue',   href: '/list-your-business', cta: 'Join waitlist →' },
-    { icon: Package,   title: 'Vendor',     tagline: 'Materials & RFQs',  price: 'Free',  accentVar: '--purple', href: '/join-as-vendor',     cta: 'Join waitlist →' },
-    { icon: Wrench,    title: 'Consultant', tagline: 'Reviews & RFIs',    price: 'Free',  accentVar: '--blue',   href: '#waitlist',       cta: 'Join waitlist' },
-    { icon: UserRound, title: 'Client',     tagline: 'Tracks progress',   price: 'Free',  accentVar: '--success', href: '#waitlist',       cta: 'Join waitlist' },
-  ]
-
-  return (
-    <section id="roles" className="py-14 sm:py-20 relative overflow-hidden">
-      <div className="mx-auto max-w-6xl px-5 sm:px-8">
-        <FadeUp className="text-center mb-8">
-          <h2 className="font-brand text-[28px] sm:text-[34px] tracking-tight" style={{ color: 'var(--on-surface)' }}>
-            Built for every role on the project
-          </h2>
-          <p className="mt-2 text-[14px]" style={{ color: 'var(--on-surface-variant)' }}>
-            Listing is free for architects, contractors, and vendors. Join the waitlist for your role below.
-          </p>
-        </FadeUp>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {list.map((r, i) => {
-            const accent = `var(${r.accentVar})`
-            const isPartner = r.title === 'Architect' || r.title === 'Contractor' || r.title === 'Vendor'
-            return (
-              <FadeUp key={r.title} delay={0.05 * i}>
-                <Link
-                  href={r.href}
-                  className="card-5bloc text-center py-5 px-3 block h-full transition-all hover:-translate-y-0.5"
-                  style={isPartner ? { boxShadow: `inset 0 0 0 1px ${accent}33` } : undefined}
-                >
-                  <r.icon className="h-5 w-5 mx-auto mb-3" style={{ color: accent }} />
-                  <p className="font-brand text-[15px]" style={{ color: 'var(--on-surface)' }}>{r.title}</p>
-                  <p className="mt-1 text-[12px]" style={{ color: 'var(--stone)' }}>{r.tagline}</p>
-                  <p className="mt-2 font-mono text-[9px] uppercase tracking-widest" style={{ color: accent }}>{r.price}</p>
-                  <p className="mt-3 text-[11.5px] font-semibold" style={{ color: accent }}>{r.cta}</p>
-                </Link>
-              </FadeUp>
-            )
-          })}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-/* ────────────────────────────────────────
-   FAQ
-──────────────────────────────────────── */
-function FAQ() {
-  const [open, setOpen] = useState<number | null>(null)
-
+function AppleFAQ() {
+  const [open, setOpen] = useState<number | null>(0)
   const faqs = [
-    { q: 'What is 5Bloc?', a: 'One workspace for everyone on a build project — architects, contractors, vendors, consultants, and clients. Drawings, RFIs, and updates live in one place instead of WhatsApp and email.' },
-    { q: 'Is it free to join?', a: 'Yes. Listing on the waitlist is free for architects, contractors, and vendors. Early architect members also get their first three projects free at launch.' },
-    { q: 'Who pays later?', a: 'After launch, the architect\'s practice carries the workspace subscription. Contractors, vendors, consultants, and clients stay free on projects they\'re invited to.' },
-    { q: 'I\'m a contractor or vendor — how do I join?', a: 'Click the contractor or vendor card at the top of the page. Listing is free — we\'ll email you when onboarding opens in your city.' },
-    { q: 'When can I start?', a: 'We onboard a small batch of practices each week. Join the waitlist and we\'ll email you when your slot opens.' },
-    { q: 'Do I need to move old projects?', a: 'No. Start with one new project. Add older work later when you\'re ready.' },
-    { q: 'How is this different from Procore?', a: '5Bloc is built for architect-led projects in India — lighter, faster to set up, and priced for smaller practices.' },
+    { q: 'What is 5Bloc?', a: 'One workspace for everyone on a build project. Drawings, RFIs, and updates — instead of WhatsApp and email.' },
+    { q: 'Is it free to join?', a: 'Yes. The waitlist is free for architects, contractors, and vendors. Early architects get their first three projects free at launch.' },
+    { q: 'Who pays later?', a: 'After launch, the architect\'s practice carries the subscription. Everyone invited to a project stays free.' },
+    { q: 'I\'m a contractor or vendor — how do I join?', a: 'Use the contractor or vendor buttons at the top of the page. Listing is free — we\'ll email you when onboarding opens in your city.' },
+    { q: 'How is this different from Procore?', a: '5Bloc is built for architect-led projects in India — lighter, faster to adopt, priced for smaller practices.' },
   ]
 
   return (
-    <section id="faq" className="py-16 sm:py-24 relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 60% 60% at 20% 50%, rgba(56,130,255,0.05) 0%, transparent 60%)' }} aria-hidden />
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <FadeUp className="text-center mb-8">
-          <span className="metadata-caps" style={{ color: 'var(--amber)' }}>FAQ</span>
-          <h2 className="mt-4 font-brand text-[28px] sm:text-[36px] tracking-tight" style={{ color: 'var(--on-surface)' }}>
-            Common questions
-          </h2>
-        </FadeUp>
+    <section id="faq" className="py-20 sm:py-28" style={{ background: 'var(--lp-bg-alt)' }}>
+      <div className="mx-auto max-w-[680px] px-5 sm:px-6">
+        <Reveal className="text-center mb-12">
+          <h2 className="lp-section-title">Questions & answers</h2>
+        </Reveal>
 
-        <FadeUp delay={0.08}>
-          <dl className="grid gap-2 max-w-2xl mx-auto">
-              {faqs.map((f, i) => (
-                <motion.div
-                  key={f.q}
-                  className="card-5bloc cursor-pointer"
-                  style={{ padding: '18px 22px' }}
+        <dl>
+          {faqs.map((f, i) => (
+            <Reveal key={f.q} delay={0.05 * i}>
+              <div className="lp-divider" />
+              <dt>
+                <button
+                  type="button"
+                  className="w-full flex items-center justify-between gap-4 py-5 text-left"
                   onClick={() => setOpen(open === i ? null : i)}
                 >
-                  <dt className="flex items-center justify-between gap-4">
-                    <span className="font-brand text-[16px]" style={{ color: 'var(--on-surface)' }}>
-                      {f.q}
-                    </span>
-                    <motion.span
-                      animate={{ rotate: open === i ? 180 : 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="shrink-0"
-                      style={{ color: 'var(--stone)' }}
-                    >
-                      <ChevronDown className="h-4 w-4" />
-                    </motion.span>
-                  </dt>
-                  <motion.dd
-                    initial={false}
-                    animate={{ height: open === i ? 'auto' : 0, opacity: open === i ? 1 : 0 }}
-                    transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-                    className="overflow-hidden"
-                    style={{ color: 'var(--on-surface-variant)' }}
-                  >
-                    <p className="pt-4 text-[14px] leading-relaxed">{f.a}</p>
-                  </motion.dd>
-                </motion.div>
-              ))}
-            </dl>
-          </FadeUp>
-          <p className="mt-8 text-center text-[13px]" style={{ color: 'var(--stone)' }}>
-            More questions?{' '}
-            <a href="mailto:contact@5bloc.com" className="underline underline-offset-2" style={{ color: 'var(--amber)' }}>
-              contact@5bloc.com
-            </a>
-          </p>
-      </div>
-    </section>
-  )
-}
-
-/* ────────────────────────────────────────
-   Waitlist CTA
-──────────────────────────────────────── */
-function WaitlistCTA() {
-  return (
-    <section
-      id="waitlist"
-      className="py-16 sm:py-24 relative overflow-hidden"
-      style={{ background: 'transparent' }}
-    >
-      {/* Strong atmospheric glow for the CTA climax */}
-      <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 90% 70% at 50% 80%, rgba(102,51,238,0.16) 0%, rgba(56,130,255,0.08) 40%, transparent 70%)' }} aria-hidden />
-      <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)', backgroundSize: '24px 24px' }} aria-hidden />
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <FadeUp>
-          <div
-            className="relative overflow-hidden rounded-[2.5rem] p-px"
-            style={{
-              background: 'linear-gradient(135deg, rgba(245,166,35,0.25), rgba(122,184,255,0.12), rgba(245,166,35,0.08))',
-            }}
-          >
-            <div
-              className="relative rounded-[calc(2.5rem-1px)] px-6 py-14 sm:px-12 sm:py-16 overflow-hidden"
-              style={{ background: 'var(--surface-container-lowest)' }}
-            >
-              {/* Ambient glow */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background: 'radial-gradient(ellipse at 20% 50%, rgba(245,166,35,0.06) 0%, transparent 60%)',
-                }}
-                aria-hidden
-              />
-
-              <div className="relative z-10 grid gap-14 lg:grid-cols-[1fr_1.1fr] lg:items-center">
-                <div>
-                  <span className="metadata-caps" style={{ color: 'var(--blue)' }}>
-                    Private beta · invite-only
+                  <span className="text-[17px] font-semibold" style={{ color: 'var(--lp-text)' }}>
+                    {f.q}
                   </span>
-                  <h2
-                    className="mt-4 font-brand leading-[1.08] tracking-tight"
-                    style={{ fontSize: 'clamp(28px, 4vw, 44px)', color: 'var(--on-surface)' }}
-                  >
-                    Join the waitlist
-                  </h2>
-                  <p className="mt-4 max-w-lg text-[15px] leading-relaxed" style={{ color: 'var(--on-surface-variant)' }}>
-                    Free to join the waitlist. We onboard a small batch each week — early architects get their first three projects free.
-                  </p>
-                  <ul className="mt-6 grid gap-2.5">
-                    {[
-                      'Free listing for architects',
-                      'Free for invited team members',
-                      'Help moving off spreadsheets',
-                    ].map((b) => (
-                      <li key={b} className="flex items-center gap-3 text-[14.5px] font-medium" style={{ color: 'var(--on-surface)' }}>
-                        <div
-                          className="h-5 w-5 rounded-full flex items-center justify-center shrink-0"
-                          style={{ background: 'rgba(245,166,35,0.15)' }}
-                        >
-                          <Check className="h-3 w-3" style={{ color: 'var(--amber)' }} />
-                        </div>
-                        {b}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                  <motion.span animate={{ rotate: open === i ? 180 : 0 }} transition={{ duration: 0.25 }}>
+                    <ChevronDown className="h-5 w-5 shrink-0" style={{ color: 'var(--lp-text-tertiary)' }} />
+                  </motion.span>
+                </button>
+              </dt>
+              <motion.dd
+                initial={false}
+                animate={{ height: open === i ? 'auto' : 0, opacity: open === i ? 1 : 0 }}
+                transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+                className="overflow-hidden"
+              >
+                <p className="pb-5 text-[17px] leading-relaxed" style={{ color: 'var(--lp-text-secondary)' }}>
+                  {f.a}
+                </p>
+              </motion.dd>
+            </Reveal>
+          ))}
+          <div className="lp-divider" />
+        </dl>
 
-                <div
-                  className="rounded-2xl p-2"
-                  style={{
-                    background: 'var(--surface-elevated)',
-                    boxShadow: 'var(--shadow-3)',
-                  }}
-                >
-                  <WaitlistForm source="cta" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </FadeUp>
+        <p className="mt-10 text-center text-[14px]" style={{ color: 'var(--lp-text-secondary)' }}>
+          More questions?{' '}
+          <a href="mailto:contact@5bloc.com" className="lp-link text-[14px]">contact@5bloc.com</a>
+        </p>
       </div>
     </section>
   )
 }
 
-/* ────────────────────────────────────────
-   Footer
-──────────────────────────────────────── */
-function SiteFooter() {
-  const cols = [
+function AppleWaitlist() {
+  return (
+    <section id="waitlist" className="py-20 sm:py-28 scroll-mt-20" style={{ background: 'var(--lp-bg)' }}>
+      <div className="mx-auto max-w-[680px] px-5 sm:px-6 text-center">
+        <Reveal>
+          <h2 className="lp-section-title">Join the waitlist.</h2>
+          <p className="lp-subhead mt-4">
+            Free to list. We onboard a small batch each week.
+          </p>
+        </Reveal>
+        <Reveal delay={0.1} className="mt-10 text-left">
+          <WaitlistForm source="cta" theme="apple" />
+        </Reveal>
+      </div>
+    </section>
+  )
+}
+
+function AppleFooter() {
+  const groups = [
     {
-      title: 'Product',
+      title: 'Explore',
       links: [
-        { href: '#flow',      label: 'How it works' },
-        { href: '#prototype', label: 'Live demo' },
-        { href: '#features',  label: 'Features' },
-        { href: '#architect-waitlist',  label: 'Architect waitlist (free)' },
-        { href: '#waitlist',            label: 'Full signup form' },
+        { href: '#flow', label: 'How it works' },
+        { href: '#prototype', label: 'Demo' },
+        { href: '#features', label: 'Features' },
+        { href: '#faq', label: 'FAQ' },
       ],
     },
     {
-      title: 'Company',
+      title: 'Join',
       links: [
-        { href: '#architect-waitlist',  label: 'Architect waitlist (free)' },
-        { href: '/list-your-business',    label: 'Contractor waitlist (free)' },
-        { href: '/join-as-vendor',        label: 'Vendor waitlist (free)' },
-        { href: 'mailto:contact@5bloc.com', label: 'Contact us' },
+        { href: '#architect-waitlist', label: 'Architects' },
+        { href: '/list-your-business', label: 'Contractors' },
+        { href: '/join-as-vendor', label: 'Vendors' },
+        { href: 'mailto:contact@5bloc.com', label: 'Contact' },
       ],
     },
   ]
 
   return (
-    <footer style={{ background: 'rgba(255,255,255,0.025)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' }}>
-      <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8">
-        <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr]">
+    <footer style={{ background: 'var(--lp-bg-alt)', borderTop: '1px solid var(--lp-border)' }}>
+      <div className="mx-auto max-w-[980px] px-5 sm:px-6 py-12 sm:py-16">
+        <div className="grid sm:grid-cols-3 gap-10">
           <div>
-            <Wordmark />
-            <p className="mt-5 max-w-sm text-[13.5px] leading-relaxed" style={{ color: 'var(--on-surface-variant)' }}>
-              One workspace for architects, contractors, vendors, and clients on every build project.
+            <Logo size={18} showTagline={false} color="var(--lp-text)" />
+            <p className="text-[12px] leading-relaxed max-w-xs mt-4" style={{ color: 'var(--lp-text-secondary)' }}>
+              One workspace for architects, contractors, vendors, and clients.
             </p>
           </div>
-          {cols.map((c) => (
-            <div key={c.title}>
-              <div className="label-sm mb-6" style={{ color: 'var(--stone)', opacity: 0.5 }}>
-                {c.title}
-              </div>
-              <ul className="grid gap-4 text-[13.5px] font-medium">
-                {c.links.map((l) => (
+          {groups.map((g) => (
+            <div key={g.title}>
+              <p className="text-[12px] font-semibold mb-4" style={{ color: 'var(--lp-text)' }}>
+                {g.title}
+              </p>
+              <ul className="space-y-2.5">
+                {g.links.map((l) => (
                   <li key={l.label}>
-                    <Link
-                      href={l.href}
-                      className="transition-colors duration-150"
-                      style={{ color: 'var(--on-surface-variant)' }}
-                      onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--on-surface)')}
-                      onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--on-surface-variant)')}
-                    >
+                    <Link href={l.href} className="text-[12px] lp-link text-[12px]">
                       {l.label}
                     </Link>
                   </li>
@@ -980,55 +491,39 @@ function SiteFooter() {
             </div>
           ))}
         </div>
-
-        <div
-          className="mt-16 flex flex-col items-start justify-between gap-3 pt-8 text-[12px] sm:flex-row sm:items-center"
-          style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)', color: 'var(--stone)' }}
-        >
-          <div>© {new Date().getFullYear()} 5Bloc Technologies. All rights reserved.</div>
-          <div className="label-sm opacity-40">v1.0 · India</div>
-        </div>
+        <div className="lp-divider mt-12 mb-6" />
+        <p className="text-[12px]" style={{ color: 'var(--lp-text-tertiary)' }}>
+          Copyright © {new Date().getFullYear()} 5Bloc Technologies. All rights reserved.
+        </p>
       </div>
     </footer>
   )
 }
 
-/* ────────────────────────────────────────
-   Page
-──────────────────────────────────────── */
 export default function Home() {
-  // Release body overflow-hidden (set by the app shell layout) so
-  // the landing page scrolls at the document level. window.scrollY
-  // then works correctly for the header blur effect.
   useEffect(() => {
     const prev = document.body.style.overflow
     document.body.style.overflow = 'auto'
     document.documentElement.style.overflow = 'auto'
+    document.documentElement.classList.add('landing-page-active')
     return () => {
       document.body.style.overflow = prev
       document.documentElement.style.overflow = ''
+      document.documentElement.classList.remove('landing-page-active')
     }
   }, [])
 
   return (
-    <div
-      className="font-body"
-      style={{
-        background: '#080810',
-        color: 'var(--on-surface)',
-      }}
-    >
-      <SiteHeader />
-      <StickyBar />
-      <Hero />
+    <div className="landing-apple min-h-screen">
+      <AppleNav />
+      <AppleHero />
       <HowItWorksFlow />
-      <PainStrip />
-      <PrototypeSection />
-      <FeaturesSection />
-      <RolesGrid />
-      <FAQ />
-      <WaitlistCTA />
-      <SiteFooter />
+      <AppleDemo />
+      <AppleFeatures />
+      <AppleFAQ />
+      <AppleWaitlist />
+      <PartnerStrip />
+      <AppleFooter />
     </div>
   )
 }

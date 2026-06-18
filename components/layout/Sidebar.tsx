@@ -117,7 +117,7 @@ export default function Sidebar({
         style={{ boxShadow: '0 1px 0 var(--hairline)' }}
       >
         <Link href="/dashboard" onClick={onClose} className="flex items-center gap-2">
-          <Logo size={22} showTagline={false} />
+          <Logo size={22} showTagline={false} color="var(--on-surface)" />
         </Link>
         {onClose && (
           <button

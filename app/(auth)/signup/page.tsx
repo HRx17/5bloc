@@ -8,23 +8,12 @@ import { Eye, EyeOff, AlertCircle, Check, Info, ArrowLeft, ArrowRight } from 'lu
 import { createSupabaseClient } from '@/lib/supabase/client'
 import { authCallbackUrl } from '@/lib/auth/oauth-redirect'
 import { USER_ROLES, type UserRole } from '@/lib/roles'
+import { Logo } from '@/components/brand/LogoMark'
 
 const SUPABASE_CONFIGURED =
   typeof process !== 'undefined' &&
   !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
   !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-function LogoMark({ size = 28 }: { size?: number }) {
-  const a = 'var(--amber)'
-  return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" aria-hidden>
-      <rect x="6" y="6"  width="28" height="5.5" rx="1.5" fill={a} />
-      <rect x="6" y="15" width="22" height="5.5" rx="1.5" fill={a} opacity="0.72" />
-      <rect x="6" y="24" width="16" height="5.5" rx="1.5" fill={a} opacity="0.44" />
-      <rect x="6" y="33" width="10" height="4.5" rx="1.5" fill={a} opacity="0.22" />
-    </svg>
-  )
-}
 
 export default function Signup() {
   const router = useRouter()
@@ -136,11 +125,8 @@ export default function Signup() {
         >
           {/* Header */}
           <div className="flex flex-col items-center mb-6">
-            <LogoMark size={36} />
-            <span className="font-body text-[15px] font-semibold tracking-wide mt-2" style={{ color: 'var(--on-surface)' }}>
-              5BLOC
-            </span>
-            <p className="mt-1 text-[12px]" style={{ color: 'var(--stone)' }}>
+            <Logo size={36} showTagline={false} color="var(--on-surface)" />
+            <p className="mt-3 text-[12px]" style={{ color: 'var(--stone)' }}>
               {step === 1 ? 'Choose how you\'ll use 5BLOC' : `Create your ${selectedRole.label} account`}
             </p>
           </div>
@@ -159,7 +145,7 @@ export default function Signup() {
           {!SUPABASE_CONFIGURED && (
             <div
               className="mb-5 flex items-start gap-2.5 rounded-xl px-4 py-3 text-[12px]"
-              style={{ background: 'rgba(122,184,255,0.08)', color: 'var(--blue)', boxShadow: 'inset 0 0 0 1px rgba(122,184,255,0.15)' }}
+              style={{ background: 'rgba(0, 102, 204, 0.08)', color: 'var(--blue)', boxShadow: 'inset 0 0 0 1px rgba(0, 102, 204, 0.15)' }}
             >
               <Info className="h-4 w-4 shrink-0 mt-0.5" />
               <span><strong>Demo mode</strong> — accounts are not persisted until Supabase is connected.</span>

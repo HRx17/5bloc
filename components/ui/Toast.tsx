@@ -32,7 +32,7 @@ const ICONS: Record<ToastType, string> = {
 const COLORS: Record<ToastType, { bg: string; color: string; border: string }> = {
   success: { bg: 'rgba(46,204,138,.10)',  color: 'var(--success)', border: 'rgba(46,204,138,.25)' },
   error:   { bg: 'rgba(255,138,128,.10)', color: 'var(--error)',   border: 'rgba(255,138,128,.25)' },
-  info:    { bg: 'rgba(122,184,255,.10)', color: 'var(--blue)',    border: 'rgba(122,184,255,.25)' },
+  info:    { bg: 'rgba(0,102,204,.08)', color: 'var(--blue)',    border: 'rgba(0,102,204,.18)' },
   warning: { bg: 'rgba(245,166,35,.10)',  color: 'var(--amber)',   border: 'rgba(245,166,35,.25)'  },
 }
 
@@ -53,9 +53,8 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
       transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
       className="flex items-start gap-3 px-4 py-3 rounded-xl max-w-[340px] w-full shadow-xl cursor-pointer select-none"
       style={{
-        background: 'var(--surface-container-high)',
-        boxShadow: `0 8px 32px rgba(0,0,0,0.4), inset 0 0 0 1px ${c.border}`,
-        backdropFilter: 'blur(20px)',
+        background: '#fff',
+        boxShadow: `0 8px 32px rgba(0,0,0,0.08), inset 0 0 0 1px ${c.border}`,
       }}
       onClick={() => onDismiss(toast.id)}
     >

@@ -1,0 +1,187 @@
+/* Apple-inspired landing page — scoped via .landing-apple */
+
+.landing-apple {
+  --lp-bg: #fbfbfd;
+  --lp-bg-alt: #f5f5f7;
+  --lp-bg-dark: #000000;
+  --lp-text: #1d1d1f;
+  --lp-text-secondary: #6e6e73;
+  --lp-text-tertiary: #86868b;
+  --lp-brand: #f5a623;
+  --lp-brand-hover: #ffb94a;
+  --lp-brand-dk: #d4891a;
+  --lp-on-brand: #1d1d1f;
+  --lp-link: var(--lp-brand);
+  --lp-link-hover: var(--lp-brand-dk);
+  --lp-border: rgba(0, 0, 0, 0.08);
+  --lp-nav-bg: rgba(251, 251, 253, 0.72);
+  --lp-nav-bg-scrolled: rgba(251, 251, 253, 0.88);
+  --lp-font: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  font-family: var(--lp-font);
+  background: var(--lp-bg);
+  color: var(--lp-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.landing-apple .lp-headline {
+  font-size: clamp(2.5rem, 6.5vw, 4.5rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  color: var(--lp-text);
+}
+
+.landing-apple .lp-headline-dark {
+  color: #f5f5f7;
+}
+
+.landing-apple .lp-subhead {
+  font-size: clamp(1.125rem, 2.2vw, 1.5rem);
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0.004em;
+  color: var(--lp-text-secondary);
+}
+
+.landing-apple .lp-subhead-dark {
+  color: #a1a1a6;
+}
+
+.landing-apple .lp-eyebrow {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--lp-link);
+}
+
+.landing-apple .lp-section-title {
+  font-size: clamp(2rem, 4.5vw, 3rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+}
+
+.landing-apple .lp-link {
+  color: var(--lp-link);
+  font-size: 1.0625rem;
+  font-weight: 400;
+  transition: color 0.2s ease;
+}
+
+.landing-apple .lp-link:hover {
+  color: var(--lp-link-hover);
+  text-decoration: underline;
+}
+
+.landing-apple .lp-link-dark {
+  color: var(--lp-brand);
+}
+
+.landing-apple .lp-link-dark:hover {
+  color: var(--lp-brand-hover);
+}
+
+.landing-apple .lp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 2.75rem;
+  padding: 0 1.375rem;
+  border-radius: 980px;
+  font-size: 1.0625rem;
+  font-weight: 400;
+  background: var(--lp-brand);
+  color: var(--lp-on-brand);
+  transition: background 0.2s ease;
+}
+
+.landing-apple .lp-btn:hover {
+  background: var(--lp-brand-hover);
+}
+
+.landing-apple .lp-btn-nav {
+  min-height: 1.75rem;
+  padding: 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: #fff;
+}
+
+.landing-apple .lp-btn-outline {
+  background: transparent;
+  color: var(--lp-brand);
+  box-shadow: inset 0 0 0 1px var(--lp-brand);
+}
+
+.landing-apple .lp-btn-outline:hover {
+  background: rgba(245, 166, 35, 0.08);
+}
+
+.landing-apple .lp-btn-sm {
+  min-height: 2.25rem;
+  padding: 0 1.125rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.landing-apple .lp-tile-row {
+  gap: 1px;
+}
+
+.landing-apple .lp-tile {
+  background: var(--lp-bg-alt);
+}
+
+.landing-apple .lp-tile:hover {
+  background: #fff;
+}
+
+.landing-apple .lp-feature-item {
+  border: 1px solid var(--lp-border);
+  border-radius: 1rem;
+  padding: 1.5rem 1.75rem;
+  background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.landing-apple .lp-feature-item:hover {
+  border-color: rgba(245, 166, 35, 0.35);
+  box-shadow: 0 0 0 1px rgba(245, 166, 35, 0.12);
+}
+
+.landing-apple .lp-nav-link {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--lp-text);
+  opacity: 0.88;
+  transition: opacity 0.2s ease;
+}
+
+.landing-apple .lp-nav-link:hover {
+  opacity: 1;
+}
+
+.landing-apple .lp-divider {
+  height: 1px;
+  background: var(--lp-border);
+}
+
+.landing-apple .lp-device {
+  border-radius: 1.25rem;
+  overflow: hidden;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    0 12px 48px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.landing-apple .lp-device-dark {
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.3),
+    0 24px 64px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+}

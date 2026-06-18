@@ -1,35 +1,24 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
-import {
-  ArrowRight,
-  Check,
-  Loader2,
-  Upload,
-  X,
-  ShieldCheck,
-  Globe2,
-  Rocket,
-  BadgeCheck,
-} from 'lucide-react'
+import { Loader2, Upload, X } from 'lucide-react'
 import { createSupabaseClient } from '@/lib/supabase/client'
-
-const C = {
-  page:    '#080810',
-  base:    '#0b0c10',
-  mid:     '#13151a',
-  border:  'rgba(255,255,255,0.07)',
-  borderStrong: 'rgba(255,255,255,0.12)',
-  txt:     '#f0efef',
-  txtMid:  '#b0a898',
-  txtDim:  '#6e6660',
-  amber:   '#F5A623',
-  blue:    '#7ab8ff',
-}
-
-type Country = 'india' | 'us'
+import {
+  PartnerChipGrid,
+  PartnerCountryToggle,
+  PartnerField,
+  PartnerHero,
+  PartnerSection,
+  PartnerSignupFooter,
+  PartnerSignupHeader,
+  PartnerSubmitRow,
+  PartnerSuccess,
+  partnerInputProps,
+  usePartnerPageScroll,
+  type PartnerCountry,
+} from '@/components/site/PartnerSignupChrome'
+import '../landing.css'
 
 const CATEGORIES = [
   'Building Materials',
@@ -52,51 +41,6 @@ const CATEGORIES = [
 
 const TEAM_SIZES = ['Just me', '2–10', '11–50', '51–200', '200+']
 
-function LogoMark({ size = 26 }: { size?: number }) {
-  const a = 'var(--amber)'
-  return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" aria-hidden>
-      <rect x="6" y="6" width="28" height="5.5" rx="1.5" fill={a} />
-      <rect x="6" y="15" width="22" height="5.5" rx="1.5" fill={a} opacity="0.72" />
-      <rect x="6" y="24" width="16" height="5.5" rx="1.5" fill={a} opacity="0.44" />
-      <rect x="6" y="33" width="10" height="4.5" rx="1.5" fill={a} opacity="0.22" />
-    </svg>
-  )
-}
-
-function Field({
-  label,
-  required,
-  hint,
-  children,
-}: {
-  label: string
-  required?: boolean
-  hint?: string
-  children: React.ReactNode
-}) {
-  return (
-    <div className="grid gap-1.5">
-      <label className="font-mono text-[10px] uppercase tracking-[0.18em]" style={{ color: C.txtDim }}>
-        {label}
-        {required && <span style={{ color: C.amber }}> *</span>}
-      </label>
-      {children}
-      {hint && <span className="text-[11px]" style={{ color: C.txtDim }}>{hint}</span>}
-    </div>
-  )
-}
-
-const inputCls = 'h-11 w-full rounded-lg px-3.5 text-sm outline-none transition-all'
-const inputStyle = { background: C.base, color: C.txt, boxShadow: `inset 0 0 0 1px ${C.border}` }
-
-function onFocus(e: React.FocusEvent<HTMLElement>) {
-  e.target.style.boxShadow = `inset 0 0 0 1px rgba(122,184,255,0.5), 0 0 0 3px rgba(122,184,255,0.08)`
-}
-function onBlur(e: React.FocusEvent<HTMLElement>) {
-  e.target.style.boxShadow = `inset 0 0 0 1px ${C.border}`
-}
-
 interface PhotoItem {
   id: string
   preview: string
@@ -106,17 +50,10 @@ interface PhotoItem {
 }
 
 export default function JoinAsVendor() {
-  useEffect(() => {
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'auto'
-    document.documentElement.style.overflow = 'auto'
-    return () => {
-      document.body.style.overflow = prev
-      document.documentElement.style.overflow = ''
-    }
-  }, [])
+  usePartnerPageScroll()
 
-  const [country, setCountry] = useState<Country>('india')
+  const input = partnerInputProps()
+  const [country, setCountry] = useState<PartnerCountry>('india')
   const [businessName, setBusinessName] = useState('')
   const [contactName, setContactName] = useState('')
   const [email, setEmail] = useState('')
@@ -129,7 +66,6 @@ export default function JoinAsVendor() {
   const [website, setWebsite] = useState('')
   const [bio, setBio] = useState('')
   const [photos, setPhotos] = useState<PhotoItem[]>([])
-
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [done, setDone] = useState(false)
@@ -201,14 +137,12 @@ export default function JoinAsVendor() {
         source: 'join-as-vendor',
       })
       if (dbError) {
-        console.error('vendor_signups insert error:', dbError)
         setError(dbError.message || 'Something went wrong. Please try again.')
       } else {
         setDone(true)
         window.scrollTo({ top: 0, behavior: 'smooth' })
       }
-    } catch (err) {
-      console.error('vendor signup submit error:', err)
+    } catch {
       setError('Something went wrong. Please try again.')
     } finally {
       setBusy(false)
@@ -219,343 +153,154 @@ export default function JoinAsVendor() {
   const phoneHint = country === 'india' ? '+91 98765 43210' : '+1 (555) 123-4567'
 
   return (
-    <div className="font-body min-h-screen" style={{ background: C.page, color: C.txt }}>
-      {/* Header */}
-      <header
-        className="sticky top-0 z-50"
-        style={{
-          background: 'rgba(8,8,16,0.82)',
-          backdropFilter: 'blur(24px) saturate(160%)',
-          WebkitBackdropFilter: 'blur(24px) saturate(160%)',
-          boxShadow: '0 1px 0 rgba(255,255,255,0.06)',
-        }}
-      >
-        <div className="mx-auto flex h-[60px] max-w-5xl items-center justify-between px-5 sm:px-8">
-          <Link href="/" className="flex items-center gap-2.5 select-none">
-            <LogoMark size={26} />
-            <span className="font-mono text-[17px] font-bold tracking-widest" style={{ color: C.txt }}>5BLOC</span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/list-your-business"
-              className="text-[13px] font-medium transition-colors"
-              style={{ color: C.txtMid }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = C.amber)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = C.txtMid)}
-            >
-              Contractor signup
-            </Link>
-            <Link
-              href="/"
-              className="text-[13px] font-medium transition-colors"
-              style={{ color: C.txtMid }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = C.txt)}
-              onMouseLeave={(e) => (e.currentTarget.style.color = C.txtMid)}
-            >
-              ← Home
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div className="landing-apple min-h-screen" style={{ background: 'var(--lp-bg)' }}>
+      <PartnerSignupHeader secondaryHref="/list-your-business" secondaryLabel="Contractor signup" />
 
-      <main className="mx-auto max-w-5xl px-5 pb-24 pt-10 sm:px-8">
+      <main className="mx-auto max-w-[720px] px-5 pb-20 pt-10 sm:px-6">
         {done ? (
-          <SuccessState firstName={contactName.split(' ')[0]} businessName={businessName} country={country} />
+          <PartnerSuccess
+            firstName={contactName.split(' ')[0]}
+            businessName={businessName}
+            country={country}
+            steps={[
+              'We review your profile and prepare your supplier page.',
+              'You get an early-access invite before public launch.',
+              'Architects and contractors start sourcing from you.',
+            ]}
+          />
         ) : (
           <>
-            {/* Hero */}
-            <motion.div
-              initial={{ opacity: 0, y: 18, filter: 'blur(4px)' }}
-              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-              className="mb-10 max-w-2xl"
-            >
-              <div
-                className="inline-flex items-center gap-2 rounded-full px-3 py-1 font-mono text-[10.5px] uppercase tracking-[0.18em] mb-5"
-                style={{ background: `rgba(122,184,255,0.10)`, color: C.blue, boxShadow: 'inset 0 0 0 1px rgba(122,184,255,0.18)' }}
-              >
-                <Globe2 className="h-3.5 w-3.5" /> Vendors &amp; Suppliers · 100% free
-              </div>
-              <h1 className="font-display text-[34px] leading-[1.08] sm:text-[44px]" style={{ color: C.txt }}>
-                List your supply business free on 5Bloc
-              </h1>
-              <p className="mt-4 text-[15px] leading-relaxed" style={{ color: C.txtMid }}>
-                Get discovered by architects and contractors sourcing materials, fixtures and equipment
-                for active projects. Add your product categories, service area and catalogue photos —
-                completely free. We&apos;ll feature your profile when the marketplace opens.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-[13px]" style={{ color: C.txtMid }}>
-                {[
-                  { icon: BadgeCheck, label: 'Free listing, no card required' },
-                  { icon: ShieldCheck, label: 'Review-only access for architects' },
-                  { icon: Rocket, label: 'Early access at launch' },
-                ].map(({ icon: Icon, label }) => (
-                  <span key={label} className="inline-flex items-center gap-2">
-                    <Icon className="h-4 w-4" style={{ color: C.blue }} /> {label}
-                  </span>
-                ))}
-              </div>
-            </motion.div>
+            <PartnerHero
+              eyebrow="Vendors & suppliers · Free listing · India & US"
+              title="Join the vendor waitlist."
+              body="Get discovered when architects and contractors source materials for active projects. Add your categories, service area, and catalogue photos — completely free."
+              bullets={[
+                'Free listing — no card required',
+                'Review-only access for architects',
+                'Early access when marketplace opens',
+              ]}
+            />
 
-            {/* Form */}
-            <form onSubmit={submit} className="grid gap-6">
-              {/* Country */}
-              <div className="rounded-2xl p-5 sm:p-6" style={{ background: C.mid, boxShadow: `inset 0 0 0 1px ${C.border}` }}>
-                <Field label="Where do you operate?" required>
-                  <div className="flex gap-2.5">
-                    {([
-                      { id: 'india', label: '🇮🇳  India' },
-                      { id: 'us', label: '🇺🇸  United States' },
-                    ] as { id: Country; label: string }[]).map((opt) => {
-                      const active = country === opt.id
-                      return (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => setCountry(opt.id)}
-                          className="flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition-all"
-                          style={{
-                            background: active ? `rgba(122,184,255,0.10)` : C.base,
-                            color: active ? C.blue : C.txtMid,
-                            boxShadow: active ? 'inset 0 0 0 1.5px rgba(122,184,255,0.5)' : `inset 0 0 0 1px ${C.border}`,
-                          }}
-                        >
-                          {opt.label}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </Field>
-              </div>
+            <form onSubmit={submit} className="grid gap-5">
+              <PartnerSection title="Where do you operate?">
+                <PartnerField label="Country" required>
+                  <PartnerCountryToggle country={country} onChange={setCountry} />
+                </PartnerField>
+              </PartnerSection>
 
-              {/* Business details */}
-              <div className="grid gap-5 rounded-2xl p-5 sm:p-6" style={{ background: C.mid, boxShadow: `inset 0 0 0 1px ${C.border}` }}>
-                <SectionTitle>Business details</SectionTitle>
+              <PartnerSection title="Business details">
                 <div className="grid gap-5 sm:grid-cols-2">
-                  <Field label="Business name" required>
-                    <input className={inputCls} style={inputStyle} onFocus={onFocus} onBlur={onBlur}
-                      value={businessName} onChange={(e) => setBusinessName(e.target.value)}
-                      placeholder="e.g. SteelCraft Supplies" required />
-                  </Field>
-                  <Field label="Your name" required>
-                    <input className={inputCls} style={inputStyle} onFocus={onFocus} onBlur={onBlur}
-                      value={contactName} onChange={(e) => setContactName(e.target.value)}
-                      placeholder="e.g. Vishal Patil" required />
-                  </Field>
+                  <PartnerField label="Business name" required>
+                    <input {...input} value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="SteelCraft Supplies" required />
+                  </PartnerField>
+                  <PartnerField label="Your name" required>
+                    <input {...input} value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="Vishal Patil" required />
+                  </PartnerField>
                 </div>
                 <div className="grid gap-5 sm:grid-cols-2">
-                  <Field label="Work email" required>
-                    <input type="email" className={inputCls} style={inputStyle} onFocus={onFocus} onBlur={onBlur}
-                      value={email} onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@business.com" required />
-                  </Field>
-                  <Field label="Phone" hint={phoneHint}>
-                    <input className={inputCls} style={inputStyle} onFocus={onFocus} onBlur={onBlur}
-                      value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={phoneHint} />
-                  </Field>
+                  <PartnerField label="Work email" required>
+                    <input {...input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@business.com" required />
+                  </PartnerField>
+                  <PartnerField label="Phone" hint={phoneHint}>
+                    <input {...input} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={phoneHint} />
+                  </PartnerField>
                 </div>
                 <div className="grid gap-5 sm:grid-cols-2">
-                  <Field label="City" required hint={cityHint}>
-                    <input className={inputCls} style={inputStyle} onFocus={onFocus} onBlur={onBlur}
-                      value={city} onChange={(e) => setCity(e.target.value)}
-                      placeholder={country === 'india' ? 'Mumbai' : 'Austin'} required />
-                  </Field>
-                  <Field label="State / Region">
-                    <input className={inputCls} style={inputStyle} onFocus={onFocus} onBlur={onBlur}
-                      value={stateRegion} onChange={(e) => setStateRegion(e.target.value)}
-                      placeholder={country === 'india' ? 'Maharashtra' : 'Texas'} />
-                  </Field>
+                  <PartnerField label="City" required hint={cityHint}>
+                    <input {...input} value={city} onChange={(e) => setCity(e.target.value)} placeholder={country === 'india' ? 'Mumbai' : 'Austin'} required />
+                  </PartnerField>
+                  <PartnerField label="State / region">
+                    <input {...input} value={stateRegion} onChange={(e) => setStateRegion(e.target.value)} placeholder={country === 'india' ? 'Maharashtra' : 'Texas'} />
+                  </PartnerField>
                 </div>
-              </div>
+              </PartnerSection>
 
-              {/* Categories */}
-              <div className="grid gap-4 rounded-2xl p-5 sm:p-6" style={{ background: C.mid, boxShadow: `inset 0 0 0 1px ${C.border}` }}>
-                <SectionTitle>
-                  What do you supply?{' '}
-                  <span style={{ color: C.txtDim }}>· pick all that apply</span>
-                </SectionTitle>
-                <div className="flex flex-wrap gap-2">
-                  {CATEGORIES.map((cat) => {
-                    const active = cats.includes(cat)
-                    return (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => toggleCat(cat)}
-                        className="rounded-full px-3.5 py-2 text-[12.5px] font-medium transition-all"
-                        style={{
-                          background: active ? `rgba(122,184,255,0.12)` : C.base,
-                          color: active ? C.blue : C.txtMid,
-                          boxShadow: active ? 'inset 0 0 0 1.5px rgba(122,184,255,0.45)' : `inset 0 0 0 1px ${C.border}`,
-                        }}
-                      >
-                        {active && <Check className="mr-1 inline h-3.5 w-3.5" />}
-                        {cat}
-                      </button>
-                    )
-                  })}
-                </div>
-
+              <PartnerSection title="What do you supply?">
+                <PartnerField label="Categories" required hint="Pick all that apply">
+                  <PartnerChipGrid options={CATEGORIES} selected={cats} onToggle={toggleCat} />
+                </PartnerField>
                 <div className="grid gap-5 sm:grid-cols-2">
-                  <Field label="Team / company size">
-                    <select className={inputCls} style={{ ...inputStyle, appearance: 'none' }} onFocus={onFocus} onBlur={onBlur}
-                      value={teamSize} onChange={(e) => setTeamSize(e.target.value)}>
-                      <option value="" style={{ background: C.mid }}>Select…</option>
-                      {TEAM_SIZES.map((t) => <option key={t} value={t} style={{ background: C.mid }}>{t}</option>)}
+                  <PartnerField label="Company size">
+                    <select {...input} style={{ ...input.style, appearance: 'none' as const }} value={teamSize} onChange={(e) => setTeamSize(e.target.value)}>
+                      <option value="">Select…</option>
+                      {TEAM_SIZES.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
                     </select>
-                  </Field>
-                  <Field label="Years in business">
-                    <input type="number" min="0" className={inputCls} style={inputStyle} onFocus={onFocus} onBlur={onBlur}
-                      value={years} onChange={(e) => setYears(e.target.value)} placeholder="e.g. 14" />
-                  </Field>
+                  </PartnerField>
+                  <PartnerField label="Years in business">
+                    <input {...input} type="number" min="0" value={years} onChange={(e) => setYears(e.target.value)} placeholder="14" />
+                  </PartnerField>
                 </div>
-
-                <Field label="Website / catalogue">
-                  <input className={inputCls} style={inputStyle} onFocus={onFocus} onBlur={onBlur}
-                    value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://" />
-                </Field>
-
-                <Field label="Tell architects about your products" hint="What you supply, your key brands, delivery coverage, MOQ.">
+                <PartnerField label="Website / catalogue">
+                  <input {...input} value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://" />
+                </PartnerField>
+                <PartnerField label="About your products" hint="What you supply, key brands, delivery coverage.">
                   <textarea
-                    className="w-full rounded-lg px-3.5 py-3 text-sm outline-none transition-all resize-none"
-                    style={inputStyle} onFocus={onFocus} onBlur={onBlur}
-                    rows={4} value={bio} onChange={(e) => setBio(e.target.value)}
-                    placeholder="We stock 500+ SKUs of structural steel sections and deliver same-day across Maharashtra…" />
-                </Field>
-              </div>
+                    {...input}
+                    className="w-full rounded-xl px-3.5 py-3 text-[15px] outline-none transition-all resize-none"
+                    rows={4}
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    placeholder="We stock 500+ SKUs of structural steel and deliver same-day across Maharashtra…"
+                  />
+                </PartnerField>
+              </PartnerSection>
 
-              {/* Photos */}
-              <div className="grid gap-4 rounded-2xl p-5 sm:p-6" style={{ background: C.mid, boxShadow: `inset 0 0 0 1px ${C.border}` }}>
-                <SectionTitle>Product / catalogue photos <span style={{ color: C.txtDim }}>· optional, up to 6</span></SectionTitle>
-                <div className="flex flex-wrap gap-3">
-                  {photos.map((p) => (
-                    <div key={p.id} className="relative h-24 w-24 overflow-hidden rounded-xl" style={{ boxShadow: `inset 0 0 0 1px ${C.border}` }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={p.preview} alt="" className="h-full w-full object-cover" />
-                      {p.uploading && (
-                        <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.55)' }}>
-                          <Loader2 className="h-5 w-5 animate-spin" style={{ color: C.blue }} />
-                        </div>
-                      )}
-                      <button type="button" onClick={() => removePhoto(p.id)}
-                        className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full"
-                        style={{ background: 'rgba(0,0,0,0.6)', color: '#fff' }} aria-label="Remove photo">
-                        <X className="h-3.5 w-3.5" />
+              <PartnerSection title="Catalogue photos">
+                <PartnerField label="Product photos" hint="Optional · up to 6">
+                  <div className="flex flex-wrap gap-3">
+                    {photos.map((p) => (
+                      <div key={p.id} className="relative h-24 w-24 overflow-hidden rounded-xl" style={{ border: '1px solid var(--lp-border)' }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={p.preview} alt="" className="h-full w-full object-cover" />
+                        {p.uploading && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                            <Loader2 className="h-5 w-5 animate-spin" style={{ color: 'var(--lp-brand)' }} />
+                          </div>
+                        )}
+                        <button type="button" onClick={() => removePhoto(p.id)} className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/55 text-white" aria-label="Remove photo">
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                    {photos.length < 6 && (
+                      <button
+                        type="button"
+                        onClick={() => fileRef.current?.click()}
+                        className="flex h-24 w-24 flex-col items-center justify-center gap-1.5 rounded-xl"
+                        style={{ background: 'var(--lp-bg-alt)', border: '1px solid var(--lp-border)', color: 'var(--lp-text-secondary)' }}
+                      >
+                        <Upload className="h-5 w-5" />
+                        <span className="text-[11px]">Add photo</span>
                       </button>
-                    </div>
-                  ))}
-                  {photos.length < 6 && (
-                    <button type="button" onClick={() => fileRef.current?.click()}
-                      className="flex h-24 w-24 flex-col items-center justify-center gap-1.5 rounded-xl transition-all"
-                      style={{ background: C.base, color: C.txtDim, boxShadow: `inset 0 0 0 1px ${C.border}` }}
-                      onMouseEnter={(e) => (e.currentTarget.style.boxShadow = `inset 0 0 0 1px ${C.borderStrong}`)}
-                      onMouseLeave={(e) => (e.currentTarget.style.boxShadow = `inset 0 0 0 1px ${C.border}`)}>
-                      <Upload className="h-5 w-5" />
-                      <span className="text-[11px] font-medium">Add photo</span>
-                    </button>
-                  )}
-                </div>
-                <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={(e) => handleFiles(e.target.files)} />
-              </div>
+                    )}
+                  </div>
+                  <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" multiple hidden onChange={(e) => handleFiles(e.target.files)} />
+                </PartnerField>
+              </PartnerSection>
 
-              {/* Submit */}
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <button
-                  type="submit"
-                  disabled={busy}
-                  className="inline-flex h-12 items-center justify-center gap-2 rounded-full px-8 text-[15px] font-semibold transition-all active:scale-[0.98] disabled:opacity-50"
-                  style={{ background: C.blue, color: '#04121a' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#a8d4ff')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = C.blue)}
-                >
-                  {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <>List my supply business free <ArrowRight className="h-5 w-5" /></>}
-                </button>
-                {error
-                  ? <p className="text-[13px]" style={{ color: '#ff6b6b' }}>{error}</p>
-                  : <p className="text-[12.5px]" style={{ color: C.txtDim }}>
-                      Are you a contractor?{' '}
-                      <Link href="/list-your-business" className="underline" style={{ color: C.amber }}>Sign up here.</Link>
-                    </p>}
-              </div>
+              <PartnerSubmitRow
+                busy={busy}
+                error={error}
+                submitLabel="Join waitlist — free"
+                footer={
+                  <p className="text-[13px]" style={{ color: 'var(--lp-text-tertiary)' }}>
+                    Are you a contractor?{' '}
+                    <Link href="/list-your-business" className="lp-link text-[13px]">
+                      Sign up here ›
+                    </Link>
+                  </p>
+                }
+              />
             </form>
           </>
         )}
       </main>
 
-      <footer style={{ background: 'rgba(255,255,255,0.025)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' }}>
-        <div className="mx-auto flex max-w-5xl flex-col items-start justify-between gap-3 px-5 py-10 text-[12px] sm:flex-row sm:items-center sm:px-8" style={{ color: C.txtDim }}>
-          <div>© {new Date().getFullYear()} 5Bloc Technologies. All rights reserved.</div>
-          <div className="flex gap-5">
-            <Link href="/" style={{ color: C.txtDim }}>Home</Link>
-            <Link href="/list-your-business" style={{ color: C.txtDim }}>Contractor signup</Link>
-            <Link href="/terms" style={{ color: C.txtDim }}>Terms</Link>
-            <Link href="/privacy" style={{ color: C.txtDim }}>Privacy</Link>
-          </div>
-        </div>
-      </footer>
+      <PartnerSignupFooter extraLinks={[{ href: '/list-your-business', label: 'Contractor signup' }]} />
     </div>
-  )
-}
-
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="font-mono text-[10.5px] uppercase tracking-[0.18em]" style={{ color: C.blue, opacity: 0.85 }}>
-      {children}
-    </h2>
-  )
-}
-
-function SuccessState({ firstName, businessName, country }: { firstName: string; businessName: string; country: Country }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20, filter: 'blur(4px)' }}
-      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-      className="mx-auto max-w-2xl py-10 text-center"
-    >
-      <div className="mx-auto mb-7 flex h-16 w-16 items-center justify-center rounded-2xl" style={{ background: 'rgba(46,204,138,0.12)', boxShadow: 'inset 0 0 0 1px rgba(46,204,138,0.3)' }}>
-        <Check className="h-8 w-8" style={{ color: '#2ECC8A' }} />
-      </div>
-      <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 font-mono text-[11px] uppercase tracking-[0.18em] mb-5" style={{ background: 'rgba(46,204,138,0.12)', color: '#2ECC8A' }}>
-        <Check className="h-3.5 w-3.5" /> You&apos;re on the list
-      </div>
-      <h1 className="font-display text-[30px] leading-tight sm:text-[38px]" style={{ color: C.txt }}>
-        Thank you for joining, {firstName || 'there'}.
-      </h1>
-      <p className="mx-auto mt-4 max-w-lg text-[15px] leading-relaxed" style={{ color: C.txtMid }}>
-        <span style={{ color: C.txt, fontWeight: 600 }}>{businessName || 'Your business'}</span> is now registered
-        for the 5Bloc supplier marketplace. We&apos;re launching in{' '}
-        <span style={{ color: C.blue, fontWeight: 600 }}>about 2 months</span>
-        {country === 'us' ? ' across the US' : ' across India'} — early-access invites go to listed businesses first.
-      </p>
-      <div className="mx-auto mt-8 grid max-w-md gap-3 rounded-2xl p-5 text-left" style={{ background: C.mid, boxShadow: `inset 0 0 0 1px ${C.border}` }}>
-        {[
-          'We review your profile and prepare your supplier page.',
-          'You get an early-access invite before public launch.',
-          'Architects and contractors start sourcing directly from you.',
-        ].map((step, i) => (
-          <div key={i} className="flex items-start gap-3">
-            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full font-mono text-[11px] font-bold" style={{ background: `rgba(122,184,255,0.14)`, color: C.blue }}>
-              {i + 1}
-            </span>
-            <span className="text-[13.5px]" style={{ color: C.txtMid }}>{step}</span>
-          </div>
-        ))}
-      </div>
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-        <Link
-          href="/"
-          className="inline-flex h-11 items-center gap-2 rounded-full px-6 text-sm font-semibold transition-all"
-          style={{ background: C.blue, color: '#04121a' }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = '#a8d4ff')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = C.blue)}
-        >
-          Back to home <ArrowRight className="h-4 w-4" />
-        </Link>
-        <a href="mailto:contact@5bloc.com" className="inline-flex h-11 items-center rounded-full px-6 text-sm font-semibold" style={{ color: C.txtMid, boxShadow: `inset 0 0 0 1px ${C.border}` }}>
-          Questions? Email us
-        </a>
-      </div>
-    </motion.div>
   )
 }

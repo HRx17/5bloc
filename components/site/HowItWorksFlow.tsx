@@ -1,320 +1,470 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import {
-  FolderPlus,
-  Upload,
-  MessageSquare,
-  Eye,
-  ArrowRight,
-  Check,
-} from 'lucide-react'
+import { useRef, useState, useEffect } from 'react'
+import { motion, AnimatePresence, useInView } from 'framer-motion'
+import { CheckCircle2, Circle, FileText, Users } from 'lucide-react'
 
 const STEPS = [
   {
     id: 'project',
-    icon: FolderPlus,
-    label: 'Step 1',
-    title: 'Create your project',
-    body: 'Add the client, site, and team. Everyone gets the right access — architect, contractor, consultant, client.',
-    visual: {
-      title: 'Shah Residence · Mumbai',
-      lines: [
-        { label: 'Architect', value: 'You', color: 'var(--amber)' },
-        { label: 'Contractor', value: 'Invited', color: 'var(--blue)' },
-        { label: 'Client', value: 'Portal access', color: 'var(--success)' },
-      ],
-    },
+    phase: 'Project setup',
+    title: 'Open a project. Invite the team.',
+    body: 'Name the site, set the phase, and add who needs access — architect, contractor, client.',
+    bullets: ['Phase tracker from brief to handover', 'Role-based access per person', 'One home for every file and message'],
+    screenTitle: 'Kapoor Villa · Juhu',
+    Screen: ProjectScreen,
   },
   {
     id: 'drawings',
-    icon: Upload,
-    label: 'Step 2',
-    title: 'Upload drawings',
-    body: 'Store plans and specs in one vault. Every version is saved — no more hunting for "final_v3_FINAL.dwg".',
-    visual: {
-      title: 'Document vault',
-      lines: [
-        { label: 'A-07 Floor plan', value: 'v14 · today', color: 'var(--amber)' },
-        { label: 'A-07 Floor plan', value: 'v13 · archived', color: 'var(--stone)' },
-        { label: 'Structural set', value: 'v6 · linked', color: 'var(--blue)' },
-      ],
-    },
+    phase: 'Document control',
+    title: 'Issue drawings with version history.',
+    body: 'Upload sheets to the vault. Every revision stays linked — no more “which PDF is latest?”',
+    bullets: ['Sheets numbered like your issue set', 'Current vs superseded at a glance', 'Structural and MEP cross-linked'],
+    screenTitle: 'Document vault',
+    Screen: DrawingsScreen,
   },
   {
     id: 'collaborate',
-    icon: MessageSquare,
-    label: 'Step 3',
-    title: 'Run the project together',
-    body: 'RFIs, submittals, and approvals stay on the drawing they refer to — not lost in group chats or email.',
-    visual: {
-      title: 'RFI #061 · Stair landing width',
-      lines: [
-        { label: 'Linked to', value: 'Drawing A-07 v14', color: 'var(--blue)' },
-        { label: 'Status', value: 'Answered', color: 'var(--success)' },
-        { label: 'Contractor', value: 'Notified', color: 'var(--stone)' },
-      ],
-    },
+    phase: 'RFIs & coordination',
+    title: 'Raise RFIs on the sheet they refer to.',
+    body: 'Contractor questions stay tied to A-07 v14 — not buried in a WhatsApp thread.',
+    bullets: ['RFI pinned to drawing + version', 'Status from open to answered', 'Drawing updated when resolved'],
+    screenTitle: 'RFI #061',
+    Screen: RfiScreen,
   },
   {
     id: 'client',
-    icon: Eye,
-    label: 'Step 4',
-    title: 'Client stays in the loop',
-    body: 'They open a simple portal to see progress, approve samples, and check payments — without calling you every evening.',
-    visual: {
-      title: 'Client portal',
-      lines: [
-        { label: 'Phase', value: 'Construction docs', color: 'var(--amber)' },
-        { label: 'Pending', value: '2 approvals', color: 'var(--blue)' },
-        { label: 'Updates', value: 'Plain English', color: 'var(--success)' },
-      ],
-    },
+    phase: 'Client portal',
+    title: 'Clients see progress in plain English.',
+    body: 'Approvals, milestones, and site photos — without another app to install.',
+    bullets: ['Weekly update in simple language', 'Sign-offs on samples and drawings', 'No login for your client team'],
+    screenTitle: 'Client update',
+    Screen: ClientScreen,
   },
 ] as const
 
-const STEP_MS = 4500
+type Step = (typeof STEPS)[number]
 
-export function HowItWorksFlow() {
-  const [active, setActive] = useState(0)
-  const [paused, setPaused] = useState(false)
+const UI = {
+  bg: '#f5f5f7',
+  surface: '#ffffff',
+  border: 'rgba(0,0,0,0.08)',
+  text: '#1d1d1f',
+  muted: '#86868b',
+  secondary: '#6e6e73',
+  brand: 'var(--lp-brand)',
+}
 
-  const goNext = useCallback(() => {
-    setActive((i) => (i + 1) % STEPS.length)
-  }, [])
+function AppScreen({
+  title,
+  children,
+}: {
+  title: string
+  children: React.ReactNode
+}) {
+  return (
+    <div
+      className="overflow-hidden rounded-[1.125rem]"
+      style={{
+        background: UI.surface,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.04), 0 0 0 1px rgba(0,0,0,0.06)',
+      }}
+    >
+      <div
+        className="flex items-center justify-between px-4 py-3"
+        style={{ background: UI.bg, borderBottom: `1px solid ${UI.border}` }}
+      >
+        <span className="text-[13px] font-semibold tracking-tight" style={{ color: UI.text }}>
+          {title}
+        </span>
+        <span className="text-[11px]" style={{ color: UI.muted }}>
+          5Bloc
+        </span>
+      </div>
+      <div className="p-4 sm:p-5">{children}</div>
+    </div>
+  )
+}
 
-  useEffect(() => {
-    if (paused) return
-    const t = setInterval(goNext, STEP_MS)
-    return () => clearInterval(t)
-  }, [paused, goNext, active])
-
-  const step = STEPS[active]
-  const Icon = step.icon
+function ProjectScreen() {
+  const team = ['PN', 'AK', 'RS', 'Client']
+  const phases = ['Brief', 'Schematic', 'Design dev', 'Construction docs']
 
   return (
-    <section id="flow" className="py-16 sm:py-24 relative overflow-hidden">
+    <AppScreen title="Kapoor Villa · Juhu">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[11px]" style={{ color: UI.muted }}>
+            Active phase
+          </p>
+          <p className="text-[15px] font-semibold mt-0.5" style={{ color: UI.text }}>
+            Design development
+          </p>
+        </div>
+        <span
+          className="rounded-full px-2.5 py-1 text-[11px] font-medium"
+          style={{ background: 'rgba(245,166,35,0.12)', color: '#b86a00' }}
+        >
+          On track
+        </span>
+      </div>
+
+      <div className="mt-4 flex gap-1.5 overflow-x-auto pb-1">
+        {phases.map((p, i) => (
+          <span
+            key={p}
+            className="shrink-0 rounded-full px-2.5 py-1 text-[11px]"
+            style={{
+              background: i === 2 ? UI.text : UI.bg,
+              color: i === 2 ? '#fff' : UI.secondary,
+            }}
+          >
+            {p}
+          </span>
+        ))}
+      </div>
+
+      <div className="mt-5 grid grid-cols-2 gap-2.5">
+        {[
+          { label: 'Client', value: 'Kapoor family' },
+          { label: 'Contractor', value: 'Invited' },
+          { label: 'Site', value: 'Juhu Tara Rd' },
+          { label: 'RERA', value: 'P518000…' },
+        ].map((row) => (
+          <div
+            key={row.label}
+            className="rounded-xl px-3 py-2.5"
+            style={{ background: UI.bg, border: `1px solid ${UI.border}` }}
+          >
+            <p className="text-[10px]" style={{ color: UI.muted }}>
+              {row.label}
+            </p>
+            <p className="text-[13px] font-medium mt-0.5" style={{ color: UI.text }}>
+              {row.value}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4 flex items-center gap-2">
+        <Users className="h-4 w-4" style={{ color: UI.muted }} />
+        <div className="flex -space-x-2">
+          {team.map((initials) => (
+            <span
+              key={initials}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-semibold"
+              style={{ background: UI.bg, color: UI.text }}
+            >
+              {initials}
+            </span>
+          ))}
+        </div>
+        <span className="text-[12px]" style={{ color: UI.secondary }}>
+          4 on the project
+        </span>
+      </div>
+    </AppScreen>
+  )
+}
+
+function DrawingsScreen() {
+  const files = [
+    { code: 'A-07', name: 'First floor plan', ver: 'v14', status: 'Current', active: true },
+    { code: 'A-03', name: 'Sections', ver: 'v8', status: 'Issued', active: false },
+    { code: 'S-02', name: 'Structural GA', ver: 'v3', status: 'Linked', active: false },
+  ]
+
+  return (
+    <AppScreen title="Document vault">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[12px]" style={{ color: UI.secondary }}>
+          12 files · Kapoor Villa
+        </p>
+        <span className="text-[11px] font-medium" style={{ color: UI.brand }}>
+          + Upload
+        </span>
+      </div>
+      <ul className="space-y-2">
+        {files.map((f) => (
+          <li
+            key={f.code}
+            className="flex items-center gap-3 rounded-xl px-3 py-2.5"
+            style={{
+              background: f.active ? 'rgba(245,166,35,0.06)' : UI.bg,
+              border: `1px solid ${f.active ? 'rgba(245,166,35,0.22)' : UI.border}`,
+            }}
+          >
+            <FileText className="h-4 w-4 shrink-0" style={{ color: f.active ? '#b86a00' : UI.muted }} />
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-medium truncate" style={{ color: UI.text }}>
+                {f.code} · {f.name}
+              </p>
+              <p className="text-[11px] mt-0.5" style={{ color: UI.muted }}>
+                {f.ver} · Today 09:41
+              </p>
+            </div>
+            <span
+              className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium"
+              style={{
+                background: f.active ? 'rgba(245,166,35,0.14)' : 'rgba(0,0,0,0.04)',
+                color: f.active ? '#b86a00' : UI.secondary,
+              }}
+            >
+              {f.status}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </AppScreen>
+  )
+}
+
+function RfiScreen() {
+  const steps = [
+    { label: 'Raised by contractor', done: true },
+    { label: 'Answer from architect', done: true },
+    { label: 'Drawing re-issued', done: true },
+  ]
+
+  return (
+    <AppScreen title="RFI #061 · Stair landing">
       <div
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 0%, rgba(56,130,255,0.08) 0%, transparent 65%)' }}
+        className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium mb-3"
+        style={{ background: UI.bg, border: `1px solid ${UI.border}`, color: UI.secondary }}
+      >
+        <FileText className="h-3 w-3" />
+        Linked to A-07 v14
+      </div>
+
+      <div className="rounded-xl p-3" style={{ background: UI.bg, border: `1px solid ${UI.border}` }}>
+        <p className="text-[11px] font-medium" style={{ color: UI.muted }}>
+          Question
+        </p>
+        <p className="text-[13px] mt-1 leading-relaxed" style={{ color: UI.text }}>
+          Landing width at level 2 — confirm 1.05 m per NBC 4.3.2 or revise plan?
+        </p>
+      </div>
+
+      <div className="rounded-xl p-3 mt-2" style={{ background: 'rgba(245,166,35,0.06)', border: '1px solid rgba(245,166,35,0.18)' }}>
+        <p className="text-[11px] font-medium" style={{ color: '#b86a00' }}>
+          Answer · Priya N.
+        </p>
+        <p className="text-[13px] mt-1 leading-relaxed" style={{ color: UI.text }}>
+          Revise to 1.10 m. Updated A-07 v14 issued — contractor notified.
+        </p>
+      </div>
+
+      <ul className="mt-4 space-y-2">
+        {steps.map((s) => (
+          <li key={s.label} className="flex items-center gap-2 text-[12px]" style={{ color: UI.secondary }}>
+            <CheckCircle2 className="h-3.5 w-3.5 shrink-0" style={{ color: '#2ECC8A' }} />
+            {s.label}
+          </li>
+        ))}
+      </ul>
+    </AppScreen>
+  )
+}
+
+function ClientScreen() {
+  const items = [
+    { label: 'Tile sample — master bath', state: 'Awaiting approval' },
+    { label: 'Weekly site photos', state: 'Viewed' },
+    { label: 'Phase: Construction docs', state: '68% complete' },
+  ]
+
+  return (
+    <AppScreen title="Client portal">
+      <p className="text-[15px] font-semibold leading-snug" style={{ color: UI.text }}>
+        Your home is in design development.
+      </p>
+      <p className="text-[13px] mt-2 leading-relaxed" style={{ color: UI.secondary }}>
+        Staircase width was updated this week. Two items need your sign-off before we issue tender drawings.
+      </p>
+
+      <div className="mt-4 h-1.5 rounded-full overflow-hidden" style={{ background: UI.bg }}>
+        <div className="h-full w-[68%] rounded-full" style={{ background: UI.brand }} />
+      </div>
+      <p className="text-[11px] mt-1.5" style={{ color: UI.muted }}>
+        68% through current phase
+      </p>
+
+      <ul className="mt-4 space-y-2">
+        {items.map((item) => (
+          <li
+            key={item.label}
+            className="flex items-center justify-between gap-3 rounded-xl px-3 py-2.5"
+            style={{ background: UI.bg, border: `1px solid ${UI.border}` }}
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <Circle className="h-3 w-3 shrink-0" style={{ color: UI.muted }} />
+              <span className="text-[12px] truncate" style={{ color: UI.text }}>
+                {item.label}
+              </span>
+            </div>
+            <span className="text-[11px] shrink-0" style={{ color: UI.muted }}>
+              {item.state}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </AppScreen>
+  )
+}
+
+function StepPreview({ step }: { step: Step }) {
+  const Screen = step.Screen
+  return <Screen />
+}
+
+function FlowStep({
+  step,
+  active,
+  onActivate,
+}: {
+  step: Step
+  active: boolean
+  onActivate: () => void
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  const inView = useInView(ref, { margin: '-40% 0px -40% 0px' })
+
+  useEffect(() => {
+    if (inView) onActivate()
+  }, [inView, onActivate])
+
+  return (
+    <div
+      ref={ref}
+      className="relative flex flex-col justify-center py-14 sm:py-16 min-h-[52vh] lg:min-h-[62vh] lg:pl-10"
+    >
+      <motion.span
+        className="absolute left-0 top-1/2 hidden lg:block h-2 w-2 -translate-x-[5px] -translate-y-1/2 rounded-full"
+        animate={{
+          scale: active ? 1.15 : 0.85,
+          backgroundColor: active ? 'var(--lp-brand)' : '#d2d2d7',
+        }}
+        transition={{ duration: 0.4 }}
         aria-hidden
       />
 
-      <div className="mx-auto max-w-7xl px-5 sm:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-10 sm:mb-14">
-          <span className="metadata-caps" style={{ color: 'var(--amber)' }}>
-            How it works
-          </span>
-          <h2
-            className="mt-4 font-brand text-[32px] sm:text-[42px] tracking-tight leading-[1.1]"
-            style={{ color: 'var(--on-surface)' }}
-          >
-            From messy chats to one clear workspace
-          </h2>
-          <p className="mt-3 text-[15px] sm:text-[16px] leading-relaxed" style={{ color: 'var(--on-surface-variant)' }}>
-            Four steps. Same project, same team — just organised.
-          </p>
-        </div>
-
-        <div
-          className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-10 items-stretch"
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
+      <motion.div
+        initial={false}
+        animate={{ opacity: active ? 1 : 0.22, y: active ? 0 : 12 }}
+        transition={{ duration: 0.55, ease: [0.25, 0.1, 0.25, 1] }}
+      >
+        <p className="text-[13px] font-medium" style={{ color: active ? UI.text : UI.muted }}>
+          {step.phase}
+        </p>
+        <h3
+          className="mt-2 text-[clamp(1.625rem,2.8vw,2.125rem)] font-semibold tracking-tight leading-tight max-w-md"
+          style={{ color: UI.text }}
         >
-          {/* Step picker */}
-          <div className="flex flex-col gap-2">
-            {STEPS.map((s, i) => {
-              const StepIcon = s.icon
-              const isActive = i === active
-              return (
-                <motion.button
-                  key={s.id}
-                  type="button"
-                  onClick={() => setActive(i)}
-                  className="text-left rounded-2xl px-4 py-4 sm:px-5 sm:py-5 transition-colors"
-                  style={{
-                    background: isActive ? 'var(--surface-container)' : 'transparent',
-                    boxShadow: isActive
-                      ? 'inset 0 0 0 1px rgba(245,166,35,0.22), var(--shadow-2)'
-                      : 'inset 0 0 0 1px rgba(255,255,255,0.05)',
-                  }}
-                  whileHover={{ x: isActive ? 0 : 4 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
-                      style={{
-                        background: isActive ? 'rgba(245,166,35,0.12)' : 'var(--surface-container-low)',
-                        color: isActive ? 'var(--amber)' : 'var(--stone)',
-                      }}
-                    >
-                      <StepIcon className="h-[18px] w-[18px]" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-[10px] uppercase tracking-widest" style={{ color: 'var(--stone)' }}>
-                          {s.label}
-                        </span>
-                        {isActive && (
-                          <motion.span
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider"
-                            style={{ color: 'var(--amber)' }}
-                          >
-                            <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--amber)] animate-pulse" />
-                            Live
-                          </motion.span>
-                        )}
-                      </div>
-                      <p className="font-brand text-[15px] sm:text-[16px] mt-0.5" style={{ color: isActive ? 'var(--on-surface)' : 'var(--on-surface-variant)' }}>
-                        {s.title}
-                      </p>
-                      <AnimatePresence mode="wait">
-                        {isActive && (
-                          <motion.p
-                            key={s.id}
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.25 }}
-                            className="mt-2 text-[13px] leading-relaxed overflow-hidden"
-                            style={{ color: 'var(--stone)' }}
-                          >
-                            {s.body}
-                          </motion.p>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  </div>
+          {step.title}
+        </h3>
+        <p className="mt-3 text-[17px] leading-relaxed max-w-md" style={{ color: UI.secondary }}>
+          {step.body}
+        </p>
+        <ul className="mt-5 space-y-2 max-w-md">
+          {step.bullets.map((b) => (
+            <li key={b} className="flex items-start gap-2.5 text-[14px]" style={{ color: UI.secondary }}>
+              <span
+                className="mt-[7px] h-1 w-1 shrink-0 rounded-full"
+                style={{ background: active ? 'var(--lp-brand)' : '#c7c7cc' }}
+              />
+              {b}
+            </li>
+          ))}
+        </ul>
+      </motion.div>
 
-                  {isActive && (
-                    <motion.div
-                      className="mt-4 h-0.5 rounded-full overflow-hidden"
-                      style={{ background: 'rgba(255,255,255,0.06)' }}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                    >
-                      <motion.div
-                        key={`progress-${active}-${paused}`}
-                        className="h-full rounded-full"
-                        style={{ background: 'var(--amber)' }}
-                        initial={{ width: '0%' }}
-                        animate={{ width: '100%' }}
-                        transition={{ duration: paused ? 0 : STEP_MS / 1000, ease: 'linear' }}
-                      />
-                    </motion.div>
-                  )}
-                </motion.button>
-              )
-            })}
+      <motion.div
+        className="lg:hidden mt-8"
+        initial={false}
+        animate={{ opacity: active ? 1 : 0.35 }}
+        transition={{ duration: 0.5 }}
+      >
+        <StepPreview step={step} />
+      </motion.div>
+    </div>
+  )
+}
+
+function StickyPreview({ step, activeIndex }: { step: Step; activeIndex: number }) {
+  return (
+    <div className="sticky top-28">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={step.id}
+          initial={{ opacity: 0, y: 28 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.55, ease: [0.25, 0.1, 0.25, 1] }}
+        >
+          <StepPreview step={step} />
+          <div className="mt-5 flex items-center gap-1.5">
+            {STEPS.map((s, i) => (
+              <div
+                key={s.id}
+                className="h-1 rounded-full transition-all duration-500"
+                style={{
+                  width: i === activeIndex ? 28 : 6,
+                  background: i <= activeIndex ? 'var(--lp-brand)' : '#d2d2d7',
+                }}
+              />
+            ))}
+            <span className="ml-2 text-[12px]" style={{ color: UI.muted }}>
+              Scroll
+            </span>
           </div>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  )
+}
 
-          {/* Animated preview panel */}
-          <div
-            className="relative rounded-2xl overflow-hidden min-h-[280px] sm:min-h-[340px]"
-            style={{
-              background: 'var(--surface-container)',
-              boxShadow: 'var(--glow-amber), var(--shadow-4)',
-            }}
-          >
+export function HowItWorksFlow() {
+  const [active, setActive] = useState(0)
+  const headerRef = useRef<HTMLDivElement>(null)
+  const headerInView = useInView(headerRef, { once: true, margin: '-60px' })
+
+  return (
+    <section id="flow" className="py-20 sm:py-28 scroll-mt-16" style={{ background: '#fff' }}>
+      <div className="mx-auto max-w-[980px] px-5 sm:px-6">
+        <motion.div
+          ref={headerRef}
+          className="text-center max-w-2xl mx-auto mb-10 sm:mb-14"
+          initial={{ opacity: 0, y: 24 }}
+          animate={headerInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+        >
+          <p className="lp-eyebrow">How it works</p>
+          <h2 className="lp-section-title mt-3">From brief to client sign-off.</h2>
+          <p className="lp-subhead mt-3">
+            Four phases you already run — now in one workspace.
+          </p>
+        </motion.div>
+
+        <div className="lg:grid lg:grid-cols-2 lg:gap-14 xl:gap-20">
+          <div className="relative">
             <div
-              className="absolute inset-x-0 top-0 h-10 flex items-center gap-2 px-4"
-              style={{ background: 'var(--surface-container-low)', boxShadow: 'inset 0 -1px 0 rgba(255,255,255,0.05)' }}
-            >
-              <span className="h-2.5 w-2.5 rounded-full" style={{ background: 'rgba(255,100,100,0.5)' }} />
-              <span className="h-2.5 w-2.5 rounded-full" style={{ background: 'rgba(245,166,35,0.5)' }} />
-              <span className="h-2.5 w-2.5 rounded-full" style={{ background: 'rgba(46,204,138,0.5)' }} />
-              <span className="ml-2 font-mono text-[10px] tracking-wider" style={{ color: 'var(--stone)' }}>
-                5Bloc workspace
-              </span>
-            </div>
-
-            <div className="pt-10 p-5 sm:p-6 h-full">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={step.id}
-                  initial={{ opacity: 0, x: 24, filter: 'blur(6px)' }}
-                  animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-                  exit={{ opacity: 0, x: -24, filter: 'blur(6px)' }}
-                  transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                  className="h-full flex flex-col"
-                >
-                  <div className="flex items-center gap-3 mb-5">
-                    <div
-                      className="h-11 w-11 rounded-2xl flex items-center justify-center"
-                      style={{ background: 'rgba(245,166,35,0.12)', color: 'var(--amber)' }}
-                    >
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="font-mono text-[10px] uppercase tracking-widest" style={{ color: 'var(--stone)' }}>
-                        {step.label}
-                      </p>
-                      <p className="font-brand text-[17px]" style={{ color: 'var(--on-surface)' }}>
-                        {step.visual.title}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div
-                    className="rounded-xl p-4 flex-1 space-y-3"
-                    style={{ background: 'var(--surface-recessed)', boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.05)' }}
-                  >
-                    {step.visual.lines.map((line, li) => (
-                      <motion.div
-                        key={`${step.id}-${line.label}`}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.08 * li, duration: 0.35 }}
-                        className="flex items-center justify-between gap-3 py-2"
-                        style={{ boxShadow: li < step.visual.lines.length - 1 ? 'inset 0 -1px 0 rgba(255,255,255,0.04)' : undefined }}
-                      >
-                        <span className="text-[13px]" style={{ color: 'var(--on-surface-variant)' }}>
-                          {line.label}
-                        </span>
-                        <span className="text-[13px] font-medium flex items-center gap-1.5" style={{ color: line.color }}>
-                          {li === 0 && step.id === 'collaborate' && <Check className="h-3.5 w-3.5" />}
-                          {line.value}
-                        </span>
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  {/* Flow arrows between steps — decorative */}
-                  <div className="mt-4 flex items-center justify-center gap-1.5">
-                    {STEPS.map((_, i) => (
-                      <motion.div
-                        key={i}
-                        className="h-1 rounded-full"
-                        animate={{
-                          width: i === active ? 20 : 6,
-                          opacity: i === active ? 1 : 0.35,
-                        }}
-                        style={{ background: i <= active ? 'var(--amber)' : 'var(--stone)' }}
-                        transition={{ duration: 0.3 }}
-                      />
-                    ))}
-                  </div>
-                </motion.div>
-              </AnimatePresence>
-            </div>
+              className="absolute left-0 top-0 bottom-0 w-px hidden lg:block"
+              style={{ background: '#d2d2d7' }}
+              aria-hidden
+            />
+            {STEPS.map((step) => (
+              <FlowStep
+                key={step.id}
+                step={step}
+                active={active === STEPS.indexOf(step)}
+                onActivate={() => setActive(STEPS.indexOf(step))}
+              />
+            ))}
           </div>
-        </div>
 
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <a href="#prototype" className="btn-primary">
-            Try the live demo <ArrowRight className="h-4 w-4" />
-          </a>
-          <a
-            href="#waitlist"
-            className="text-[13.5px] font-semibold transition-colors"
-            style={{ color: 'var(--stone)' }}
-          >
-            Join the waitlist
-          </a>
+          <div className="hidden lg:block">
+            <StickyPreview step={STEPS[active]} activeIndex={active} />
+          </div>
         </div>
       </div>
     </section>

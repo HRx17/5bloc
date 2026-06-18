@@ -1,13 +1,102 @@
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════
-   5BLOC — "Studio at Night" Design System
-   Inspired by Stitch / Google Labs precision aesthetic
-   No borders. No noise. Depth via glow + shadow only.
+   5BLOC — Apple light design system (Studio dark via .dark)
 ═══════════════════════════════════════════════ */
 
 :root {
-  /* ── Core Surfaces ── */
+  /* ── Apple light surfaces (matches landing.css) ── */
+  --surface:                    #fbfbfd;
+  --surface-dim:                #f5f5f7;
+  --surface-bright:             #ffffff;
+  --surface-container-lowest:   #ffffff;
+  --surface-container-low:      #f5f5f7;
+  --surface-container:          #ffffff;
+  --surface-container-high:     #f5f5f7;
+  --surface-container-highest:  #e8e8ed;
+  --surface-canvas:             #fbfbfd;
+  --surface-recessed:           #f5f5f7;
+  --surface-elevated:           #ffffff;
+
+  --surface-1:                  #ffffff;
+  --surface-2:                  #f5f5f7;
+  --surface-3:                  #e8e8ed;
+
+  --hairline:                   rgba(0, 0, 0, 0.08);
+  --hairline-strong:            rgba(0, 0, 0, 0.12);
+  --overlay-hover:              rgba(0, 0, 0, 0.04);
+  --overlay-active:             rgba(0, 0, 0, 0.06);
+  --card-bg:                    #ffffff;
+  --card-top-glow:              transparent;
+  --scrim:                      rgba(0, 0, 0, 0.42);
+
+  --navy:     var(--surface);
+  --navy-mid: var(--surface-container);
+  --navy-lt:  var(--surface-container-high);
+
+  --on-surface:         #1d1d1f;
+  --on-surface-variant: #6e6e73;
+  --chalk-white:        #1d1d1f;
+  --bone-paper:         #fbfbfd;
+  --ink-black:          #1d1d1f;
+  --stone:              #86868b;
+  --sandstone:          #a1a1a6;
+
+  --primary:              #f5a623;
+  --on-primary:           #1d1d1f;
+  --primary-container:    #f5a623;
+  --on-primary-container: #1d1d1f;
+  --primary-fixed:        #ffd9a0;
+  --primary-fixed-dim:    #f5a623;
+  --amber:                #f5a623;
+  --amber-dk:             #d4891a;
+  --amber-lt:             #ffb94a;
+  --surface-tint:         #f5a623;
+
+  --secondary:              #ffb955;
+  --on-secondary:           #452b00;
+  --secondary-container:    #dc9100;
+  --on-secondary-container: #4f3100;
+
+  --tertiary:               #0066cc;
+  --on-tertiary:            #ffffff;
+  --tertiary-container:     #0066cc;
+  --on-tertiary-container:  #ffffff;
+  --blue:                   #0066cc;
+  --blue-lt:                #2997ff;
+
+  --purple:       #7c5cd6;
+  --purple-dim:   #6b4fc4;
+  --purple-glow:  0 0 0 1px rgba(124, 92, 214, 0.18);
+
+  --success:            #2ECC8A;
+  --error:              #ff3b30;
+  --on-error:           #ffffff;
+  --error-container:    #ff3b30;
+  --on-error-container: #ffffff;
+
+  --glass-bg:   rgba(251, 251, 253, 0.72);
+  --glass-blur: saturate(180%) blur(20px);
+
+  --shadow-0: none;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-2: 0 2px 8px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  --shadow-3: 0 4px 16px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  --shadow-4: 0 8px 32px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.06);
+
+  --glow-amber:  0 0 0 1px rgba(245, 166, 35, 0.22);
+  --glow-blue:   0 0 0 1px rgba(0, 102, 204, 0.18);
+  --glow-active: 0 0 0 1px rgba(0, 0, 0, 0.08);
+  --shadow-amber: 0 2px 12px rgba(245, 166, 35, 0.22);
+
+  --icon-weight:      300;
+  --icon-opsz:        20;
+  --heading-weight:   600;
+  --label-weight:     500;
+}
+
+/* Optional dark mode — Studio at Night */
+.dark {
   --surface:                    #0d0e0e;
   --surface-dim:                #0a0b0b;
   --surface-bright:             #2a2c2c;
@@ -19,13 +108,9 @@
   --surface-canvas:             #0d0e0e;
   --surface-recessed:           #080909;
   --surface-elevated:           #232626;
-
-  /* ── Elevation surfaces (used by viewer + integration panels) ── */
   --surface-1:                  #141616;
   --surface-2:                  #1a1c1c;
   --surface-3:                  #222424;
-
-  /* ── Hairline / overlay tokens — theme-aware so light mode isn't washed out ── */
   --hairline:                   rgba(255,255,255,0.06);
   --hairline-strong:            rgba(255,255,255,0.10);
   --overlay-hover:              rgba(255,255,255,0.05);
@@ -33,152 +118,31 @@
   --card-bg:                    rgba(255,255,255,0.04);
   --card-top-glow:              rgba(255,255,255,0.06);
   --scrim:                      rgba(0,0,0,0.55);
-
-  /* ── Legacy aliases (keep for backward compat) ── */
-  --navy:     var(--surface);
-  --navy-mid: var(--surface-container);
-  --navy-lt:  var(--surface-container-high);
-
-  /* ── Text ── */
   --on-surface:         #f0efef;
   --on-surface-variant: #b0a898;
   --chalk-white:        #f0efef;
-  --bone-paper:         #FAFAF8;
+  --stone:              #8a8078;
   --ink-black:          #0d0e0e;
-  --stone:              #8a8078;   /* ← was missing — used in Sidebar, TopNav, auth pages */
-  --sandstone:          #c9b89e;
-
-  /* ── Primary (Luminous Amber) ── */
-  --primary:              #ffe8c2;
-  --on-primary:           #3d2400;
-  --primary-container:    #f5a623;
-  --on-primary-container: #6b3f00;
-  --primary-fixed:        #ffd9a0;
-  --primary-fixed-dim:    #f5a623;
   --amber:                #f5a623;
   --amber-dk:             #d4891a;
   --amber-lt:             #ffb94a;
-  --surface-tint:         #f5a623;
-
-  /* ── Secondary ── */
-  --secondary:              #ffb955;
-  --on-secondary:           #452b00;
-  --secondary-container:    #dc9100;
-  --on-secondary-container: #4f3100;
-
-  /* ── Tertiary (Blueprint Blue) ── */
-  --tertiary:               #deeeff;
-  --on-tertiary:            #002d4f;
-  --tertiary-container:     #99c8ff;
-  --on-tertiary-container:  #004f87;
   --blue:                   #7ab8ff;
-  --blue-lt:                #a8d0ff;  /* ← was missing — used in login page */
-
-  /* ── AI / Purple accent ── */
+  --blue-lt:                #a8d0ff;
   --purple:       #a78bfa;
-  --purple-dim:   #7c6fd6;
-  --purple-glow:  0 0 0 1px rgba(167,139,250,.18), 0 4px 24px rgba(167,139,250,.28);
-
-  /* ── Status ── */
   --success:            #2ECC8A;
   --error:              #ff8a80;
-  --on-error:           #690005;
-  --error-container:    #93000a;
-  --on-error-container: #ffdad6;
-
-  /* ── Glassmorphism ── */
   --glass-bg:   rgba(20, 22, 22, 0.78);
   --glass-blur: blur(28px);
-
-  /* ══════════════════════════════════
-     ELEVATION — Refractive Shadows
-  ══════════════════════════════════ */
-  --shadow-0: none;
   --shadow-1: 0 2px 8px rgba(0,0,0,.40), 0 1px 2px rgba(0,0,0,.28);
   --shadow-2: 0 6px 20px rgba(0,0,0,.52), 0 2px 6px rgba(0,0,0,.36);
   --shadow-3: 0 12px 36px rgba(0,0,0,.62), 0 4px 10px rgba(0,0,0,.44);
   --shadow-4: 0 20px 56px rgba(0,0,0,.72), 0 8px 18px rgba(0,0,0,.50);
-
-  /* Refractive Glows */
   --glow-amber:  0 0 0 1px rgba(245,166,35,.18), 0 4px 24px rgba(245,166,35,.24);
   --glow-blue:   0 0 0 1px rgba(122,184,255,.18), 0 4px 24px rgba(122,184,255,.24);
   --glow-active: 0 0 0 1px rgba(255,255,255,.07), 0 2px 8px rgba(255,255,255,.04);
-  --shadow-amber: 0 0 0 1px rgba(245,166,35,.18), 0 8px 32px rgba(245,166,35,.20);  /* ← was missing */
-
-  /* Typography + icon scale */
-  --icon-weight:      200;
-  --icon-opsz:        18;
-  --heading-weight:   500;
-  --label-weight:     500;
-}
-
-/* ══════════════════════════════════
-   Bone-Paper Day (Light Mode)
-   Warm off-white paper, ink text, dark-alpha overlays
-══════════════════════════════════ */
-.light {
-  /* Surfaces — warm paper whites */
-  --surface:                  #f7f6f3;
-  --surface-dim:              #eeece7;
-  --surface-bright:           #ffffff;
-  --surface-container-lowest: #ffffff;
-  --surface-container-low:    #faf9f6;
-  --surface-container:        #ffffff;
-  --surface-container-high:   #f3f1ec;
-  --surface-container-highest:#ebe8e2;
-  --surface-canvas:           #f8f5f0;
-  --surface-recessed:         #eeece7;
-  --surface-elevated:         #ffffff;
-
-  --surface-1:                #ffffff;
-  --surface-2:                #faf9f6;
-  --surface-3:                #f3f1ec;
-
-  /* Legacy navy aliases */
-  --navy:                     var(--surface);
-  --navy-mid:                 #ffffff;
-  --navy-lt:                  #ebe8e2;
-
-  /* Text — warm ink */
-  --on-surface:               #1c1813;
-  --on-surface-variant:       #544c42;
-  --chalk-white:              #1c1813;
-  --stone:                    #8a8178;
-
-  /* Primary — richer amber that reads on white */
-  --primary:                  #b86a00;
-  --on-primary:               #ffffff;
-  --amber:                    #c47d12;
-  --amber-dk:                 #9c6200;
-  --amber-lt:                 #e09a2e;
-  --ink-black:                #ffffff;   /* btn-primary text → white on amber in light */
-
-  /* Accents tuned for light bg */
-  --blue:                     #2b6fc4;
-  --blue-lt:                  #4f8de0;
-  --purple:                   #7c5cd6;
-  --success:                  #1f9d6b;
-  --error:                    #d14b3f;
-
-  /* Overlays / hairlines — DARK alpha (the key fix for light mode) */
-  --hairline:                 rgba(28,24,19,0.08);
-  --hairline-strong:          rgba(28,24,19,0.14);
-  --overlay-hover:            rgba(28,24,19,0.04);
-  --overlay-active:           rgba(28,24,19,0.07);
-  --card-bg:                  #ffffff;
-  --card-top-glow:            rgba(28,24,19,0.04);
-  --scrim:                    rgba(40,36,30,0.40);
-
-  --glass-bg:                 rgba(255,255,255,0.82);
-
-  --shadow-1: 0 1px 2px rgba(40,36,30,.06), 0 2px 6px rgba(40,36,30,.05);
-  --shadow-2: 0 2px 6px rgba(40,36,30,.07), 0 8px 24px rgba(40,36,30,.07);
-  --shadow-3: 0 6px 16px rgba(40,36,30,.09), 0 16px 40px rgba(40,36,30,.10);
-  --shadow-4: 0 12px 28px rgba(40,36,30,.12), 0 28px 64px rgba(40,36,30,.14);
-  --glow-amber:  0 0 0 1px rgba(196,125,18,.22), 0 6px 22px rgba(196,125,18,.16);
-  --glow-blue:   0 0 0 1px rgba(43,111,196,.18), 0 6px 22px rgba(43,111,196,.14);
-  --glow-active: 0 0 0 1px rgba(28,24,19,.08), 0 2px 8px rgba(28,24,19,.05);
-  --shadow-amber:0 0 0 1px rgba(196,125,18,.20), 0 8px 28px rgba(196,125,18,.16);
+  --shadow-amber: 0 0 0 1px rgba(245,166,35,.18), 0 8px 32px rgba(245,166,35,.20);
+  --icon-weight: 200;
+  --heading-weight: 500;
 }
 
 /* ── Tailwind v4 theme map ── */
@@ -214,11 +178,11 @@
   /* text-white override — softer off-white instead of #fff */
   --color-white:            var(--on-surface);
 
-  --font-display:   'DM Sans', system-ui, sans-serif;
-  --font-editorial: 'DM Sans', system-ui, sans-serif;
-  --font-body:      'DM Sans', system-ui, sans-serif;
-  --font-mono:      'JetBrains Mono', ui-monospace, monospace;
-  --font-brand:     'Syne', ui-sans-serif, sans-serif;
+  --font-display:   -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-editorial: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-body:      -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono:      'SF Mono', ui-monospace, 'JetBrains Mono', monospace;
+  --font-brand:     -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
 }
 
 /* ══════════════════════════════════
@@ -229,7 +193,7 @@ html { font-size: 16px; scroll-behavior: smooth; }
 body {
   background-color: var(--surface-canvas);
   color: var(--on-surface);
-  font-family: 'DM Sans', system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-weight: 400;
   letter-spacing: -0.011em;
   -webkit-font-smoothing: antialiased;
@@ -244,7 +208,7 @@ h1, h2, h3, h4 {
 }
 
 /* ── Smooth theme switch ──
-   Animate color/background/shadow changes when toggling .light so the
+   Animate color/background/shadow changes when toggling .dark so the
    transition feels fluid rather than a hard flash. Excludes transform-based
    interactions (handled per-component) to avoid jank. */
 *, *::before, *::after {
@@ -303,15 +267,15 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
 }
 
 /* ── Typography helpers ── */
-.font-display   { font-family: 'DM Sans', system-ui, sans-serif; font-weight: 500; letter-spacing: -0.02em; }
-.font-brand     { font-family: 'Syne', ui-sans-serif, sans-serif; font-weight: 500; letter-spacing: -0.01em; }
-.font-editorial { font-family: 'DM Sans', system-ui, sans-serif; }
-.font-body      { font-family: 'DM Sans', system-ui, sans-serif; }
-.font-mono      { font-family: 'JetBrains Mono', monospace; }
+.font-display   { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif; font-weight: 600; letter-spacing: -0.02em; }
+.font-brand     { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif; font-weight: 600; letter-spacing: -0.02em; }
+.font-editorial { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif; }
+.font-body      { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif; }
+.font-mono      { font-family: 'SF Mono', ui-monospace, monospace; }
 
 /* Softer Tailwind weight mapping */
-.font-bold { font-weight: 500; }
-.font-semibold { font-weight: 500; }
+.font-bold { font-weight: 600; }
+.font-semibold { font-weight: 600; }
 
 /* Lucide — thinner strokes app-wide */
 svg.lucide {
@@ -323,10 +287,10 @@ svg.lucide {
    (Stitch landing page hallmark texture)
 ══════════════════════════════════ */
 .dot-grid {
-  background-image: radial-gradient(var(--dot-grid-color, rgba(255,255,255,0.055)) 1px, transparent 1px);
+  background-image: radial-gradient(var(--dot-grid-color, rgba(0, 0, 0, 0.04)) 1px, transparent 1px);
   background-size: 24px 24px;
 }
-.light .dot-grid { --dot-grid-color: rgba(28,24,19,0.06); }
+.dark .dot-grid { --dot-grid-color: rgba(255,255,255,0.055); }
 .dot-grid-amber {
   background-image: radial-gradient(rgba(245,166,35,0.12) 1px, transparent 1px);
   background-size: 24px 24px;
@@ -380,7 +344,7 @@ svg.lucide {
   outline: none;
   box-shadow: none !important;
   padding: 0;
-  font-family: 'DM Sans', sans-serif;
+  font-family: inherit;
   font-size: 13.5px;
   color: var(--on-surface);
   width: 100%;
@@ -405,7 +369,7 @@ svg.lucide {
   -webkit-appearance: none;
   background: var(--surface-container);
   color: var(--on-surface);
-  font-family: 'DM Sans', sans-serif;
+  font-family: inherit;
   font-size: 12.5px;
   font-weight: 500;
   padding: 7px 32px 7px 12px;
@@ -436,11 +400,11 @@ svg.lucide {
 ══════════════════════════════════ */
 .input-recessed,
 .input-5bloc {
-  background: var(--surface-container);
-  border-radius: 10px;
+  background: #fff;
+  border-radius: 12px;
   color: var(--on-surface);
-  font-family: 'DM Sans', sans-serif;
-  font-size: 13.5px;
+  font-family: inherit;
+  font-size: 15px;
   padding: 9px 13px;
   width: 100%;
   box-shadow: inset 0 0 0 1px var(--hairline-strong);
@@ -448,28 +412,25 @@ svg.lucide {
   display: block;
 }
 .input-recessed::placeholder,
-.input-5bloc::placeholder { color: var(--stone); opacity: 0.65; }
+.input-5bloc::placeholder { color: var(--stone); opacity: 0.85; }
 .input-recessed:focus,
 .input-5bloc:focus {
-  box-shadow: inset 0 0 0 1.5px var(--amber);
-  background: var(--surface-elevated);
+  box-shadow: inset 0 0 0 1px rgba(245,166,35,0.55), 0 0 0 3px rgba(245,166,35,0.12);
+  background: #fff;
 }
 
 /* ══════════════════════════════════
    STAT CARDS — overview metrics
 ══════════════════════════════════ */
 .stat-card {
-  border-radius: 14px;
+  border-radius: 16px;
   padding: 14px 16px;
-  background: var(--surface-container);
+  background: #fff;
   box-shadow: inset 0 0 0 1px var(--hairline);
-  transition: box-shadow 0.18s ease, transform 0.18s ease, background 0.18s ease;
+  transition: box-shadow 0.18s ease, background 0.18s ease;
 }
-.light .stat-card {
-  box-shadow: var(--shadow-1), inset 0 0 0 1px var(--hairline);
-}
-.light .stat-card-interactive:hover {
-  box-shadow: var(--shadow-2), inset 0 0 0 1px var(--hairline-strong);
+.stat-card-interactive:hover {
+  box-shadow: var(--shadow-2);
 }
 .stat-card-display {
   /* purely informational — no hover lift */
@@ -498,29 +459,27 @@ svg.lucide {
 .btn-primary {
   background: var(--amber);
   color: var(--ink-black);
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 500;
-  font-size: 13px;
+  font-family: inherit;
+  font-weight: 400;
+  font-size: 14px;
   padding: 8px 18px;
-  border-radius: 9999px;
+  border-radius: 980px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   cursor: pointer;
-  letter-spacing: 0.01em;
-  box-shadow: var(--shadow-1);
-  transition: transform 0.18s cubic-bezier(.25,.46,.45,.94),
-              box-shadow 0.18s ease,
-              background  0.18s ease;
+  letter-spacing: 0;
+  box-shadow: none;
+  transition: background 0.2s ease, opacity 0.2s ease;
   white-space: nowrap;
   text-decoration: none;
 }
 .btn-pill-primary:hover,
 .btn-primary:hover {
   background: var(--amber-lt);
-  transform: translateY(-1.5px);
-  box-shadow: var(--glow-amber);
+  transform: none;
+  box-shadow: none;
 }
 .btn-pill-primary:active,
 .btn-primary:active { transform: translateY(0); }
@@ -529,34 +488,34 @@ svg.lucide {
 
 /* Secondary — ghost / outline pill */
 .btn-secondary {
-  background: var(--surface-container);
+  background: var(--surface-bright);
   color: var(--on-surface);
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 500;
-  font-size: 13px;
+  font-family: inherit;
+  font-weight: 400;
+  font-size: 14px;
   padding: 8px 18px;
-  border-radius: 9999px;
+  border-radius: 980px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
   cursor: pointer;
-  box-shadow: inset 0 0 0 1px var(--hairline-strong), var(--shadow-1);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  box-shadow: inset 0 0 0 1px var(--hairline-strong);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
   white-space: nowrap;
   text-decoration: none;
 }
 .btn-secondary:hover {
   background: var(--surface-container-high);
-  box-shadow: inset 0 0 0 1px var(--hairline-strong), var(--glow-active);
-  transform: translateY(-1px);
+  box-shadow: inset 0 0 0 1px var(--hairline-strong);
+  transform: none;
 }
 
 /* Ghost Amber — amber-tinted ghost pill */
 .btn-ghost-amber {
   background: rgba(245,166,35,0.08);
   color: var(--amber);
-  font-family: 'DM Sans', sans-serif;
+  font-family: inherit;
   font-weight: 500;
   font-size: 13px;
   padding: 8px 18px;
@@ -573,8 +532,8 @@ svg.lucide {
 }
 .btn-ghost-amber:hover {
   background: rgba(245,166,35,0.14);
-  box-shadow: inset 0 0 0 1px rgba(245,166,35,0.28), var(--glow-amber);
-  transform: translateY(-1px);
+  box-shadow: inset 0 0 0 1px rgba(245,166,35,0.28);
+  transform: none;
 }
 
 /* Size modifier — small (32px tall, for table/inline actions) */
@@ -594,7 +553,7 @@ svg.lucide {
 .btn-ghost-error {
   background: rgba(255,99,99,0.08);
   color: var(--error);
-  font-family: 'DM Sans', sans-serif;
+  font-family: inherit;
   font-weight: 500;
   font-size: 13px;
   padding: 8px 18px;
@@ -612,7 +571,7 @@ svg.lucide {
 .btn-ghost-error:hover {
   background: rgba(255,99,99,0.14);
   box-shadow: inset 0 0 0 1px rgba(255,99,99,0.28);
-  transform: translateY(-1px);
+  transform: none;
 }
 
 /* Icon button — square icon-only hit target */
@@ -640,9 +599,9 @@ svg.lucide {
 
 /* AI Wash — blue-tinted ghost */
 .btn-ai-wash {
-  background: rgba(122,184,255, 0.08);
-  color: var(--tertiary-container);
-  font-family: 'DM Sans', sans-serif;
+  background: rgba(0, 102, 204, 0.08);
+  color: var(--blue);
+  font-family: inherit;
   font-weight: 500;
   font-size: 13px;
   padding: 8px 18px;
@@ -657,9 +616,9 @@ svg.lucide {
   text-decoration: none;
 }
 .btn-ai-wash:hover {
-  background: rgba(122,184,255, 0.13);
+  background: rgba(0, 102, 204, 0.1);
   box-shadow: var(--glow-blue);
-  transform: translateY(-1px);
+  transform: none;
 }
 
 /* ══════════════════════════════════
@@ -667,16 +626,12 @@ svg.lucide {
 ══════════════════════════════════ */
 .card-5bloc,
 .card-glass {
-  background: var(--card-bg);
+  background: #fff;
   border-radius: 16px;
   padding: 18px;
-  box-shadow: inset 0 1px 0 var(--card-top-glow), inset 0 0 0 1px var(--hairline), var(--shadow-1);
+  box-shadow: inset 0 0 0 1px var(--hairline), var(--shadow-1);
   position: relative;
   overflow: hidden;
-}
-.light .card-5bloc,
-.light .card-glass {
-  box-shadow: var(--shadow-2), inset 0 0 0 1px var(--hairline);
 }
 .card-glass {
   background: var(--glass-bg);
@@ -684,14 +639,32 @@ svg.lucide {
   -webkit-backdrop-filter: var(--glass-blur);
 }
 
-/* App cards (inside dashboard/app pages) */
 .app-card {
-  background: var(--surface-container);
-  border-radius: 14px;
+  background: #fff;
+  border-radius: 16px;
   padding: 16px;
-  box-shadow: inset 0 1px 0 var(--card-top-glow), inset 0 0 0 1px var(--hairline), var(--shadow-1);
+  box-shadow: inset 0 0 0 1px var(--hairline), var(--shadow-1);
   position: relative;
   overflow: hidden;
+  transition: box-shadow 0.18s ease, background 0.18s ease;
+}
+.app-card-interactive {
+  cursor: pointer;
+}
+.app-card-interactive:hover {
+  background: var(--surface-container-high);
+  box-shadow: var(--shadow-2);
+}
+.dark .card-5bloc,
+.dark .card-glass {
+  background: var(--surface-container);
+}
+.dark .app-card {
+  background: var(--surface-container);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+.dark .btn-secondary {
+  background: var(--surface-container-high);
 }
 
 
@@ -703,7 +676,7 @@ svg.lucide {
   align-items: center;
   padding: 3px 9px;
   border-radius: 9999px;
-  font-family: 'DM Sans', sans-serif;
+  font-family: inherit;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.01em;
@@ -726,8 +699,8 @@ svg.lucide {
   background: var(--overlay-hover);
 }
 .metadata-ai {
-  background: rgba(122,184,255,.10);
-  color: var(--tertiary-container);
+  background: rgba(0, 102, 204, 0.08);
+  color: var(--blue);
 }
 
 /* ══════════════════════════════════
@@ -744,6 +717,9 @@ svg.lucide {
   cursor: pointer;
   transition: background 0.2s ease;
   flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px var(--hairline-strong);
+}
+.dark .toggle-track {
   box-shadow: inset 0 0 0 1.5px rgba(255,255,255,0.10);
 }
 .toggle-track[data-on="true"],
@@ -769,7 +745,7 @@ svg.lucide {
 
 /* ── Label small ── */
 .label-sm {
-  font-family: 'DM Sans', sans-serif;
+  font-family: inherit;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.05em;
@@ -782,9 +758,12 @@ svg.lucide {
 ══════════════════════════════════ */
 .ghost-cut {
   height: 1px;
+  background: var(--hairline);
+  width: 100%;
+}
+.dark .ghost-cut {
   background: transparent;
   box-shadow: 0 1px 0 rgba(255,255,255,.035), 0 -1px 0 rgba(0,0,0,.18);
-  width: 100%;
 }
 
 /* ══════════════════════════════════
@@ -886,7 +865,7 @@ svg.lucide {
    (₹47.2L, 60%, Phase 3, etc.)
 ══════════════════════════════════ */
 .display-number {
-  font-family: 'DM Sans', system-ui, sans-serif;
+  font-family: inherit;
   font-weight: 500;
   line-height: 1.05;
   letter-spacing: -0.025em;
@@ -924,10 +903,7 @@ svg.lucide {
   z-index: 0;
 }
 .phase-step.is-done:not(:last-child)::after {
-  background: rgba(245,166,35,0.38);
-}
-.light .phase-step.is-done:not(:last-child)::after {
-  background: rgba(196,125,18,0.32);
+  background: rgba(245,166,35,0.32);
 }
 .phase-step-circle {
   width: 28px;
@@ -936,7 +912,7 @@ svg.lucide {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'DM Sans', system-ui, sans-serif;
+  font-family: inherit;
   font-weight: 500;
   font-size: 11px;
   position: relative;
@@ -977,12 +953,9 @@ svg.lucide {
 .progress-track {
   height: 8px;
   border-radius: 9999px;
-  background: var(--surface-container-high);
+  background: var(--surface-container-highest);
   box-shadow: inset 0 0 0 1px var(--hairline);
   overflow: hidden;
-}
-.light .progress-track {
-  background: var(--surface-container-highest);
 }
 .progress-fill {
   height: 100%;
@@ -1004,7 +977,7 @@ svg.lucide {
   gap: 6px;
   padding: 7px 14px;
   border-radius: 9999px;
-  font-family: 'DM Sans', system-ui, sans-serif;
+  font-family: inherit;
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.04em;
@@ -1038,7 +1011,7 @@ svg.lucide {
   border-collapse: collapse;
 }
 .data-table thead th {
-  font-family: 'DM Sans', system-ui, sans-serif;
+  font-family: inherit;
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.06em;
@@ -1102,7 +1075,7 @@ svg.lucide {
   border-radius: 14px;
   background: var(--amber);
   color: var(--ink-black);
-  font-family: 'DM Sans', sans-serif;
+  font-family: inherit;
   font-weight: 600;
   font-size: 15px;
   display: flex;
@@ -1123,7 +1096,7 @@ svg.lucide {
    ("LATEST DRAWING", "AI COST ESTIMATOR")
 ══════════════════════════════════ */
 .section-eyebrow {
-  font-family: 'DM Sans', system-ui, sans-serif;
+  font-family: inherit;
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.08em;
@@ -1133,32 +1106,10 @@ svg.lucide {
 .section-eyebrow-amber { color: var(--amber); }
 
 /* ══════════════════════════════════
-   APP CARD — solid surface card
-   (project tiles, team cards, etc.)
-══════════════════════════════════ */
-.app-card {
-  background: var(--surface-container);
-  border-radius: 16px;
-  padding: 18px;
-  box-shadow: inset 0 0 0 1px var(--hairline);
-  transition: box-shadow 0.18s ease, transform 0.18s ease, background 0.18s ease;
-}
-.app-card-interactive:hover {
-  background: var(--surface-container-high);
-  box-shadow: inset 0 0 0 1px var(--hairline-strong), var(--shadow-1);
-}
-.light .app-card {
-  box-shadow: var(--shadow-1), inset 0 0 0 1px var(--hairline);
-}
-.light .app-card-interactive:hover {
-  box-shadow: var(--shadow-2), inset 0 0 0 1px var(--hairline-strong);
-}
-
-/* ══════════════════════════════════
    KICKER — category / type label
 ══════════════════════════════════ */
 .kicker {
-  font-family: 'DM Sans', system-ui, sans-serif;
+  font-family: inherit;
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.06em;

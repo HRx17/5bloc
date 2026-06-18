@@ -80,17 +80,20 @@ export default function OnboardingChecklist() {
  const progressPercent = Math.round((completedCount / tasks.length) * 100)
 
  return (
- <div className="fixed bottom-6 right-6 z-50 w-80 overflow-hidden font-body" style={{ background: 'var(--surface-container)', boxShadow: 'var(--shadow-4)' }}>
+ <div className="fixed bottom-6 right-6 z-50 w-80 overflow-hidden font-body rounded-2xl" style={{ background: 'var(--surface-elevated)', boxShadow: 'var(--shadow-4), inset 0 0 0 1px var(--hairline)' }}>
  {/* Title Header */}
- <div className="px-4 py-3 flex items-center justify-between" style={{ background: 'var(--surface-container-high)', boxShadow: '0 1px 0 rgba(159,142,122,0.10)' }}>
+ <div className="px-4 py-3 flex items-center justify-between" style={{ background: 'var(--surface-container-low)', boxShadow: '0 1px 0 var(--hairline)' }}>
  <div className="flex items-center gap-2">
  <span className="material-icons-outlined text-amber text-[18px]">verified</span>
- <span className="text-xs font-bold tracking-wider uppercase text-white">Getting Started</span>
+ <span className="text-xs font-semibold tracking-wide" style={{ color: 'var(--on-surface)' }}>Getting Started</span>
  </div>
  <div className="flex items-center gap-1.5">
  <button 
  onClick={() => setMinimized(!minimized)} 
- className="text-stone hover:text-white transition p-0.5 hover:bg-navy/40"
+ className="transition p-0.5 rounded-lg"
+ style={{ color: 'var(--stone)' }}
+ onMouseEnter={(e) => { const t = e.currentTarget as HTMLElement; t.style.color = 'var(--on-surface)'; t.style.background = 'var(--overlay-hover)' }}
+ onMouseLeave={(e) => { const t = e.currentTarget as HTMLElement; t.style.color = 'var(--stone)'; t.style.background = 'transparent' }}
  >
  <span className="material-icons-outlined text-[18px]">
  {minimized ? 'expand_less' : 'expand_more'}
@@ -98,7 +101,10 @@ export default function OnboardingChecklist() {
  </button>
  <button 
  onClick={handleDismiss} 
- className="text-stone hover:text-white transition p-0.5 hover:bg-navy/40"
+ className="transition p-0.5 rounded-lg"
+ style={{ color: 'var(--stone)' }}
+ onMouseEnter={(e) => { const t = e.currentTarget as HTMLElement; t.style.color = 'var(--on-surface)'; t.style.background = 'var(--overlay-hover)' }}
+ onMouseLeave={(e) => { const t = e.currentTarget as HTMLElement; t.style.color = 'var(--stone)'; t.style.background = 'transparent' }}
  >
  <span className="material-icons-outlined text-[18px]">close</span>
  </button>
@@ -143,9 +149,12 @@ export default function OnboardingChecklist() {
  href={task.url}
  className={`transition-colors ${
  task.completed 
- ? 'text-stone line-through' 
- : 'text-white hover:text-amber'
+ ? 'line-through' 
+ : ''
  }`}
+ style={{ color: task.completed ? 'var(--stone)' : 'var(--on-surface)' }}
+ onMouseEnter={(e) => { if (!task.completed) (e.currentTarget as HTMLElement).style.color = 'var(--amber)' }}
+ onMouseLeave={(e) => { if (!task.completed) (e.currentTarget as HTMLElement).style.color = 'var(--on-surface)' }}
  >
  {task.label}
  </Link>

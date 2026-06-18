@@ -7,13 +7,13 @@ export const metadata: Metadata = {
  manifest: "/manifest.json",
  appleWebApp: {
  capable: true,
- statusBarStyle: "black-translucent",
+ statusBarStyle: "default",
  title: "5Bloc",
  },
 };
 
 export const viewport: Viewport = {
- themeColor: "#121414",
+ themeColor: "#fbfbfd",
  width: "device-width",
  initialScale: 1,
 };
@@ -26,14 +26,14 @@ export default function RootLayout({
  return (
  <html lang="en" className="h-full select-none">
  <head>
- {/* Load Google Fonts & Material Icons Outlined precisely as per design specification */}
- <link 
- href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400&family=Syne:wght@500;600&display=swap" 
+ <link
+ href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
  rel="stylesheet"
  />
- <link 
- href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" 
- rel="stylesheet"
+ <script
+   dangerouslySetInnerHTML={{
+     __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark')document.documentElement.classList.add('dark')}catch(e){}})()`,
+   }}
  />
  </head>
  <body className="h-full bg-[var(--surface-canvas)] text-[var(--on-surface)] min-h-full overflow-hidden font-body">

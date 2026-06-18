@@ -131,7 +131,7 @@ export default function Onboarding() {
         style={{ background: 'var(--surface-container)', boxShadow: 'inset 0 0 0 1px var(--hairline), var(--shadow-3)' }}
       >
         <div className="px-7 pt-7 flex items-center justify-between">
-          <Logo size={28} showTagline={false} />
+          <Logo size={28} showTagline={false} color="var(--on-surface)" />
           <span className="font-mono text-[10px] tracking-widest" style={{ color: 'var(--stone)' }}>
             STEP {step}/3
           </span>

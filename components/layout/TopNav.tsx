@@ -22,7 +22,7 @@ export default function TopNav({
   avatarUrl,
   onMenuToggle,
 }: TopNavProps) {
-  const [theme, setTheme]         = useState<'light' | 'dark'>('dark')
+  const [theme, setTheme]         = useState<'light' | 'dark'>('light')
   const [searchFocused, setSearchFocused] = useState(false)
   const [searchQuery, setSearchQuery]     = useState('')
   const [notifOpen, setNotifOpen] = useState(false)
@@ -40,17 +40,16 @@ export default function TopNav({
 
   useEffect(() => {
     const saved = localStorage.getItem('theme') as 'light' | 'dark' | null
-    if (saved) {
-      setTheme(saved)
-      document.documentElement.classList.toggle('light', saved === 'light')
-    }
+    const initial = saved ?? 'light'
+    setTheme(initial)
+    document.documentElement.classList.toggle('dark', initial === 'dark')
   }, [])
 
   const toggleTheme = () => {
-    const next = theme === 'dark' ? 'light' : 'dark'
+    const next = theme === 'light' ? 'dark' : 'light'
     setTheme(next)
     localStorage.setItem('theme', next)
-    document.documentElement.classList.toggle('light', next === 'light')
+    document.documentElement.classList.toggle('dark', next === 'dark')
   }
 
   const initials = userName
@@ -88,7 +87,7 @@ export default function TopNav({
 
         {/* Mobile logo */}
         <div className="lg:hidden">
-          <Logo size={22} showTagline={false} />
+          <Logo size={22} showTagline={false} color="var(--on-surface)" />
         </div>
 
         {/* Desktop search */}

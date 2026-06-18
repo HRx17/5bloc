@@ -137,7 +137,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
         className="shrink-0 px-5 pt-4 pb-0"
         style={{
           background: 'var(--surface-container)',
-          boxShadow: '0 1px 0 rgba(255,255,255,0.04)',
+          boxShadow: '0 1px 0 var(--hairline)',
         }}
       >
         <div className="max-w-[1280px] mx-auto">
@@ -170,7 +170,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
                 {/* Type chip */}
                 <span
                   className="px-2.5 py-1 rounded-full text-[11px] font-medium"
-                  style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--on-surface-variant)' }}
+                  style={{ background: 'var(--overlay-hover)', color: 'var(--on-surface-variant)' }}
                 >
                   {project.type}
                 </span>
@@ -249,7 +249,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
                           onClick={() => setShowActions(false)}
                           className="w-full text-left px-4 py-2.5 flex items-center gap-2.5 text-[12.5px] font-medium transition-colors"
                           style={{ color: 'var(--stone)' }}
-                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--on-surface)'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)' }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--on-surface)'; (e.currentTarget as HTMLElement).style.background = 'var(--overlay-hover)' }}
                           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--stone)'; (e.currentTarget as HTMLElement).style.background = '' }}
                         >
                           <RefreshCw className="h-3.5 w-3.5" />
@@ -331,7 +331,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
                                 onClick={() => setOpenSub(null)}
                                 className="flex items-center px-4 py-2.5 text-[12.5px] font-medium transition-colors gap-2"
                                 style={{ color: subActive ? 'var(--amber)' : 'var(--on-surface-variant)' }}
-                                onMouseEnter={(e) => { if (!subActive) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)' }}
+                                onMouseEnter={(e) => { if (!subActive) (e.currentTarget as HTMLElement).style.background = 'var(--overlay-hover)' }}
                                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
                               >
                                 {subActive && <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: 'var(--amber)' }} />}

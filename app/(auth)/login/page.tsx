@@ -4,6 +4,7 @@ import React, { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
+import { Logo } from '@/components/brand/LogoMark'
 import { Eye, EyeOff, AlertCircle, Info } from 'lucide-react'
 import { createSupabaseClient } from '@/lib/supabase/client'
 import { authCallbackUrl } from '@/lib/auth/oauth-redirect'
@@ -16,18 +17,6 @@ const SUPABASE_CONFIGURED =
 /* Demo credential shown when Supabase isn't configured */
 const DEMO_EMAIL    = 'demo@5bloc.com'
 const DEMO_PASSWORD = 'demo1234'
-
-function LogoMark({ size = 28 }: { size?: number }) {
-  const a = 'var(--amber)'
-  return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" aria-hidden>
-      <rect x="6" y="6"  width="28" height="5.5" rx="1.5" fill={a} />
-      <rect x="6" y="15" width="22" height="5.5" rx="1.5" fill={a} opacity="0.72" />
-      <rect x="6" y="24" width="16" height="5.5" rx="1.5" fill={a} opacity="0.44" />
-      <rect x="6" y="33" width="10" height="4.5" rx="1.5" fill={a} opacity="0.22" />
-    </svg>
-  )
-}
 
 function LoginInner() {
   const router = useRouter()
@@ -183,20 +172,14 @@ function LoginInner() {
           className="rounded-2xl p-8"
           style={{
             background: 'var(--surface-container)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), var(--shadow-3)',
+            boxShadow: 'inset 0 0 0 1px var(--hairline), var(--shadow-3)',
           }}
         >
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
-            <LogoMark size={40} />
-            <span
-              className="mt-3 font-body text-[15px] font-semibold tracking-wide"
-              style={{ color: 'var(--on-surface)' }}
-            >
-              5BLOC
-            </span>
+            <Logo size={40} showTagline={false} color="var(--on-surface)" />
             <p
-              className="mt-1.5 font-mono text-[10.5px] uppercase tracking-[0.16em]"
+              className="mt-3 font-mono text-[10.5px] uppercase tracking-[0.16em]"
               style={{ color: 'var(--stone)' }}
             >
               Sign in to your workspace
@@ -208,9 +191,9 @@ function LoginInner() {
             <div
               className="mb-5 flex items-start gap-2.5 rounded-xl px-4 py-3 text-[12.5px]"
               style={{
-                background: 'rgba(122,184,255,0.08)',
+                background: 'rgba(0, 102, 204, 0.08)',
                 color: 'var(--blue)',
-                boxShadow: 'inset 0 0 0 1px rgba(122,184,255,0.15)',
+                boxShadow: 'inset 0 0 0 1px rgba(0, 102, 204, 0.15)',
               }}
             >
               <Info className="h-4 w-4 shrink-0 mt-0.5" />
