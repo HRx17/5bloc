@@ -1,4 +1,4 @@
-export type UserRole = 'architect' | 'client' | 'contractor' | 'vendor' | 'consultant'
+export type UserRole = 'architect' | 'client' | 'contractor' | 'vendor' | 'consultant' | 'interior_designer'
 
 export interface RoleConfig {
   id: UserRole
@@ -68,6 +68,17 @@ export const USER_ROLES: RoleConfig[] = [
     orgLabel: 'Consultancy name',
     orgPlaceholder: 'e.g. Structura Engineers',
   },
+  {
+    id: 'interior_designer',
+    label: 'Interior Designer',
+    tagline: 'Design interiors & finishes',
+    icon: 'weekend',
+    color: '#C084FC',
+    signupDesc: 'Coordinate finishes, mood boards, vendor samples and site installs with the project team.',
+    onboardingTitle: 'Set up your interior design studio',
+    orgLabel: 'Studio / firm name',
+    orgPlaceholder: 'e.g. Atelier Interiors',
+  },
 ]
 
 export function getRoleConfig(role: string | undefined | null): RoleConfig {
@@ -92,6 +103,10 @@ export const ROLE_NAV: Record<UserRole, string[]> = {
   consultant: [
     '/dashboard', '/projects', '/coordination', '/messages', '/documents', '/cad',
     '/marketplace', '/ai/estimate', '/settings',
+  ],
+  interior_designer: [
+    '/dashboard', '/projects', '/coordination', '/messages', '/documents',
+    '/marketplace', '/settings',
   ],
 }
 

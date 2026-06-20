@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       clients: {
         Row: {
+          city: string | null
           company: string | null
           created_at: string
           email: string | null
@@ -24,8 +25,12 @@ export type Database = {
           notes: string | null
           org_id: string
           phone: string | null
+          pipeline_stage: string | null
+          state: string | null
+          total_value: number | null
         }
         Insert: {
+          city?: string | null
           company?: string | null
           created_at?: string
           email?: string | null
@@ -34,8 +39,12 @@ export type Database = {
           notes?: string | null
           org_id: string
           phone?: string | null
+          pipeline_stage?: string | null
+          state?: string | null
+          total_value?: number | null
         }
         Update: {
+          city?: string | null
           company?: string | null
           created_at?: string
           email?: string | null
@@ -44,6 +53,9 @@ export type Database = {
           notes?: string | null
           org_id?: string
           phone?: string | null
+          pipeline_stage?: string | null
+          state?: string | null
+          total_value?: number | null
         }
         Relationships: [
           {
@@ -115,98 +127,47 @@ export type Database = {
         }
         Relationships: []
       }
-      vendor_signups: {
+      conversation_invites: {
         Row: {
-          bio: string | null
-          business_name: string
-          categories: string[]
-          city: string
-          contact_name: string
-          country: string
+          accepted_at: string | null
+          conversation_id: string
           created_at: string
           email: string
           id: string
-          phone: string | null
-          photos: string[]
-          source: string | null
-          state: string | null
-          status: string
-          team_size: string | null
-          website: string | null
-          years_experience: number | null
+          invited_by: string
         }
         Insert: {
-          bio?: string | null
-          business_name: string
-          categories?: string[]
-          city: string
-          contact_name: string
-          country?: string
+          accepted_at?: string | null
+          conversation_id: string
           created_at?: string
           email: string
           id?: string
-          phone?: string | null
-          photos?: string[]
-          source?: string | null
-          state?: string | null
-          status?: string
-          team_size?: string | null
-          website?: string | null
-          years_experience?: number | null
+          invited_by: string
         }
         Update: {
-          bio?: string | null
-          business_name?: string
-          categories?: string[]
-          city?: string
-          contact_name?: string
-          country?: string
+          accepted_at?: string | null
+          conversation_id?: string
           created_at?: string
           email?: string
           id?: string
-          phone?: string | null
-          photos?: string[]
-          source?: string | null
-          state?: string | null
-          status?: string
-          team_size?: string | null
-          website?: string | null
-          years_experience?: number | null
+          invited_by?: string
         }
-        Relationships: []
-      }
-      conversations: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          id: string
-          last_message_at: string
-          org_id: string | null
-          project_id: string | null
-          title: string | null
-          type: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          last_message_at?: string
-          org_id?: string | null
-          project_id?: string | null
-          title?: string | null
-          type?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          last_message_at?: string
-          org_id?: string | null
-          project_id?: string | null
-          title?: string | null
-          type?: string
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "conversation_invites_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_invites_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       conversation_members: {
         Row: {
@@ -247,47 +208,57 @@ export type Database = {
           },
         ]
       }
-      messages: {
+      conversations: {
         Row: {
-          attachment_name: string | null
-          attachment_url: string | null
-          body: string
-          conversation_id: string
           created_at: string
+          created_by: string | null
           id: string
-          sender_id: string | null
+          last_message_at: string
+          org_id: string | null
+          project_id: string | null
+          title: string | null
+          type: string
         }
         Insert: {
-          attachment_name?: string | null
-          attachment_url?: string | null
-          body: string
-          conversation_id: string
           created_at?: string
+          created_by?: string | null
           id?: string
-          sender_id?: string | null
+          last_message_at?: string
+          org_id?: string | null
+          project_id?: string | null
+          title?: string | null
+          type?: string
         }
         Update: {
-          attachment_name?: string | null
-          attachment_url?: string | null
-          body?: string
-          conversation_id?: string
           created_at?: string
+          created_by?: string | null
           id?: string
-          sender_id?: string | null
+          last_message_at?: string
+          org_id?: string | null
+          project_id?: string | null
+          title?: string | null
+          type?: string
         }
         Relationships: [
           {
-            foreignKeyName: "messages_conversation_id_fkey"
-            columns: ["conversation_id"]
+            foreignKeyName: "conversations_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "conversations"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "messages_sender_id_fkey"
-            columns: ["sender_id"]
+            foreignKeyName: "conversations_org_id_fkey"
+            columns: ["org_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -498,6 +469,205 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          attachment_name: string | null
+          attachment_url: string | null
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          sender_id: string | null
+        }
+        Insert: {
+          attachment_name?: string | null
+          attachment_url?: string | null
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          sender_id?: string | null
+        }
+        Update: {
+          attachment_name?: string | null
+          attachment_url?: string | null
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          sender_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organisation_invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invite_token: string | null
+          invited_by: string
+          member_role: string
+          org_id: string
+          user_role: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invite_token?: string | null
+          invited_by: string
+          member_role?: string
+          org_id: string
+          user_role?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invite_token?: string | null
+          invited_by?: string
+          member_role?: string
+          org_id?: string
+          user_role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organisation_invites_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organisation_invites_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organisation_join_requests: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          org_id: string
+          profile_id: string
+          requested_org_name: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          org_id: string
+          profile_id: string
+          requested_org_name: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          org_id?: string
+          profile_id?: string
+          requested_org_name?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organisation_join_requests_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organisation_join_requests_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organisation_join_requests_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organisation_members: {
+        Row: {
+          created_at: string
+          id: string
+          member_role: string
+          org_id: string
+          profile_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          member_role?: string
+          org_id: string
+          profile_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          member_role?: string
+          org_id?: string
+          profile_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organisation_members_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organisation_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organisations: {
         Row: {
           created_at: string
@@ -678,6 +848,99 @@ export type Database = {
           },
           {
             foreignKeyName: "project_members_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_team_members: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          invite_email: string | null
+          is_external: boolean
+          profile_id: string | null
+          project_role: string
+          status: string
+          team_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          invite_email?: string | null
+          is_external?: boolean
+          profile_id?: string | null
+          project_role?: string
+          status?: string
+          team_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          invite_email?: string | null
+          is_external?: boolean
+          profile_id?: string | null
+          project_role?: string
+          status?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_team_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "project_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_teams: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          project_id: string
+          template_key: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          project_id: string
+          template_key?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          project_id?: string
+          template_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_teams_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_teams_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -940,10 +1203,10 @@ export type Database = {
           connected_at: string | null
           expires_at: string | null
           id: string
+          metadata: Json | null
           provider: string
           provider_email: string | null
           provider_name: string | null
-          metadata: Json | null
           refresh_token: string | null
           scope: string | null
           user_id: string
@@ -953,10 +1216,10 @@ export type Database = {
           connected_at?: string | null
           expires_at?: string | null
           id?: string
+          metadata?: Json | null
           provider: string
           provider_email?: string | null
           provider_name?: string | null
-          metadata?: Json | null
           refresh_token?: string | null
           scope?: string | null
           user_id: string
@@ -966,13 +1229,73 @@ export type Database = {
           connected_at?: string | null
           expires_at?: string | null
           id?: string
+          metadata?: Json | null
           provider?: string
           provider_email?: string | null
           provider_name?: string | null
-          metadata?: Json | null
           refresh_token?: string | null
           scope?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      vendor_signups: {
+        Row: {
+          bio: string | null
+          business_name: string
+          categories: string[]
+          city: string
+          contact_name: string
+          country: string
+          created_at: string
+          email: string
+          id: string
+          phone: string | null
+          photos: string[]
+          source: string | null
+          state: string | null
+          status: string
+          team_size: string | null
+          website: string | null
+          years_experience: number | null
+        }
+        Insert: {
+          bio?: string | null
+          business_name: string
+          categories?: string[]
+          city: string
+          contact_name: string
+          country?: string
+          created_at?: string
+          email: string
+          id?: string
+          phone?: string | null
+          photos?: string[]
+          source?: string | null
+          state?: string | null
+          status?: string
+          team_size?: string | null
+          website?: string | null
+          years_experience?: number | null
+        }
+        Update: {
+          bio?: string | null
+          business_name?: string
+          categories?: string[]
+          city?: string
+          contact_name?: string
+          country?: string
+          created_at?: string
+          email?: string
+          id?: string
+          phone?: string | null
+          photos?: string[]
+          source?: string | null
+          state?: string | null
+          status?: string
+          team_size?: string | null
+          website?: string | null
+          years_experience?: number | null
         }
         Relationships: []
       }
@@ -1050,7 +1373,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_access_project: { Args: { proj: string }; Returns: boolean }
+      is_conversation_member: { Args: { conv: string }; Returns: boolean }
+      is_org_admin: { Args: { org: string }; Returns: boolean }
+      is_org_member: { Args: { org: string }; Returns: boolean }
+      my_org_id: { Args: never; Returns: string }
+      my_profile_id: { Args: never; Returns: string }
+      search_messaging_profiles: {
+        Args: { result_limit?: number; search_query: string }
+        Returns: {
+          avatar_url: string
+          email: string
+          full_name: string
+          id: string
+          role: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

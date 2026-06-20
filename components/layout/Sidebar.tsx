@@ -70,12 +70,7 @@ export default function Sidebar({
   const router    = useRouter()
   const { unreadCount } = useMessages()
   const [loggingOut, setLoggingOut] = useState(false)
-  const [effectiveRole, setEffectiveRole] = useState(userRole)
-
-  useEffect(() => {
-    const demo = localStorage.getItem('5bloc_demo_role')
-    setEffectiveRole(demo || userRole)
-  }, [userRole])
+  const effectiveRole = userRole as UserRole
 
   async function handleLogout() {
     setLoggingOut(true)

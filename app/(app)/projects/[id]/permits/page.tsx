@@ -118,7 +118,7 @@ export default function PermitsAndCompliance() {
           <div className="card-5bloc space-y-4">
             <div className="border-b pb-3 flex justify-between items-center">
               <div>
-                <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Sanction & NOC Checklist</h3>
+                <h3 className="text-xs font-bold font-mono text-on-surface uppercase tracking-wider">Sanction & NOC Checklist</h3>
                 <p className="text-[10px] text-stone mt-0.5 font-mono">Verify state building codes and certificate filings.</p>
               </div>
               <span className="label-sm font-bold text-stone">PERMITS: {permits.length}</span>
@@ -132,7 +132,7 @@ export default function PermitsAndCompliance() {
                   <div key={permit.id} className="py-4 space-y-2.5">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h4 className="text-xs font-bold text-white">{permit.approval_name}</h4>
+                        <h4 className="text-xs font-bold text-on-surface">{permit.approval_name}</h4>
                         <span className="text-[10px] text-stone font-mono">Authority: {permit.authority}</span>
                       </div>
                       <span className={`px-2 py-0.5 border text-[9px] font-mono font-semibold uppercase ${getStatusChipStyle(permit.status)}`}>
@@ -196,22 +196,22 @@ export default function PermitsAndCompliance() {
             </div>
 
             <div className="p-3.5 bg-navy/40 border space-y-3">
-              <h4 className="text-xs font-bold text-white flex items-center gap-1.5 font-mono">
+              <h4 className="text-xs font-bold text-on-surface flex items-center gap-1.5 font-mono">
                 <span className="material-icons-outlined text-amber text-[15px]">info</span>
                 Zoning Bye-Laws (residential)
               </h4>
               <div className="space-y-2 text-[10px] text-stone font-mono leading-normal">
                 <div className="flex justify-between border-b pb-1 border-navy-lt/60">
                   <span>Front Margin Space:</span>
-                  <span className="text-white">Min 4.5 meters</span>
+                  <span className="text-on-surface">Min 4.5 meters</span>
                 </div>
                 <div className="flex justify-between border-b pb-1 border-navy-lt/60">
                   <span>Permissible FSI Limit:</span>
-                  <span className="text-white">1.33 base + 0.5 paid TDR</span>
+                  <span className="text-on-surface">1.33 base + 0.5 paid TDR</span>
                 </div>
                 <div className="flex justify-between border-b pb-1 border-navy-lt/60">
                   <span>Maximum Height:</span>
-                  <span className="text-white">IS 24m fire safety limit</span>
+                  <span className="text-on-surface">IS 24m fire safety limit</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Rainwater Harvesting:</span>

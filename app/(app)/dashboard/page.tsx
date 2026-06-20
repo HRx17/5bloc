@@ -1,10 +1,12 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CalendarWidget } from '@/components/integrations/CalendarWidget'
 import { StatCard } from '@/components/ui/StatCard'
+import { useToast } from '@/components/ui/Toast'
 import type { UserRole } from '@/lib/roles'
 import { supabaseClient } from '@/lib/supabase/client'
 import { hasSupabaseEnv, phaseKeyFromNumber } from '@/lib/data/client-data'
@@ -60,9 +62,48 @@ const DASHBOARD_STATS: Record<UserRole, { label: string; value: string; icon: st
     { label: 'Submittals to review', value: '1', icon: 'fact_check', color: 'var(--amber)', href: '/projects/proj-1/submittals' },
     { label: 'Documents', value: '18', icon: 'folder_open', color: 'var(--stone)', href: '/documents' },
   ],
+  interior_designer: [
+    { label: 'Active projects', value: '1', icon: 'weekend', color: '#C084FC', href: '/projects' },
+    { label: 'Finish selections', value: '12', icon: 'palette', color: 'var(--amber)', href: '/documents' },
+    { label: 'Vendor samples', value: '6', icon: 'inventory_2', color: 'var(--purple)', href: '/marketplace' },
+    { label: 'Team messages', value: '4', icon: 'chat', color: 'var(--blue)', href: '/messages' },
+  ],
 }
 
 /* Onboarding steps from IA */
+const QUICK_ACTIONS: Record<UserRole, { label: string; icon: string; href: string; color: string }[]> = {
+  architect: [
+    { label: 'New RFI', icon: 'forum', href: '/coordination', color: 'var(--error)' },
+    { label: 'Upload drawing', icon: 'upload_file', href: '/documents', color: 'var(--blue)' },
+    { label: 'Send an invoice', icon: 'receipt_long', href: '/invoices/new', color: 'var(--success)' },
+    { label: 'AI cost estimate', icon: 'auto_awesome', href: '/ai/estimate', color: 'var(--purple)' },
+  ],
+  client: [
+    { label: 'View documents', icon: 'folder_open', href: '/documents', color: 'var(--blue)' },
+    { label: 'Open RFIs', icon: 'forum', href: '/coordination', color: 'var(--error)' },
+    { label: 'Team messages', icon: 'chat', href: '/messages', color: 'var(--amber)' },
+  ],
+  contractor: [
+    { label: 'Site RFIs', icon: 'forum', href: '/coordination', color: 'var(--error)' },
+    { label: 'Upload submittal', icon: 'upload_file', href: '/documents', color: 'var(--blue)' },
+    { label: 'Team messages', icon: 'chat', href: '/messages', color: 'var(--amber)' },
+  ],
+  vendor: [
+    { label: 'Marketplace', icon: 'storefront', href: '/marketplace', color: 'var(--purple)' },
+    { label: 'Team messages', icon: 'chat', href: '/messages', color: 'var(--blue)' },
+  ],
+  consultant: [
+    { label: 'Review RFIs', icon: 'forum', href: '/coordination', color: 'var(--error)' },
+    { label: 'Documents', icon: 'folder_open', href: '/documents', color: 'var(--blue)' },
+    { label: 'Team messages', icon: 'chat', href: '/messages', color: 'var(--amber)' },
+  ],
+  interior_designer: [
+    { label: 'Finish documents', icon: 'palette', href: '/documents', color: 'var(--purple)' },
+    { label: 'Vendor marketplace', icon: 'storefront', href: '/marketplace', color: 'var(--amber)' },
+    { label: 'Team messages', icon: 'chat', href: '/messages', color: 'var(--blue)' },
+  ],
+}
+
 const ONBOARDING_STEPS = [
   { id: 'client',      label: 'Add your first client',     icon: 'contacts',       href: '/clients',           done: false },
   { id: 'project',     label: 'Create your first project', icon: 'space_dashboard',href: '/projects',          done: true  },
@@ -154,12 +195,11 @@ function OnboardingCard() {
 
   return (
     <motion.div
-      className="rounded-2xl p-5"
+      className="app-card p-5"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       style={{
-        background: 'var(--surface-container)',
         boxShadow: 'inset 0 0 0 1px rgba(245,166,35,0.10)',
       }}
     >
@@ -180,7 +220,7 @@ function OnboardingCard() {
           onClick={() => setOpen(false)}
           className="text-[12px] px-3 py-1.5 rounded-lg transition-colors"
           style={{ color: 'var(--stone)', background: 'transparent' }}
-          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)')}
+          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'var(--overlay-hover)')}
           onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
         >
           Dismiss
@@ -235,13 +275,31 @@ function OnboardingCard() {
   )
 }
 
-export default function Dashboard() {
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={null}>
+      <Dashboard />
+    </Suspense>
+  )
+}
+
+function Dashboard() {
+  const searchParams = useSearchParams()
+  const { toast } = useToast()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading,  setLoading]  = useState(true)
   const [userRole, setUserRole] = useState<UserRole>('architect')
   const [firstName, setFirstName] = useState('')
+  const [adminTodos, setAdminTodos] = useState(0)
+  const [joinRequestPending, setJoinRequestPending] = useState<{ orgName: string } | null>(null)
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+
+  useEffect(() => {
+    if (searchParams.get('access') === 'denied') {
+      toast('You do not have access to that page for your role.', 'error')
+    }
+  }, [searchParams, toast])
 
   useEffect(() => {
     fetch('/api/profile/me')
@@ -252,6 +310,18 @@ export default function Dashboard() {
         if (DASHBOARD_STATS[role]) setUserRole(role)
         const name = data.user.full_name ?? data.user.email?.split('@')[0] ?? ''
         setFirstName(name.split(/\s+/)[0] ?? name)
+        if (data.joinRequestPending) {
+          setJoinRequestPending({ orgName: data.joinRequestPending.orgName })
+        }
+      })
+      .catch(() => {})
+
+    fetch('/api/org/team')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.isAdmin && Array.isArray(data.joinRequests)) {
+          setAdminTodos(data.joinRequests.length)
+        }
       })
       .catch(() => {})
   }, [])
@@ -312,6 +382,7 @@ export default function Dashboard() {
   ]
 
   const totalRfis = projects.reduce((s, p) => s + p.openRfis, 0)
+  const quickActions = QUICK_ACTIONS[userRole] ?? QUICK_ACTIONS.architect
   const roleStats = DASHBOARD_STATS[userRole].map((stat) => {
     if (stat.label === 'Active projects' || stat.label === 'Your projects' || stat.label === 'Active sites') {
       return { ...stat, value: loading ? '—' : String(projects.length) }
@@ -351,6 +422,8 @@ export default function Dashboard() {
                   ? 'Manage supply schedules, RFQs and project deliveries'
                   : userRole === 'consultant'
                     ? 'Review submissions, RFIs and specialist coordination'
+                    : userRole === 'interior_designer'
+                      ? 'Finishes, samples, and install coordination in one place'
                     : loading ? '…' : `${projects.length} active projects · ${totalRfis} open RFIs`}
           </p>
         </div>
@@ -361,6 +434,43 @@ export default function Dashboard() {
         </Link>
         )}
       </motion.div>
+
+      {joinRequestPending && (
+        <div
+          className="block app-card p-4"
+          style={{ boxShadow: 'inset 0 0 0 1px rgba(122,184,255,0.25)', background: 'rgba(122,184,255,0.06)' }}
+        >
+          <div className="flex items-center gap-3">
+            <span className="material-icons-outlined text-[20px]" style={{ color: 'var(--blue)' }}>hourglass_top</span>
+            <div>
+              <p className="text-[13px] font-semibold" style={{ color: 'var(--on-surface)' }}>
+                Join request pending for {joinRequestPending.orgName}
+              </p>
+              <p className="text-[12px]" style={{ color: 'var(--stone)' }}>
+                A firm admin will review your request. You&apos;ll get an email when approved.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {adminTodos > 0 && (
+        <Link
+          href="/settings?tab=team"
+          className="block app-card app-card-interactive p-4"
+          style={{ boxShadow: 'inset 0 0 0 1px rgba(245,166,35,0.25)', background: 'rgba(245,166,35,0.06)' }}
+        >
+          <div className="flex items-center gap-3">
+            <span className="material-icons-outlined text-[20px]" style={{ color: 'var(--amber)' }}>group_add</span>
+            <div>
+              <p className="text-[13px] font-semibold" style={{ color: 'var(--on-surface)' }}>
+                {adminTodos} pending join request{adminTodos === 1 ? '' : 's'}
+              </p>
+              <p className="text-[12px]" style={{ color: 'var(--stone)' }}>Review and approve teammates in Org Team settings.</p>
+            </div>
+          </div>
+        </Link>
+      )}
 
       {/* ── At-a-glance stat row ── */}
       <motion.div
@@ -403,7 +513,7 @@ export default function Dashboard() {
           {loading ? (
             <div className="space-y-3">
               {[0, 1, 2].map((i) => (
-                <div key={i} className="rounded-2xl p-5 h-[110px]" style={{ background: 'var(--surface-container)' }}>
+                <div key={i} className="app-card p-5 h-[110px]">
                   <div className="skeleton h-3 w-1/4 rounded-full mb-3" />
                   <div className="skeleton h-4 w-3/5 rounded-full mb-2" />
                   <div className="skeleton h-2.5 w-2/5 rounded-full" />
@@ -411,10 +521,7 @@ export default function Dashboard() {
               ))}
             </div>
           ) : projects.length === 0 ? (
-            <div
-              className="rounded-2xl p-10 flex flex-col items-center text-center"
-              style={{ background: 'var(--surface-container)' }}
-            >
+            <div className="app-card p-10 flex flex-col items-center text-center">
               <span className="material-icons-outlined text-[28px] mb-4" style={{ color: 'var(--stone)', opacity: 0.3 }}>
                 space_dashboard
               </span>
@@ -422,11 +529,15 @@ export default function Dashboard() {
                 No projects yet
               </h3>
               <p className="text-[13px] mb-5" style={{ color: 'var(--stone)' }}>
-                Create your first project to get started
+                {userRole === 'architect'
+                  ? 'Create your first project to get started'
+                  : 'You will see projects here once you are added to a workspace.'}
               </p>
+              {userRole === 'architect' && (
               <Link href="/projects/new" className="btn-primary text-[13px]">
                 Create project
               </Link>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -467,15 +578,15 @@ export default function Dashboard() {
         {/* Right column — Activity + Quick actions */}
         <div className="space-y-4">
 
-          {/* Onboarding checklist */}
-          <OnboardingCard />
+          {/* Onboarding checklist — architects only */}
+          {userRole === 'architect' && <OnboardingCard />}
 
           {/* Activity feed */}
           <div>
             <h2 className="section-eyebrow mb-3">Recent Activity</h2>
             <div
-              className="rounded-2xl overflow-hidden"
-              style={{ background: 'var(--surface-container)' }}
+              className="rounded-2xl overflow-hidden app-card"
+              style={{ padding: 0 }}
             >
               {activities.map((act, idx) => (
                 <Link
@@ -487,7 +598,7 @@ export default function Dashboard() {
                     initial={{ opacity: 0, x: -6 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.3, delay: 0.2 + 0.06 * idx }}
-                    whileHover={{ backgroundColor: 'rgba(255,255,255,0.025)' }}
+                    whileHover={{ backgroundColor: 'var(--overlay-hover)' }}
                     style={idx > 0 ? { boxShadow: 'inset 0 1px 0 var(--hairline)' } : {}}
                   >
                     <div
@@ -519,12 +630,7 @@ export default function Dashboard() {
           <div>
             <h2 className="section-eyebrow mb-3">Quick Actions</h2>
             <div className="space-y-1.5">
-              {[
-              { label: 'New RFI',          icon: 'forum',         href: '/coordination', color: 'var(--error)'   },
-              { label: 'Upload drawing',   icon: 'upload_file',   href: '/documents',    color: 'var(--blue)'    },
-                { label: 'Send an invoice',  icon: 'receipt_long',  href: '/invoices/new', color: 'var(--success)' },
-                { label: 'AI cost estimate', icon: 'auto_awesome',  href: '/ai/estimate',  color: 'var(--purple)'  },
-              ].map((a) => (
+              {quickActions.map((a) => (
                 <Link
                   key={a.label}
                   href={a.href}
@@ -553,8 +659,7 @@ export default function Dashboard() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.4 }}
-            className="rounded-2xl p-4 relative"
-            style={{ background: 'var(--surface-container)', boxShadow: 'inset 0 0 0 1px var(--hairline)' }}
+            className="rounded-2xl p-4 relative app-card"
           >
             <div className="flex items-center gap-2 mb-3">
               <div className="w-7 h-7 flex items-center justify-center rounded-lg"

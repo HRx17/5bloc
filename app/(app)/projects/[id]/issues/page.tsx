@@ -224,7 +224,7 @@ export default function IssueTracker() {
           <div className="card-5bloc space-y-4">
             <div className="border-b pb-3 flex items-center justify-between">
               <div>
-                <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Site Issue Register</h3>
+                <h3 className="text-xs font-bold font-mono text-on-surface uppercase tracking-wider">Site Issue Register</h3>
                 <p className="text-[10px] text-stone mt-0.5">Logs of active construction delays or design non-compliance.</p>
               </div>
               <span className="label-sm font-bold text-stone">COUNT: {filtered.length}</span>
@@ -256,7 +256,7 @@ export default function IssueTracker() {
                       >
                         <td className="py-4 pl-2 font-mono text-stone">ISS-{String(i.issue_number).padStart(3, '0')}</td>
                         <td className="py-4 font-semibold pr-4">
-                          <span className="text-white group-hover:text-amber transition-colors line-clamp-1">{i.title}</span>
+                          <span className="text-on-surface group-hover:text-amber transition-colors line-clamp-1">{i.title}</span>
                           <span className="text-[10px] text-stone block font-mono mt-0.5">Reported: {i.date_reported}</span>
                         </td>
                         <td className="py-4 text-stone">{i.assigned_to}</td>
@@ -269,7 +269,7 @@ export default function IssueTracker() {
                           </span>
                         </td>
                         <td className="py-4 pr-2 text-right">
-                          <span className="material-icons-outlined text-stone group-hover:text-white transition-colors text-[18px]">
+                          <span className="material-icons-outlined text-stone group-hover:text-on-surface transition-colors text-[18px]">
                             chevron_right
                           </span>
                         </td>
@@ -293,13 +293,13 @@ export default function IssueTracker() {
                   </h4>
                   <span className="text-[10px] text-stone font-mono">ISS-{String(activeIssue.issue_number).padStart(3, '0')}</span>
                 </div>
-                <button onClick={() => setActiveIssue(null)} className="text-stone hover:text-white transition">
+                <button onClick={() => setActiveIssue(null)} className="text-stone hover:text-on-surface transition">
                   <span className="material-icons-outlined text-[16px]">close</span>
                 </button>
               </div>
 
               <div>
-                <h3 className="text-sm font-bold text-white leading-snug">{activeIssue.title}</h3>
+                <h3 className="text-sm font-bold text-on-surface leading-snug">{activeIssue.title}</h3>
                 <div className="flex gap-2 mt-2">
                   <span className="chip" style={getSeverityStyle(activeIssue.severity)}>{activeIssue.severity} severity</span>
                   <span className={`px-2 py-0.5 border text-[10px] font-semibold uppercase ${getStatusBadge(activeIssue.status)}`}>
@@ -325,11 +325,11 @@ export default function IssueTracker() {
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div>
                   <span className="text-stone font-mono text-[9px] uppercase block">Assigned To</span>
-                  <span className="font-semibold text-white mt-1 block truncate">{activeIssue.assigned_to}</span>
+                  <span className="font-semibold text-on-surface mt-1 block truncate">{activeIssue.assigned_to}</span>
                 </div>
                 <div>
                   <span className="text-stone font-mono text-[9px] uppercase block">Reported By</span>
-                  <span className="font-semibold text-white mt-1 block truncate">{activeIssue.reported_by}</span>
+                  <span className="font-semibold text-on-surface mt-1 block truncate">{activeIssue.reported_by}</span>
                 </div>
               </div>
 
@@ -380,7 +380,7 @@ export default function IssueTracker() {
           <div className="w-full max-w-md bg-navy-mid border p-6 space-y-4">
             <div className="border-b pb-3 flex justify-between items-center">
               <h3 className="text-xs font-bold font-mono text-amber uppercase tracking-wider">Report Site Defect/Issue</h3>
-              <button onClick={() => setShowReportModal(false)} className="text-stone hover:text-white transition">
+              <button onClick={() => setShowReportModal(false)} className="text-stone hover:text-on-surface transition">
                 <span className="material-icons-outlined text-[18px]">close</span>
               </button>
             </div>

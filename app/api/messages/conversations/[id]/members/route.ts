@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServer, createServiceRoleClient } from '@/lib/supabase/server'
+import { createSupabaseServer } from '@/lib/supabase/server'
+import {
+  addMembersToConversation,
+  createConversationInvites,
+  getMessagingDb,
+  resolveMemberIds,
+  sendConversationInviteEmails,
+  upgradeDmToGroupIfNeeded,
+} from '@/lib/messages/server'
 
 export const dynamic = 'force-dynamic'
 
 /**
- * Add registered users to an existing conversation.
- * Body: { memberProfileIds: string[] }. Caller must already be a member.
+ * Add registered users to an existing conversation by profile id and/or email.
+ * Body: { memberProfileIds?: string[], emails?: string[] }. Caller must already be a member.
+ * Unregistered emails receive an invite email and join automatically after signup.
  */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: conversationId } = await params
@@ -13,16 +22,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const admin = createServiceRoleClient()
-  const { data: me } = await admin
+  const db = getMessagingDb(supabase)
+  const { data: me } = await supabase
     .from('profiles')
-    .select('id')
+    .select('id, full_name, email')
     .eq('auth_id', user.id)
     .maybeSingle()
   if (!me) return NextResponse.json({ error: 'Profile not found' }, { status: 400 })
 
-  // Caller must be a member of the conversation
-  const { data: membership } = await admin
+  const { data: membership } = await supabase
     .from('conversation_members')
     .select('id')
     .eq('conversation_id', conversationId)
@@ -32,32 +40,43 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const body = await req.json().catch(() => ({}))
   const rawIds: string[] = Array.isArray(body.memberProfileIds) ? body.memberProfileIds : []
-  const memberIds = Array.from(new Set(rawIds.filter(Boolean)))
-  if (memberIds.length === 0) return NextResponse.json({ error: 'No users provided' }, { status: 400 })
+  const rawEmails: string[] = Array.isArray(body.emails) ? body.emails : []
 
-  const rows = memberIds.map((profile_id) => ({ conversation_id: conversationId, profile_id }))
-  // Ignore duplicates (unique constraint) by upserting on the unique pair
-  const { error } = await admin
-    .from('conversation_members')
-    .upsert(rows, { onConflict: 'conversation_id,profile_id', ignoreDuplicates: true })
-  if (error) return NextResponse.json({ error: 'Could not add members' }, { status: 500 })
-
-  // If this conversation is tied to a project, mirror membership into project_members
-  const { data: conv } = await admin
-    .from('conversations')
-    .select('project_id')
-    .eq('id', conversationId)
-    .maybeSingle()
-  if (conv?.project_id) {
-    const pmRows = memberIds.map((profile_id) => ({
-      project_id: conv.project_id as string,
-      profile_id,
-      role: 'member',
-    }))
-    await admin
-      .from('project_members')
-      .upsert(pmRows, { onConflict: 'project_id,profile_id', ignoreDuplicates: true })
+  const { memberIds, pendingEmails } = await resolveMemberIds(db, me.id, rawIds, rawEmails)
+  if (memberIds.length === 0 && pendingEmails.length === 0) {
+    return NextResponse.json({ error: 'No users or emails provided' }, { status: 400 })
   }
 
-  return NextResponse.json({ ok: true, added: memberIds.length })
+  const { data: conv } = await db
+    .from('conversations')
+    .select('project_id, title')
+    .eq('id', conversationId)
+    .maybeSingle()
+
+  if (memberIds.length > 0) {
+    await addMembersToConversation(db, conversationId, memberIds, conv?.project_id ?? null)
+    await upgradeDmToGroupIfNeeded(db, conversationId)
+  }
+
+  let invited = 0
+  let autoAdded = 0
+  if (pendingEmails.length > 0) {
+    const inviteResult = await createConversationInvites(db, conversationId, me.id, pendingEmails)
+    invited = inviteResult.pendingEmails.length
+    autoAdded = inviteResult.autoAdded
+    if (inviteResult.pendingEmails.length > 0) {
+      const inviterName = me.full_name || me.email || 'Someone'
+      await sendConversationInviteEmails(inviteResult.pendingEmails, inviterName, conv?.title ?? null)
+    }
+    if (autoAdded > 0) {
+      await upgradeDmToGroupIfNeeded(db, conversationId)
+    }
+  }
+
+  return NextResponse.json({
+    ok: true,
+    added: memberIds.length + autoAdded,
+    invited,
+    pendingEmails: invited > 0 ? pendingEmails : undefined,
+  })
 }

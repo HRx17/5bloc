@@ -43,6 +43,8 @@ export default function TopNav({
     const initial = saved ?? 'light'
     setTheme(initial)
     document.documentElement.classList.toggle('dark', initial === 'dark')
+    const meta = document.querySelector('meta[name="theme-color"]')
+    if (meta) meta.setAttribute('content', initial === 'dark' ? '#000000' : '#F2F2F7')
   }, [])
 
   const toggleTheme = () => {
@@ -50,6 +52,8 @@ export default function TopNav({
     setTheme(next)
     localStorage.setItem('theme', next)
     document.documentElement.classList.toggle('dark', next === 'dark')
+    const meta = document.querySelector('meta[name="theme-color"]')
+    if (meta) meta.setAttribute('content', next === 'dark' ? '#000000' : '#F2F2F7')
   }
 
   const initials = userName

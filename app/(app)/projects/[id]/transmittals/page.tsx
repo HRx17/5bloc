@@ -138,7 +138,7 @@ export default function TransmittalsLog() {
         ].map((kpi, idx) => (
           <div key={idx} className="card-5bloc p-4">
             <span className="text-[10px] text-stone font-mono uppercase tracking-wider">{kpi.label}</span>
-            <h4 className="text-lg font-bold text-white mt-1 font-mono">{kpi.value}</h4>
+            <h4 className="text-lg font-bold text-on-surface mt-1 font-mono">{kpi.value}</h4>
             <p className="text-[10px] text-stone mt-1 font-mono">{kpi.sub}</p>
           </div>
         ))}
@@ -149,7 +149,7 @@ export default function TransmittalsLog() {
         <div className="lg:col-span-2 card-5bloc space-y-4">
           <div className="border-b pb-3 flex justify-between items-center">
             <div>
-              <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Transmittals Dispatch Registry</h3>
+              <h3 className="text-xs font-bold font-mono text-on-surface uppercase tracking-wider">Transmittals Dispatch Registry</h3>
               <p className="text-[10px] text-stone mt-0.5 font-mono">Formal verification records of drawings and specifications dispatch.</p>
             </div>
             <button
@@ -170,9 +170,9 @@ export default function TransmittalsLog() {
                 <div key={t.id} className="py-4 space-y-3">
                   <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
                     <div className="flex items-center gap-3">
-                      <span className="font-mono text-white font-bold text-xs">{t.transmittal_no}</span>
+                      <span className="font-mono text-on-surface font-bold text-xs">{t.transmittal_no}</span>
                       <span className="text-[10px] font-mono text-stone">Date: {t.date}</span>
-                      <span className="text-[10px] text-stone">via <span className="font-mono font-semibold text-white">{t.via}</span></span>
+                      <span className="text-[10px] text-stone">via <span className="font-mono font-semibold text-on-surface">{t.via}</span></span>
                     </div>
                     <div className="flex gap-2">
                       <span className={`px-2 py-0.5 border text-[9px] font-mono font-semibold uppercase ${getPurposeBadgeClass(t.purpose)}`}>
@@ -186,13 +186,13 @@ export default function TransmittalsLog() {
 
                   <div>
                     <span className="text-[9px] text-stone font-mono uppercase block">Transmitted Documents</span>
-                    <p className="text-xs font-semibold text-white mt-0.5 leading-relaxed">{t.documents}</p>
+                    <p className="text-xs font-semibold text-on-surface mt-0.5 leading-relaxed">{t.documents}</p>
                   </div>
 
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-navy/20 p-2.5 border">
                     <div className="text-[11px] text-stone">
                       <span>Recipient: </span>
-                      <span className="font-semibold text-white">{t.recipient_name}</span>
+                      <span className="font-semibold text-on-surface">{t.recipient_name}</span>
                       <span> ({t.recipient_company})</span>
                     </div>
                     <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
@@ -214,7 +214,7 @@ export default function TransmittalsLog() {
                       )}
                       <button
                         onClick={() => alert(`Simulating print-friendly transmittal slip generation for ${t.transmittal_no}`)}
-                        className="p-1 text-stone hover:text-white hover:bg-navy-lt transition shrink-0"
+                        className="p-1 text-stone hover:text-on-surface hover:bg-navy-lt transition shrink-0"
                         title="Print Transmittal Slip"
                       >
                         <span className="material-icons-outlined text-[16px]">print</span>
@@ -256,7 +256,7 @@ export default function TransmittalsLog() {
           <div className="w-full max-w-md bg-navy-mid border p-6 space-y-4 rounded-2xl">
             <div className="border-b pb-3 flex justify-between items-center">
               <h3 className="text-xs font-bold font-mono text-amber uppercase tracking-wider">Create Transmittal Sheet</h3>
-              <button onClick={() => setShowFormModal(false)} className="text-stone hover:text-white transition">
+              <button onClick={() => setShowFormModal(false)} className="text-stone hover:text-on-surface transition">
                 <span className="material-icons-outlined text-[18px]">close</span>
               </button>
             </div>
@@ -293,7 +293,7 @@ export default function TransmittalsLog() {
                   value={newTransmittal.documents}
                   placeholder="Detail drawing name, sheet numbers and revision codes..."
                   onChange={e => setNewTransmittal(prev => ({ ...prev, documents: e.target.value }))}
-                  className="w-full bg-navy border text-xs text-white p-3 focus:outline-none resize-none"
+                  className="w-full bg-navy border text-xs text-on-surface p-3 focus:outline-none resize-none"
                   style={{ borderRadius: '12px' }}
                 />
               </div>

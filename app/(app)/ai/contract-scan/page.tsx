@@ -173,7 +173,7 @@ export default function ContractRiskScan() {
                 <span className="material-icons-outlined text-[28px]">sync</span>
               </div>
               <div className="space-y-1">
-                <h4 className="text-sm font-bold text-white uppercase tracking-wider font-mono">Analyzing Contract Terms</h4>
+                <h4 className="text-sm font-bold text-on-surface uppercase tracking-wider font-mono">Analyzing Contract Terms</h4>
                 <p className="text-xs text-stone">{loadingMessages[loadingStep]}</p>
               </div>
               <div className="w-64 bg-navy h-1.5 overflow-hidden border">
@@ -189,7 +189,7 @@ export default function ContractRiskScan() {
               {/* Score summary card */}
               <div className="card-5bloc flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div className="space-y-1">
-                  <h2 className="text-sm font-bold font-mono uppercase text-white tracking-wider">Audit Result Summary</h2>
+                  <h2 className="text-sm font-bold font-mono uppercase text-on-surface tracking-wider">Audit Result Summary</h2>
                   <p className="text-xs text-stone">Audit completed. Risk checklist generated below.</p>
                 </div>
                 <div className="flex items-center gap-3.5">
@@ -212,7 +212,7 @@ export default function ContractRiskScan() {
                   {scanResult.risks.map((risk, index) => (
                     <div key={index} className="p-4 bg-navy/30 border space-y-3">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <h4 className="text-xs font-bold text-on-surface flex items-center gap-1.5">
                           <span className="font-mono text-stone">{risk.clauseNumber}</span> - {risk.title}
                         </h4>
                         <span className="chip" style={getRiskColor(risk.riskLevel)}>{risk.riskLevel} Risk</span>
@@ -225,11 +225,11 @@ export default function ContractRiskScan() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 text-xs">
                         <div>
                           <p className="text-stone font-semibold mb-1">Contract Implication:</p>
-                          <p className="text-white leading-relaxed">{risk.implication}</p>
+                          <p className="text-on-surface leading-relaxed">{risk.implication}</p>
                         </div>
                         <div>
                           <p className="text-amber font-semibold mb-1">Suggested Remedy:</p>
-                          <p className="text-white leading-relaxed">{risk.remedy}</p>
+                          <p className="text-on-surface leading-relaxed">{risk.remedy}</p>
                         </div>
                       </div>
                     </div>
@@ -246,7 +246,7 @@ export default function ContractRiskScan() {
                   {scanResult.missing.map((item, index) => (
                     <div key={index} className="p-4 bg-navy/30 border space-y-3.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-white font-mono">{item.category}</span>
+                        <span className="text-xs font-bold text-on-surface font-mono">{item.category}</span>
                         <span className={`chip ${
                           item.importance === 'critical' ? 'bg-error/10 text-error' : 'bg-stone/10 text-stone'
                         }`}>{item.importance}</span>
@@ -255,7 +255,7 @@ export default function ContractRiskScan() {
                       
                       <div className="pt-2.5 border-t border-navy-lt">
                         <p className="text-[10px] text-stone font-mono mb-1.5 uppercase">SUGGESTED DROP-IN TEXT:</p>
-                        <p className="text-xs text-white leading-relaxed p-3 bg-navy-mid border font-mono">
+                        <p className="text-xs text-on-surface leading-relaxed p-3 bg-navy-mid border font-mono">
                           {item.suggestedText}
                         </p>
                       </div>
@@ -268,7 +268,7 @@ export default function ContractRiskScan() {
             /* Idle screen placeholder */
             <div className="card-5bloc flex flex-col items-center justify-center text-center h-[520px] text-stone">
               <span className="material-icons-outlined text-[28px] text-stone/20 mb-3">gavel</span>
-              <h4 className="text-sm font-bold text-white">AI Contract Scan Engine Idle</h4>
+              <h4 className="text-sm font-bold text-on-surface">AI Contract Scan Engine Idle</h4>
               <p className="text-xs max-w-sm mt-1">
                 Upload a document or paste terms in the left panel to trigger the professional design liability audit.
               </p>

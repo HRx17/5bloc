@@ -1,0 +1,2 @@
+-- Org teams, invites, join requests, project teams
+-- Applied via Supabase migration: org_teams_and_access

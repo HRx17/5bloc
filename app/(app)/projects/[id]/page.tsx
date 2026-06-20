@@ -245,7 +245,7 @@ export default function ProjectOverview() {
  </div>
  <div className="pt-3 border-t ">
  <p className="text-[11px] font-medium text-stone mb-1">Project Brief Summary</p>
- <p className="text-xs text-white leading-relaxed">{projectStats.brief}</p>
+ <p className="text-xs text-on-surface leading-relaxed">{projectStats.brief}</p>
  </div>
  </div>
 
@@ -255,11 +255,11 @@ export default function ProjectOverview() {
  <div className="space-y-3.5 my-3">
  <div className="flex items-center justify-between text-xs">
  <span className="text-stone">Start Date:</span>
- <span className="font-semibold text-white">{projectStats.startDate}</span>
+ <span className="font-semibold text-on-surface">{projectStats.startDate}</span>
  </div>
  <div className="flex items-center justify-between text-xs">
  <span className="text-stone">Estimated End:</span>
- <span className="font-semibold text-white">{projectStats.endDate}</span>
+ <span className="font-semibold text-on-surface">{projectStats.endDate}</span>
  </div>
  </div>
  <div className="pt-3 border-t flex items-center gap-2 text-[11px] text-stone">
@@ -322,7 +322,7 @@ style={{ padding: 0, borderRadius: 16 }}
                 </div>
  
  <div>
- <h4 className="text-sm font-semibold text-white">{m.label}</h4>
+ <h4 className="text-sm font-semibold text-on-surface">{m.label}</h4>
  <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-stone">
  <span>Target: {m.date}</span>
  <button
@@ -421,7 +421,7 @@ style={{ padding: 0, borderRadius: 16 }}
  </div>
 
  <div className="flex flex-wrap items-center gap-4 pt-1">
- <label className="flex items-center gap-2 text-xs text-white cursor-pointer select-none">
+ <label className="flex items-center gap-2 text-xs text-on-surface cursor-pointer select-none">
  <input
  type="checkbox"
  checked={m.paid}
@@ -431,7 +431,7 @@ style={{ padding: 0, borderRadius: 16 }}
  <span>Mark Fee as Paid</span>
  </label>
 
- <label className="flex items-center gap-2 text-xs text-white cursor-pointer select-none">
+ <label className="flex items-center gap-2 text-xs text-on-surface cursor-pointer select-none">
  <input
  type="checkbox"
  checked={m.reraCertified}

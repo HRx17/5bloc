@@ -10,11 +10,25 @@ export async function getAuthUser() {
     redirect('/login')
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*, organisations(*)')
-    .eq('auth_id', user.id)
-    .maybeSingle()
+  let profile = (
+    await supabase
+      .from('profiles')
+      .select('*, organisations!profiles_org_id_fkey(*)')
+      .eq('auth_id', user.id)
+      .maybeSingle()
+  ).data
+
+  if (!profile) {
+    const { data: profileId } = await supabase.rpc('my_profile_id')
+    if (profileId) {
+      const { data: byId } = await supabase
+        .from('profiles')
+        .select('*, organisations!profiles_org_id_fkey(*)')
+        .eq('id', profileId)
+        .maybeSingle()
+      profile = byId
+    }
+  }
 
   const orgId = profile?.org_id ?? null
 

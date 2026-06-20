@@ -321,7 +321,7 @@ export default function NewProject() {
  <div className="pt-4 space-y-4" style={{ boxShadow: '0 -1px 0 rgba(159,142,122,0.10)' }}>
  <div className="flex items-center justify-between">
  <div>
- <h4 className="text-xs font-bold text-white">RERA Registered Project</h4>
+ <h4 className="text-xs font-bold text-on-surface">RERA Registered Project</h4>
  <p className="text-[10px] text-stone">Does this project comply with digital RERA reporting?</p>
  </div>
  <Toggle on={formData.isRera} onChange={(v) => setFormData(prev => ({ ...prev, isRera: v }))} label="RERA compliant" />

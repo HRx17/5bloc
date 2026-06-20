@@ -251,7 +251,7 @@ export default function DocumentVault() {
  {uploadQueue.length > 0 && (
  <div className="fixed bottom-6 left-6 z-50 w-72 bg-navy-mid border rounded-lg shadow-none p-4 space-y-3">
  <div className="flex items-center justify-between text-xs border-b pb-2">
- <span className="font-semibold text-white tracking-wider">Background Uploading...</span>
+ <span className="font-semibold text-on-surface tracking-wider">Background Uploading...</span>
  <span className="material-icons-outlined text-amber text-[16px] animate-spin">sync</span>
  </div>
  {uploadQueue.map(item => (
@@ -280,7 +280,7 @@ export default function DocumentVault() {
  <button
  onClick={() => setSelectedFolder('all')}
  className={`w-full flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-md transition ${
- selectedFolder === 'all' ? 'bg-amber text-navy font-bold' : 'text-stone hover:text-white hover:bg-navy-lt'
+ selectedFolder === 'all' ? 'bg-amber text-navy font-bold' : 'text-stone hover:text-on-surface hover:bg-navy-lt'
  }`}
  >
  <span className="flex items-center gap-2">
@@ -297,7 +297,7 @@ export default function DocumentVault() {
  key={folder}
  onClick={() => setSelectedFolder(folder)}
  className={`w-full flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-md transition capitalize ${
- selectedFolder === folder ? 'bg-amber text-navy font-bold' : 'text-stone hover:text-white hover:bg-navy-lt'
+ selectedFolder === folder ? 'bg-amber text-navy font-bold' : 'text-stone hover:text-on-surface hover:bg-navy-lt'
  }`}
  >
  <span className="flex items-center gap-2">
@@ -316,7 +316,7 @@ export default function DocumentVault() {
  {/* Action header */}
  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b ">
  <div>
- <h3 className="text-sm font-semibold text-white capitalize">
+ <h3 className="text-sm font-semibold text-on-surface capitalize">
  {selectedFolder === 'all' ? 'All Files' : `${selectedFolder} folder`}
  </h3>
  <p className="text-[11px] text-stone mt-0.5">Double click rows to inspect layout drawings.</p>
@@ -352,7 +352,7 @@ export default function DocumentVault() {
  ) : filteredDocs.length === 0 ? (
  <div className="py-16 flex flex-col items-center justify-center text-center text-stone flex-1">
  <span className="material-icons-outlined text-[28px] text-stone/30 mb-3">folder_open</span>
- <h4 className="text-sm font-bold text-white">Folder is empty</h4>
+ <h4 className="text-sm font-bold text-on-surface">Folder is empty</h4>
  <p className="text-xs max-w-xs mt-1">Upload CAD sheets or regulatory documents to get started.</p>
  </div>
  ) : (
@@ -388,7 +388,7 @@ export default function DocumentVault() {
  {/* File Name + Version badge */}
  <td className="py-3.5 font-medium pr-4">
  <div className="flex items-center gap-2">
- <span className="text-white hover:text-amber transition-colors line-clamp-1">{doc.name}</span>
+ <span className="text-on-surface hover:text-amber transition-colors line-clamp-1">{doc.name}</span>
  <span className="bg-navy border text-stone text-[9px] font-mono px-1 rounded-md">
  v{doc.version}
  </span>
@@ -425,7 +425,7 @@ export default function DocumentVault() {
  <button
  onClick={() => handleToggleShare(doc.id)}
  className={`p-1 rounded-md hover:bg-navy-lt transition ${
- doc.shared_with_client ? 'text-success' : 'text-stone hover:text-white'
+ doc.shared_with_client ? 'text-success' : 'text-stone hover:text-on-surface'
  }`}
  title={doc.shared_with_client ? 'Visible in Client Portal' : 'Private to team'}
  >
@@ -447,7 +447,7 @@ export default function DocumentVault() {
 
  <button 
  onClick={() => setViewingDoc(doc)}
- className="p-1 rounded-md hover:bg-navy-lt text-stone hover:text-white transition"
+ className="p-1 rounded-md hover:bg-navy-lt text-stone hover:text-on-surface transition"
  title="Inspect File"
  >
  <span className="material-icons-outlined text-[16px]">open_in_new</span>
@@ -474,13 +474,13 @@ export default function DocumentVault() {
  {getDocTypeIcon(viewingDoc.extension)}
  </span>
  <div>
- <h3 className="text-sm font-semibold text-white">{viewingDoc.name}</h3>
+ <h3 className="text-sm font-semibold text-on-surface">{viewingDoc.name}</h3>
  <p className="text-[10px] text-stone font-body">Filename: {viewingDoc.original_filename} (Version {viewingDoc.version})</p>
  </div>
  </div>
  <button 
  onClick={() => setViewingDoc(null)}
- className="text-stone hover:text-white transition p-1 hover:bg-navy-lt rounded-md"
+ className="text-stone hover:text-on-surface transition p-1 hover:bg-navy-lt rounded-md"
  >
  <span className="material-icons-outlined text-[20px]">close</span>
  </button>
@@ -494,7 +494,7 @@ export default function DocumentVault() {
         /* Mock PDF preview container */
         <div className="w-full h-full min-h-[300px] border bg-navy/70 rounded-md flex flex-col items-center justify-center text-center p-6 text-stone">
           <span className="material-icons-outlined text-[28px] text-amber mb-2">picture_as_pdf</span>
-          <span className="text-xs font-semibold text-white">Integrated PDF Canvas Viewer (pdfjs-dist)</span>
+          <span className="text-xs font-semibold text-on-surface">Integrated PDF Canvas Viewer (pdfjs-dist)</span>
           <span className="text-[10px] mt-1">Simulated display buffer. Actual files downloaded securely.</span>
           <button className="btn-secondary py-1 px-4 mt-4 text-xs">Page 1 of 4</button>
         </div>
@@ -509,7 +509,7 @@ export default function DocumentVault() {
         </div>
       ) : viewingDoc.extension === 'gdoc' || viewingDoc.extension === 'gsheet' ? (
         /* Google Workspace Document / Sheet Sync Viewer */
-        <div className="w-full h-full flex flex-col bg-white border text-stone relative overflow-hidden rounded-md">
+        <div className="w-full h-full flex flex-col bg-surface-container border text-stone relative overflow-hidden rounded-md">
           <div className="bg-[#4285F4]/10 px-4 py-2 border-b flex items-center justify-between text-[#4285F4] text-xs font-semibold">
             <div className="flex items-center gap-1.5">
               <span className="material-icons-outlined text-[16px]">cloud_queue</span>
@@ -519,7 +519,7 @@ export default function DocumentVault() {
           </div>
 
           <div className="flex-1 overflow-y-auto bg-stone-100 p-6 flex justify-center">
-            <div className="w-full max-w-2xl bg-white shadow-sm border p-8 text-[#1a1714] min-h-[400px]">
+            <div className="w-full max-w-2xl bg-surface-container shadow-sm border p-8 text-[#1a1714] min-h-[400px]">
               {viewingDoc.extension === 'gdoc' ? (
                 <div className="space-y-4 text-xs leading-relaxed">
                   <h1 className="text-lg font-bold border-b pb-2 text-stone-800">{viewingDoc.name}</h1>
@@ -606,13 +606,13 @@ export default function DocumentVault() {
             <div className="flex bg-navy border rounded overflow-hidden">
               <button 
                 onClick={() => setCadViewMode('2d')}
-                className={`px-3 py-1 font-mono text-[10px] ${cadViewMode === '2d' ? 'bg-amber text-navy font-bold' : 'text-stone hover:text-white'}`}
+                className={`px-3 py-1 font-mono text-[10px] ${cadViewMode === '2d' ? 'bg-amber text-navy font-bold' : 'text-stone hover:text-on-surface'}`}
               >
                 2D AutoCAD Sheet
               </button>
               <button 
                 onClick={() => setCadViewMode('3d')}
-                className={`px-3 py-1 font-mono text-[10px] ${cadViewMode === '3d' ? 'bg-amber text-navy font-bold' : 'text-stone hover:text-white'}`}
+                className={`px-3 py-1 font-mono text-[10px] ${cadViewMode === '3d' ? 'bg-amber text-navy font-bold' : 'text-stone hover:text-on-surface'}`}
               >
                 Autodesk Fusion 3D BIM
               </button>
@@ -781,7 +781,7 @@ export default function DocumentVault() {
           ].slice(0, viewingDoc.version).map((v, i) => (
             <div key={i} className={`p-3 border text-xs space-y-1.5 ${v.active ? 'bg-amber/5 border-amber/35' : 'bg-navy/40 border-navy-lt/50'}`}>
               <div className="flex justify-between items-center font-mono">
-                <span className={`font-bold ${v.active ? 'text-amber' : 'text-white'}`}>Version {v.ver}.0</span>
+                <span className={`font-bold ${v.active ? 'text-amber' : 'text-on-surface'}`}>Version {v.ver}.0</span>
                 {v.active ? (
                   <span className="text-[9px] bg-amber/15 text-amber px-1.5 py-0.5 rounded font-bold uppercase">Active</span>
                 ) : (
@@ -864,7 +864,7 @@ export default function DocumentVault() {
           </h3>
           <button 
             onClick={() => setShowLinkGDocModal(false)}
-            className="text-stone hover:text-white transition p-1"
+            className="text-stone hover:text-on-surface transition p-1"
           >
             <span className="material-icons-outlined text-[18px]">close</span>
           </button>
@@ -887,7 +887,7 @@ export default function DocumentVault() {
             <select 
               value={newGDocType}
               onChange={(e) => setNewGDocType(e.target.value as any)}
-              className="w-full bg-navy text-white border text-xs px-3 py-2 outline-none focus:ring-1 focus:ring-amber"
+              className="w-full bg-navy text-on-surface border text-xs px-3 py-2 outline-none focus:ring-1 focus:ring-amber"
             >
               <option value="doc">Google Doc (Text)</option>
               <option value="sheet">Google Sheet (Spreadsheet)</option>

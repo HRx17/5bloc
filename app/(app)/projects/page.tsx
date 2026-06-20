@@ -31,8 +31,12 @@ export default function ProjectsList() {
  const isArchitect = role === 'architect'
 
  useEffect(() => {
- const demo = localStorage.getItem('5bloc_demo_role')
- if (demo) setRole(demo)
+   fetch('/api/profile/me')
+     .then((res) => (res.ok ? res.json() : null))
+     .then((data) => {
+       if (data?.user?.role) setRole(data.user.role)
+     })
+     .catch(() => {})
  }, [])
 
  useEffect(() => {

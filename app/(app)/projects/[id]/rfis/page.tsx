@@ -242,7 +242,7 @@ export default function RFILog() {
  ) : rfis.length === 0 ? (
  <div className="py-16 text-center text-stone flex flex-col items-center">
  <span className="material-icons-outlined text-[28px] text-stone/30 mb-3">forum</span>
- <h4 className="text-sm font-bold text-white">No RFIs logged</h4>
+ <h4 className="text-sm font-bold text-on-surface">No RFIs logged</h4>
  <p className="text-xs max-w-xs mt-1">Contractors can raise RFIs to clarify drawing specifications.</p>
  </div>
  ) : (
@@ -271,7 +271,7 @@ export default function RFILog() {
  >
  <td className="py-4 text-xs text-stone">RFI-{String(rfi.rfi_number).padStart(3, '0')}</td>
  <td className="py-4 font-semibold pr-4">
- <span className="text-white group-hover:text-amber transition-colors line-clamp-1">{rfi.title}</span>
+ <span className="text-on-surface group-hover:text-amber transition-colors line-clamp-1">{rfi.title}</span>
  {rfi.drawing_ref && (
  <span className="text-[11px] text-stone mt-0.5 block">Sheet: {rfi.drawing_ref}</span>
  )}
@@ -285,7 +285,7 @@ export default function RFILog() {
  </td>
  <td className="py-4 text-xs text-stone">{rfi.due_date}</td>
  <td className="py-4 pr-2 text-right">
- <span className="material-icons-outlined text-stone group-hover:text-white transition-colors text-[18px]">
+ <span className="material-icons-outlined text-stone group-hover:text-on-surface transition-colors text-[18px]">
  chevron_right
  </span>
  </td>
@@ -397,7 +397,7 @@ export default function RFILog() {
  <div className="flex-1 overflow-y-auto p-6 space-y-6">
  {/* Query block details */}
  <div className="space-y-2">
- <h4 className="text-sm font-semibold text-white leading-snug">{activeRfi.title}</h4>
+ <h4 className="text-sm font-semibold text-on-surface leading-snug">{activeRfi.title}</h4>
  {activeRfi.drawing_ref && (
  <span className="chip" style={{ background: 'rgba(245,166,35,.10)', color: 'var(--amber)' }}>
  Sheet: {activeRfi.drawing_ref}
@@ -424,7 +424,7 @@ export default function RFILog() {
  {/* RFI Response form */}
  <div className="pt-6 space-y-4" style={{ boxShadow: '0 -1px 0 rgba(159,142,122,0.10)' }}>
  <div className="flex items-center justify-between">
- <h4 className="text-xs font-semibold text-white">Resolve Response</h4>
+ <h4 className="text-xs font-semibold text-on-surface">Resolve Response</h4>
  <button 
  onClick={handleRequestAIDraft}
  disabled={aiDrafting}
@@ -447,7 +447,7 @@ export default function RFILog() {
  setActiveRfi(prev => prev ? { ...prev, response: aiDraftText } : null)
  setAiDraftText('')
  }}
- className="mt-3 text-[11px] font-medium text-amber hover:text-white transition flex items-center gap-0.5"
+ className="mt-3 text-[11px] font-medium text-amber hover:text-on-surface transition flex items-center gap-0.5"
  >
  <span className="material-icons-outlined text-[12px]">input</span> Use This Response
  </button>
@@ -473,7 +473,7 @@ export default function RFILog() {
  className="w-4 h-4 cursor-pointer accent-amber"
  style={{ accentColor: 'var(--amber-dk)' }}
  />
- <label htmlFor="scopeChange" className="text-xs text-white cursor-pointer select-none">
+ <label htmlFor="scopeChange" className="text-xs text-on-surface cursor-pointer select-none">
  Flag as Scope / Material Change
  </label>
  </div>

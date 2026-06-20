@@ -254,7 +254,7 @@ export default function ProjectInvoices() {
       <div className="card-5bloc space-y-4">
         <div className="border-b pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Practice Revenue Analytics</h3>
+            <h3 className="text-xs font-bold font-mono text-on-surface uppercase tracking-wider">Practice Revenue Analytics</h3>
             <p className="text-[10px] text-stone mt-0.5 font-mono">Billed fees vs. realized cash collection tracking.</p>
           </div>
           <div className="text-right">
@@ -266,7 +266,7 @@ export default function ProjectInvoices() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="p-3 bg-navy/40 border">
             <span className="text-[9px] text-stone font-mono uppercase block">Total Billed Fees</span>
-            <span className="text-base font-bold text-white font-mono mt-1 block">₹{totalBilled.toLocaleString()}</span>
+            <span className="text-base font-bold text-on-surface font-mono mt-1 block">₹{totalBilled.toLocaleString()}</span>
             <span className="text-[9px] text-stone font-mono mt-1 block font-mono">Active invoice totals</span>
           </div>
           <div className="p-3 bg-navy/40 border">
@@ -308,7 +308,7 @@ export default function ProjectInvoices() {
           <div className="card-5bloc space-y-4">
             <div className="border-b pb-3 flex items-center justify-between">
               <div>
-                <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Client Fee Invoices</h3>
+                <h3 className="text-xs font-bold font-mono text-on-surface uppercase tracking-wider">Client Fee Invoices</h3>
                 <p className="text-[10px] text-stone mt-0.5">Calculated tax distributions and online payments status.</p>
               </div>
               <button onClick={() => setShowCreateModal(true)} className="btn-primary py-1.5 text-xs font-bold">
@@ -337,13 +337,13 @@ export default function ProjectInvoices() {
                   <tbody className="divide-y divide-navy-lt/30">
                     {invoices.map(inv => (
                       <tr key={inv.id} className="hover:bg-navy-lt/20 transition-colors">
-                        <td className="py-4 pl-2 font-mono text-white font-semibold">{inv.invoice_number}</td>
-                        <td className="py-4 font-semibold text-white">
+                        <td className="py-4 pl-2 font-mono text-on-surface font-semibold">{inv.invoice_number}</td>
+                        <td className="py-4 font-semibold text-on-surface">
                           <span>{inv.milestone_label}</span>
                           <span className="text-[10px] text-stone block font-mono mt-0.5">Due: {inv.due_date}</span>
                         </td>
                         <td className="py-4 text-right font-mono text-stone">{inv.subtotal.toLocaleString()}</td>
-                        <td className="py-4 text-right font-mono text-white font-bold">{inv.total.toLocaleString()}</td>
+                        <td className="py-4 text-right font-mono text-on-surface font-bold">{inv.total.toLocaleString()}</td>
                         <td className="py-4">
                           <span className={`px-2 py-0.5 border text-[10px] font-semibold uppercase ${getInvoiceStatusStyle(inv.status)}`}>
                             {inv.status}
@@ -353,14 +353,14 @@ export default function ProjectInvoices() {
                           <div className="flex gap-2 justify-end">
                             <button
                               onClick={() => alert(`Simulating Razorpay online receipt validation (2% merchant fee audit)`)}
-                              className="p-1 text-stone hover:text-white hover:bg-navy-lt transition"
+                              className="p-1 text-stone hover:text-on-surface hover:bg-navy-lt transition"
                               title="Razorpay checkout info"
                             >
                               <span className="material-icons-outlined text-[16px] text-blue">payments</span>
                             </button>
                             <button
                               onClick={() => alert(`Simulated downloading PDF file`)}
-                              className="p-1 text-stone hover:text-white hover:bg-navy-lt transition"
+                              className="p-1 text-stone hover:text-on-surface hover:bg-navy-lt transition"
                               title="Download PDF"
                             >
                               <span className="material-icons-outlined text-[16px]">picture_as_pdf</span>
@@ -379,7 +379,7 @@ export default function ProjectInvoices() {
           <div className="card-5bloc space-y-4">
             <div className="border-b pb-3 flex justify-between items-center">
               <div>
-                <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Project Expense Log</h3>
+                <h3 className="text-xs font-bold font-mono text-on-surface uppercase tracking-wider">Project Expense Log</h3>
                 <p className="text-[10px] text-stone mt-0.5 font-mono">Travel, prints, and municipal transaction audits.</p>
               </div>
               <span className="label-sm font-bold text-stone font-mono">EXPENSES: {expenses.length}</span>
@@ -400,9 +400,9 @@ export default function ProjectInvoices() {
                   {expenses.map(exp => (
                     <tr key={exp.id} className="hover:bg-navy-lt/20 transition-colors">
                       <td className="py-2.5 pl-2 font-mono text-stone">{exp.date}</td>
-                      <td className="py-2.5 font-semibold text-white">{exp.title}</td>
+                      <td className="py-2.5 font-semibold text-on-surface">{exp.title}</td>
                       <td className="py-2.5 text-stone font-mono text-[10px]">{exp.category}</td>
-                      <td className="py-2.5 text-right font-mono text-white font-bold">{exp.amount.toLocaleString()}</td>
+                      <td className="py-2.5 text-right font-mono text-on-surface font-bold">{exp.amount.toLocaleString()}</td>
                       <td className="py-2.5 pr-2 text-right">
                         <button
                           onClick={() => handleDeleteExpense(exp.id)}
@@ -519,7 +519,7 @@ export default function ProjectInvoices() {
 
               <div className="p-3 bg-navy/40 border text-xs">
                 <span className="text-[9px] text-stone font-mono uppercase block">Estimated Base Architectural Fee</span>
-                <span className="text-lg font-bold text-white font-mono">₹{totalCalc.toLocaleString()}</span>
+                <span className="text-lg font-bold text-on-surface font-mono">₹{totalCalc.toLocaleString()}</span>
               </div>
 
               {/* Phases break downs */}
@@ -531,7 +531,7 @@ export default function ProjectInvoices() {
                     return (
                       <div key={idx} className="flex justify-between border-b pb-1 border-navy-lt/30 last:border-b-0">
                         <span className="text-stone">{ph.name} ({ph.pct}%)</span>
-                        <span className="font-mono text-white font-semibold">₹{phaseFee.toLocaleString()}</span>
+                        <span className="font-mono text-on-surface font-semibold">₹{phaseFee.toLocaleString()}</span>
                       </div>
                     )
                   })}
@@ -576,7 +576,7 @@ export default function ProjectInvoices() {
                   <div key={p.id} className="p-3 bg-navy/40 border space-y-2">
                     <div className="flex justify-between items-start">
                       <div>
-                        <h4 className="text-xs font-bold text-white">{p.consultant_name}</h4>
+                        <h4 className="text-xs font-bold text-on-surface">{p.consultant_name}</h4>
                         <p className="text-[10px] text-stone font-mono">{p.discipline} Consultant</p>
                       </div>
                       <span className={`px-2 py-0.5 border text-[9px] font-mono font-semibold uppercase ${getPaymentStatusStyle(p.status)}`}>
@@ -587,7 +587,7 @@ export default function ProjectInvoices() {
                     <div className="pt-2 border-t border-navy-lt/60 flex justify-between items-center text-xs">
                       <div>
                         <span className="text-[9px] text-stone font-mono uppercase block">Milestone Phase</span>
-                        <span className="text-white font-semibold">{p.milestone_phase}</span>
+                        <span className="text-on-surface font-semibold">{p.milestone_phase}</span>
                       </div>
                       <div className="text-right">
                         <span className="text-[9px] text-stone font-mono uppercase block">Fee Amount</span>
@@ -622,7 +622,7 @@ export default function ProjectInvoices() {
           <div className="w-full max-w-md bg-navy-mid border p-6 space-y-4">
             <div className="border-b pb-3 flex justify-between items-center">
               <h3 className="text-xs font-bold font-mono text-amber uppercase tracking-wider">Generate Fee Invoice</h3>
-              <button onClick={() => setShowCreateModal(false)} className="text-stone hover:text-white transition">
+              <button onClick={() => setShowCreateModal(false)} className="text-stone hover:text-on-surface transition">
                 <span className="material-icons-outlined text-[18px]">close</span>
               </button>
             </div>
@@ -664,18 +664,18 @@ export default function ProjectInvoices() {
               <div className="p-3 bg-navy border text-xs space-y-1 text-stone">
                 <div className="flex justify-between">
                   <span>Subtotal:</span>
-                  <span className="font-mono text-white">₹{newInvoice.subtotal.toLocaleString()}</span>
+                  <span className="font-mono text-on-surface">₹{newInvoice.subtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>CGST (9%):</span>
-                  <span className="font-mono text-white">₹{Math.round(newInvoice.subtotal * 0.09).toLocaleString()}</span>
+                  <span className="font-mono text-on-surface">₹{Math.round(newInvoice.subtotal * 0.09).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>SGST (9%):</span>
-                  <span className="font-mono text-white">₹{Math.round(newInvoice.subtotal * 0.09).toLocaleString()}</span>
+                  <span className="font-mono text-on-surface">₹{Math.round(newInvoice.subtotal * 0.09).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-navy-lt/60 font-semibold">
-                  <span className="text-white">Gross Invoice Total (18% GST):</span>
+                  <span className="text-on-surface">Gross Invoice Total (18% GST):</span>
                   <span className="font-mono text-amber">
                     ₹{Math.round(newInvoice.subtotal * 1.18).toLocaleString()}
                   </span>
