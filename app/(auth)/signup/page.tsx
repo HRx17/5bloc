@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Eye, EyeOff, AlertCircle, Check, Info, ArrowLeft, ArrowRight } from 'lucide-react'
 import { createSupabaseClient } from '@/lib/supabase/client'
@@ -16,7 +16,16 @@ const SUPABASE_CONFIGURED =
   !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 export default function Signup() {
+  return (
+    <Suspense fallback={null}>
+      <SignupInner />
+    </Suspense>
+  )
+}
+
+function SignupInner() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [step, setStep]         = useState<1 | 2>(1)
   const [role, setRole]         = useState<UserRole>('architect')
   const [name, setName]         = useState('')
@@ -28,6 +37,15 @@ export default function Signup() {
   const [done, setDone]         = useState(false)
 
   const selectedRole = USER_ROLES.find((r) => r.id === role)!
+
+  useEffect(() => {
+    const invite = searchParams.get('invite')
+    const invitedEmail = searchParams.get('email')
+    if (invite) localStorage.setItem('5bloc_invite_token', invite)
+    if (invitedEmail) setEmail(invitedEmail)
+    const roleParam = searchParams.get('role') as UserRole | null
+    if (roleParam && USER_ROLES.some((r) => r.id === roleParam)) setRole(roleParam)
+  }, [searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -190,7 +190,7 @@ export default function SubmittalsLog() {
  <div className="card-5bloc flex flex-col justify-between">
  <div className="flex items-center justify-between pb-4 border-b ">
  <div>
- <h3 className="text-sm font-semibold text-white">Product & Material Submittals</h3>
+ <h3 className="text-sm font-semibold text-on-surface">Product & Material Submittals</h3>
  <p className="text-[11px] text-stone mt-0.5">Review technical spec sheets and contractor sample files.</p>
  </div>
  <button onClick={() => setShowCreateModal(true)} className="btn-primary py-2 text-xs">
@@ -204,7 +204,7 @@ export default function SubmittalsLog() {
  ) : submittals.length === 0 ? (
  <div className="py-16 text-center text-stone flex flex-col items-center">
  <span className="material-icons-outlined text-[28px] text-stone/30 mb-3">fact_check</span>
- <h4 className="text-sm font-bold text-white">No submittals logged</h4>
+ <h4 className="text-sm font-bold text-on-surface">No submittals logged</h4>
  <p className="text-xs max-w-xs mt-1">Logged submittals must be verified before material procurement.</p>
  </div>
  ) : (
@@ -231,7 +231,7 @@ export default function SubmittalsLog() {
  >
  <td className="py-4 pl-2 font-mono text-[10px] text-stone">SUB-{String(sub.submittal_number).padStart(3, '0')}</td>
  <td className="py-4 font-semibold pr-4">
- <span className="text-white group-hover:text-amber transition-colors line-clamp-1">{sub.title}</span>
+ <span className="text-on-surface group-hover:text-amber transition-colors line-clamp-1">{sub.title}</span>
  {sub.file_name && (
  <span className="text-[10px] text-stone font-mono mt-0.5 flex items-center gap-0.5">
  <span className="material-icons-outlined text-[13px] text-blue">attachment</span> {sub.file_name}
@@ -248,7 +248,7 @@ export default function SubmittalsLog() {
  <td className="py-4 font-mono text-[10px] text-stone">{sub.due_date}</td>
  <td className="py-4 font-mono text-[10px] text-stone">Rev {sub.revision}</td>
  <td className="py-4 pr-2 text-right">
- <span className="material-icons-outlined text-stone group-hover:text-white transition-colors text-[18px]">
+ <span className="material-icons-outlined text-stone group-hover:text-on-surface transition-colors text-[18px]">
  chevron_right
  </span>
  </td>
@@ -266,7 +266,7 @@ export default function SubmittalsLog() {
  <div className="w-full max-w-md bg-navy-mid border rounded-lg p-6 shadow-none relative">
  <div className="flex items-center justify-between border-b pb-3 mb-4">
  <h3 className="text-sm font-semibold text-amber font-body">Log New Material Submittal</h3>
- <button onClick={() => setShowCreateModal(false)} className="text-stone hover:text-white transition">
+ <button onClick={() => setShowCreateModal(false)} className="text-stone hover:text-on-surface transition">
  <span className="material-icons-outlined text-[18px]">close</span>
  </button>
  </div>
@@ -357,12 +357,12 @@ export default function SubmittalsLog() {
  {/* Slide-over Header */}
  <div className="px-6 py-4 bg-navy border-b flex items-center justify-between">
  <div>
- <h3 className="text-sm font-semibold text-white">
+ <h3 className="text-sm font-semibold text-on-surface">
  SUB-{String(activeSubmittal.submittal_number).padStart(3, '0')}
  </h3>
  <span className="text-[10px] text-stone mt-0.5 block">Contractor: {activeSubmittal.contractor}</span>
  </div>
- <button onClick={requestClosePanel} className="text-stone hover:text-white transition p-1 hover:bg-navy-lt rounded-md">
+ <button onClick={requestClosePanel} className="text-stone hover:text-on-surface transition p-1 hover:bg-navy-lt rounded-md">
  <span className="material-icons-outlined text-[20px]">close</span>
  </button>
  </div>
@@ -370,7 +370,7 @@ export default function SubmittalsLog() {
  {/* Slide-over Body */}
  <div className="flex-1 overflow-y-auto p-6 space-y-6">
  <div className="space-y-2">
- <h4 className="text-sm font-semibold text-white leading-snug">{activeSubmittal.title}</h4>
+ <h4 className="text-sm font-semibold text-on-surface leading-snug">{activeSubmittal.title}</h4>
  <div className="flex flex-wrap gap-2">
  <span className="text-[10px] font-mono text-stone bg-navy border px-2 py-0.5 rounded-md">
  {activeSubmittal.spec_section}
@@ -388,7 +388,7 @@ export default function SubmittalsLog() {
  <div className="p-3 bg-navy-lt/50 rounded-md flex items-center justify-between mt-3 border ">
  <div className="flex items-center gap-2 text-xs truncate">
  <span className="material-icons-outlined text-[20px] text-blue">picture_as_pdf</span>
- <span className="text-white truncate font-mono text-[11px]">{activeSubmittal.file_name}</span>
+ <span className="text-on-surface truncate font-mono text-[11px]">{activeSubmittal.file_name}</span>
  </div>
  <button className="text-xs text-blue hover:text-blue-lt transition font-semibold">View</button>
  </div>
@@ -397,7 +397,7 @@ export default function SubmittalsLog() {
 
  {/* Review area */}
  <div className="pt-6 border-t space-y-4">
- <h4 className="text-xs font-semibold text-white">Review Decision</h4>
+ <h4 className="text-xs font-semibold text-on-surface">Review Decision</h4>
  
  <textarea
  rows={4}

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServer } from '@/lib/supabase/server'
+import { getOrgDb } from '@/lib/org/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,13 +12,67 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*, organisations(*)')
-    .eq('auth_id', user.id)
-    .maybeSingle()
+  const db = getOrgDb(supabase)
+
+  let profile = (
+    await supabase
+      .from('profiles')
+      .select('*, organisations!profiles_org_id_fkey(*)')
+      .eq('auth_id', user.id)
+      .maybeSingle()
+  ).data
+
+  if (!profile) {
+    const { data: profileId } = await supabase.rpc('my_profile_id')
+    if (profileId) {
+      const { data: byId } = await supabase
+        .from('profiles')
+        .select('*, organisations!profiles_org_id_fkey(*)')
+        .eq('id', profileId)
+        .maybeSingle()
+      profile = byId
+    }
+  }
 
   const meta = user.user_metadata ?? {}
+
+  let joinRequestPending: { id: string; orgName: string } | null = null
+  if (profile?.id && !profile.org_id) {
+    const { data: pending } = await db
+      .from('organisation_join_requests')
+      .select('id, requested_org_name, organisations(name)')
+      .eq('profile_id', profile.id)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    if (pending) {
+      const org = (pending as { organisations: { name: string } | null }).organisations
+      joinRequestPending = {
+        id: pending.id,
+        orgName: org?.name ?? pending.requested_org_name,
+      }
+    }
+  }
+
+  let isOrgAdmin = false
+  if (profile?.org_id) {
+    const { data: org } = await db
+      .from('organisations')
+      .select('owner_id')
+      .eq('id', profile.org_id)
+      .maybeSingle()
+    const { data: membership } = await db
+      .from('organisation_members')
+      .select('member_role')
+      .eq('org_id', profile.org_id)
+      .eq('profile_id', profile.id)
+      .maybeSingle()
+    isOrgAdmin =
+      org?.owner_id === profile.id ||
+      membership?.member_role === 'admin' ||
+      membership?.member_role === 'owner'
+  }
 
   return NextResponse.json({
     user: {
@@ -26,10 +81,12 @@ export async function GET() {
       full_name: profile?.full_name ?? meta.full_name ?? user.email?.split('@')[0],
       role: profile?.role ?? meta.role ?? 'architect',
       avatar_url: profile?.avatar_url ?? meta.avatar_url ?? user.user_metadata?.picture ?? null,
-      onboarding_complete: meta.onboarding_complete === true || !!profile?.org_id,
+      onboarding_complete: meta.onboarding_complete === true || !!profile?.org_id || !!joinRequestPending,
+      isOrgAdmin,
     },
     profile,
     organisation: profile?.organisations ?? null,
+    joinRequestPending,
     metadata: {
       city: meta.city ?? null,
       state: meta.state ?? null,
@@ -60,8 +117,8 @@ export async function PATCH(req: NextRequest) {
     }
 
     if (typeof body.full_name === 'string') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase.from('profiles') as any)
+      await supabase
+        .from('profiles')
         .update({ full_name: body.full_name.trim() })
         .eq('auth_id', user.id)
     }
@@ -74,8 +131,8 @@ export async function PATCH(req: NextRequest) {
         .maybeSingle()
 
       if (profile?.org_id) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (supabase.from('organisations') as any)
+        await supabase
+          .from('organisations')
           .update({ name: body.org_name.trim() })
           .eq('id', profile.org_id)
       }

@@ -1,6 +1,7 @@
 import React from 'react'
 import { redirect } from 'next/navigation'
 import AppShell from '@/components/layout/AppShell'
+import { RoleGate } from '@/components/auth/RoleGate'
 import { getAuthUser } from '@/lib/supabase/get-user'
 
 export const dynamic = 'force-dynamic'
@@ -36,7 +37,7 @@ export default async function AppLayout({
           : undefined,
       }}
     >
-      {children}
+      <RoleGate role={p.role}>{children}</RoleGate>
     </AppShell>
   )
 }

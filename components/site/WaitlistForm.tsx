@@ -61,21 +61,24 @@ export function WaitlistForm({
   source = 'landing',
   compact = false,
   theme = 'dark',
+  defaultRole = 'architect',
 }: {
   source?: string
   compact?: boolean
   theme?: 'dark' | 'apple'
+  defaultRole?: string
 }) {
   const P = theme === 'apple' ? APPLE : DARK
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
-  const [role, setRole] = useState('architect')
+  const [role, setRole] = useState(defaultRole)
   const [firm, setFirm] = useState('')
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
 
   const roles = [
+    { key: 'interior_designer', label: 'Interior Designer' },
     { key: 'architect', label: 'Architect' },
     { key: 'contractor', label: 'Contractor / Vendor' },
     { key: 'builder', label: 'Builder / Developer' },

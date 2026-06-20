@@ -124,7 +124,7 @@ export default function InvoicesList() {
  <div className="card-5bloc flex flex-col justify-between">
  <div className="flex items-center justify-between pb-4 ">
  <div>
- <h3 className="text-sm font-bold uppercase text-white font-mono">Invoice Records</h3>
+ <h3 className="text-sm font-bold uppercase text-on-surface font-mono">Invoice Records</h3>
  <p className="text-[11px] text-stone mt-0.5">Automated billing numbers generated server-side. Click rows to inspect.</p>
  </div>
  </div>
@@ -134,7 +134,7 @@ export default function InvoicesList() {
  ) : invoices.length === 0 ? (
  <div className="py-16 text-center text-stone flex flex-col items-center">
  <span className="material-icons-outlined text-[28px] text-stone/30 mb-3">receipt_long</span>
- <h4 className="text-sm font-bold text-white">No invoice records logged</h4>
+ <h4 className="text-sm font-bold text-on-surface">No invoice records logged</h4>
  <p className="text-xs max-w-xs mt-1">Generate your first fee invoice to release project milestone payments.</p>
  </div>
  ) : (
@@ -163,11 +163,11 @@ export default function InvoicesList() {
  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--surface-container-high)' }}
  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
  >
- <td className="py-4 pl-3 font-mono text-[10px] text-white font-semibold">{inv.invoice_number}</td>
+ <td className="py-4 pl-3 font-mono text-[10px] text-on-surface font-semibold">{inv.invoice_number}</td>
  <td className="py-4 font-semibold" style={{ color: 'var(--on-surface)', maxWidth: '220px' }}><span className="line-clamp-1">{inv.project_name}</span></td>
  <td className="py-4 text-stone">{inv.client_name}</td>
  <td className="py-4 text-right font-mono text-stone">{inv.subtotal.toLocaleString()}</td>
- <td className="py-4 text-right font-mono font-semibold text-white">{inv.total.toLocaleString()}</td>
+ <td className="py-4 text-right font-mono font-semibold text-on-surface">{inv.total.toLocaleString()}</td>
  <td className="py-4">
  <span className="chip" style={getStatusStyle(inv.status)}>
    {inv.status.replace(/_/g, ' ').toUpperCase()}
@@ -187,7 +187,7 @@ export default function InvoicesList() {
  )}
  <button
  onClick={() => toast(`PDF export for ${inv.invoice_number} — connect Cloudflare R2 to enable.`, 'info')}
- className="p-1 text-stone hover:text-white hover:bg-navy-lt transition"
+ className="p-1 text-stone hover:text-on-surface hover:bg-navy-lt transition"
  title="Download PDF Invoice"
  >
  <span className="material-icons-outlined text-[16px]">picture_as_pdf</span>

@@ -37,3 +37,11 @@ export function createServiceRoleClient() {
     }
   )
 }
+
+/** True only when a real service-role JWT is configured (not .env placeholders). */
+export function hasValidServiceRoleKey(): boolean {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
+  if (!key || !process.env.NEXT_PUBLIC_SUPABASE_URL) return false
+  if (key === 'your_service_role_key_here') return false
+  return key.startsWith('eyJ') && key.split('.').length === 3
+}

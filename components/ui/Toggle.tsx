@@ -28,12 +28,12 @@ export function Toggle({ on, onChange, label, disabled, size = 'md' }: TogglePro
           : 'bg-(--surface-container-high)'
       } ${disabled ? 'opacity-40 cursor-not-allowed' : ''}`}
       style={{
-        boxShadow: on ? 'none' : 'inset 0 0 0 1.5px rgba(255,255,255,0.10)',
+        boxShadow: on ? 'none' : 'inset 0 0 0 1.5px var(--hairline-strong)',
       }}
     >
       <span
-        className={`absolute rounded-full bg-white pointer-events-none transition-transform duration-200 shadow-sm ${thumbS} ${thumbT}`}
-        style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}
+        className={`absolute rounded-full pointer-events-none transition-transform duration-200 shadow-sm ${thumbS} ${thumbT}`}
+        style={{ background: 'var(--surface-bright)', boxShadow: 'var(--shadow-1)' }}
       />
     </button>
   )

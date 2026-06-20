@@ -155,6 +155,11 @@ function HeroRoleCards() {
       href: '#architect-waitlist',
     },
     {
+      label: 'Interior designers',
+      sub: 'Free waitlist',
+      href: '#interior-designer-waitlist',
+    },
+    {
       label: 'Contractors',
       sub: 'Free listing',
       href: '/list-your-business',
@@ -168,7 +173,7 @@ function HeroRoleCards() {
 
   return (
     <motion.div
-      className="mt-10 sm:mt-12 max-w-3xl mx-auto"
+      className="mt-10 sm:mt-12 max-w-4xl mx-auto"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, delay: 0.28 }}
@@ -177,7 +182,7 @@ function HeroRoleCards() {
         Free to list — choose your role
       </p>
       <div
-        className="grid sm:grid-cols-3 rounded-2xl overflow-hidden lp-tile-row"
+        className="grid grid-cols-2 lg:grid-cols-4 rounded-2xl overflow-hidden lp-tile-row"
         style={{ background: 'var(--lp-border)' }}
       >
         {cards.map((card) => (
@@ -527,6 +532,22 @@ function AppleFAQ() {
   )
 }
 
+function InteriorDesignerWaitlist() {
+  return (
+    <section id="interior-designer-waitlist" className="py-16 sm:py-20 scroll-mt-24" style={{ background: 'var(--lp-bg-alt)' }}>
+      <div className="mx-auto max-w-[680px] px-5 sm:px-6 text-center">
+        <h2 className="lp-section-title">Built for interior designers</h2>
+        <p className="lp-subhead mt-4 max-w-lg mx-auto">
+          Coordinate finishes, vendor samples, and site installs with architects and contractors — without another WhatsApp group.
+        </p>
+        <div className="mt-8 text-left">
+          <WaitlistForm source="interior-designer" theme="apple" defaultRole="interior_designer" />
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function AppleWaitlist() {
   return (
     <section id="waitlist" className="py-20 sm:py-28 scroll-mt-20" style={{ background: 'var(--lp-bg)' }}>
@@ -560,6 +581,7 @@ function AppleFooter() {
       title: 'Join',
       links: [
         { href: '#architect-waitlist', label: 'Architects' },
+        { href: '#interior-designer-waitlist', label: 'Interior designers' },
         { href: '/list-your-business', label: 'Contractors' },
         { href: '/join-as-vendor', label: 'Vendors' },
         { href: 'mailto:contact@5bloc.com', label: 'Contact' },
@@ -626,6 +648,7 @@ export default function Home() {
       <AppleFeatures />
       <AppleFAQ />
       <TestimonialSection />
+      <InteriorDesignerWaitlist />
       <AppleWaitlist />
       <PartnerStrip />
       <AppleFooter />

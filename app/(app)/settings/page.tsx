@@ -7,6 +7,7 @@ import { useToast } from '@/components/ui/Toast'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { SaveBar } from '@/components/ui/SaveBar'
 import { initialsOf } from '@/lib/data/messages'
+import OrgTeamPanel from '@/components/settings/OrgTeamPanel'
 
 interface OrgMember {
  id: string
@@ -55,13 +56,6 @@ function SettingsInner() {
        setSavedProfile(nextProfile)
        setOrg(nextOrg)
        setSavedOrg(nextOrg)
-       setTeam([{
-         id: data.user.id,
-         name: nextProfile.name || nextProfile.email.split('@')[0],
-         email: nextProfile.email,
-         role: 'Owner',
-         joined_at: new Date().toISOString().split('T')[0],
-       }])
      })
      .catch(() => {})
      .finally(() => setProfileLoading(false))
@@ -349,76 +343,7 @@ function SettingsInner() {
  )}
 
  {activeTab === 'team' && (
- <div className="space-y-6">
- {/* Invite member */}
- <div className="card-5bloc space-y-4">
- <h3 className="text-sm font-semibold text-amber pb-2.5">Invite Firm Co-Worker</h3>
- <form onSubmit={handleInviteTeam} className="flex gap-4 items-end">
-              <div className="grow">
- <label className="block text-stone text-xs font-medium mb-1.5">Co-worker Email *</label>
- <input
- type="email"
- required
- placeholder="e.g. colleague@firm.com"
- value={newTeamEmail}
- onChange={(e) => setNewTeamEmail(e.target.value)}
- className="input-5bloc py-1.5 text-xs"
- />
- </div>
- <button type="submit" className="btn-primary py-2 px-6 text-xs h-[34px]">
- Send invite
- </button>
- </form>
- </div>
-
- {/* Members lists */}
- <div className="card-5bloc space-y-4">
- <h3 className="text-xs font-semibold text-stone pb-2.5">Firm Workspace Members</h3>
- <div className="overflow-x-auto">
- <table className="w-full text-left text-xs ">
- <thead>
- <tr className="text-stone text-[10px] pb-2 font-medium">
- <th className="pb-2 pl-2">Name</th>
- <th className="pb-2">Email</th>
- <th className="pb-2">Joined Date</th>
- <th className="pb-2">Workspace Role</th>
- <th className="pb-2 pr-2 text-right">Actions</th>
- </tr>
- </thead>
- <tbody className="divide-y divide-navy-lt/40 text-stone">
- {team.map((member) => (
- <tr key={member.id}>
- <td className="py-3 pl-2 font-semibold text-white">{member.name}</td>
- <td className="py-3 text-xs">{member.email}</td>
- <td className="py-3 text-xs">{member.joined_at}</td>
- <td className="py-3">
- <span
-   className="chip"
-   style={{
-     background: member.role === 'Owner' ? 'rgba(245,166,35,.12)' : 'rgba(159,142,122,.10)',
-     color: member.role === 'Owner' ? 'var(--amber)' : 'var(--stone)'
-   }}
- >
- {member.role}
- </span>
- </td>
- <td className="py-3 pr-2 text-right">
- {member.role !== 'Owner' && (
- <button 
- onClick={() => handleRemoveTeam(member)}
- className="text-stone hover:text-error transition font-semibold"
- >
- Remove
- </button>
- )}
- </td>
- </tr>
- ))}
- </tbody>
- </table>
- </div>
- </div>
- </div>
+ <OrgTeamPanel />
  )}
 
  {activeTab === 'billing' && (
@@ -437,7 +362,7 @@ function SettingsInner() {
  >
  <div>
  <h4 className="text-xs font-semibold text-stone">{plan.name}</h4>
- <h2 className="text-2xl font-bold text-white mt-2">{plan.price}</h2>
+ <h2 className="text-2xl font-bold mt-2" style={{ color: 'var(--on-surface)' }}>{plan.price}</h2>
  <p className="text-[11px] text-stone mt-2 leading-relaxed">{plan.term}</p>
  </div>
 
@@ -466,7 +391,7 @@ function SettingsInner() {
   <span className="material-icons-outlined text-[20px]">auto_awesome</span>
  </div>
  <div>
- <h4 className="text-xs font-bold text-white">AI Assistant Add-On</h4>
+ <h4 className="text-xs font-bold" style={{ color: 'var(--on-surface)' }}>AI Assistant Add-On</h4>
  <p className="text-[11px] text-stone mt-0.5">₹1,499/mo. Unlocks unlimited quantity estimator & RERA helper tools.</p>
  </div>
  </div>
@@ -498,7 +423,7 @@ function SettingsInner() {
  ].map((item) => (
  <div key={item.key} className="flex items-start justify-between gap-4">
  <div className="max-w-md">
- <span className="text-white font-medium">{item.label}</span>
+ <span className="font-medium" style={{ color: 'var(--on-surface)' }}>{item.label}</span>
  <p className="text-[11px] text-stone mt-0.5 leading-relaxed">{item.desc}</p>
  </div>
  <Toggle

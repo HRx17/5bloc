@@ -53,7 +53,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
       transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
       className="flex items-start gap-3 px-4 py-3 rounded-xl max-w-[340px] w-full shadow-xl cursor-pointer select-none"
       style={{
-        background: '#fff',
+        background: 'var(--surface-elevated)',
         boxShadow: `0 8px 32px rgba(0,0,0,0.08), inset 0 0 0 1px ${c.border}`,
       }}
       onClick={() => onDismiss(toast.id)}

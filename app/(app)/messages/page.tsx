@@ -1,10 +1,13 @@
 'use client'
 
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useSearchParams } from 'next/navigation'
 import { supabaseClient } from '@/lib/supabase/client'
 import { hasSupabaseEnv } from '@/lib/data/client-data'
 import { useMessages } from '@/components/messages/MessagesProvider'
+import { useCall } from '@/components/messages/CallProvider'
+import { useToast } from '@/components/ui/Toast'
 import {
   type ChatConversation,
   type ChatMessage,
@@ -38,6 +41,8 @@ export default function MessagesPage() {
 function Messenger() {
   const searchParams = useSearchParams()
   const { setActiveConversation, refreshUnread } = useMessages()
+  const { startCall, callState } = useCall()
+  const { toast } = useToast()
 
   const [me, setMe] = useState<ChatProfile | null>(null)
   const [conversations, setConversations] = useState<ChatConversation[]>([])
@@ -54,6 +59,19 @@ function Messenger() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const activeIdRef = useRef<string | null>(null)
   const noEnv = !hasSupabaseEnv()
+
+  // Authenticate realtime for live messages
+  useEffect(() => {
+    if (noEnv) return
+    ;(async () => {
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession()
+        if (session?.access_token) supabaseClient.realtime.setAuth(session.access_token)
+      } catch {
+        /* ignore */
+      }
+    })()
+  }, [noEnv])
 
   // Initial load
   useEffect(() => {
@@ -137,7 +155,7 @@ function Messenger() {
     if (!text || !activeId || !me || sending) return
     setSending(true)
     setDraft('')
-    const sent = await sendMessage(activeId, me.id, text)
+    const { message: sent, error } = await sendMessage(activeId, me.id, text)
     setSending(false)
     if (sent) {
       setMessages((prev) => (prev.some((m) => m.id === sent.id) ? prev : [...prev, sent]))
@@ -148,14 +166,20 @@ function Messenger() {
       )
     } else {
       setDraft(text)
+      toast(error || 'Could not send message', 'error')
     }
   }
 
   async function reloadConversations(selectId?: string) {
-    if (!me) return
-    const convs = await listConversations(me.id)
+    let profile = me
+    if (!profile) {
+      profile = await getMyProfile()
+      if (profile) setMe(profile)
+    }
+    if (!profile) return
+    const convs = await listConversations(profile.id)
     setConversations(convs)
-    if (selectId) openConversation(selectId, me)
+    if (selectId) openConversation(selectId, profile)
   }
 
   const active = conversations.find((c) => c.id === activeId) || null
@@ -176,7 +200,7 @@ function Messenger() {
   }
 
   return (
-    <div className="h-full flex" style={{ background: 'var(--surface-canvas)' }}>
+    <div className="h-full min-h-0 flex overflow-hidden" style={{ background: 'var(--surface-canvas)' }}>
       {/* ── Conversation list ── */}
       <aside
         className={`${activeId ? 'hidden md:flex' : 'flex'} w-full md:w-[320px] shrink-0 flex-col`}
@@ -283,15 +307,39 @@ function Messenger() {
                   </p>
                 </div>
               </div>
-              <button
-                onClick={() => setShowAdd(true)}
-                className="flex items-center gap-1.5 px-3 h-8 rounded-xl text-[12px] font-semibold transition-colors"
-                style={{ background: 'var(--overlay-hover)', color: 'var(--on-surface-variant)' }}
-                title="Add people"
-              >
-                <span className="material-icons-outlined text-[16px]">person_add</span>
-                <span className="hidden sm:inline">Add</span>
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => setShowNew(true)}
+                  className="h-8 w-8 flex items-center justify-center rounded-xl transition-colors md:hidden"
+                  style={{ background: 'var(--overlay-hover)', color: 'var(--on-surface-variant)' }}
+                  title="New message"
+                  aria-label="New message"
+                >
+                  <span className="material-icons-outlined text-[16px]">edit_square</span>
+                </button>
+                <button
+                  onClick={() => {
+                    if (!me || !active || callState !== 'idle') return
+                    void startCall(active.id, active.members, me.id)
+                  }}
+                  disabled={callState !== 'idle' || active.members.length < 2}
+                  className="h-8 w-8 flex items-center justify-center rounded-xl transition-colors disabled:opacity-40"
+                  style={{ background: 'rgba(34,197,94,0.12)', color: '#22c55e' }}
+                  title={active.members.length < 2 ? 'Add someone to call' : active.members.length > 2 ? 'Start group audio call' : 'Start audio call'}
+                  aria-label="Start audio call"
+                >
+                  <span className="material-icons-outlined text-[16px]">call</span>
+                </button>
+                <button
+                  onClick={() => setShowAdd(true)}
+                  className="flex items-center gap-1.5 px-3 h-8 rounded-xl text-[12px] font-semibold transition-colors"
+                  style={{ background: 'var(--overlay-hover)', color: 'var(--on-surface-variant)' }}
+                  title="Add people"
+                >
+                  <span className="material-icons-outlined text-[16px]">person_add</span>
+                  <span className="hidden sm:inline">Add</span>
+                </button>
+              </div>
             </div>
 
             {/* Messages */}
@@ -350,7 +398,7 @@ function Messenger() {
         )}
       </section>
 
-      {showNew && me && (
+      {showNew && (
         <PeopleModal
           title="New message"
           actionLabel="Start conversation"
@@ -361,11 +409,33 @@ function Messenger() {
             const res = await fetch('/api/messages/conversations', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ memberProfileIds: ids, title: extra.title || null, projectId: extra.projectId || null }),
+              body: JSON.stringify({
+                memberProfileIds: ids,
+                emails: extra.emails || [],
+                title: extra.title || null,
+                projectId: extra.projectId || null,
+              }),
             })
             const json = await res.json()
+            if (!res.ok) {
+              toast(json.error || 'Could not create conversation', 'error')
+              return false
+            }
             setShowNew(false)
-            if (res.ok && json.id) await reloadConversations(json.id)
+            if (json.id) {
+              await reloadConversations(json.id)
+              if (activeIdRef.current !== json.id) {
+                const profile = me ?? (await getMyProfile())
+                if (profile) {
+                  setMe(profile)
+                  await openConversation(json.id, profile)
+                }
+              }
+            }
+            if (json.invited > 0) {
+              toast(`Invite sent to ${json.invited} email${json.invited === 1 ? '' : 's'}`, 'success')
+            }
+            return true
           }}
         />
       )}
@@ -376,14 +446,25 @@ function Messenger() {
           actionLabel="Add to conversation"
           excludeIds={active.members.map((m) => m.id)}
           onClose={() => setShowAdd(false)}
-          onSubmit={async (ids) => {
+          onSubmit={async (ids, extra) => {
             const res = await fetch(`/api/messages/conversations/${active.id}/members`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ memberProfileIds: ids }),
+              body: JSON.stringify({ memberProfileIds: ids, emails: extra.emails || [] }),
             })
+            const json = await res.json()
+            if (!res.ok) {
+              toast(json.error || 'Could not add people', 'error')
+              return false
+            }
             setShowAdd(false)
-            if (res.ok) await reloadConversations(active.id)
+            await reloadConversations(active.id)
+            if (json.invited > 0) {
+              toast(`Invite sent to ${json.invited} email${json.invited === 1 ? '' : 's'}`, 'success')
+            } else {
+              toast('People added to conversation', 'success')
+            }
+            return true
           }}
         />
       )}
@@ -460,7 +541,7 @@ function PeopleModal({
   allowProject?: boolean
   excludeIds?: string[]
   onClose: () => void
-  onSubmit: (ids: string[], extra: { title?: string; projectId?: string }) => Promise<void>
+  onSubmit: (ids: string[], extra: { title?: string; projectId?: string; emails?: string[] }) => Promise<boolean | void>
 }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchUser[]>([])
@@ -470,6 +551,14 @@ function PeopleModal({
   const [projects, setProjects] = useState<{ id: string; name: string }[]>([])
   const [searching, setSearching] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const looksLikeEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(query.trim())
 
   useEffect(() => {
     if (!allowProject) return
@@ -502,8 +591,12 @@ function PeopleModal({
 
   const canSubmit = selected.length > 0 && !submitting
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'var(--scrim)', backdropFilter: 'blur(4px)' }} onClick={onClose}>
+  const modal = (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      style={{ background: 'var(--scrim)', backdropFilter: 'blur(4px)' }}
+      onClick={onClose}
+    >
       <div
         className="w-full max-w-md rounded-2xl overflow-hidden"
         style={{ background: 'var(--surface-container)', boxShadow: '0 20px 60px rgba(0,0,0,0.5), inset 0 0 0 1px var(--hairline)' }}
@@ -561,7 +654,33 @@ function PeopleModal({
             {searching ? (
               <p className="text-center text-[12px] py-4" style={{ color: 'var(--stone)' }}>Searching…</p>
             ) : query.trim().length >= 2 && results.length === 0 ? (
-              <p className="text-center text-[12px] py-4" style={{ color: 'var(--stone)' }}>No registered users found for “{query.trim()}”.</p>
+              <div className="text-center py-4 px-2">
+                <p className="text-[12px]" style={{ color: 'var(--stone)' }}>
+                  No registered users found for “{query.trim()}”.
+                </p>
+                {looksLikeEmail && (
+                  <button
+                    onClick={() => {
+                      setSelected((prev) => [
+                        ...prev,
+                        {
+                          id: `email:${query.trim().toLowerCase()}`,
+                          full_name: query.trim(),
+                          email: query.trim().toLowerCase(),
+                          role: null,
+                          avatar_url: null,
+                        },
+                      ])
+                      setQuery('')
+                      setResults([])
+                    }}
+                    className="mt-2 text-[12px] font-semibold underline"
+                    style={{ color: 'var(--amber)' }}
+                  >
+                    Invite by email
+                  </button>
+                )}
+              </div>
             ) : (
               results.map((u) => (
                 <button
@@ -582,13 +701,31 @@ function PeopleModal({
               ))
             )}
           </div>
+          {error && (
+            <p className="text-[12px] px-1" style={{ color: '#ef4444' }}>{error}</p>
+          )}
         </div>
 
         <div className="px-5 py-3.5 flex items-center justify-end gap-2" style={{ boxShadow: '0 -1px 0 var(--hairline)' }}>
           <button onClick={onClose} className="btn-secondary text-[12.5px] py-2">Cancel</button>
           <button
             disabled={!canSubmit}
-            onClick={async () => { setSubmitting(true); await onSubmit(selected.map((s) => s.id), { title: groupTitle.trim() || undefined, projectId: projectId || undefined }) }}
+            onClick={async () => {
+              setSubmitting(true)
+              setError(null)
+              const profileIds = selected.filter((s) => !s.id.startsWith('email:')).map((s) => s.id)
+              const emails = selected
+                .filter((s) => s.id.startsWith('email:'))
+                .map((s) => s.email || s.full_name || '')
+                .filter(Boolean)
+              const ok = await onSubmit(profileIds, {
+                title: groupTitle.trim() || undefined,
+                projectId: projectId || undefined,
+                emails,
+              })
+              setSubmitting(false)
+              if (ok === false) setError('Something went wrong. Try again.')
+            }}
             className="btn-primary text-[12.5px] py-2"
           >
             {submitting ? 'Working…' : actionLabel}
@@ -597,6 +734,9 @@ function PeopleModal({
       </div>
     </div>
   )
+
+  if (!mounted) return null
+  return createPortal(modal, document.body)
 }
 
 function groupByDate(messages: ChatMessage[]) {

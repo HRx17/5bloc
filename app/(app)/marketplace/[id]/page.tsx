@@ -87,7 +87,7 @@ export default function ContractorProfile() {
  )}
  </div>
  
- <h1 className="text-xl md:text-2xl font-bold text-white tracking-wide">{contractor.company_name}</h1>
+ <h1 className="text-xl md:text-2xl font-bold text-on-surface tracking-wide">{contractor.company_name}</h1>
  
  <div className="flex flex-wrap items-center gap-1.5 pt-1">
  {contractor.specializations.map(s => (
@@ -102,7 +102,7 @@ export default function ContractorProfile() {
  <div className="flex flex-col md:items-end justify-center shrink-0 border-t md:border-t-0 pt-4 md:pt-0">
  <div className="flex items-center gap-1 text-amber">
  <span className="material-icons-outlined text-[20px]">star</span>
- <span className="text-xl font-bold text-white">{contractor.rating}</span>
+ <span className="text-xl font-bold text-on-surface">{contractor.rating}</span>
  <span className="text-stone text-xs">/ 5.0</span>
  </div>
  <p className="text-xs text-stone font-mono mt-1">{contractor.reviews_count} reviews • {contractor.jobs_completed} jobs completed</p>
@@ -127,7 +127,7 @@ export default function ContractorProfile() {
  className={`text-xs font-semibold pb-1.5 border-b-2 transition-all uppercase tracking-wider ${
  activeTab === tab.id 
  ? ' text-amber font-bold' 
- : ' text-stone hover:text-white'
+ : ' text-stone hover:text-on-surface'
  }`}
  >
  {tab.label}
@@ -141,20 +141,20 @@ export default function ContractorProfile() {
  <div className="card-5bloc space-y-4">
  <div>
  <h4 className="text-xs font-bold text-stone font-mono uppercase mb-2">Company Biography</h4>
- <p className="text-xs text-white leading-relaxed">{contractor.bio}</p>
+ <p className="text-xs text-on-surface leading-relaxed">{contractor.bio}</p>
  </div>
  <div className="grid grid-cols-2 gap-4 pt-3 border-t text-xs">
  <div>
  <span className="text-stone font-mono text-[10px] uppercase block">Experience</span>
- <span className="font-semibold text-white mt-1.5 block">{contractor.years_experience} Years</span>
+ <span className="font-semibold text-on-surface mt-1.5 block">{contractor.years_experience} Years</span>
  </div>
  <div>
  <span className="text-stone font-mono text-[10px] uppercase block">Office Location</span>
- <span className="font-semibold text-white mt-1.5 block">{contractor.service_cities.join(', ')}</span>
+ <span className="font-semibold text-on-surface mt-1.5 block">{contractor.service_cities.join(', ')}</span>
  </div>
  <div>
  <span className="text-stone font-mono text-[10px] uppercase block">Est. Team Size</span>
- <span className="font-semibold text-white mt-1.5 block">{contractor.team_size} Skilled Craftsmen</span>
+ <span className="font-semibold text-on-surface mt-1.5 block">{contractor.team_size} Skilled Craftsmen</span>
  </div>
  <div>
  <span className="text-stone font-mono text-[10px] uppercase block">Web URL</span>
@@ -174,7 +174,7 @@ export default function ContractorProfile() {
  className="w-full h-36 object-cover border-b rounded-t"
  />
  <div className="p-3">
- <h4 className="text-xs font-bold text-white truncate">{port.title}</h4>
+ <h4 className="text-xs font-bold text-on-surface truncate">{port.title}</h4>
  <p className="text-[10px] text-stone font-mono mt-1">Verified Project Work</p>
  </div>
  </div>
@@ -188,7 +188,7 @@ export default function ContractorProfile() {
  <div key={idx} className="card-5bloc space-y-2">
  <div className="flex justify-between items-start">
  <div>
- <h4 className="text-xs font-bold text-white">{rev.clientName}</h4>
+ <h4 className="text-xs font-bold text-on-surface">{rev.clientName}</h4>
  <span className="text-[10px] text-stone font-mono mt-0.5 block">Review Date: {rev.date}</span>
  </div>
  <div className="flex items-center text-amber text-xs font-mono font-bold">

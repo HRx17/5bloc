@@ -35,12 +35,24 @@ export async function getMyProfile(): Promise<ChatProfile | null> {
   try {
     const { data: { user } } = await supabaseClient.auth.getUser()
     if (!user) return null
+
+    const { data: rpcRows, error: rpcError } = await supabaseClient.rpc('get_my_messaging_profile')
+    if (!rpcError && rpcRows?.length) {
+      return rpcRows[0] as ChatProfile
+    }
+
     const { data } = await supabaseClient
       .from('profiles')
       .select('id, full_name, email, role, avatar_url')
       .eq('auth_id', user.id)
       .maybeSingle()
-    return data ?? null
+    if (data) return data
+
+    const res = await fetch('/api/profile/me')
+    if (!res.ok) return null
+    const json = await res.json()
+    const p = json.profile as ChatProfile | null
+    return p?.id ? p : null
   } catch {
     return null
   }
@@ -122,14 +134,25 @@ export async function listMessages(conversationId: string): Promise<ChatMessage[
   return data as unknown as ChatMessage[]
 }
 
-export async function sendMessage(conversationId: string, senderId: string, body: string): Promise<ChatMessage | null> {
-  const { data, error } = await supabaseClient
-    .from('messages')
-    .insert({ conversation_id: conversationId, sender_id: senderId, body })
-    .select('id, conversation_id, sender_id, body, attachment_url, attachment_name, created_at, sender:profiles(id, full_name, email, role, avatar_url)')
-    .single()
-  if (error || !data) return null
-  return data as unknown as ChatMessage
+export async function sendMessage(
+  conversationId: string,
+  _senderId: string,
+  body: string,
+): Promise<{ message: ChatMessage | null; error?: string }> {
+  try {
+    const res = await fetch(`/api/messages/conversations/${conversationId}/messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ body }),
+    })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      return { message: null, error: json.error || 'Could not send message' }
+    }
+    return { message: json.message as ChatMessage }
+  } catch {
+    return { message: null, error: 'Network error while sending' }
+  }
 }
 
 export async function markConversationRead(conversationId: string, profileId: string): Promise<void> {

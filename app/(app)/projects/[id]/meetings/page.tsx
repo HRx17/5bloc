@@ -137,7 +137,7 @@ export default function MeetingNotes() {
           <div className="card-5bloc space-y-4">
             <div className="border-b pb-3 flex items-center justify-between">
               <div>
-                <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Meeting Minutes Registry</h3>
+                <h3 className="text-xs font-bold font-mono text-on-surface uppercase tracking-wider">Meeting Minutes Registry</h3>
                 <p className="text-[10px] text-stone mt-0.5">Formal log of on-site design coordinate agendas.</p>
               </div>
               <span className="label-sm font-bold text-stone">COUNT: {filtered.length}</span>
@@ -161,12 +161,12 @@ export default function MeetingNotes() {
                         <span>·</span>
                         <span>{m.attendees.length} Attendees</span>
                       </div>
-                      <h4 className="text-xs font-bold text-white group-hover:text-amber transition-colors">
+                      <h4 className="text-xs font-bold text-on-surface group-hover:text-amber transition-colors">
                         {m.title}
                       </h4>
                       <p className="text-[11px] text-stone leading-relaxed line-clamp-1">{m.agenda}</p>
                     </div>
-                    <span className="material-icons-outlined text-stone group-hover:text-white transition-colors text-[16px] pt-1">
+                    <span className="material-icons-outlined text-stone group-hover:text-on-surface transition-colors text-[16px] pt-1">
                       chevron_right
                     </span>
                   </div>
@@ -187,13 +187,13 @@ export default function MeetingNotes() {
                   </h4>
                   <span className="text-[10px] text-stone font-mono">{activeMeeting.date}</span>
                 </div>
-                <button onClick={() => setActiveMeeting(null)} className="text-stone hover:text-white transition">
+                <button onClick={() => setActiveMeeting(null)} className="text-stone hover:text-on-surface transition">
                   <span className="material-icons-outlined text-[16px]">close</span>
                 </button>
               </div>
 
               <div>
-                <h3 className="text-sm font-bold text-white leading-snug">{activeMeeting.title}</h3>
+                <h3 className="text-sm font-bold text-on-surface leading-snug">{activeMeeting.title}</h3>
                 <p className="text-[11px] text-stone mt-2 italic">"{activeMeeting.agenda}"</p>
               </div>
 
@@ -201,7 +201,7 @@ export default function MeetingNotes() {
                 <h5 className="text-[10px] font-bold text-stone font-mono uppercase mb-2">Attendees</h5>
                 <div className="flex flex-wrap gap-1.5">
                   {activeMeeting.attendees.map(a => (
-                    <span key={a} className="bg-navy border text-white text-[9px] font-mono px-2 py-0.5">
+                    <span key={a} className="bg-navy border text-on-surface text-[9px] font-mono px-2 py-0.5">
                       {a}
                     </span>
                   ))}
@@ -212,7 +212,7 @@ export default function MeetingNotes() {
                 <h5 className="text-[10px] font-bold text-stone font-mono uppercase">Key Decisions</h5>
                 <ul className="list-disc list-inside text-xs text-stone space-y-1">
                   {activeMeeting.decisions.map((d, i) => (
-                    <li key={i} className="leading-relaxed pl-1 text-white">{d}</li>
+                    <li key={i} className="leading-relaxed pl-1 text-on-surface">{d}</li>
                   ))}
                 </ul>
               </div>
@@ -222,9 +222,9 @@ export default function MeetingNotes() {
                 <div className="space-y-2">
                   {activeMeeting.actionItems.map((act, i) => (
                     <div key={i} className="p-3 bg-navy/40 border space-y-1.5">
-                      <p className="text-xs text-white leading-normal font-semibold">{act.task}</p>
+                      <p className="text-xs text-on-surface leading-normal font-semibold">{act.task}</p>
                       <div className="flex justify-between items-center text-[10px] font-mono text-stone">
-                        <span>Owner: <span className="text-white">{act.owner}</span></span>
+                        <span>Owner: <span className="text-on-surface">{act.owner}</span></span>
                         <span>Due: {act.deadline}</span>
                       </div>
                     </div>
@@ -247,7 +247,7 @@ export default function MeetingNotes() {
           <div className="w-full max-w-md bg-navy-mid border p-6 space-y-4">
             <div className="border-b pb-3 flex justify-between items-center">
               <h3 className="text-xs font-bold font-mono text-amber uppercase tracking-wider">Record Meeting Minutes</h3>
-              <button onClick={() => setShowAddModal(false)} className="text-stone hover:text-white transition">
+              <button onClick={() => setShowAddModal(false)} className="text-stone hover:text-on-surface transition">
                 <span className="material-icons-outlined text-[18px]">close</span>
               </button>
             </div>

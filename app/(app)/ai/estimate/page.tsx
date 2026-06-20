@@ -194,7 +194,7 @@ export default function AIEstimator() {
  <div className="flex items-center justify-between pb-2.5 mb-2">
  <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-amber">Parameters</h3>
  <span className="text-[10px] text-stone font-mono uppercase">
- Remaining: <span className="text-white font-bold">{remainingCalls} runs</span>
+ Remaining: <span className="text-on-surface font-bold">{remainingCalls} runs</span>
  </span>
  </div>
 

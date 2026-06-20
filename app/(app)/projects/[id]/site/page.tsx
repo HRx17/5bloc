@@ -208,7 +208,7 @@ export default function SiteAndField() {
             key={tab.id}
             onClick={() => setActiveSubTab(tab.id as any)}
             className={`text-xs font-semibold pb-1.5 border-b-2 transition-all uppercase tracking-wider ${
-              activeSubTab === tab.id ? 'text-amber border-amber font-bold' : 'text-stone hover:text-white border-transparent'
+              activeSubTab === tab.id ? 'text-amber border-amber font-bold' : 'text-stone hover:text-on-surface border-transparent'
             }`}
           >
             {tab.label}
@@ -229,7 +229,7 @@ export default function SiteAndField() {
               <div className="card-5bloc space-y-5">
                 <div className="border-b pb-3 flex justify-between items-center">
                   <div>
-                    <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Site Inspection logs</h3>
+                    <h3 className="text-xs font-bold font-mono text-on-surface uppercase tracking-wider">Site Inspection logs</h3>
                     <p className="text-[10px] text-stone mt-0.5 font-mono">GPS-tagged inspection records with photo logs.</p>
                   </div>
                   <span className="label-sm font-bold text-stone">VISITS: {visitReports.length}</span>
@@ -239,7 +239,7 @@ export default function SiteAndField() {
                   {visitReports.map(visit => (
                     <div key={visit.id} className="p-4 bg-navy/30 border space-y-3">
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                        <h4 className="text-xs font-bold text-white flex items-center gap-2">
+                        <h4 className="text-xs font-bold text-on-surface flex items-center gap-2">
                           <span className="material-icons-outlined text-amber text-[14px]">place</span>
                           Visit Report #{visit.visit_number}
                         </h4>
@@ -266,7 +266,7 @@ export default function SiteAndField() {
               <div className="card-5bloc space-y-5">
                 <div className="border-b pb-3 flex justify-between items-center">
                   <div>
-                    <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Materials Verification registry</h3>
+                    <h3 className="text-xs font-bold font-mono text-on-surface uppercase tracking-wider">Materials Verification registry</h3>
                     <p className="text-[10px] text-stone mt-0.5">Flag substitutions against blueprint specifications.</p>
                   </div>
                 </div>
@@ -275,7 +275,7 @@ export default function SiteAndField() {
                   {materialLogs.map(log => (
                     <div key={log.id} className="p-4 bg-navy/30 border space-y-3">
                       <div className="flex justify-between items-center">
-                        <h4 className="text-xs font-bold text-white">{log.material_name}</h4>
+                        <h4 className="text-xs font-bold text-on-surface">{log.material_name}</h4>
                         <span className={`chip ${
                           log.status === 'compliant' 
                             ? 'bg-success/10 text-success' 
@@ -288,11 +288,11 @@ export default function SiteAndField() {
                       <div className="grid grid-cols-2 gap-4 text-xs">
                         <div>
                           <span className="text-stone font-mono text-[9px] uppercase block">Specified Standard</span>
-                          <span className="text-white font-semibold">{log.specified_standard}</span>
+                          <span className="text-on-surface font-semibold">{log.specified_standard}</span>
                         </div>
                         <div>
                           <span className="text-stone font-mono text-[9px] uppercase block">Delivered Material</span>
-                          <span className="text-white font-semibold">{log.delivered_material}</span>
+                          <span className="text-on-surface font-semibold">{log.delivered_material}</span>
                         </div>
                       </div>
 
@@ -320,7 +320,7 @@ export default function SiteAndField() {
               <div className="card-5bloc space-y-5">
                 <div className="border-b pb-3 flex justify-between items-center">
                   <div>
-                    <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Closeout Snag checklist</h3>
+                    <h3 className="text-xs font-bold font-mono text-on-surface uppercase tracking-wider">Closeout Snag checklist</h3>
                     <p className="text-[10px] text-stone mt-0.5">Final items to resolve before retention release.</p>
                   </div>
                 </div>
@@ -329,7 +329,7 @@ export default function SiteAndField() {
                   {punchList.map(item => (
                     <div key={item.id} className="p-4 bg-navy/30 border space-y-3">
                       <div className="flex justify-between items-center">
-                        <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <h4 className="text-xs font-bold text-on-surface flex items-center gap-1.5">
                           <span className="font-mono text-stone">#{item.item_number}</span> - {item.defect}
                         </h4>
                         <span className={`px-2 py-0.5 rounded border text-[10px] font-bold ${

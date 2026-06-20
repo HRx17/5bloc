@@ -232,7 +232,7 @@ export default function NewInvoice() {
  {/* Interstate GST Toggle */}
  <div className="flex items-center justify-between text-xs pt-1">
  <div>
- <span className="text-white font-semibold">Interstate Transaction</span>
+ <span className="text-on-surface font-semibold">Interstate Transaction</span>
  <p className="text-[10px] text-stone">Applies IGST 18% instead of CGST+SGST</p>
  </div>
  <Toggle on={isInterstate} onChange={(v) => setIsInterstate(v)} label="Interstate GST" />
@@ -241,28 +241,28 @@ export default function NewInvoice() {
  <div className=" pt-4 space-y-2.5 text-xs font-mono text-stone">
  <div className="flex justify-between">
  <span>Subtotal:</span>
- <span className="text-white font-semibold">₹{subtotal.toLocaleString()}</span>
+ <span className="text-on-surface font-semibold">₹{subtotal.toLocaleString()}</span>
  </div>
  
  {isInterstate ? (
  <div className="flex justify-between">
  <span>IGST (18%):</span>
- <span className="text-white">₹{igstAmount.toLocaleString()}</span>
+ <span className="text-on-surface">₹{igstAmount.toLocaleString()}</span>
  </div>
  ) : (
  <>
  <div className="flex justify-between">
  <span>CGST (9%):</span>
- <span className="text-white">₹{cgstAmount.toLocaleString()}</span>
+ <span className="text-on-surface">₹{cgstAmount.toLocaleString()}</span>
  </div>
  <div className="flex justify-between">
  <span>SGST (9%):</span>
- <span className="text-white">₹{sgstAmount.toLocaleString()}</span>
+ <span className="text-on-surface">₹{sgstAmount.toLocaleString()}</span>
  </div>
  </>
  )}
 
- <div className=" pt-3 flex justify-between text-sm text-white font-bold font-body">
+ <div className=" pt-3 flex justify-between text-sm text-on-surface font-bold font-body">
  <span>GRAND TOTAL:</span>
  <span className="text-amber">₹{grandTotal.toLocaleString()}</span>
  </div>

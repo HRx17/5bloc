@@ -7,6 +7,8 @@ import Sidebar from './Sidebar'
 import TopNav from './TopNav'
 import { ToastProvider } from '@/components/ui/Toast'
 import { MessagesProvider } from '@/components/messages/MessagesProvider'
+import { CallProvider } from '@/components/messages/CallProvider'
+import CallOverlay from '@/components/messages/CallOverlay'
 
 interface AppShellProps {
  children: React.ReactNode
@@ -36,6 +38,7 @@ export default function AppShell({ children, userProfile }: AppShellProps) {
   return (
     <ToastProvider>
       <MessagesProvider>
+      <CallProvider>
       {/* Root shell — flat surface, no overflow */}
       <div
         className="flex h-screen w-screen overflow-hidden"
@@ -99,6 +102,8 @@ export default function AppShell({ children, userProfile }: AppShellProps) {
         </main>
       </div>
     </div>
+      <CallOverlay />
+      </CallProvider>
       </MessagesProvider>
     </ToastProvider>
   )

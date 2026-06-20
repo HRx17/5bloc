@@ -191,7 +191,7 @@ export default function IntegrationsDashboard() {
 
       {/* ── Quick Stats Grid ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="card-glass border border-navy-lt/20" style={{ padding: '16px 20px', borderRadius: '12px' }}>
+        <div className="card-glass" style={{ padding: '16px 20px', borderRadius: '12px', boxShadow: 'inset 0 0 0 1px var(--hairline)' }}>
           <p className="label-sm text-[10px]" style={{ color: 'var(--stone)' }}>Linked Applications</p>
           <div className="flex items-center gap-2.5 mt-2">
             <span className="text-[22px] font-medium" style={{ color: 'var(--on-surface)' }}>
@@ -201,7 +201,7 @@ export default function IntegrationsDashboard() {
           </div>
         </div>
 
-        <div className="card-glass border border-navy-lt/20" style={{ padding: '16px 20px', borderRadius: '12px' }}>
+        <div className="card-glass" style={{ padding: '16px 20px', borderRadius: '12px', boxShadow: 'inset 0 0 0 1px var(--hairline)' }}>
           <p className="label-sm text-[10px]" style={{ color: 'var(--stone)' }}>Synced Assets Registry</p>
           <div className="flex items-center gap-2.5 mt-2">
             <span className="text-[22px] font-medium" style={{ color: 'var(--on-surface)' }}>
@@ -211,7 +211,7 @@ export default function IntegrationsDashboard() {
           </div>
         </div>
 
-        <div className="card-glass border border-navy-lt/20" style={{ padding: '16px 20px', borderRadius: '12px' }}>
+        <div className="card-glass" style={{ padding: '16px 20px', borderRadius: '12px', boxShadow: 'inset 0 0 0 1px var(--hairline)' }}>
           <p className="label-sm text-[10px]" style={{ color: 'var(--stone)' }}>Sync Status</p>
           <div className="flex items-center gap-2.5 mt-2">
             <span className="text-[12px] font-bold truncate" style={{ color: 'var(--on-surface)' }}>
@@ -223,7 +223,7 @@ export default function IntegrationsDashboard() {
       </div>
 
       {/* ── Category Filters ── */}
-      <div className="flex border-b border-navy-lt/40 pb-px gap-1">
+      <div className="flex pb-px gap-1" style={{ borderBottom: '1px solid var(--hairline)' }}>
         {[
           { id: 'all', label: 'All Integrations', icon: 'extension' },
           { id: 'workspace', label: 'Workspace Cloud', icon: 'cloud_queue' },
@@ -286,7 +286,7 @@ export default function IntegrationsDashboard() {
                       <span className="material-icons-outlined text-[18px]">{item.icon}</span>
                     </div>
                     <div>
-                      <h3 className="text-[14px] font-medium text-white leading-tight">{item.name}</h3>
+                      <h3 className="text-[14px] font-medium leading-tight" style={{ color: 'var(--on-surface)' }}>{item.name}</h3>
                       <p className="text-[10px] text-stone mt-0.5 font-normal">Provider: {item.provider}</p>
                     </div>
                   </div>
@@ -373,24 +373,27 @@ export default function IntegrationsDashboard() {
 
       {/* ── Interactive Setup/Config Modal ── */}
       {showConfigModal && selectedIntegration && (
-        <div className="fixed inset-0 bg-navy/95 backdrop-blur-md flex items-center justify-center z-50 p-6 animate-fade-in">
+        <div className="fixed inset-0 flex items-center justify-center z-50 p-6 animate-fade-in" style={{ background: 'var(--scrim)', backdropFilter: 'blur(8px)' }}>
           <div
-            className="w-full max-w-md bg-navy-mid border border-navy-lt/60 overflow-hidden flex flex-col justify-between relative shadow-none"
-            style={{ borderRadius: '24px' }}
+            className="w-full max-w-md overflow-hidden flex flex-col justify-between relative"
+            style={{ borderRadius: '24px', background: 'var(--surface-container)', boxShadow: 'var(--shadow-4), inset 0 0 0 1px var(--hairline)' }}
           >
             {/* Header */}
-            <div className="px-6 py-4 bg-navy border-b border-navy-lt/40 flex items-center justify-between">
+            <div className="px-6 py-4 flex items-center justify-between" style={{ background: 'var(--surface-container-high)', borderBottom: '1px solid var(--hairline)' }}>
               <div className="flex items-center gap-2">
                 <span className="material-icons-outlined text-[18px]" style={{ color: selectedIntegration.color }}>
                   {selectedIntegration.icon}
                 </span>
-                <span className="text-xs font-bold font-mono text-white uppercase tracking-wider">
+                <span className="text-xs font-bold font-mono uppercase tracking-wider" style={{ color: 'var(--on-surface)' }}>
                   Configure {selectedIntegration.name}
                 </span>
               </div>
               <button
                 onClick={() => setShowConfigModal(false)}
-                className="text-stone hover:text-white transition p-1 hover:bg-navy-lt rounded-full"
+                className="transition p-1 rounded-full"
+                style={{ color: 'var(--stone)' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--overlay-hover)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
               >
                 <span className="material-icons-outlined text-[20px]">close</span>
               </button>
@@ -413,7 +416,7 @@ export default function IntegrationsDashboard() {
                   <div>
                     <label className="block text-stone text-xs font-medium mb-1.5">Auto-Sync Intervals</label>
                     <select
-                      className="input-5bloc py-2 text-xs bg-navy-lt border-none"
+                      className="input-5bloc py-2 text-xs border-none"
                       style={{ borderRadius: '8px' }}
                       defaultValue="realtime"
                     >
@@ -429,7 +432,7 @@ export default function IntegrationsDashboard() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-stone text-xs font-medium mb-1.5">Synchronised Inboxes</label>
-                    <div className="p-3 bg-navy rounded-lg space-y-2 text-xs text-white">
+                    <div className="p-3 rounded-lg space-y-2 text-xs" style={{ background: 'var(--surface-container-high)', color: 'var(--on-surface)' }}>
                       <div className="flex items-center justify-between">
                         <span>parth@5bloc.com</span>
                         <span className="text-[10px] text-success">PRIMARY</span>
@@ -466,13 +469,13 @@ export default function IntegrationsDashboard() {
                   </div>
                   <div>
                     <label className="block text-stone text-xs font-medium mb-1.5">AI Spatial Clash Inspection Options</label>
-                    <div className="space-y-2 text-xs text-stone-300">
+                    <div className="space-y-2 text-xs" style={{ color: 'var(--on-surface-variant)' }}>
                       <label className="flex items-center gap-2.5">
-                        <input type="checkbox" defaultChecked className="rounded bg-navy focus:ring-0 text-amber" />
+                        <input type="checkbox" defaultChecked className="rounded focus:ring-0 text-amber accent-amber" />
                         <span>Verify HVAC duct vs cantilever beam load limits</span>
                       </label>
                       <label className="flex items-center gap-2.5">
-                        <input type="checkbox" defaultChecked className="rounded bg-navy focus:ring-0 text-amber" />
+                        <input type="checkbox" defaultChecked className="rounded focus:ring-0 text-amber accent-amber" />
                         <span>Verify concrete structural rebar column clearances</span>
                       </label>
                     </div>
@@ -482,7 +485,7 @@ export default function IntegrationsDashboard() {
             </div>
 
             {/* Footer */}
-            <div className="px-6 py-4 bg-navy border-t border-navy-lt/40 flex justify-end gap-3">
+            <div className="px-6 py-4 flex justify-end gap-3" style={{ background: 'var(--surface-container-high)', borderTop: '1px solid var(--hairline)' }}>
               <button
                 onClick={() => setShowConfigModal(false)}
                 className="btn-secondary py-1.5 px-4 text-xs rounded-lg"

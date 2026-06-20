@@ -121,12 +121,12 @@ export default function ClientProfile() {
  <div className="card-5bloc space-y-4">
  <div className="flex items-center justify-between border-b pb-2.5">
  <span className="text-xs font-bold font-mono uppercase tracking-wider text-amber">Contact Details</span>
- <span className="material-icons-outlined text-[16px] text-stone hover:text-white cursor-pointer transition-colors">edit</span>
+ <span className="material-icons-outlined text-[16px] text-stone hover:text-on-surface cursor-pointer transition-colors">edit</span>
  </div>
 
  <div className="space-y-3">
  <div>
- <h2 className="text-base font-bold text-white leading-snug">{client.full_name}</h2>
+ <h2 className="text-base font-bold text-on-surface leading-snug">{client.full_name}</h2>
  <p className="text-[10px] text-stone font-mono uppercase mt-0.5">{client.company}</p>
  </div>
 
@@ -159,7 +159,7 @@ export default function ClientProfile() {
  rows={4}
  value={client.notes}
  onChange={(e) => handleNotesChange(e.target.value)}
- className="w-full bg-transparent border-0 outline-none text-xs text-white resize-none pt-2 font-body leading-relaxed h-[120px]"
+ className="w-full bg-transparent border-0 outline-none text-xs text-on-surface resize-none pt-2 font-body leading-relaxed h-[120px]"
  placeholder="Jot down notes (auto-saves on typing)..."
  />
  </div>
@@ -169,7 +169,7 @@ export default function ClientProfile() {
  <h4 className="text-xs font-bold font-mono uppercase tracking-wider text-stone border-b pb-2">Active Commissions</h4>
  {client.projects.map(p => (
  <Link key={p.id} href={`/projects/${p.id}`} className="block p-3 bg-navy/40 border rounded hover: transition-colors">
- <span className="text-xs font-bold text-white block truncate">{p.name}</span>
+ <span className="text-xs font-bold text-on-surface block truncate">{p.name}</span>
  <span className="text-[9px] font-mono text-stone uppercase mt-1 block tracking-wider">Phase: {p.phase.replace(/_/g, ' ')}</span>
  </Link>
  ))}
@@ -230,7 +230,7 @@ export default function ClientProfile() {
  <span className="uppercase text-amber tracking-wider font-bold">{log.type}</span>
  <span>{log.date}</span>
  </div>
- <p className="text-white leading-relaxed">{log.summary}</p>
+ <p className="text-on-surface leading-relaxed">{log.summary}</p>
  </div>
  </div>
  ))}
