@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server'
-import { createSupabaseServer } from '@/lib/supabase/server'
+import { createSupabaseServer, isSupabaseConfigured, SupabaseConfigError } from '@/lib/supabase/server'
 import { send } from '@/lib/email/resend'
 
 export async function POST(request: Request) {
   try {
+    if (!isSupabaseConfigured()) {
+      return NextResponse.json({ error: 'Authentication service not configured' }, { status: 503 })
+    }
+
     const supabase = await createSupabaseServer()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
@@ -36,6 +40,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, messageId: data?.id })
   } catch (err: unknown) {
+    if (err instanceof SupabaseConfigError) {
+      return NextResponse.json({ error: 'Authentication service not configured' }, { status: 503 })
+    }
     console.error('API send-email error:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

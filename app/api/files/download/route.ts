@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServer } from '@/lib/supabase/server'
+import { createSupabaseServer, isSupabaseConfigured, SupabaseConfigError } from '@/lib/supabase/server'
 import { getDownloadUrl } from '@/lib/files/r2-client'
 
 export async function GET(req: NextRequest) {
   try {
+    if (!isSupabaseConfigured()) {
+      return NextResponse.json({ error: 'Authentication service not configured' }, { status: 503 })
+    }
+
     const supabase = await createSupabaseServer()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -40,6 +44,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Could not generate download link' }, { status: 500 })
     }
   } catch (e) {
+    if (e instanceof SupabaseConfigError) {
+      return NextResponse.json({ error: 'Authentication service not configured' }, { status: 503 })
+    }
     console.error('File download API error:', e)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
