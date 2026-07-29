@@ -8,20 +8,23 @@ import { Logo } from '@/components/brand/LogoMark'
 import { Eye, EyeOff, AlertCircle, Info } from 'lucide-react'
 import { createSupabaseClient } from '@/lib/supabase/client'
 import { authCallbackUrl } from '@/lib/auth/oauth-redirect'
+import { safeRedirectPath } from '@/lib/auth/safe-redirect'
 
 const SUPABASE_CONFIGURED =
   typeof process !== 'undefined' &&
   !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
   !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-/* Demo credential shown when Supabase isn't configured */
+/* Demo credentials only when Supabase isn't configured AND not a production build */
+const DEMO_MODE =
+  !SUPABASE_CONFIGURED && process.env.NODE_ENV !== 'production'
 const DEMO_EMAIL    = 'demo@5bloc.com'
 const DEMO_PASSWORD = 'demo1234'
 
 function LoginInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const nextPath = searchParams.get('next') || '/dashboard'
+  const nextPath = safeRedirectPath(searchParams.get('next'), '/dashboard')
   const [email,        setEmail]        = useState('')
   const [password,     setPassword]     = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -73,7 +76,11 @@ function LoginInner() {
 
     try {
       if (!SUPABASE_CONFIGURED) {
-        /* ── Demo mode ── */
+        if (!DEMO_MODE) {
+          setError('Authentication is not configured. Contact support.')
+          return
+        }
+        /* ── Local demo mode only ── */
         await new Promise((r) => setTimeout(r, 600))
         if (
           email.trim().toLowerCase() === DEMO_EMAIL &&
@@ -186,8 +193,8 @@ function LoginInner() {
             </p>
           </div>
 
-          {/* Demo mode banner */}
-          {!SUPABASE_CONFIGURED && (
+          {/* Demo mode banner — local/dev only when Supabase is unset */}
+          {DEMO_MODE && (
             <div
               className="mb-5 flex items-start gap-2.5 rounded-xl px-4 py-3 text-[12.5px]"
               style={{

@@ -4,18 +4,48 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Logo } from '@/components/brand/LogoMark'
+import { createSupabaseClient } from '@/lib/supabase/client'
+import { appOrigin } from '@/lib/auth/oauth-redirect'
+
+const SUPABASE_CONFIGURED =
+  typeof process !== 'undefined' &&
+  !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
+  !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError('')
     setLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setSubmitted(true)
-    setLoading(false)
+
+    try {
+      if (!SUPABASE_CONFIGURED) {
+        setError('Password reset is unavailable — authentication is not configured.')
+        return
+      }
+
+      const supabase = createSupabaseClient()
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        email.trim().toLowerCase(),
+        { redirectTo: `${appOrigin()}/auth/callback?next=${encodeURIComponent('/settings')}` },
+      )
+
+      if (resetError) {
+        setError(resetError.message || 'Could not send reset email. Please try again.')
+        return
+      }
+
+      setSubmitted(true)
+    } catch {
+      setError('Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -71,8 +101,9 @@ export default function ForgotPassword() {
                   Check your email
                 </h3>
                 <p className="text-[13px] mt-1 leading-relaxed" style={{ color: 'var(--stone)' }}>
-                  We sent a reset link to{' '}
-                  <span className="font-medium" style={{ color: 'var(--on-surface)' }}>{email}</span>.
+                  If an account exists for{' '}
+                  <span className="font-medium" style={{ color: 'var(--on-surface)' }}>{email}</span>,
+                  we sent a secure reset link.
                 </p>
               </div>
               <Link href="/login" className="btn-primary w-full py-3">
@@ -84,6 +115,12 @@ export default function ForgotPassword() {
               <p className="text-[13px] text-center leading-relaxed" style={{ color: 'var(--stone)' }}>
                 Enter your email and we&apos;ll send a secure link to reset your password.
               </p>
+
+              {error && (
+                <p className="text-[13px] text-center leading-relaxed" style={{ color: 'var(--danger, #c0392b)' }}>
+                  {error}
+                </p>
+              )}
 
               <div>
                 <label className="label-sm block mb-2" style={{ color: 'var(--stone)' }}>
