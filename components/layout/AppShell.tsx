@@ -78,6 +78,7 @@ export default function AppShell({ children, userProfile }: AppShellProps) {
  />
 
       <main
+        id="main-content"
             className="flex-1 overflow-x-hidden overflow-y-auto relative"
             style={{
               background: 'var(--surface-canvas)',

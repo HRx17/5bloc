@@ -255,8 +255,14 @@ export default function Signup() {
                           className="input-5bloc pr-10"
                           placeholder="Minimum 8 characters"
                         />
-                        <button type="button" onClick={() => setShowPassword((v) => !v)} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--stone)' }} tabIndex={-1}>
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((v) => !v)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2"
+                          style={{ color: 'var(--stone)' }}
+                          aria-label={showPassword ? 'Hide password' : 'Show password'}
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
                         </button>
                       </div>
                       {password.length > 0 && (

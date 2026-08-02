@@ -87,7 +87,7 @@ export const ROLE_NAV: Record<UserRole, string[]> = {
   ],
   vendor: [
     '/dashboard', '/projects', '/coordination', '/messages', '/documents',
-    '/marketplace', '/settings',
+    '/marketplace', '/catalog', '/settings',
   ],
   consultant: [
     '/dashboard', '/projects', '/coordination', '/messages', '/documents', '/cad',

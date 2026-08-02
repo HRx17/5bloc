@@ -92,13 +92,16 @@ export default function TopNav({
 
         {/* Desktop search */}
         <div className="hidden lg:flex items-center relative max-w-[260px] w-full">
+          <label htmlFor="topnav-search" className="sr-only">Search workspace</label>
           <Search
             className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 pointer-events-none transition-colors"
             style={{ color: searchFocused ? 'var(--on-surface-variant)' : 'var(--stone)' }}
+            aria-hidden
           />
           <input
+            id="topnav-search"
             ref={searchRef}
-            type="text"
+            type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setSearchFocused(true)}
@@ -109,11 +112,13 @@ export default function TopNav({
           />
           {searchQuery && (
             <button
+              type="button"
+              aria-label="Clear search"
               className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 flex items-center justify-center rounded-full transition-opacity hover:opacity-70"
               style={{ background: 'var(--stone)', color: 'var(--surface)' }}
               onClick={() => { setSearchQuery(''); searchRef.current?.focus() }}
             >
-              <X className="h-2.5 w-2.5" />
+              <X className="h-2.5 w-2.5" aria-hidden />
             </button>
           )}
         </div>
@@ -123,7 +128,9 @@ export default function TopNav({
       <div className="flex items-center gap-1">
         {/* Theme toggle */}
         <button
+          type="button"
           onClick={toggleTheme}
+          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
           className="h-8 w-8 flex items-center justify-center rounded-xl transition-all"
           style={{ color: 'var(--stone)' }}
@@ -139,8 +146,8 @@ export default function TopNav({
           }}
         >
           {theme === 'dark'
-            ? <Sun className="h-3.5 w-3.5" />
-            : <Moon className="h-3.5 w-3.5" />
+            ? <Sun className="h-3.5 w-3.5" aria-hidden />
+            : <Moon className="h-3.5 w-3.5" aria-hidden />
           }
         </button>
 
