@@ -13,11 +13,8 @@ export function createSupabaseClient(): BrowserClient {
       '@supabase/ssr: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are required',
     )
   }
-<<<<<<< HEAD
-=======
 
   // Reuse one browser client per page load (avoids multiple GoTrue clients)
->>>>>>> origin/cursor/production-readiness-fixes-2e0b
   if (singleton) return singleton
   singleton = createBrowserClient<Database>(url, key)
   return singleton
