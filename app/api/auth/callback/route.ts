@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { needsOnboarding } from '@/lib/auth/onboarding'
+import { safeRedirectPath } from '@/lib/auth/safe-redirect'
 
 async function resolvePostAuthPath(
   supabase: ReturnType<typeof createServerClient>,
@@ -27,8 +28,7 @@ export async function GET(req: NextRequest) {
   const code = requestUrl.searchParams.get('code')
   const oauthError = requestUrl.searchParams.get('error')
   const errorCode = requestUrl.searchParams.get('error_code')
-  const nextRaw = requestUrl.searchParams.get('next') ?? '/dashboard'
-  const next = nextRaw.startsWith('/') ? nextRaw : '/dashboard'
+  const next = safeRedirectPath(requestUrl.searchParams.get('next'), '/dashboard')
 
   if (oauthError || errorCode) {
     const params = new URLSearchParams()

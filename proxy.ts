@@ -48,12 +48,13 @@ export async function proxy(req: NextRequest) {
       url.searchParams.set('next', pathname)
       return NextResponse.redirect(url)
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     // Network/SSL errors (e.g. UNABLE_TO_VERIFY_LEAF_SIGNATURE in local dev) —
     // let the request through rather than redirect-looping to /login.
     // The app-level auth check in each page will still protect routes.
     if (process.env.NODE_ENV === 'development') {
-      console.warn('[proxy] Auth check skipped due to network error:', e?.message)
+      const message = e instanceof Error ? e.message : String(e)
+      console.warn('[proxy] Auth check skipped due to network error:', message)
       return res
     }
     // In production treat as unauthenticated

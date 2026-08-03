@@ -11,7 +11,12 @@ export function appOrigin(): string {
 
 /** Build the Supabase OAuth callback URL — shows loading UI, then exchanges session server-side. */
 export function authCallbackUrl(nextPath = '/dashboard') {
-  const next = nextPath.startsWith('/') ? nextPath : `/${nextPath}`
+  // Inline safe-path check (avoid importing crypto-heavy modules on client)
+  const raw = nextPath?.trim() || '/dashboard'
+  const next =
+    raw.startsWith('/') && !raw.startsWith('//') && !raw.includes('://')
+      ? raw.split('#')[0]
+      : '/dashboard'
   const origin = typeof window !== 'undefined'
     ? (process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin)
     : (process.env.NEXT_PUBLIC_APP_URL ?? APP_DEV_ORIGIN)

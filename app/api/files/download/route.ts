@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServer } from '@/lib/supabase/server'
+import { createSupabaseServer, isSupabaseConfigured, SupabaseConfigError } from '@/lib/supabase/server'
+import { getDownloadUrl } from '@/lib/files/r2-client'
 
 export async function GET(req: NextRequest) {
   try {
+    if (!isSupabaseConfigured()) {
+      return NextResponse.json({ error: 'Authentication service not configured' }, { status: 503 })
+    }
+
     const supabase = await createSupabaseServer()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -26,18 +31,22 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Not found or access denied' }, { status: 404 })
     }
 
-    // Generate a signed URL from Supabase Storage
-    const { data: signedData, error: signErr } = await supabase
-      .storage
-      .from('documents')
-      .createSignedUrl(doc.storage_path, 900)
-
-    if (signErr || !signedData) {
+    // Uploads go to Cloudflare R2 — sign a download URL from the same store
+    try {
+      const url = await getDownloadUrl(doc.storage_path, doc.original_filename)
+      return NextResponse.json({
+        url,
+        filename: doc.original_filename,
+        expires_in: 900,
+      })
+    } catch (signErr) {
+      console.error('R2 signed URL error:', signErr)
       return NextResponse.json({ error: 'Could not generate download link' }, { status: 500 })
     }
-
-    return NextResponse.json({ url: signedData.signedUrl, filename: doc.original_filename, expires_in: 900 })
   } catch (e) {
+    if (e instanceof SupabaseConfigError) {
+      return NextResponse.json({ error: 'Authentication service not configured' }, { status: 503 })
+    }
     console.error('File download API error:', e)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServer } from '@/lib/supabase/server'
 import { buildAutodeskAuthUrl, getAutodeskRedirectUri } from '@/lib/integrations/autodesk'
+import { signOAuthState } from '@/lib/auth/oauth-state'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,10 +14,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL('/integrations?error=autodesk_not_configured', req.url))
   }
 
-  const origin      = req.nextUrl.origin
-  const redirectUri = getAutodeskRedirectUri(origin)
-  const state       = Buffer.from(JSON.stringify({ userId: user.id, origin })).toString('base64')
-  const authUrl     = buildAutodeskAuthUrl(redirectUri, state)
-
-  return NextResponse.redirect(authUrl)
+  try {
+    const origin = req.nextUrl.origin
+    const redirectUri = getAutodeskRedirectUri(origin)
+    const state = signOAuthState({ userId: user.id, origin })
+    const authUrl = buildAutodeskAuthUrl(redirectUri, state)
+    return NextResponse.redirect(authUrl)
+  } catch (e) {
+    console.error('Autodesk connect error:', e)
+    return NextResponse.redirect(new URL('/integrations?error=autodesk_not_configured', req.url))
+  }
 }

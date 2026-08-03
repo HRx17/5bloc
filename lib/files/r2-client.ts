@@ -24,12 +24,13 @@ export const R2_BUCKET = process.env.R2_BUCKET_NAME || '5bloc-documents'
 
 export async function getDownloadUrl(r2Key: string, filename: string): Promise<string> {
   if (!r2) {
-    return `https://dummyimage.com/600x400/0c1220/f5a623.png&text=${encodeURIComponent(filename)}`
+    throw new Error('R2 not configured')
   }
+  const safeName = filename.replace(/["\r\n]/g, '_')
   return getSignedUrl(r2, new GetObjectCommand({
     Bucket: R2_BUCKET,
     Key: r2Key,
-    ResponseContentDisposition: `attachment; filename="${filename}"`,
+    ResponseContentDisposition: `attachment; filename="${safeName}"`,
   }), { expiresIn: 900 })
 }
 

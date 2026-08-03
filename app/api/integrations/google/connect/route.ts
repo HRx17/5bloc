@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServer } from '@/lib/supabase/server'
 import { buildGoogleAuthUrl, getGoogleRedirectUri } from '@/lib/integrations/google'
+import { signOAuthState } from '@/lib/auth/oauth-state'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,10 +14,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL('/integrations?error=google_not_configured', req.url))
   }
 
-  const origin      = req.nextUrl.origin
-  const redirectUri = getGoogleRedirectUri(origin)
-  const state       = Buffer.from(JSON.stringify({ userId: user.id, origin })).toString('base64')
-  const authUrl     = buildGoogleAuthUrl(redirectUri, state)
-
-  return NextResponse.redirect(authUrl)
+  try {
+    const origin = req.nextUrl.origin
+    const redirectUri = getGoogleRedirectUri(origin)
+    const state = signOAuthState({ userId: user.id, origin })
+    const authUrl = buildGoogleAuthUrl(redirectUri, state)
+    return NextResponse.redirect(authUrl)
+  } catch (e) {
+    console.error('Google connect error:', e)
+    return NextResponse.redirect(new URL('/integrations?error=google_not_configured', req.url))
+  }
 }

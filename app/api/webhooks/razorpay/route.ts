@@ -3,15 +3,21 @@ import { createServiceRoleClient } from '@/lib/supabase/server'
 
 export async function POST(req: Request) {
   const body = await req.text()
-  const sig  = req.headers.get('x-razorpay-signature')
-
+  const sig = req.headers.get('x-razorpay-signature')
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET
-  if (secret) {
-    if (!sig) return new Response('Missing signature header', { status: 400 })
-    const hmac = crypto.createHmac('sha256', secret).update(body).digest('hex')
-    if (hmac !== sig) return new Response('Invalid signature', { status: 401 })
-  } else {
-    console.warn('RAZORPAY_WEBHOOK_SECRET not configured — bypassing signature check.')
+
+  if (!secret) {
+    console.error('Razorpay webhook rejected: RAZORPAY_WEBHOOK_SECRET not configured')
+    return new Response('Webhook not configured', { status: 503 })
+  }
+
+  if (!sig) return new Response('Missing signature header', { status: 400 })
+
+  const hmac = crypto.createHmac('sha256', secret).update(body).digest('hex')
+  const a = Buffer.from(hmac)
+  const b = Buffer.from(sig)
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    return new Response('Invalid signature', { status: 401 })
   }
 
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -20,8 +26,8 @@ export async function POST(req: Request) {
   }
 
   try {
-    const event  = JSON.parse(body)
-    const sub    = event.payload?.subscription?.entity
+    const event = JSON.parse(body)
+    const sub = event.payload?.subscription?.entity
     const userId = sub?.notes?.user_id as string | undefined
 
     if (!userId) return new Response('No user_id in notes', { status: 200 })
@@ -42,10 +48,18 @@ export async function POST(req: Request) {
         if (plan === 'ai_addon') {
           await supabase.from('profiles').update({ ai_add_on: true }).eq('auth_id', userId)
         } else {
-          await supabase
-            .from('organisations')
-            .update({ plan })
-            .in('id', supabase.from('profiles').select('org_id').eq('auth_id', userId) as any)
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('org_id')
+            .eq('auth_id', userId)
+            .maybeSingle()
+
+          if (profile?.org_id) {
+            await supabase
+              .from('organisations')
+              .update({ plan })
+              .eq('id', profile.org_id)
+          }
           await supabase.from('profiles').update({ plan }).eq('auth_id', userId)
         }
         break
@@ -53,16 +67,25 @@ export async function POST(req: Request) {
 
       case 'subscription.cancelled':
       case 'subscription.expired': {
-        await supabase
-          .from('organisations')
-          .update({ plan: 'free' })
-          .in('id', supabase.from('profiles').select('org_id').eq('auth_id', userId) as any)
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('org_id')
+          .eq('auth_id', userId)
+          .maybeSingle()
+
+        if (profile?.org_id) {
+          await supabase
+            .from('organisations')
+            .update({ plan: 'free' })
+            .eq('id', profile.org_id)
+        }
         await supabase.from('profiles').update({ plan: 'free', ai_add_on: false }).eq('auth_id', userId)
         break
       }
     }
   } catch (err) {
     console.error('Razorpay webhook error:', err)
+    return new Response('Webhook Error', { status: 400 })
   }
 
   return new Response('OK')

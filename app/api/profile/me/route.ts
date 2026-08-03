@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createSupabaseServer } from '@/lib/supabase/server'
+import { createSupabaseServer, isSupabaseConfigured } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
+  if (!isSupabaseConfigured()) {
+    return NextResponse.json({ error: 'Authentication service not configured' }, { status: 503 })
+  }
+
   const supabase = await createSupabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -39,6 +43,10 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
+  if (!isSupabaseConfigured()) {
+    return NextResponse.json({ error: 'Authentication service not configured' }, { status: 503 })
+  }
+
   const supabase = await createSupabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
 
