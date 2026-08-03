@@ -5,8 +5,8 @@
   --lp-bg-alt: #F5F5F7;
   --lp-bg-dark: #0C1220;
   --lp-text: #0C1220;
-  --lp-text-secondary: #5C5750;
-  --lp-text-tertiary: #8C8680;
+  --lp-text-secondary: #5C5750; /* ~7:1 on #FAFAF8 */
+  --lp-text-tertiary: #6B6560;  /* raised from #8C8680 for WCAG AA */
   --lp-brand: #F5A623;
   --lp-brand-hover: #ffb94a;
   --lp-brand-dk: #CC7A00;

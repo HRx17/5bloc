@@ -35,12 +35,13 @@
   --navy-lt:  var(--surface-container-high);
 
   --on-surface:         #1d1d1f;
-  --on-surface-variant: #6e6e73;
+  --on-surface-variant: #6e6e73; /* ~4.6:1 on #fbfbfd — WCAG AA for body text */
   --chalk-white:        #1d1d1f;
   --bone-paper:         #fbfbfd;
   --ink-black:          #1d1d1f;
-  --stone:              #86868b;
-  --sandstone:          #a1a1a6;
+  /* Was #86868b (~3.5:1). Raised for WCAG AA contrast on light surfaces. */
+  --stone:              #6e6e73;
+  --sandstone:          #8e8e93;
 
   --primary:              #f5a623;
   --on-primary:           #1d1d1f;
@@ -236,6 +237,42 @@ button, a, .btn-primary, .btn-secondary, .btn-ghost-amber, .btn-ghost-error,
 /* Focus ring — accessibility only */
 :focus-visible {
   box-shadow: 0 0 0 2px var(--amber) !important;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+/* Skip link — visually hidden until keyboard focus */
+.skip-link {
+  position: absolute;
+  left: 12px;
+  top: 0;
+  z-index: 10000;
+  transform: translateY(-120%);
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--amber);
+  color: var(--on-primary);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: var(--shadow-3);
+}
+.skip-link:focus,
+.skip-link:focus-visible {
+  transform: translateY(12px);
+  box-shadow: 0 0 0 2px var(--on-surface), var(--shadow-3) !important;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Material Symbols — light stroke weight, backward-compat with material-icons-outlined class */

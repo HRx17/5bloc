@@ -319,15 +319,16 @@ export default function Marketplace() {
         <div className="card-5bloc w-full lg:w-64 shrink-0 space-y-5">
           <div className="flex items-center justify-between pb-2">
             <span className="text-xs font-bold uppercase tracking-wider font-mono" style={{ color: 'var(--amber)' }}>Filters</span>
-            <span
+            <button
+              type="button"
               onClick={resetFilters}
-              className="text-[10px] cursor-pointer font-mono uppercase transition-colors"
+              className="text-[10px] font-mono uppercase transition-colors"
               style={{ color: 'var(--stone)' }}
               onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--amber)')}
               onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--stone)')}
             >
-              Reset
-            </span>
+              Reset filters
+            </button>
           </div>
 
           <div>

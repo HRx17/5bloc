@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import React, { useEffect, useId } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { ArrowRight, Check, Loader2 } from 'lucide-react'
@@ -152,15 +152,49 @@ export function PartnerField({
   hint?: string
   children: React.ReactNode
 }) {
+  const autoId = useId()
+  const labelId = `${autoId}-label`
+  const hintId = hint ? `${autoId}-hint` : undefined
+
+  const enhanced = React.Children.map(children, (child) => {
+    if (!React.isValidElement(child)) return child
+    const props = child.props as Record<string, unknown>
+    const type = child.type
+    const isControl =
+      type === 'input' || type === 'textarea' || type === 'select'
+
+    if (isControl) {
+      return React.cloneElement(child as React.ReactElement<Record<string, unknown>>, {
+        id: (props.id as string) || autoId,
+        'aria-required': required || undefined,
+        'aria-describedby': hintId || props['aria-describedby'],
+      })
+    }
+
+    return React.cloneElement(child as React.ReactElement<Record<string, unknown>>, {
+      'aria-labelledby': (props['aria-labelledby'] as string) || labelId,
+    })
+  })
+
   return (
     <div className="grid gap-1.5">
-      <label className="text-[12px] font-medium" style={{ color: 'var(--lp-text-secondary)' }}>
+      <label
+        id={labelId}
+        htmlFor={autoId}
+        className="text-[12px] font-medium"
+        style={{ color: 'var(--lp-text-secondary)' }}
+      >
         {label}
-        {required && <span style={{ color: 'var(--lp-brand)' }}> *</span>}
+        {required && (
+          <span style={{ color: 'var(--lp-brand)' }} aria-hidden="true">
+            {' '}
+            *
+          </span>
+        )}
       </label>
-      {children}
+      {enhanced}
       {hint && (
-        <span className="text-[12px]" style={{ color: 'var(--lp-text-tertiary)' }}>
+        <span id={hintId} className="text-[12px]" style={{ color: 'var(--lp-text-tertiary)' }}>
           {hint}
         </span>
       )}
@@ -202,13 +236,15 @@ export function PartnerCountryToggle({
   ]
 
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Country">
       {opts.map((opt) => {
         const active = country === opt.id
         return (
           <button
             key={opt.id}
             type="button"
+            role="radio"
+            aria-checked={active}
             onClick={() => onChange(opt.id)}
             className="rounded-xl px-4 py-3 text-[15px] transition-all"
             style={{
@@ -238,13 +274,14 @@ export function PartnerChipGrid({
   onToggle: (value: string) => void
 }) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2" role="group" aria-label="Options">
       {options.map((option) => {
         const active = selected.includes(option)
         return (
           <button
             key={option}
             type="button"
+            aria-pressed={active}
             onClick={() => onToggle(option)}
             className="rounded-full px-3.5 py-2 text-[13px] transition-all"
             style={{
@@ -255,7 +292,7 @@ export function PartnerChipGrid({
                 : 'inset 0 0 0 1px var(--lp-border)',
             }}
           >
-            {active && <Check className="mr-1 inline h-3.5 w-3.5" style={{ color: 'var(--lp-brand)' }} />}
+            {active && <Check className="mr-1 inline h-3.5 w-3.5" style={{ color: 'var(--lp-brand)' }} aria-hidden />}
             {option}
           </button>
         )
@@ -281,7 +318,7 @@ export function PartnerSubmitRow({
         {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : submitLabel}
       </button>
       {error ? (
-        <p className="text-[13px]" style={{ color: '#ff3b30' }}>
+        <p role="alert" className="text-[13px]" style={{ color: '#c62828' }}>
           {error}
         </p>
       ) : (

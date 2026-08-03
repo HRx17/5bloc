@@ -22,7 +22,7 @@ const APPLE = {
   mid: '#f5f5f7',
   border: 'rgba(0,0,0,0.12)',
   txt: '#1d1d1f',
-  txtDim: '#86868b',
+  txtDim: '#6e6e73',
   accent: '#f5a623',
   accentHover: '#ffb94a',
   btnText: '#0C1220',
@@ -36,21 +36,24 @@ function Field({
   label,
   required,
   palette,
+  htmlFor,
   children,
 }: {
   label: string
   required?: boolean
   palette: Palette
+  htmlFor?: string
   children: React.ReactNode
 }) {
   return (
     <div className="grid gap-1.5">
       <label
+        htmlFor={htmlFor}
         className="text-[12px] font-medium"
         style={{ color: palette.txtDim }}
       >
         {label}
-        {required && <span style={{ color: palette.accent }}> *</span>}
+        {required && <span style={{ color: palette.accent }} aria-hidden> *</span>}
       </label>
       {children}
     </div>
@@ -158,7 +161,9 @@ export function WaitlistForm({
   if (compact) {
     return (
       <form onSubmit={submit} className="flex w-full max-w-md flex-col gap-2 sm:flex-row mx-auto">
+        <label htmlFor="waitlist-email-compact" className="sr-only">Work email</label>
         <input
+          id="waitlist-email-compact"
           type="email"
           required
           placeholder="you@studio.com"
@@ -199,8 +204,9 @@ export function WaitlistForm({
         color: P.txt,
       }}
     >
-      <Field label="Work email" required palette={P}>
+      <Field label="Work email" required palette={P} htmlFor="waitlist-email">
         <input
+          id="waitlist-email"
           type="email"
           required
           value={email}
@@ -214,8 +220,9 @@ export function WaitlistForm({
       </Field>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Your name" palette={P}>
+        <Field label="Your name" palette={P} htmlFor="waitlist-name">
           <input
+            id="waitlist-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Aanya Mehta"
@@ -225,8 +232,9 @@ export function WaitlistForm({
             onBlur={onBlur}
           />
         </Field>
-        <Field label="I'm a" palette={P}>
+        <Field label="I'm a" palette={P} htmlFor="waitlist-role">
           <select
+            id="waitlist-role"
             value={role}
             onChange={(e) => setRole(e.target.value)}
             className={inputCls}
@@ -243,8 +251,9 @@ export function WaitlistForm({
         </Field>
       </div>
 
-      <Field label="Firm / organisation" palette={P}>
+      <Field label="Firm / organisation" palette={P} htmlFor="waitlist-firm">
         <input
+          id="waitlist-firm"
           value={firm}
           onChange={(e) => setFirm(e.target.value)}
           placeholder="Mehta + Rao Architects"

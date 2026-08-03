@@ -119,6 +119,10 @@ export type Database = {
         Row: {
           bio: string | null
           business_name: string
+          catalog_file_url: string | null
+          catalog_item_count: number | null
+          catalog_method: string | null
+          catalog_notes: string | null
           categories: string[]
           city: string
           contact_name: string
@@ -138,6 +142,10 @@ export type Database = {
         Insert: {
           bio?: string | null
           business_name: string
+          catalog_file_url?: string | null
+          catalog_item_count?: number | null
+          catalog_method?: string | null
+          catalog_notes?: string | null
           categories?: string[]
           city: string
           contact_name: string
@@ -157,6 +165,10 @@ export type Database = {
         Update: {
           bio?: string | null
           business_name?: string
+          catalog_file_url?: string | null
+          catalog_item_count?: number | null
+          catalog_method?: string | null
+          catalog_notes?: string | null
           categories?: string[]
           city?: string
           contact_name?: string
@@ -172,6 +184,111 @@ export type Database = {
           team_size?: string | null
           website?: string | null
           years_experience?: number | null
+        }
+        Relationships: []
+      }
+      vendor_catalog_imports: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          file_name: string | null
+          file_url: string | null
+          id: string
+          method: string
+          org_id: string | null
+          owner_email: string
+          processed_rows: number
+          sample: Json
+          source_url: string | null
+          status: string
+          total_rows: number
+          updated_at: string
+          vendor_signup_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          method: string
+          org_id?: string | null
+          owner_email: string
+          processed_rows?: number
+          sample?: Json
+          source_url?: string | null
+          status?: string
+          total_rows?: number
+          updated_at?: string
+          vendor_signup_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          method?: string
+          org_id?: string | null
+          owner_email?: string
+          processed_rows?: number
+          sample?: Json
+          source_url?: string | null
+          status?: string
+          total_rows?: number
+          updated_at?: string
+          vendor_signup_id?: string | null
+        }
+        Relationships: []
+      }
+      vendor_catalog_items: {
+        Row: {
+          brand: string | null
+          category: string | null
+          created_at: string
+          currency: string | null
+          description: string | null
+          id: string
+          import_id: string | null
+          is_active: boolean
+          name: string
+          org_id: string | null
+          owner_email: string
+          price: number | null
+          sku: string
+          unit: string | null
+        }
+        Insert: {
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          id?: string
+          import_id?: string | null
+          is_active?: boolean
+          name: string
+          org_id?: string | null
+          owner_email: string
+          price?: number | null
+          sku: string
+          unit?: string | null
+        }
+        Update: {
+          brand?: string | null
+          category?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          id?: string
+          import_id?: string | null
+          is_active?: boolean
+          name?: string
+          org_id?: string | null
+          owner_email?: string
+          price?: number | null
+          sku?: string
+          unit?: string | null
         }
         Relationships: []
       }

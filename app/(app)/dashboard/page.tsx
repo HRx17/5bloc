@@ -49,9 +49,9 @@ const DASHBOARD_STATS: Record<UserRole, { label: string; value: string; icon: st
     { label: 'Site issues', value: '1', icon: 'report_problem', color: 'var(--error)', href: '/projects/proj-1/issues' },
   ],
   vendor: [
-    { label: 'Active deliveries', value: '4', icon: 'local_shipping', color: 'var(--purple)', href: '/marketplace' },
+    { label: 'Catalogue SKUs', value: '—', icon: 'inventory_2', color: 'var(--purple)', href: '/catalog' },
     { label: 'Open RFQs', value: '2', icon: 'request_quote', color: 'var(--amber)', href: '/marketplace' },
-    { label: 'Projects supplied', value: '1', icon: 'inventory_2', color: 'var(--blue)', href: '/projects' },
+    { label: 'Projects supplied', value: '1', icon: 'local_shipping', color: 'var(--blue)', href: '/projects' },
     { label: 'Documents', value: '8', icon: 'folder_open', color: 'var(--stone)', href: '/documents' },
   ],
   consultant: [

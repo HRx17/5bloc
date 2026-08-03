@@ -54,6 +54,7 @@ const NAV: NavGroup[] = [
     label: 'Tools',
     items: [
       { name: 'Marketplace',  path: '/marketplace',  icon: 'storefront',        desc: 'Find contractors' },
+      { name: 'Catalog',      path: '/catalog',      icon: 'inventory_2',       desc: 'Your product catalogue' },
       { name: 'AI Assistant', path: '/ai/estimate',  icon: 'auto_awesome',      desc: 'Estimates & contract scan', badge: 'AI' },
       { name: 'Integrations', path: '/integrations', icon: 'extension',         desc: 'Connect your tools' },
     ],
@@ -121,11 +122,13 @@ export default function Sidebar({
         </Link>
         {onClose && (
           <button
+            type="button"
             onClick={onClose}
+            aria-label="Close menu"
             className="lg:hidden h-6 w-6 flex items-center justify-center rounded-lg"
             style={{ color: 'var(--stone)' }}
           >
-            <span className="material-icons-outlined text-[16px]">close</span>
+            <span className="material-icons-outlined text-[16px]" aria-hidden>close</span>
           </button>
         )}
       </div>
@@ -157,12 +160,12 @@ export default function Sidebar({
             {group.label && (
               <p
                 className="px-3 pb-1 text-[9px] uppercase tracking-[0.08em] font-medium"
-                style={{ color: 'var(--stone)', opacity: 0.55 }}
+                style={{ color: 'var(--on-surface-variant)' }}
               >
                 {group.label}
               </p>
             )}
-            <div className="space-y-0.5">
+            <div className="space-y-0.5" role="list">
               {group.items.map((item) => {
                 const active = isActive(item.path)
                 return (
@@ -170,6 +173,7 @@ export default function Sidebar({
                     key={item.path}
                     href={item.path}
                     onClick={onClose}
+                    aria-current={active ? 'page' : undefined}
                     className="relative flex items-center gap-2 px-3 py-1.5 rounded-xl text-[12.5px]"
                     style={{
                       background: active ? 'rgba(245,166,35,0.08)' : 'transparent',
