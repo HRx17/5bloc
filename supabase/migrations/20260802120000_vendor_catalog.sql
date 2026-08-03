@@ -1,7 +1,8 @@
 -- Vendor catalog for large SKU lists (10k+).
--- Run in Supabase SQL editor / migrations.
+-- Filename must be YYYYMMDDHHMMSS_name.sql for Supabase CLI / GitHub integration.
+-- Safe to re-run (IF NOT EXISTS).
 
--- Optional columns on waitlist signups (safe if re-run)
+-- Optional columns on waitlist signups
 alter table if exists public.vendor_signups
   add column if not exists catalog_method text,
   add column if not exists catalog_item_count integer,
@@ -52,9 +53,6 @@ create index if not exists vendor_catalog_items_email_idx
 
 create index if not exists vendor_catalog_items_sku_idx
   on public.vendor_catalog_items (owner_email, sku);
-
-create index if not exists vendor_catalog_items_name_trgm
-  on public.vendor_catalog_items using gin (to_tsvector('simple', coalesce(name, '') || ' ' || coalesce(sku, '')));
 
 -- Public waitlist inserts (anon) — tighten in production with RLS policies as needed
 alter table public.vendor_catalog_imports enable row level security;
