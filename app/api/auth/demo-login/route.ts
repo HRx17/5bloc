@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server'
-import {
-  clearDemoSession,
-  isLocalDemoEnabled,
-  parseDemoRole,
-  setDemoSession,
-} from '@/lib/auth/local-demo'
+import { isLocalDemoEnabled, parseDemoRole } from '@/lib/auth/local-demo'
+import { clearDemoSession, setDemoSession } from '@/lib/auth/local-demo-server'
 
 export async function POST(request: Request) {
   if (!isLocalDemoEnabled()) {

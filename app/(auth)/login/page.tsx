@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { createSupabaseClient } from '@/lib/supabase/client'
 import { DEMO_ROLE_HINTS, isLocalDemoEnabled, parseDemoRole } from '@/lib/auth/local-demo'
 import { LogoMark } from '@/components/brand/LogoMark'
 
@@ -51,7 +51,7 @@ export default function LoginPage() {
     }
 
     try {
-      const supabase = createClient()
+      const supabase = createSupabaseClient()
       const { error: authError } = await supabase.auth.signInWithPassword({
         email: username,
         password,
