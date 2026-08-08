@@ -1,367 +1,260 @@
 'use client'
 
-import React, { Suspense, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { Logo } from '@/components/brand/LogoMark'
-import { Eye, EyeOff, AlertCircle, Info } from 'lucide-react'
-import { createSupabaseClient } from '@/lib/supabase/client'
-import { authCallbackUrl } from '@/lib/auth/oauth-redirect'
-import { safeRedirectPath } from '@/lib/auth/safe-redirect'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { DEMO_ROLE_HINTS, isLocalDemoEnabled, parseDemoRole } from '@/lib/auth/local-demo'
+import { LogoMark } from '@/components/brand/LogoMark'
 
-const SUPABASE_CONFIGURED =
-  typeof process !== 'undefined' &&
-  !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
-  !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-/* Demo credentials only when Supabase isn't configured AND not a production build */
-const DEMO_MODE =
-  !SUPABASE_CONFIGURED && process.env.NODE_ENV !== 'production'
-const DEMO_EMAIL    = 'demo@5bloc.com'
-const DEMO_PASSWORD = 'demo1234'
-
-function LoginInner() {
+export default function LoginPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const nextPath = safeRedirectPath(searchParams.get('next'), '/dashboard')
-  const [email,        setEmail]        = useState('')
-  const [password,     setPassword]     = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading,      setLoading]      = useState(false)
-  const [googleLoading, setGoogleLoading] = useState(false)
-  const [error,        setError]        = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPw, setShowPw] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [info, setInfo] = useState<string | null>(null)
+  const localDemo = isLocalDemoEnabled()
 
-  React.useEffect(() => {
-    if (!SUPABASE_CONFIGURED) return
-    const supabase = createSupabaseClient()
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (!session) return
-      try {
-        const res = await fetch('/api/profile/me')
-        if (res.ok) {
-          const data = await res.json()
-          if (!data.user?.onboarding_complete) {
-            router.replace('/onboarding')
-            return
-          }
-        }
-      } catch { /* fall through to dashboard */ }
-      router.replace(nextPath)
-    })
-  }, [router, nextPath])
-
-  React.useEffect(() => {
-    const code = searchParams.get('error') ?? searchParams.get('error_code')
-    if (!code) return
-    if (code === 'flow_state_already_used') {
-      setError('Sign-in session expired (often caused by wrong port or stale tabs). Use http://localhost:3001, close extra tabs, and try again.')
-    } else if (code === 'auth_callback_failed') {
-      setError('Google sign-in failed. Please try again.')
-    } else if (code === 'missing_code') {
-      setError('Sign-in was interrupted. Please try again.')
-    } else {
-      setError('Google sign-in failed. Please try again.')
-    }
-  }, [searchParams])
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setError('')
-
-    if (!email.trim())    return setError('Please enter your email address.')
-    if (!password.trim()) return setError('Please enter your password.')
-
     setLoading(true)
+    setError(null)
+    setInfo(null)
 
-    try {
-      if (!SUPABASE_CONFIGURED) {
-        if (!DEMO_MODE) {
-          setError('Authentication is not configured. Contact support.')
+    const username = email.trim()
+    const demoRole = localDemo ? parseDemoRole(username) : null
+
+    // Local shortcut: type a role name (vendor, contractor, client…) — no password
+    if (demoRole) {
+      try {
+        const res = await fetch('/api/auth/demo-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          setError(typeof data.error === 'string' ? data.error : 'Demo login failed')
+          setLoading(false)
           return
         }
-        /* ── Local demo mode only ── */
-        await new Promise((r) => setTimeout(r, 600))
-        if (
-          email.trim().toLowerCase() === DEMO_EMAIL &&
-          password === DEMO_PASSWORD
-        ) {
-          router.push(nextPath)
-        } else {
-          setError(
-            `Demo mode: use ${DEMO_EMAIL} / ${DEMO_PASSWORD} to sign in.`
-          )
-        }
-        return
+        localStorage.setItem('5bloc_demo_role', demoRole)
+        router.push('/dashboard')
+        router.refresh()
+      } catch {
+        setError('Demo login failed')
+        setLoading(false)
       }
+      return
+    }
 
-      /* ── Real Supabase auth ── */
-      const supabase = createSupabaseClient()
+    try {
+      const supabase = createClient()
       const { error: authError } = await supabase.auth.signInWithPassword({
-        email: email.trim().toLowerCase(),
+        email: username,
         password,
       })
-
       if (authError) {
-        if (authError.message.includes('Invalid login credentials')) {
-          setError('Incorrect email or password. Please try again.')
-        } else if (authError.message.includes('Email not confirmed')) {
-          setError('Please verify your email before signing in. Check your inbox.')
-        } else {
-          setError(authError.message)
-        }
+        setError(authError.message)
+        setLoading(false)
         return
       }
-
-      router.push(nextPath)
+      localStorage.removeItem('5bloc_demo_role')
+      router.push('/dashboard')
+      router.refresh()
     } catch {
-      setError('Something went wrong. Please try again.')
-    } finally {
+      // Fallback when Supabase env is missing: classic demo email
+      if (username === 'demo@5bloc.com' && password === 'demo1234') {
+        localStorage.setItem('5bloc_demo_role', 'architect')
+        setInfo('Signed in with local demo credentials.')
+        router.push('/dashboard')
+        return
+      }
+      setError(
+        localDemo
+          ? 'Supabase is not configured. Type a role name (vendor, contractor, client…) with no password.'
+          : 'Unable to reach authentication service. Check your connection and try again.',
+      )
       setLoading(false)
     }
   }
 
-  const handleGoogle = async () => {
-    if (!SUPABASE_CONFIGURED) {
-      setError('Google sign-in requires Supabase to be configured.')
-      return
-    }
-    setGoogleLoading(true)
-    setError('')
-    const supabase = createSupabaseClient()
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: authCallbackUrl(nextPath),
-        queryParams: { access_type: 'offline', prompt: 'select_account' },
-      },
-    })
-    if (oauthError) {
-      setError(oauthError.message)
-      setGoogleLoading(false)
-    }
-  }
-
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden font-body dot-grid"
-      style={{ background: 'var(--surface-canvas)' }}
-    >
-      {/* Ambient glow */}
-      <div
-        className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse at center, rgba(245,166,35,0.05) 0%, transparent 65%)' }}
-        aria-hidden
-      />
-      <div
-        className="absolute inset-x-0 top-0 pointer-events-none"
-        style={{ height: '50%', background: 'radial-gradient(ellipse 80% 60% at 60% -10%, rgba(56,130,255,0.08) 0%, transparent 70%)' }}
-        aria-hidden
-      />
+    <div className="min-h-screen flex">
+      {/* Left panel */}
+      <div className="hidden lg:flex lg:w-[48%] relative overflow-hidden bg-[#0A0A08] flex-col justify-between p-12">
+        <div
+          className="absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)`,
+            backgroundSize: '60px 60px',
+          }}
+        />
+        <div className="absolute top-1/3 -left-20 w-80 h-80 rounded-full bg-accent/20 blur-[120px]" />
+        <div className="absolute bottom-1/4 right-0 w-60 h-60 rounded-full bg-warm/10 blur-[100px]" />
 
-      <motion.div
-        className="w-full max-w-[400px] relative z-10"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <Link
-          href="/"
-          className="inline-flex items-center gap-1.5 text-[12px] font-medium mb-8 transition-colors"
-          style={{ color: 'var(--stone)' }}
-          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--on-surface)')}
-          onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--stone)')}
-        >
-          ← Back to site
+        <Link href="/" className="relative flex items-center gap-2.5">
+          <LogoMark size={28} />
+          <span className="font-display text-xl tracking-tight text-white">
+            5bloc<span className="text-accent">.</span>
+          </span>
         </Link>
 
-        <div
-          className="rounded-2xl p-8"
-          style={{
-            background: 'var(--surface-container)',
-            boxShadow: 'inset 0 0 0 1px var(--hairline), var(--shadow-3)',
-          }}
-        >
-          {/* Logo */}
-          <div className="flex flex-col items-center mb-8">
-            <Logo size={40} showTagline={false} color="var(--on-surface)" />
-            <p
-              className="mt-3 font-mono text-[10.5px] uppercase tracking-[0.16em]"
-              style={{ color: 'var(--stone)' }}
-            >
-              Sign in to your workspace
-            </p>
+        <div className="relative space-y-6">
+          <h1 className="font-display text-4xl text-white leading-tight tracking-tight">
+            The operating system
+            <br />
+            <span className="text-white/40">for construction.</span>
+          </h1>
+          <p className="text-sm text-white/40 leading-relaxed max-w-sm">
+            Projects, partners, RFQs, and payments — one workspace for every stakeholder on the job.
+          </p>
+          <div className="flex items-center gap-6 pt-2">
+            {[
+              { n: '12+', l: 'Countries' },
+              { n: '4.2k', l: 'Projects' },
+              { n: '98%', l: 'On-time' },
+            ].map((s) => (
+              <div key={s.l}>
+                <p className="font-display text-2xl text-white">{s.n}</p>
+                <p className="text-[10px] uppercase tracking-widest text-white/30 mt-0.5">{s.l}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <p className="relative text-[11px] text-white/20">© 2026 5bloc Inc.</p>
+      </div>
+
+      {/* Right panel */}
+      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-canvas">
+        <div className="w-full max-w-[380px]">
+          <div className="lg:hidden flex items-center gap-2 mb-10">
+            <LogoMark size={24} />
+            <span className="font-display text-lg tracking-tight text-ink">
+              5bloc<span className="text-accent">.</span>
+            </span>
           </div>
 
-          {/* Demo mode banner — local/dev only when Supabase is unset */}
-          {DEMO_MODE && (
-            <div
-              className="mb-5 flex items-start gap-2.5 rounded-xl px-4 py-3 text-[12.5px]"
-              style={{
-                background: 'rgba(0, 102, 204, 0.08)',
-                color: 'var(--blue)',
-                boxShadow: 'inset 0 0 0 1px rgba(0, 102, 204, 0.15)',
-              }}
-            >
-              <Info className="h-4 w-4 shrink-0 mt-0.5" />
-              <span>
-                <strong>Demo mode</strong> — use <code className="font-mono">{DEMO_EMAIL}</code> /{' '}
-                <code className="font-mono">{DEMO_PASSWORD}</code>
-              </span>
-            </div>
-          )}
+          <div className="mb-8">
+            <h2 className="font-display text-2xl text-ink tracking-tight">Welcome back</h2>
+            <p className="text-sm text-stone mt-1.5">Sign in to your workspace</p>
+          </div>
 
-          {/* Error */}
-          {error && (
-            <motion.div
-              key={error}
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-5 flex items-start gap-2.5 rounded-xl px-4 py-3 text-[13px]"
-              style={{
-                background: 'rgba(255,138,128,0.10)',
-                color: 'var(--error)',
-                boxShadow: 'inset 0 0 0 1px rgba(255,138,128,0.18)',
-              }}
-            >
-              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-              {error}
-            </motion.div>
+          {localDemo && (
+            <div className="mb-5 rounded-xl border border-accent/25 bg-accent/5 px-4 py-3 text-[12px] text-ink/80 leading-relaxed">
+              <p className="font-medium text-ink mb-1">Local demo login</p>
+              <p className="text-stone">
+                Type a role as the username — <span className="text-ink">no password needed</span>:
+              </p>
+              <p className="mt-1.5 font-mono text-[11px] text-ink">
+                {DEMO_ROLE_HINTS.map((h) => h.split(' ')[0]).join(' · ')}
+              </p>
+            </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="label-sm block mb-2" style={{ color: 'var(--stone)' }}>
-                Email address
+              <label htmlFor="email" className="block text-[11px] font-medium uppercase tracking-wider text-stone mb-1.5">
+                {localDemo ? 'Email or role' : 'Email'}
               </label>
               <input
-                type="email"
+                id="email"
+                type="text"
+                autoComplete="username"
                 required
-                autoComplete="email"
-                placeholder="architect@firm.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input-5bloc"
+                placeholder={localDemo ? 'vendor' : 'you@company.com'}
+                className="w-full h-11 px-3.5 rounded-xl border border-rule bg-white text-sm text-ink placeholder:text-stone/50 focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-ink/5 transition-all"
               />
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="label-sm" style={{ color: 'var(--stone)' }}>
-                  Password
+              <div className="flex items-center justify-between mb-1.5">
+                <label htmlFor="password" className="block text-[11px] font-medium uppercase tracking-wider text-stone">
+                  Password {localDemo && <span className="normal-case tracking-normal text-stone/60">(optional for roles)</span>}
                 </label>
-                <Link
-                  href="/forgot-password"
-                  className="text-[11.5px] font-medium transition-colors"
-                  style={{ color: 'var(--blue)' }}
-                  onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.opacity = '0.75')}
-                  onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.opacity = '1')}
-                >
-                  Forgot password?
+                <Link href="/forgot-password" className="text-[11px] text-stone hover:text-ink transition-colors">
+                  Forgot?
                 </Link>
               </div>
               <div className="relative">
                 <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
+                  id="password"
+                  type={showPw ? 'text' : 'password'}
                   autoComplete="current-password"
-                  placeholder="••••••••"
+                  required={!localDemo || !parseDemoRole(email.trim())}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input-5bloc pr-10"
+                  placeholder={localDemo ? 'leave blank for role login' : '••••••••'}
+                  className="w-full h-11 px-3.5 pr-11 rounded-xl border border-rule bg-white text-sm text-ink placeholder:text-stone/50 focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-ink/5 transition-all"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                  style={{ color: 'var(--stone)' }}
-                  onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--on-surface)')}
-                  onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--stone)')}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  onClick={() => setShowPw(!showPw)}
+                  aria-label={showPw ? 'Hide password' : 'Show password'}
+                  aria-pressed={showPw}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone/50 hover:text-stone transition-colors p-1 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPw ? (
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                      <path d="M2 2l12 12M6.5 6.5a2.5 2.5 0 003 3M3.2 3.2C2 4.2 1.2 5.5 1 6.5c.5 2.5 3.5 5.5 7 5.5 1.2 0 2.3-.3 3.3-.8M8.8 4.1A6.5 6.5 0 0115 6.5c-.3 1.2-1 2.3-1.9 3.2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                    </svg>
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                      <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z" stroke="currentColor" strokeWidth="1.3"/>
+                      <circle cx="8" cy="8" r="2" stroke="currentColor" strokeWidth="1.3"/>
+                    </svg>
+                  )}
                 </button>
               </div>
             </div>
 
+            {error && (
+              <div role="alert" className="flex items-start gap-2 px-3.5 py-3 rounded-xl bg-red-50 border border-red-100 text-[12px] text-red-700">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="mt-0.5 shrink-0" aria-hidden="true">
+                  <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.2"/>
+                  <path d="M7 4v3.5M7 9.5v.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                </svg>
+                {error}
+              </div>
+            )}
+            {info && !error && (
+              <div role="status" className="flex items-start gap-2 px-3.5 py-3 rounded-xl bg-emerald-50 border border-emerald-100 text-[12px] text-emerald-800">
+                {info}
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full mt-2 py-3"
+              className="w-full h-11 rounded-xl bg-ink text-white text-sm font-medium hover:bg-ink/90 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
             >
               {loading ? (
-                <span className="flex items-center gap-2">
-                  <motion.span
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
-                    className="block h-4 w-4 rounded-full"
-                    style={{ border: '2px solid rgba(0,0,0,0.2)', borderTopColor: 'var(--ink-black)' }}
-                  />
+                <>
+                  <svg className="animate-spin" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.5" strokeDasharray="20 12"/>
+                  </svg>
                   Signing in…
-                </span>
+                </>
               ) : (
                 'Sign in'
               )}
             </button>
           </form>
 
-          <div className="my-6 flex items-center gap-3">
-            <div className="ghost-cut flex-1" />
-            <span className="font-mono text-[10px] uppercase tracking-[0.16em]" style={{ color: 'var(--stone)' }}>or</span>
-            <div className="ghost-cut flex-1" />
-          </div>
-
-          <button
-            type="button"
-            onClick={handleGoogle}
-            disabled={googleLoading || loading}
-            className="btn-secondary w-full flex items-center justify-center gap-2.5"
-          >
-            {googleLoading ? (
-              <>
-                <motion.span
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
-                  className="block h-4 w-4 rounded-full"
-                  style={{ border: '2px solid var(--stone)', borderTopColor: 'var(--on-surface)' }}
-                />
-                Redirecting to Google…
-              </>
-            ) : (
-              <>
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none">
-              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-            </svg>
-            Continue with Google
-              </>
-            )}
-          </button>
-
-          <p className="mt-6 text-center text-[13px]" style={{ color: 'var(--stone)' }}>
-            New to 5Bloc?{' '}
-            <Link
-              href="/signup"
-              className="font-semibold transition-colors"
-              style={{ color: 'var(--amber)' }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--amber-lt)')}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = 'var(--amber)')}
-            >
-              Create account →
+          <p className="text-center text-sm text-stone mt-8">
+            No account?{' '}
+            <Link href="/signup" className="text-ink font-medium hover:underline underline-offset-2">
+              Create one
             </Link>
           </p>
         </div>
-      </motion.div>
+      </div>
     </div>
-  )
-}
-
-export default function Login() {
-  return (
-    <Suspense fallback={null}>
-      <LoginInner />
-    </Suspense>
   )
 }
