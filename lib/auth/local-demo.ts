@@ -26,9 +26,20 @@ export const DEMO_ROLE_HINTS = [
   'consultant (or engineer)',
 ] as const
 
-/** Local-only demo login — never enable in production builds. */
+/**
+ * Demo role login (vendor/contractor/…) with no password.
+ * On for local `next dev` and Vercel deploys so device testing works without a local install.
+ * Turn off for real production auth by setting NEXT_PUBLIC_ENABLE_DEMO_LOGIN=false
+ * (or removing the next.config env override).
+ */
 export function isLocalDemoEnabled(): boolean {
-  return process.env.NODE_ENV === 'development'
+  if (process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === 'false') return false
+  if (process.env.NODE_ENV === 'development') return true
+  if (process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === 'true') return true
+  // Inlined at build time via next.config (VERCEL_ENV → NEXT_PUBLIC_VERCEL_ENV)
+  if (process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview') return true
+  if (process.env.VERCEL_ENV === 'preview') return true
+  return false
 }
 
 export function isDemoRole(value: string | undefined | null): value is UserRole {
