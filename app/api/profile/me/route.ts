@@ -1,9 +1,38 @@
+import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import {
+  DEMO_COOKIE,
+  demoProfile,
+  isDemoRole,
+  isLocalDemoEnabled,
+} from '@/lib/auth/local-demo'
 import { createSupabaseServer, isSupabaseConfigured } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
+  if (isLocalDemoEnabled()) {
+    const jar = await cookies()
+    const role = jar.get(DEMO_COOKIE)?.value
+    if (isDemoRole(role)) {
+      const profile = demoProfile(role)
+      return NextResponse.json({
+        user: {
+          id: profile.auth_id,
+          email: profile.email,
+          full_name: profile.full_name,
+          role: profile.role,
+          avatar_url: profile.avatar_url,
+          onboarding_complete: true,
+        },
+        profile,
+        organisation: profile.organisations,
+        metadata: { city: null, state: null, gst_number: null },
+        demo: true,
+      })
+    }
+  }
+
   if (!isSupabaseConfigured()) {
     return NextResponse.json({ error: 'Authentication service not configured' }, { status: 503 })
   }

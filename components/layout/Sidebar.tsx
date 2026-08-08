@@ -81,6 +81,12 @@ export default function Sidebar({
   async function handleLogout() {
     setLoggingOut(true)
     try {
+      localStorage.removeItem('5bloc_demo_role')
+      await fetch('/api/auth/demo-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clear: true }),
+      }).catch(() => {})
       const supabase = createSupabaseClient()
       await supabase.auth.signOut()
     } catch (_) { /* ignore */ }

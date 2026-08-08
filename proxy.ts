@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { DEMO_COOKIE, isDemoRole, isLocalDemoEnabled } from '@/lib/auth/local-demo'
 
 const PUBLIC_PATHS = ['/', '/login', '/signup', '/forgot-password', '/onboarding', '/auth/callback', '/portal', '/accept-invite', '/list-your-business', '/join-as-vendor', '/terms', '/privacy']
 
@@ -18,13 +19,31 @@ export async function proxy(req: NextRequest) {
     return NextResponse.next({ request: req })
   }
 
+  // Local demo role cookie — skip Supabase session check in development
+  if (isLocalDemoEnabled()) {
+    const demoRole = req.cookies.get(DEMO_COOKIE)?.value
+    if (isDemoRole(demoRole)) {
+      return NextResponse.next({ request: req })
+    }
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!supabaseUrl || !supabaseAnon) {
+    // No auth backend — send protected routes to login (demo cookie already checked)
+    const url = req.nextUrl.clone()
+    url.pathname = '/login'
+    url.searchParams.set('next', pathname)
+    return NextResponse.redirect(url)
+  }
+
   // Protected route — verify session
   let res = NextResponse.next({ request: req })
 
   try {
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      supabaseUrl,
+      supabaseAnon,
       {
         cookies: {
           getAll() { return req.cookies.getAll() },
