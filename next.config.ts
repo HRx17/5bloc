@@ -22,9 +22,11 @@ const withPWA = require('next-pwa')({
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  // Expose Vercel environment to the browser so preview builds can enable demo login.
+  // Expose deploy metadata + enable demo role login for device testing.
+  // Set NEXT_PUBLIC_ENABLE_DEMO_LOGIN=false in Vercel to disable.
   env: {
     NEXT_PUBLIC_VERCEL_ENV: process.env.VERCEL_ENV ?? '',
+    NEXT_PUBLIC_ENABLE_DEMO_LOGIN: process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN ?? 'true',
   },
 }
 
