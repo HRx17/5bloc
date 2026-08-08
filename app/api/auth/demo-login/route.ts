@@ -4,7 +4,10 @@ import { clearDemoSession, setDemoSession } from '@/lib/auth/local-demo-server'
 
 export async function POST(request: Request) {
   if (!isLocalDemoEnabled()) {
-    return NextResponse.json({ error: 'Demo login is only available in local development.' }, { status: 403 })
+    return NextResponse.json(
+      { error: 'Demo login is only available in local development or preview deployments.' },
+      { status: 403 },
+    )
   }
 
   let body: { username?: string; clear?: boolean } = {}
