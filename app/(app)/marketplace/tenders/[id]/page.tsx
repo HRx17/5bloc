@@ -1,0 +1,287 @@
+'use client'
+
+import React, { useCallback, useEffect, useState } from 'react'
+import Link from 'next/link'
+import { useParams, useRouter } from 'next/navigation'
+import { useToast } from '@/components/ui/Toast'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+
+type Tender = {
+  id: string
+  title: string
+  project_name?: string
+  scope?: string
+  city?: string
+  services?: string[]
+  trade_type?: string
+  budget_min?: number
+  budget_max?: number
+  timeline_weeks?: number
+  deadline?: string
+  status: string
+  created_at?: string
+  project_type?: string | null
+  total_sqft?: number | null
+  floors?: number | null
+  spec_level?: string | null
+  start_date?: string | null
+  estimated_end?: string | null
+}
+
+type MyBid = {
+  id: string
+  amount: number
+  status: string
+  timeline_weeks?: number | null
+  methodology?: string | null
+  created_at?: string
+}
+
+const money = (v?: number | null) => (v ? `₹${Number(v).toLocaleString('en-IN')}` : '—')
+
+export default function TenderDetail() {
+  const params = useParams<{ id: string }>()
+  const router = useRouter()
+  const { toast } = useToast()
+
+  const [tender, setTender] = useState<Tender | null>(null)
+  const [myBid, setMyBid] = useState<MyBid | null>(null)
+  const [bidCount, setBidCount] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
+
+  const [form, setForm] = useState({ amount: '', weeks: '', methodology: '' })
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/tenders/${params.id}`)
+      if (!res.ok) {
+        setNotFound(true)
+        return
+      }
+      const data = await res.json()
+      setTender(data.tender)
+      setMyBid(data.my_bid)
+      setBidCount(data.bid_count || 0)
+    } finally {
+      setLoading(false)
+    }
+  }, [params.id])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  const submitBid = async () => {
+    setBusy(true)
+    try {
+      const res = await fetch('/api/bids', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tender_id: params.id,
+          amount: Number(form.amount),
+          timeline_weeks: Number(form.weeks) || null,
+          methodology: form.methodology,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Bid failed')
+      toast(`Bid of ${money(Number(form.amount))} submitted`, 'success')
+      setConfirmOpen(false)
+      setForm({ amount: '', weeks: '', methodology: '' })
+      await load()
+    } catch (err: any) {
+      toast(err?.message || 'Bid failed', 'error')
+      setConfirmOpen(false)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="p-8" style={{ color: 'var(--stone)' }}>
+        Loading project…
+      </div>
+    )
+  }
+
+  if (notFound || !tender) {
+    return (
+      <div className="p-8 space-y-3">
+        <p style={{ color: 'var(--stone)' }}>This project is no longer open for service.</p>
+        <Link href="/marketplace" className="btn-secondary text-xs">
+          Back to marketplace
+        </Link>
+      </div>
+    )
+  }
+
+  const services = tender.services?.length ? tender.services : tender.trade_type ? [tender.trade_type] : []
+  const closed = tender.status !== 'open'
+
+  return (
+    <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6">
+      <button onClick={() => router.back()} className="text-xs flex items-center gap-1" style={{ color: 'var(--stone)' }}>
+        <span className="material-icons-outlined text-[14px]">arrow_back</span> Back
+      </button>
+
+      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+        <div>
+          <h1 className="font-display text-[32px]">{tender.project_name || tender.title}</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
+            {tender.city || '—'} · Bids due {tender.deadline || 'Open'} · {bidCount} bid{bidCount === 1 ? '' : 's'} so far
+          </p>
+        </div>
+        <span
+          className="chip text-[11px] h-fit"
+          style={{
+            color: closed ? 'var(--stone)' : 'var(--success)',
+            background: closed ? 'rgba(159,142,122,0.12)' : 'rgba(46,204,138,0.12)',
+          }}
+        >
+          {closed ? `Bidding ${tender.status}` : 'Open for service'}
+        </span>
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-5">
+        <div className="md:col-span-2 space-y-5">
+          <section className="p-5 rounded-2xl" style={{ background: 'var(--surface-container)' }}>
+            <h2 className="text-sm font-semibold mb-3">Scope of work</h2>
+            <p className="text-[13px] leading-relaxed" style={{ color: 'var(--stone)' }}>
+              {tender.scope || 'The architect has not added a detailed scope. Contact them after bidding for drawings.'}
+            </p>
+            <div className="flex flex-wrap gap-1.5 mt-4">
+              {services.map((s) => (
+                <span key={s} className="chip text-[10px]" style={{ color: 'var(--amber)' }}>
+                  {s}
+                </span>
+              ))}
+            </div>
+          </section>
+
+          <section className="p-5 rounded-2xl" style={{ background: 'var(--surface-container)' }}>
+            <h2 className="text-sm font-semibold mb-3">Project details</h2>
+            <dl className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-[12px]">
+              {[
+                ['Type', tender.project_type ? tender.project_type.replaceAll('_', ' ') : '—'],
+                ['Built-up area', tender.total_sqft ? `${Number(tender.total_sqft).toLocaleString('en-IN')} sqft` : '—'],
+                ['Floors', tender.floors ?? '—'],
+                ['Spec level', tender.spec_level || '—'],
+                ['Site start', tender.start_date || '—'],
+                ['Target completion', tender.estimated_end || '—'],
+                ['Budget range', `${money(tender.budget_min)} – ${money(tender.budget_max)}`],
+                ['Expected duration', tender.timeline_weeks ? `${tender.timeline_weeks} weeks` : '—'],
+                ['Posted', tender.created_at ? new Date(tender.created_at).toLocaleDateString('en-IN') : '—'],
+              ].map(([label, value]) => (
+                <div key={String(label)}>
+                  <dt style={{ color: 'var(--stone)' }}>{label}</dt>
+                  <dd className="font-medium mt-0.5 capitalize">{String(value)}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        </div>
+
+        <aside className="space-y-4">
+          <div className="p-5 rounded-2xl space-y-3" style={{ background: 'var(--surface-container)' }}>
+            {myBid ? (
+              <>
+                <h2 className="text-sm font-semibold">Your bid</h2>
+                <p className="text-2xl font-semibold" style={{ color: 'var(--amber)' }}>
+                  {money(myBid.amount)}
+                </p>
+                <p className="text-[12px]" style={{ color: 'var(--stone)' }}>
+                  {myBid.timeline_weeks ? `${myBid.timeline_weeks} weeks · ` : ''}Status: {myBid.status}
+                </p>
+                {myBid.methodology && (
+                  <p className="text-[12px]" style={{ color: 'var(--stone)' }}>
+                    {myBid.methodology}
+                  </p>
+                )}
+                <p className="text-[11px]" style={{ color: 'var(--stone)' }}>
+                  One bid per project. The architect will contact you if you are shortlisted.
+                </p>
+                <Link href="/contractor/bids" className="btn-secondary text-[12px] w-full text-center block">
+                  Track my bids
+                </Link>
+              </>
+            ) : closed ? (
+              <>
+                <h2 className="text-sm font-semibold">Bidding closed</h2>
+                <p className="text-[12px]" style={{ color: 'var(--stone)' }}>
+                  This project is no longer accepting bids.
+                </p>
+              </>
+            ) : (
+              <>
+                <h2 className="text-sm font-semibold">Submit your bid</h2>
+                <div>
+                  <label className="block text-[11px] mb-1" style={{ color: 'var(--stone)' }}>
+                    Bid amount (₹) *
+                  </label>
+                  <input
+                    className="input-5bloc"
+                    type="number"
+                    min={1}
+                    value={form.amount}
+                    onChange={(e) => setForm((p) => ({ ...p, amount: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] mb-1" style={{ color: 'var(--stone)' }}>
+                    Timeline (weeks)
+                  </label>
+                  <input
+                    className="input-5bloc"
+                    type="number"
+                    min={1}
+                    value={form.weeks}
+                    onChange={(e) => setForm((p) => ({ ...p, weeks: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] mb-1" style={{ color: 'var(--stone)' }}>
+                    Methodology / notes
+                  </label>
+                  <textarea
+                    className="input-5bloc"
+                    rows={4}
+                    value={form.methodology}
+                    onChange={(e) => setForm((p) => ({ ...p, methodology: e.target.value }))}
+                  />
+                </div>
+                <button
+                  className="btn-primary w-full text-[12px]"
+                  disabled={busy || !form.amount || Number(form.amount) <= 0}
+                  onClick={() => setConfirmOpen(true)}
+                >
+                  Review and submit
+                </button>
+                <p className="text-[11px]" style={{ color: 'var(--stone)' }}>
+                  You can only bid once per project, so double-check your number.
+                </p>
+              </>
+            )}
+          </div>
+        </aside>
+      </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Submit this bid?"
+        message={`You are bidding ${money(Number(form.amount))}${
+          form.weeks ? ` over ${form.weeks} weeks` : ''
+        } for ${tender.project_name || tender.title}. Bids cannot be edited after submission.`}
+        confirmLabel="Submit bid"
+        loading={busy}
+        onConfirm={submitBid}
+        onCancel={() => setConfirmOpen(false)}
+      />
+    </div>
+  )
+}

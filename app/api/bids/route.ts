@@ -56,11 +56,17 @@ export async function POST(req: Request) {
   if (!body.tender_id || body.amount == null) {
     return NextResponse.json({ error: 'tender_id and amount required' }, { status: 400 })
   }
+  if (!Number.isFinite(Number(body.amount)) || Number(body.amount) <= 0) {
+    return NextResponse.json({ error: 'Enter a bid amount greater than zero' }, { status: 400 })
+  }
 
   if (shouldServeMockData(auth)) {
     const contractor = MOCK_CONTRACTORS.find((c) => c.user_id === auth.profile.id)
     if (!contractor) {
       return NextResponse.json({ error: 'Complete contractor profile first' }, { status: 400 })
+    }
+    if (MOCK_BIDS.some((b) => b.tender_id === body.tender_id && b.contractor_id === contractor.id)) {
+      return NextResponse.json({ error: 'You have already bid on this project' }, { status: 409 })
     }
     const tender = MOCK_TENDERS.find((t) => t.id === body.tender_id)
     const bid = {
@@ -91,6 +97,26 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Complete contractor profile first' }, { status: 400 })
   }
 
+  const { data: tender } = await auth.supabase
+    .from('tenders')
+    .select('id, status, title, project_name')
+    .eq('id', body.tender_id)
+    .maybeSingle()
+  if (!tender) return NextResponse.json({ error: 'Project is no longer listed' }, { status: 404 })
+  if (tender.status !== 'open') {
+    return NextResponse.json({ error: 'Bidding has closed for this project' }, { status: 409 })
+  }
+
+  const { data: existing } = await auth.supabase
+    .from('bids')
+    .select('id')
+    .eq('tender_id', body.tender_id)
+    .eq('contractor_id', contractor.id)
+    .maybeSingle()
+  if (existing) {
+    return NextResponse.json({ error: 'You have already bid on this project' }, { status: 409 })
+  }
+
   const { data, error } = await auth.supabase
     .from('bids')
     .insert({
@@ -103,8 +129,17 @@ export async function POST(req: Request) {
     })
     .select()
     .single()
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ bid: data }, { status: 201 })
+  if (error) {
+    const duplicate = error.code === '23505'
+    return NextResponse.json(
+      { error: duplicate ? 'You have already bid on this project' : error.message },
+      { status: duplicate ? 409 : 500 }
+    )
+  }
+  return NextResponse.json(
+    { bid: data, tender_title: tender.project_name || tender.title },
+    { status: 201 }
+  )
 }
 
 export async function PATCH(req: Request) {
@@ -154,7 +189,7 @@ export async function PATCH(req: Request) {
               title: 'Bid awarded',
               body: `Your bid on ${tender.title || 'a tender'} was awarded.`,
               type: 'bid',
-              href: '/marketplace/bids',
+              href: '/contractor/bids',
             },
             { mock: true }
           )
@@ -171,7 +206,7 @@ export async function PATCH(req: Request) {
             title: 'Bid not selected',
             body: `Your bid on ${tender?.title || 'a tender'} was not selected.`,
             type: 'bid',
-            href: '/marketplace/bids',
+            href: '/contractor/bids',
           },
           { mock: true }
         )
@@ -238,7 +273,7 @@ export async function PATCH(req: Request) {
         title: 'Bid not selected',
         body: `Your bid on ${bid.tenders?.title || 'a tender'} was not selected.`,
         type: 'bid',
-        href: '/marketplace/bids',
+        href: '/contractor/bids',
       })
     }
   }

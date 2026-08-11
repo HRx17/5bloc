@@ -35,12 +35,16 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
     let cancelled = false
     async function load() {
       try {
-        const res = await fetch(`/api/projects/${projectId}`)
+        const [res, me] = await Promise.all([
+          fetch(`/api/projects/${projectId}`),
+          fetch('/api/me').then((r) => r.json()).catch(() => ({})),
+        ])
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'Failed to load project')
         if (cancelled) return
         setProject(data.project)
-        setMemberRole((data.membership?.role || 'architect') as RoleKey)
+        // Fall back to the account role, never to architect, so tabs cannot over-expose
+        setMemberRole((data.membership?.role || me.profile?.role || 'client') as RoleKey)
       } catch (e: any) {
         if (!cancelled) setError(e.message)
       }

@@ -11,6 +11,8 @@ interface ConfirmDialogProps {
   cancelLabel?: string
   variant?: 'danger' | 'default'
   loading?: boolean
+  /** Extra input rendered between the message and the actions */
+  children?: React.ReactNode
   onConfirm: () => void
   onCancel: () => void
 }
@@ -23,6 +25,7 @@ export function ConfirmDialog({
   cancelLabel = 'Cancel',
   variant = 'default',
   loading = false,
+  children,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -55,9 +58,10 @@ export function ConfirmDialog({
             <h2 id="confirm-title" className="text-[15px] font-semibold mb-2" style={{ color: 'var(--on-surface)' }}>
               {title}
             </h2>
-            <p id="confirm-message" className="text-[13px] leading-relaxed mb-6" style={{ color: 'var(--on-surface-variant)' }}>
+            <p id="confirm-message" className="text-[13px] leading-relaxed mb-4" style={{ color: 'var(--on-surface-variant)' }}>
               {message}
             </p>
+            {children && <div className="mb-5">{children}</div>}
             <div className="flex items-center justify-end gap-2">
               <button type="button" onClick={onCancel} disabled={loading} className="btn-secondary btn-sm">
                 {cancelLabel}

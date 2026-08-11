@@ -22,6 +22,9 @@ export async function POST(req: Request) {
   if ((plan === 'solo' || plan === 'team') && auth.profile.role !== 'architect') {
     return NextResponse.json({ error: 'Firm plans are for architects' }, { status: 403 })
   }
+  if (plan === 'ai' && auth.profile.role !== 'architect') {
+    return NextResponse.json({ error: 'The AI add-on is part of a firm plan' }, { status: 403 })
+  }
 
   const planId = PLANS[plan]
   const subscription = await createSubscription(planId, auth.profile.id)

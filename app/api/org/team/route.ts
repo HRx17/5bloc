@@ -207,6 +207,9 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   const auth = await getAuthUserOrNull()
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (auth.profile.role !== 'architect') {
+    return NextResponse.json({ error: 'Only firm architects manage the team' }, { status: 403 })
+  }
   if (!auth.orgId) return NextResponse.json({ error: 'No organisation' }, { status: 400 })
 
   const url = new URL(req.url)

@@ -9,12 +9,17 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [q, setQ] = useState('')
+  const [canCreate, setCanCreate] = useState(false)
 
   useEffect(() => {
     fetch('/api/projects')
       .then((r) => r.json())
       .then((d) => setProjects(d.projects || []))
       .finally(() => setLoading(false))
+    fetch('/api/me')
+      .then((r) => r.json())
+      .then((d) => setCanCreate(d.profile?.role === 'architect'))
+      .catch(() => {})
   }, [])
 
   const filtered = projects.filter((p) =>
@@ -27,12 +32,14 @@ export default function ProjectsPage() {
         <div>
           <h1 className="font-display text-[36px]">Projects</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
-            Your project workspaces across roles.
+            {canCreate ? 'Your firm’s project workspaces.' : 'Project workspaces you have been invited to.'}
           </p>
         </div>
-        <Link href="/projects/new" className="btn-primary text-[12px]">
-          New project
-        </Link>
+        {canCreate && (
+          <Link href="/projects/new" className="btn-primary text-[12px]">
+            New project
+          </Link>
+        )}
       </div>
 
       <input
@@ -55,10 +62,12 @@ export default function ProjectsPage() {
           description={
             q
               ? 'Try a different name or city filter.'
-              : 'Architects create projects; other roles see invited workspaces here.'
+              : canCreate
+                ? 'Create your first project workspace to start coordinating.'
+                : 'When an architect invites you or awards your bid, the project appears here.'
           }
-          actionLabel={q ? undefined : 'New project'}
-          href={q ? undefined : '/projects/new'}
+          actionLabel={!q && canCreate ? 'New project' : undefined}
+          href={!q && canCreate ? '/projects/new' : undefined}
         />
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">

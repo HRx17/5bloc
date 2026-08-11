@@ -25,14 +25,17 @@ export default function Sidebar({
   const roleLabel =
     userRole in ROLES ? ROLES[userRole as RoleKey].shortLabel : userRole
   const displayOrg =
-    orgName ||
-    (userRole === 'contractor'
+    userRole === 'contractor'
       ? 'Contractor workspace'
       : userRole === 'builder'
         ? 'Builder portfolio'
         : userRole === 'consultant'
           ? 'Consultant workspace'
-          : '5Bloc')
+          : userRole === 'client'
+            ? 'Client workspace'
+            : orgName || '5Bloc'
+  // Only architects and contractors have a subscription of their own
+  const showPlan = userRole === 'architect' || userRole === 'contractor'
 
   const isSelected = (path: string) => {
     if (path === '/dashboard' || path === '/contractor' || path === '/builder' || path === '/consultant') {
@@ -109,7 +112,7 @@ export default function Sidebar({
           {displayOrg}
         </p>
         <p className="text-[11px] mt-0.5" style={{ color: 'var(--stone)' }}>
-          {roleLabel} · {planLabel}
+          {showPlan ? `${roleLabel} · ${planLabel}` : roleLabel}
         </p>
       </div>
     </aside>

@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import Sidebar from './Sidebar'
 import TopNav from './TopNav'
 import NotificationsBell from './NotificationsBell'
+import { ToastProvider } from '@/components/ui/Toast'
 
 interface AppShellProps {
   children: React.ReactNode
@@ -31,6 +32,7 @@ export default function AppShell({ children, userProfile }: AppShellProps) {
   }
 
   return (
+    <ToastProvider>
     <div
       className="flex h-screen w-screen overflow-hidden"
       style={{ background: 'var(--surface-canvas)' }}
@@ -77,5 +79,6 @@ export default function AppShell({ children, userProfile }: AppShellProps) {
         </main>
       </div>
     </div>
+    </ToastProvider>
   )
 }

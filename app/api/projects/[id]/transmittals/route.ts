@@ -17,6 +17,9 @@ export async function GET(_req: Request, ctx: Ctx) {
   const { id } = await ctx.params
   const auth = await getAuthUserOrNull()
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (auth.profile.role !== 'architect') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
   if (shouldServeMockData(auth)) {
     return NextResponse.json({
@@ -41,6 +44,9 @@ export async function POST(req: Request, ctx: Ctx) {
   const { id } = await ctx.params
   const auth = await getAuthUserOrNull()
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (auth.profile.role !== 'architect') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
   const body = await req.json()
   if (!body.recipient_name) {
@@ -101,6 +107,9 @@ export async function PATCH(req: Request, ctx: Ctx) {
   const { id } = await ctx.params
   const auth = await getAuthUserOrNull()
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (auth.profile.role !== 'architect') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
   const body = await req.json()
   if (!body.transmittal_id) {
     return NextResponse.json({ error: 'transmittal_id required' }, { status: 400 })

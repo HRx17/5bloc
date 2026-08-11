@@ -9,6 +9,9 @@ export async function GET(_req: Request, ctx: Ctx) {
   const { id } = await ctx.params
   const auth = await getAuthUserOrNull()
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!['architect', 'builder'].includes(auth.profile.role)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
   if (shouldServeMockData(auth)) {
     return NextResponse.json({ permits: MOCK_PERMITS.filter((p) => p.project_id === id) })
@@ -83,6 +86,9 @@ export async function PATCH(req: Request, ctx: Ctx) {
   const { id } = await ctx.params
   const auth = await getAuthUserOrNull()
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!['architect', 'builder'].includes(auth.profile.role)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
 
   const body = await req.json()
   if (!body.permit_id) return NextResponse.json({ error: 'permit_id required' }, { status: 400 })

@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
+import { useToast } from '@/components/ui/Toast'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 interface Contractor {
   id: string
@@ -17,7 +19,10 @@ interface Contractor {
   jobs_completed: number
 }
 
+const money = (v?: number | null) => (v ? `₹${Number(v).toLocaleString('en-IN')}` : '—')
+
 export default function Marketplace() {
+  const { toast } = useToast()
   const [contractors, setContractors] = useState<Contractor[]>([])
   const [tenders, setTenders] = useState<any[]>([])
   const [bids, setBids] = useState<any[]>([])
@@ -29,8 +34,8 @@ export default function Marketplace() {
   const [tab, setTab] = useState<'vendors' | 'tenders' | 'bids'>('vendors')
   const [loading, setLoading] = useState(true)
   const [busyBid, setBusyBid] = useState<string | null>(null)
-  const [message, setMessage] = useState('')
-  const [bidForm, setBidForm] = useState<{ tenderId: string; amount: string; weeks: string; methodology: string } | null>(null)
+  const [award, setAward] = useState<{ bid: any; status: 'accepted' | 'rejected' } | null>(null)
+  const [rejectionNote, setRejectionNote] = useState('Not selected for this package')
 
   const isContractor = role === 'contractor'
 
@@ -84,50 +89,31 @@ export default function Marketplace() {
   const openTenders = tenders.filter((t) => t.status === 'open' && (t.visibility || 'public') === 'public')
   const reviewBids = bids.filter((b) => b.status === 'submitted' || b.status === 'shortlisted')
 
-  const awardBid = async (bidId: string, status: 'accepted' | 'rejected') => {
-    setBusyBid(bidId)
-    setMessage('')
+  const confirmAward = async () => {
+    if (!award) return
+    setBusyBid(award.bid.id)
     const res = await fetch('/api/bids', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        bid_id: bidId,
-        status,
-        rejection_note: status === 'rejected' ? 'Not selected for this package' : null,
+        bid_id: award.bid.id,
+        status: award.status,
+        rejection_note: award.status === 'rejected' ? rejectionNote : null,
       }),
     })
-    const data = await res.json()
+    const data = await res.json().catch(() => ({}))
     setBusyBid(null)
+    setAward(null)
     if (!res.ok) {
-      setMessage(data.error || 'Action failed')
+      toast(data.error || 'Action failed', 'error')
       return
     }
-    setMessage(status === 'accepted' ? 'Bid awarded — contractor added to project' : 'Bid rejected')
-    await load()
-  }
-
-  const submitBid = async () => {
-    if (!bidForm) return
-    setBusyBid(bidForm.tenderId)
-    setMessage('')
-    const res = await fetch('/api/bids', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        tender_id: bidForm.tenderId,
-        amount: Number(bidForm.amount),
-        timeline_weeks: Number(bidForm.weeks) || null,
-        methodology: bidForm.methodology,
-      }),
-    })
-    const data = await res.json()
-    setBusyBid(null)
-    if (!res.ok) {
-      setMessage(data.error || 'Bid failed')
-      return
-    }
-    setMessage('Bid submitted')
-    setBidForm(null)
+    toast(
+      award.status === 'accepted'
+        ? 'Bid awarded — contractor added to the project team'
+        : 'Bid rejected and the contractor was notified',
+      'success'
+    )
     await load()
   }
 
@@ -143,12 +129,6 @@ export default function Marketplace() {
             : 'Discover verified contractors, post open bidding from a project, and award work.'}
         </p>
       </div>
-
-      {message && (
-        <p className="text-sm" style={{ color: 'var(--amber)' }}>
-          {message}
-        </p>
-      )}
 
       <div className="flex gap-2 flex-wrap">
         {(
@@ -183,11 +163,7 @@ export default function Marketplace() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <select
-              className="input-5bloc"
-              value={filterCity}
-              onChange={(e) => setFilterCity(e.target.value)}
-            >
+            <select className="input-5bloc" value={filterCity} onChange={(e) => setFilterCity(e.target.value)}>
               <option value="all">All cities</option>
               {cities.map((c) => (
                 <option key={c} value={c}>
@@ -195,11 +171,7 @@ export default function Marketplace() {
                 </option>
               ))}
             </select>
-            <select
-              className="input-5bloc"
-              value={filterSpec}
-              onChange={(e) => setFilterSpec(e.target.value)}
-            >
+            <select className="input-5bloc" value={filterSpec} onChange={(e) => setFilterSpec(e.target.value)}>
               <option value="all">All trades</option>
               {specs.map((s) => (
                 <option key={s} value={s}>
@@ -276,12 +248,8 @@ export default function Marketplace() {
                 : t.trade_type
                   ? [t.trade_type]
                   : []
-              return (
-                <div
-                  key={t.id}
-                  className="p-5 rounded-2xl flex flex-col justify-between gap-3"
-                  style={{ background: 'var(--surface-container)', boxShadow: 'var(--shadow-2)' }}
-                >
+              const card = (
+                <>
                   <div>
                     <p className="font-semibold text-lg">{t.project_name || t.title}</p>
                     <p className="text-[12px] mt-1" style={{ color: 'var(--stone)' }}>
@@ -301,19 +269,41 @@ export default function Marketplace() {
                     </div>
                     {(t.budget_min || t.budget_max) && (
                       <p className="text-[12px] mt-2" style={{ color: 'var(--stone)' }}>
-                        Budget ₹{(t.budget_min || 0).toLocaleString()} – ₹{(t.budget_max || 0).toLocaleString()}
+                        Budget {money(t.budget_min)} – {money(t.budget_max)}
                       </p>
                     )}
                   </div>
                   {isContractor && (
-                    <button
-                      className="btn-primary text-[12px] self-start"
-                      disabled={busyBid === t.id}
-                      onClick={() => setBidForm({ tenderId: t.id, amount: '', weeks: '', methodology: '' })}
+                    <span
+                      className="chip text-[11px] w-fit"
+                      style={
+                        t.my_bid
+                          ? { color: 'var(--success)', background: 'rgba(46,204,138,0.12)' }
+                          : { color: 'var(--amber)', background: 'rgba(245,166,35,0.12)' }
+                      }
                     >
-                      Submit bid
-                    </button>
+                      {t.my_bid ? `Bid submitted · ${money(t.my_bid.amount)}` : 'View details & bid'}
+                    </span>
                   )}
+                </>
+              )
+
+              return isContractor ? (
+                <Link
+                  key={t.id}
+                  href={`/marketplace/tenders/${t.id}`}
+                  className="p-5 rounded-2xl flex flex-col justify-between gap-3"
+                  style={{ background: 'var(--surface-container)', boxShadow: 'var(--shadow-2)' }}
+                >
+                  {card}
+                </Link>
+              ) : (
+                <div
+                  key={t.id}
+                  className="p-5 rounded-2xl flex flex-col justify-between gap-3"
+                  style={{ background: 'var(--surface-container)', boxShadow: 'var(--shadow-2)' }}
+                >
+                  {card}
                 </div>
               )
             })
@@ -327,37 +317,51 @@ export default function Marketplace() {
             <p style={{ color: 'var(--stone)' }}>Loading bids…</p>
           ) : reviewBids.length === 0 ? (
             <div className="p-8 rounded-2xl" style={{ background: 'var(--surface-container)' }}>
-              No bids awaiting review. When contractors submit, they appear here for award/reject.
+              No bids awaiting review. When contractors submit, they appear here for award or rejection.
             </div>
           ) : (
             reviewBids.map((b) => (
-              <div
-                key={b.id}
-                className="p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-3"
-                style={{ background: 'var(--surface-container)' }}
-              >
-                <div>
-                  <p className="font-semibold">{b.tenders?.title || b.tender_title || 'Bid'}</p>
-                  <p className="text-[12px] mt-1" style={{ color: 'var(--stone)' }}>
-                    {b.contractors?.company_name || 'Contractor'} · ₹{Number(b.amount).toLocaleString()} ·{' '}
-                    {b.timeline_weeks ? `${b.timeline_weeks} wks` : '—'}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    className="btn-primary text-[12px]"
-                    disabled={busyBid === b.id}
-                    onClick={() => awardBid(b.id, 'accepted')}
-                  >
-                    Award
-                  </button>
-                  <button
-                    className="btn-secondary text-[12px]"
-                    disabled={busyBid === b.id}
-                    onClick={() => awardBid(b.id, 'rejected')}
-                  >
-                    Reject
-                  </button>
+              <div key={b.id} className="p-5 rounded-2xl space-y-3" style={{ background: 'var(--surface-container)' }}>
+                <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold">{b.tenders?.title || b.tender_title || 'Bid'}</p>
+                    <p className="text-[12px] mt-1" style={{ color: 'var(--stone)' }}>
+                      {b.contractors?.company_name || 'Contractor'} · {money(b.amount)} ·{' '}
+                      {b.timeline_weeks ? `${b.timeline_weeks} weeks` : 'Timeline not stated'}
+                    </p>
+                    {b.methodology && (
+                      <p className="text-[12px] mt-2" style={{ color: 'var(--stone)' }}>
+                        {b.methodology}
+                      </p>
+                    )}
+                    {b.boq_url && (
+                      <a
+                        href={b.boq_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[12px] underline"
+                        style={{ color: 'var(--amber)' }}
+                      >
+                        View BOQ
+                      </a>
+                    )}
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <button
+                      className="btn-primary text-[12px]"
+                      disabled={busyBid === b.id}
+                      onClick={() => setAward({ bid: b, status: 'accepted' })}
+                    >
+                      Award
+                    </button>
+                    <button
+                      className="btn-secondary text-[12px]"
+                      disabled={busyBid === b.id}
+                      onClick={() => setAward({ bid: b, status: 'rejected' })}
+                    >
+                      Reject
+                    </button>
+                  </div>
                 </div>
               </div>
             ))
@@ -365,42 +369,31 @@ export default function Marketplace() {
         </div>
       )}
 
-      {bidForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.45)' }}>
-          <div className="w-full max-w-md p-6 rounded-2xl space-y-3" style={{ background: 'var(--surface)' }}>
-            <h3 className="font-semibold text-lg">Submit bid</h3>
-            <input
-              className="input-5bloc"
-              type="number"
-              placeholder="Amount (₹)"
-              value={bidForm.amount}
-              onChange={(e) => setBidForm({ ...bidForm, amount: e.target.value })}
-            />
-            <input
-              className="input-5bloc"
-              type="number"
-              placeholder="Timeline (weeks)"
-              value={bidForm.weeks}
-              onChange={(e) => setBidForm({ ...bidForm, weeks: e.target.value })}
-            />
-            <textarea
-              className="input-5bloc"
-              rows={3}
-              placeholder="Methodology / notes"
-              value={bidForm.methodology}
-              onChange={(e) => setBidForm({ ...bidForm, methodology: e.target.value })}
-            />
-            <div className="flex justify-end gap-2">
-              <button className="btn-secondary text-[12px]" onClick={() => setBidForm(null)}>
-                Cancel
-              </button>
-              <button className="btn-primary text-[12px]" disabled={!!busyBid} onClick={submitBid}>
-                Submit
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={!!award}
+        title={award?.status === 'accepted' ? 'Award this bid?' : 'Reject this bid?'}
+        message={
+          award?.status === 'accepted'
+            ? `${award?.bid?.contractors?.company_name || 'This contractor'} will be added to the project team at ${money(
+                award?.bid?.amount
+              )} and bidding will close for this project.`
+            : `${award?.bid?.contractors?.company_name || 'This contractor'} will be notified that their bid was not selected.`
+        }
+        confirmLabel={award?.status === 'accepted' ? 'Award bid' : 'Reject bid'}
+        variant={award?.status === 'rejected' ? 'danger' : 'default'}
+        loading={!!busyBid}
+        onConfirm={confirmAward}
+        onCancel={() => setAward(null)}
+      >
+        {award?.status === 'rejected' && (
+          <>
+            <label className="block text-[11px] mb-1" style={{ color: 'var(--stone)' }}>
+              Reason shared with the contractor
+            </label>
+            <input className="input-5bloc" value={rejectionNote} onChange={(e) => setRejectionNote(e.target.value)} />
+          </>
+        )}
+      </ConfirmDialog>
     </div>
   )
 }

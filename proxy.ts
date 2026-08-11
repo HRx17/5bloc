@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { homeForRole, isRoleKey } from '@/lib/rbac/roles'
+import { canRoleAccessPath } from '@/lib/rbac/access'
 import { hasSupabaseEnv, isMockAuthEnabled } from '@/lib/rbac/mock'
 
 const PUBLIC_PREFIXES = [
@@ -144,7 +145,11 @@ export async function proxy(req: NextRequest) {
         return NextResponse.redirect(new URL(home, req.url))
       }
 
-      if (pathname === '/' || (pathname === '/dashboard' && home !== '/dashboard')) {
+      if (pathname === '/') {
+        return NextResponse.redirect(new URL(home, req.url))
+      }
+
+      if (isRoleKey(role) && !isMarketing && !canRoleAccessPath(role, pathname)) {
         return NextResponse.redirect(new URL(home, req.url))
       }
     }

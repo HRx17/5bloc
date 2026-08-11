@@ -315,7 +315,27 @@ CREATE TABLE bids (
                         CHECK (status IN ('submitted','shortlisted','accepted','rejected')),
   rejection_note      TEXT,
   razorpay_payment_id TEXT,
-  created_at          TIMESTAMPTZ DEFAULT NOW()
+  created_at          TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (tender_id, contractor_id)
+);
+
+-- SAVED PAYMENT METHODS
+CREATE TABLE payment_methods (
+  id             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  profile_id     UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  org_id         UUID REFERENCES organisations(id) ON DELETE CASCADE,
+  kind           TEXT NOT NULL DEFAULT 'card'
+                   CHECK (kind IN ('card','upi','netbanking')),
+  label          TEXT,
+  brand          TEXT,
+  last4          TEXT,
+  upi_vpa        TEXT,
+  exp_month      INT,
+  exp_year       INT,
+  provider       TEXT DEFAULT 'razorpay',
+  provider_token TEXT,
+  is_default     BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at     TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- INVOICES

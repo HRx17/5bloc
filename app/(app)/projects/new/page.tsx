@@ -4,9 +4,11 @@ import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { MARKETPLACE_SERVICES } from '@/lib/marketplace/services'
+import { useToast } from '@/components/ui/Toast'
 
 export default function NewProject() {
  const router = useRouter()
+ const { toast } = useToast()
  const [loading, setLoading] = useState(false)
  const [clients, setClients] = useState<any[]>([])
  const [planGate, setPlanGate] = useState<{ blocked: boolean; count: number }>({ blocked: false, count: 0 })
@@ -59,12 +61,12 @@ export default function NewProject() {
  const handleSubmit = async (e: React.FormEvent) => {
  e.preventDefault()
  if (planGate.blocked) {
- alert('Free plan limit: 3 projects. Upgrade to Solo in Settings.')
- router.push('/settings')
+ toast('Free plan limit reached: 3 projects. Upgrade to Solo to add more.', 'warning')
+ router.push('/settings?tab=billing')
  return
  }
  if (formData.openForBidding && formData.servicesNeeded.length === 0) {
- alert('Select at least one service to post for open bidding.')
+ toast('Select at least one service to post for open bidding.', 'warning')
  return
  }
  setLoading(true)
@@ -96,10 +98,21 @@ export default function NewProject() {
  })
  const data = await res.json()
  if (!res.ok) throw new Error(data.error || 'Failed to create project')
+ if (formData.openForBidding) {
+ toast(
+ data.open_tender
+ ? `Project created and posted to the marketplace for ${formData.servicesNeeded.length} service${formData.servicesNeeded.length === 1 ? '' : 's'}.`
+ : 'Project created, but the open bidding post failed. Post a tender from the project workspace.',
+ data.open_tender ? 'success' : 'warning',
+ 6000
+ )
+ } else {
+ toast('Project created', 'success')
+ }
  router.push(`/projects/${data.project.id}`)
  } catch (err) {
  console.error(err)
- alert(err instanceof Error ? err.message : 'Failed to create project')
+ toast(err instanceof Error ? err.message : 'Failed to create project', 'error')
  } finally {
  setLoading(false)
  }

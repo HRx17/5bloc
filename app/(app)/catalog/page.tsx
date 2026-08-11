@@ -124,10 +124,6 @@ export default function VendorCatalogPage() {
     }
   }
 
-  if (role !== 'vendor' && role !== 'architect') {
-    // Architects can preview; others get guided away
-  }
-
   return (
     <div id="main-content" className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
       <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">

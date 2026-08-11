@@ -52,7 +52,33 @@ export async function GET(req: Request) {
 
   const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ tenders: (data || []).map(mapTender) })
+
+  const tenders = (data || []).map(mapTender)
+
+  // Contractors need to know which projects they have already bid on
+  if (role === 'contractor' && tenders.length > 0) {
+    const { data: contractor } = await auth.supabase
+      .from('contractors')
+      .select('id')
+      .eq('user_id', auth.profile.id)
+      .maybeSingle()
+    if (contractor) {
+      const { data: myBids } = await auth.supabase
+        .from('bids')
+        .select('id, tender_id, amount, status, timeline_weeks, created_at')
+        .eq('contractor_id', contractor.id)
+        .in(
+          'tender_id',
+          tenders.map((t: any) => t.id)
+        )
+      const byTender = new Map((myBids || []).map((b: any) => [b.tender_id, b]))
+      tenders.forEach((t: any) => {
+        t.my_bid = byTender.get(t.id) || null
+      })
+    }
+  }
+
+  return NextResponse.json({ tenders })
 }
 
 export async function POST(req: Request) {
