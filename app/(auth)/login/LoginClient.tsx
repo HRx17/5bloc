@@ -1,12 +1,12 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { AuthShell } from '@/components/auth/AuthShell'
 import { createClient } from '@/lib/supabase/client'
 import { hasSupabaseEnv, isMockAuthEnabled } from '@/lib/rbac/mock'
-import { homeForRole, isRoleKey } from '@/lib/rbac/roles'
+import { homeForRole, isRoleKey, type RoleKey } from '@/lib/rbac/roles'
 import {
   adminRoleAliasKeys,
   adminRoleLoginHint,
@@ -15,6 +15,15 @@ import {
 } from '@/lib/auth/local-dev-logins'
 
 type LoginMode = 'standard' | 'admin'
+
+const ALIAS_HOME: Record<string, RoleKey> = {
+  architect: 'architect',
+  vendor: 'contractor',
+  contractor: 'contractor',
+  builder: 'builder',
+  consultant: 'consultant',
+  orgmember: 'architect',
+}
 
 export default function LoginClient({ mode = 'standard' }: { mode?: LoginMode }) {
   const router = useRouter()
@@ -32,6 +41,29 @@ export default function LoginClient({ mode = 'standard' }: { mode?: LoginMode })
   const [loading, setLoading] = useState(false)
   const [oauthLoading, setOauthLoading] = useState(false)
   const [error, setError] = useState('')
+  const [ready, setReady] = useState(!roleAliases)
+
+  // Admin window: clear any existing session so we never bounce to onboarding
+  useEffect(() => {
+    if (!roleAliases || !supabaseConfigured) {
+      setReady(true)
+      return
+    }
+    let cancelled = false
+    ;(async () => {
+      try {
+        const supabase = createClient()
+        await supabase.auth.signOut()
+      } catch {
+        // ignore — still show the form
+      } finally {
+        if (!cancelled) setReady(true)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [roleAliases, supabaseConfigured])
 
   const withInviteQs = (path: string) => {
     const url = new URL(path, 'http://local')
@@ -59,7 +91,11 @@ export default function LoginClient({ mode = 'standard' }: { mode?: LoginMode })
     }
   }
 
-  const signInAs = async (loginEmail: string, loginPassword: string) => {
+  const signInAs = async (
+    loginEmail: string,
+    loginPassword: string,
+    opts?: { skipOnboarding?: boolean; aliasKey?: string }
+  ) => {
     const supabase = createClient()
     const { error: signError } = await supabase.auth.signInWithPassword({
       email: loginEmail,
@@ -67,7 +103,7 @@ export default function LoginClient({ mode = 'standard' }: { mode?: LoginMode })
     })
     if (signError) throw signError
 
-    if (inviteToken) {
+    if (inviteToken && !opts?.skipOnboarding) {
       router.push(`/accept-invite?token=${encodeURIComponent(inviteToken)}`)
       return
     }
@@ -82,6 +118,22 @@ export default function LoginClient({ mode = 'standard' }: { mode?: LoginMode })
         .select('role, onboarded_at')
         .eq('auth_id', user.id)
         .maybeSingle()
+
+      // Admin smoke aliases always land on the role home — never onboarding
+      if (opts?.skipOnboarding) {
+        const fromAlias = opts.aliasKey ? ALIAS_HOME[opts.aliasKey] : null
+        if (fromAlias) dest = homeForRole(fromAlias)
+        else if (profile && isRoleKey(profile.role)) dest = homeForRole(profile.role)
+        if (profile && !profile.onboarded_at) {
+          await supabase
+            .from('profiles')
+            .update({ onboarded_at: new Date().toISOString() })
+            .eq('auth_id', user.id)
+        }
+        router.push(dest)
+        return
+      }
+
       if (!profile?.onboarded_at || orgInviteToken) {
         dest = withInviteQs('/onboarding')
       } else if (isRoleKey(profile.role)) {
@@ -110,7 +162,11 @@ export default function LoginClient({ mode = 'standard' }: { mode?: LoginMode })
             throw new Error('Supabase is required for role logins (MOCK_AUTH must be off).')
           }
           try {
-            await signInAs(alias.email, password.trim() || SMOKE_PASSWORD)
+            const aliasKey = email.trim().toLowerCase()
+            await signInAs(alias.email, password.trim() || SMOKE_PASSWORD, {
+              skipOnboarding: true,
+              aliasKey,
+            })
           } catch (err: any) {
             throw new Error(
               `${err?.message || 'Sign-in failed'} — smoke user may be missing (try ${alias.email}).`
@@ -151,6 +207,16 @@ export default function LoginClient({ mode = 'standard' }: { mode?: LoginMode })
   }
 
   const aliasActive = roleAliases && !!resolveRoleAliasLogin(email)
+
+  if (!ready) {
+    return (
+      <AuthShell title="Admin entry">
+        <p className="text-center text-[12px]" style={{ color: 'var(--stone)' }}>
+          Preparing admin login…
+        </p>
+      </AuthShell>
+    )
+  }
 
   return (
     <AuthShell title={roleAliases ? 'Admin entry' : 'Welcome back'}>

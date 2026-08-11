@@ -13,7 +13,8 @@ const PUBLIC_PREFIXES = [
   '/auth',
 ]
 
-const AUTH_PAGES = ['/login', '/admin', '/signup', '/forgot-password']
+// /admin stays reachable while signed in so smoke role switching always works
+const AUTH_PAGES = ['/login', '/signup', '/forgot-password']
 
 function isMarketingPath(pathname: string) {
   return (
