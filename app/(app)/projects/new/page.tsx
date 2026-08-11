@@ -1,29 +1,51 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { MARKETPLACE_SERVICES } from '@/lib/marketplace/services'
 
 export default function NewProject() {
  const router = useRouter()
  const [loading, setLoading] = useState(false)
+ const [clients, setClients] = useState<any[]>([])
+ const [planGate, setPlanGate] = useState<{ blocked: boolean; count: number }>({ blocked: false, count: 0 })
  const [formData, setFormData] = useState({
  name: '',
- client: 'client-1',
+ client: '',
  type: 'residential',
  city: '',
  state: '',
  address: '',
  sqft: '',
  floors: '',
- specLevel: 'premium', // standard, premium, luxury
+ specLevel: 'premium',
  constructionCost: '',
  startDate: '',
  endDate: '',
  isRera: false,
  reraNumber: '',
  brief: '',
+ openForBidding: false,
+ servicesNeeded: [] as string[],
+ bidDeadline: '',
  })
+
+ useEffect(() => {
+ Promise.all([
+ fetch('/api/clients').then((r) => r.json()),
+ fetch('/api/projects').then((r) => r.json()),
+ fetch('/api/me').then((r) => r.json()).catch(() => ({ profile: { plan: 'free' } })),
+ ]).then(([c, p, me]) => {
+ const list = c.clients || []
+ setClients(list)
+ if (list[0]) setFormData((prev) => ({ ...prev, client: list[0].id }))
+ const count = (p.projects || []).length
+ const plan = me.profile?.plan || 'free'
+ setPlanGate({ blocked: plan === 'free' && count >= 3, count })
+ })
+ }, [])
+
 
  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
  const { name, value } = e.target
@@ -36,19 +58,48 @@ export default function NewProject() {
 
  const handleSubmit = async (e: React.FormEvent) => {
  e.preventDefault()
+ if (planGate.blocked) {
+ alert('Free plan limit: 3 projects. Upgrade to Solo in Settings.')
+ router.push('/settings')
+ return
+ }
+ if (formData.openForBidding && formData.servicesNeeded.length === 0) {
+ alert('Select at least one service to post for open bidding.')
+ return
+ }
  setLoading(true)
 
  try {
- console.log('Creating project:', formData)
- 
- // Simulate API call
- await new Promise((resolve) => setTimeout(resolve, 1000))
- 
- // In a real database this creates the record and generates default milestones.
- // Redirect back to projects registry
- router.push('/projects')
+ const res = await fetch('/api/projects', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({
+ name: formData.name,
+ client_id: formData.client && formData.client !== 'new' ? formData.client : null,
+ type: formData.type,
+ city: formData.city,
+ state: formData.state,
+ address: formData.address,
+ total_sqft: formData.sqft ? Number(formData.sqft) : null,
+ floors: formData.floors ? Number(formData.floors) : null,
+ spec_level: formData.specLevel,
+ construction_cost: formData.constructionCost ? Number(formData.constructionCost) : null,
+ start_date: formData.startDate || null,
+ estimated_end: formData.endDate || null,
+ is_rera_registered: formData.isRera,
+ rera_number: formData.reraNumber || null,
+ brief: formData.brief,
+ open_for_bidding: formData.openForBidding,
+ services_needed: formData.openForBidding ? formData.servicesNeeded : [],
+ bid_deadline: formData.openForBidding && formData.bidDeadline ? formData.bidDeadline : null,
+ }),
+ })
+ const data = await res.json()
+ if (!res.ok) throw new Error(data.error || 'Failed to create project')
+ router.push(`/projects/${data.project.id}`)
  } catch (err) {
  console.error(err)
+ alert(err instanceof Error ? err.message : 'Failed to create project')
  } finally {
  setLoading(false)
  }
@@ -96,10 +147,19 @@ export default function NewProject() {
  onChange={handleInputChange}
  className="input-5bloc font-medium"
  >
- <option value="client-1">Parth Patel (Individual Client)</option>
- <option value="client-2">Wadhwa Developers (Corporate)</option>
- <option value="new">Add new client...</option>
+ <option value="">No CRM contact linked</option>
+ {clients.map((c) => (
+ <option key={c.id} value={c.id}>
+ {c.full_name}{c.company ? ` (${c.company})` : ''}
+ </option>
+ ))}
  </select>
+ {planGate.blocked && (
+ <p className="text-[11px] mt-2" style={{ color: 'var(--error)' }}>
+ Free plan limit reached ({planGate.count}/3 projects).{' '}
+ <Link href="/settings" className="underline">Upgrade in Settings</Link>
+ </p>
+ )}
  </div>
 
  <div>
@@ -305,6 +365,82 @@ export default function NewProject() {
  </div>
  </div>
 
+ {/* Open bidding → marketplace for contractors/vendors */}
+ <div className="card-5bloc space-y-4">
+ <div className="flex items-start justify-between gap-4">
+ <div>
+ <h3 className="text-sm font-semibold" style={{ color: 'var(--amber)' }}>Post for open bidding</h3>
+ <p className="text-[11px] text-stone mt-1">
+ When enabled, this project appears as a card for contractors and vendors in the marketplace — only for the services you select.
+ </p>
+ </div>
+ <button
+ type="button"
+ onClick={() =>
+ setFormData((prev) => ({
+ ...prev,
+ openForBidding: !prev.openForBidding,
+ servicesNeeded: !prev.openForBidding ? prev.servicesNeeded : [],
+ }))
+ }
+ className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer border-2 transition-colors duration-200 ease-in-out focus:outline-none ${
+ formData.openForBidding ? 'bg-success' : 'bg-navy-lt'
+ }`}
+ aria-pressed={formData.openForBidding}
+ >
+ <span
+ className={`pointer-events-none inline-block h-5 w-5 transform bg-white shadow ring-0 transition duration-200 ease-in-out ${
+ formData.openForBidding ? 'translate-x-5' : 'translate-x-0'
+ }`}
+ />
+ </button>
+ </div>
+
+ {formData.openForBidding && (
+ <div className="space-y-4 animate-fade-in">
+ <div>
+ <label className="block text-[11px] font-semibold text-stone mb-2 font-body">Services needed *</label>
+ <div className="flex flex-wrap gap-2">
+ {MARKETPLACE_SERVICES.map((svc) => {
+ const on = formData.servicesNeeded.includes(svc)
+ return (
+ <button
+ key={svc}
+ type="button"
+ onClick={() =>
+ setFormData((prev) => ({
+ ...prev,
+ servicesNeeded: on
+ ? prev.servicesNeeded.filter((s) => s !== svc)
+ : [...prev.servicesNeeded, svc],
+ }))
+ }
+ className="chip text-[11px]"
+ style={{
+ color: on ? 'var(--amber)' : 'var(--stone)',
+ background: on ? 'rgba(245,166,35,0.12)' : 'rgba(159,142,122,0.1)',
+ }}
+ >
+ {svc}
+ </button>
+ )
+ })}
+ </div>
+ </div>
+ <div className="max-w-xs">
+ <label className="block text-[11px] font-semibold text-stone mb-1 font-body">Bid deadline</label>
+ <input
+ type="date"
+ name="bidDeadline"
+ value={formData.bidDeadline}
+ onChange={handleInputChange}
+ className="input-5bloc font-mono"
+ />
+ </div>
+ </div>
+ )}
+ </div>
+
  {/* Submit */}
  <div className="flex justify-end pt-2">
  <button
@@ -312,7 +448,11 @@ export default function NewProject() {
  disabled={loading}
  className="btn-primary px-10 py-3 text-base tracking-wider font-bold"
  >
- {loading ? 'CREATING PROJECT...' : 'CREATE PROJECT WORKSPACE'}
+ {loading
+ ? 'CREATING PROJECT...'
+ : formData.openForBidding
+ ? 'CREATE & POST TO MARKETPLACE'
+ : 'CREATE PROJECT WORKSPACE'}
  </button>
  </div>
  </form>

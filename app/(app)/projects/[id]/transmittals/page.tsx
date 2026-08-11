@@ -34,65 +34,26 @@ export default function TransmittalsLog() {
   })
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setTransmittals([
-        {
-          id: 'tr-1',
-          transmittal_no: 'TR-001',
-          date: '2026-05-10',
-          recipient_name: 'Rajesh Kumar',
-          recipient_company: 'L&T Construction Ltd',
-          via: 'Printed Courier',
-          documents: 'Main Structural Frame Detail Sheets (v2)',
-          purpose: 'For Construction',
-          status: 'acknowledged'
-        },
-        {
-          id: 'tr-2',
-          transmittal_no: 'TR-002',
-          date: '2026-05-28',
-          recipient_name: 'Karan Shah',
-          recipient_company: 'Lodha Developers Office',
-          via: 'Digital Portal',
-          documents: 'Lobby Interior Finishes Rendering & Plan (v1)',
-          purpose: 'For Review',
-          status: 'received'
-        },
-        {
-          id: 'tr-3',
-          transmittal_no: 'TR-003',
-          date: '2026-06-02',
-          recipient_name: 'Officer Shinde',
-          recipient_company: 'Municipal Fire Department NOC Ward',
-          via: 'Hand Delivered',
-          documents: 'Emergency Exit & Hydrant Layout Diagram (v1)',
-          purpose: 'For Approval',
-          status: 'sent'
-        }
-      ])
-      setLoading(false)
-    }, 300)
-    return () => clearTimeout(timer)
+    fetch(`/api/projects/${projectId}/transmittals`)
+      .then((r) => r.json())
+      .then((d) => setTransmittals(d.transmittals || []))
+      .finally(() => setLoading(false))
   }, [projectId])
 
-  const handleCreateTransmittal = (e: React.FormEvent) => {
+  const handleCreateTransmittal = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    const record: Transmittal = {
-      id: `tr-${Date.now()}`,
-      transmittal_no: `TR-00${transmittals.length + 1}`,
-      date: newTransmittal.date,
-      recipient_name: newTransmittal.recipient_name,
-      recipient_company: newTransmittal.recipient_company,
-      via: newTransmittal.via,
-      documents: newTransmittal.documents,
-      purpose: newTransmittal.purpose,
-      status: 'sent'
+    const res = await fetch(`/api/projects/${projectId}/transmittals`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newTransmittal),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      alert(data.error || 'Failed to create transmittal')
+      return
     }
-
-    setTransmittals(prev => [record, ...prev])
+    setTransmittals(prev => [data.transmittal, ...prev])
     setShowFormModal(false)
-    // reset form
     setNewTransmittal({
       recipient_name: '',
       recipient_company: '',
@@ -103,10 +64,14 @@ export default function TransmittalsLog() {
     })
   }
 
-  const handleUpdateStatus = (id: string, nextStatus: Transmittal['status']) => {
-    setTransmittals(prev => 
-      prev.map(t => t.id === id ? { ...t, status: nextStatus } : t)
-    )
+  const handleUpdateStatus = async (id: string, nextStatus: Transmittal['status']) => {
+    const res = await fetch(`/api/projects/${projectId}/transmittals`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ transmittal_id: id, status: nextStatus }),
+    })
+    if (!res.ok) return
+    setTransmittals(prev => prev.map(t => t.id === id ? { ...t, status: nextStatus } : t))
   }
 
   const getStatusBadgeClass = (st: Transmittal['status']) => {
@@ -213,7 +178,28 @@ export default function TransmittalsLog() {
                         </button>
                       )}
                       <button
-                        onClick={() => alert(`Simulating print-friendly transmittal slip generation for ${t.transmittal_no}`)}
+                        onClick={() => {
+                          const slip = [
+                            `TRANSMITTAL ${t.transmittal_no}`,
+                            `Date: ${t.date}`,
+                            `To: ${t.recipient_name} (${t.recipient_company})`,
+                            `Via: ${t.via}`,
+                            `Purpose: ${t.purpose}`,
+                            `Documents: ${t.documents}`,
+                            `Status: ${t.status}`,
+                            '',
+                            'Print this slip or save as PDF via your browser (Ctrl/Cmd+P).',
+                          ].join('\n')
+                          const w = window.open('', '_blank', 'noopener,noreferrer,width=640,height=720')
+                          if (!w) {
+                            alert(slip)
+                            return
+                          }
+                          w.document.write(`<pre style="font:12px/1.5 ui-monospace,monospace;padding:24px;white-space:pre-wrap">${slip.replace(/</g, '&lt;')}</pre>`)
+                          w.document.close()
+                          w.focus()
+                          w.print()
+                        }}
                         className="p-1 text-stone hover:text-white hover:bg-navy-lt transition shrink-0"
                         title="Print Transmittal Slip"
                       >

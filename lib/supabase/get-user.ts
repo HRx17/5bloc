@@ -1,28 +1,97 @@
 import { createServerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
+import { cookies, headers } from 'next/headers'
+import { getMockProfile, hasSupabaseEnv, isMockAuthEnabled } from '@/lib/rbac/mock'
+import type { RoleKey } from '@/lib/rbac/roles'
+import { PROFILE_TABLE } from '@/lib/supabase/schema-map'
 
-export async function getAuthUser() {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    // Mock user for local development and testing when Supabase keys are not set yet
+export type AuthProfile = {
+  id: string
+  auth_id?: string
+  full_name: string | null
+  email: string
+  phone?: string | null
+  avatar_url?: string | null
+  role: RoleKey | string
+  org_id: string | null
+  plan: string
+  ai_add_on: boolean
+  onboarded_at?: string | null
+  organisations?: {
+    id: string
+    name: string
+    plan: string
+    owner_id?: string
+    city?: string | null
+    gst_number?: string | null
+    address?: string | null
+  } | null
+}
+
+async function loadProfile(supabase: any, authUserId: string) {
+  const { data: profile, error: profileError } = await supabase
+    .from(PROFILE_TABLE)
+    .select('*, organisations!profiles_org_id_fkey(*)')
+    .eq('auth_id', authUserId)
+    .single()
+
+  if (profileError || !profile) {
+    const plain = await supabase.from(PROFILE_TABLE).select('*').eq('auth_id', authUserId).single()
+    if (plain.error || !plain.data) {
+      throw new Response('Profile not found', { status: 404 })
+    }
+    let organisations = null
+    if (plain.data.org_id) {
+      const org = await supabase.from('organisations').select('*').eq('id', plain.data.org_id).maybeSingle()
+      organisations = org.data
+    }
+    return { ...plain.data, organisations } as AuthProfile
+  }
+  return profile as AuthProfile
+}
+
+export async function getAuthUser(options?: { roleOverride?: string }) {
+  // Explicit mock mode only — never treat missing env as silent mock success
+  if (isMockAuthEnabled()) {
+    const profile = getMockProfile(options?.roleOverride)
     return {
-      user: { id: 'mock-user-id', email: 'architect@5bloc.com' },
-      profile: {
-        id: 'mock-profile-id',
-        full_name: 'Parth (Mock Architect)',
-        email: 'architect@5bloc.com',
-        role: 'architect',
-        org_id: 'mock-org-id',
-        plan: 'team',
-        ai_add_on: true,
-        organisations: {
-          id: 'mock-org-id',
-          name: 'Apex Architects',
-          plan: 'team',
-          owner_id: 'mock-profile-id'
-        }
-      },
+      user: { id: profile.auth_id, email: profile.email },
+      profile,
       supabase: null as any,
-      orgId: 'mock-org-id'
+      orgId: profile.org_id,
+      isMock: true as const,
+    }
+  }
+
+  if (!hasSupabaseEnv()) {
+    throw new Response('Auth not configured', { status: 503 })
+  }
+
+  const headerStore = await headers()
+  const authHeader = headerStore.get('authorization') || headerStore.get('Authorization')
+  const bearer = authHeader?.match(/^Bearer\s+(.+)$/i)?.[1]
+
+  if (bearer) {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: { headers: { Authorization: `Bearer ${bearer}` } },
+        auth: { persistSession: false, autoRefreshToken: false },
+      }
+    )
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser(bearer)
+    if (error || !user) throw new Response('Unauthorized', { status: 401 })
+    const profile = await loadProfile(supabase, user.id)
+    return {
+      user,
+      profile,
+      supabase,
+      orgId: profile.org_id as string | null,
+      isMock: false as const,
     }
   }
 
@@ -41,27 +110,48 @@ export async function getAuthUser() {
               cookieStore.set(name, value, options)
             )
           } catch {
-            // Ignore error if set from Server Component
+            // Ignore if called from a Server Component
           }
         },
       },
     }
   )
-  const { data: { user }, error } = await supabase.auth.getUser()
-  
+
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser()
+
   if (error || !user) {
     throw new Response('Unauthorized', { status: 401 })
   }
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('*, organisations(*)')
-    .eq('auth_id', user.id)
-    .single()
+  const profile = await loadProfile(supabase, user.id)
 
-  if (!profile) {
-    throw new Response('Profile not found', { status: 404 })
+  return {
+    user,
+    profile,
+    supabase,
+    orgId: profile.org_id as string | null,
+    isMock: false as const,
   }
+}
 
-  return { user, profile, supabase, orgId: profile.org_id }
+/** Soft fetch for layouts — returns null instead of throwing. Never invents a mock user when MOCK_AUTH=0. */
+export async function getAuthUserOrNull() {
+  try {
+    return await getAuthUser()
+  } catch {
+    if (isMockAuthEnabled()) {
+      const profile = getMockProfile()
+      return {
+        user: { id: profile.auth_id, email: profile.email },
+        profile,
+        supabase: null as any,
+        orgId: profile.org_id,
+        isMock: true as const,
+      }
+    }
+    return null
+  }
 }

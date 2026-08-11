@@ -34,81 +34,112 @@ export default function RFILog() {
  title: '',
  description: '',
  drawing_ref: '',
- assigned_to: 'Amit Sharma',
+ assigned_to: '',
  due_date: '',
  })
+ const [savingRfi, setSavingRfi] = useState(false)
 
  // AI draft state
  const [aiDrafting, setAiDrafting] = useState(false)
  const [aiDraftText, setAiDraftText] = useState('')
 
  useEffect(() => {
- // Mock load RFIs
- const timer = setTimeout(() => {
- setRfis([
- {
- id: 'rfi-1',
- rfi_number: 1,
- title: 'Beam Reinforcement Revision at Grid B-4',
- description: 'Slab reinforcement details do not match the column layout grid drawings. Please confirm spacing constraints.',
- drawing_ref: 'S-201 (Rev 2)',
- status: 'open',
- raised_by: 'Amit Sharma (Contractor)',
- assigned_to: 'Parth Patel (Architect)',
- due_date: '2026-06-15',
- is_scope_change: false,
- },
- {
- id: 'rfi-2',
- rfi_number: 2,
- title: 'HVAC Duct Clearance in Lobby',
- description: 'Clear ceiling height drops below 2.4m if duct runs according to services layouts. Need structural review.',
- drawing_ref: 'M-104',
- status: 'in_review',
- raised_by: 'Rohan Deshmukh (MEP)',
- assigned_to: 'Aritro Roy (Consultant)',
- due_date: '2026-06-18',
- is_scope_change: true,
- scope_change_amount: 125000,
- },
- {
- id: 'rfi-3',
- rfi_number: 3,
- title: 'Sanitary fittings brand selection',
- description: 'Premium specification calls for Kohler, but local inventory is delayed by 6 weeks. Recommend alternative.',
- drawing_ref: 'A-402',
- status: 'answered',
- raised_by: 'Karan Shah (Builder)',
- assigned_to: 'Parth Patel (Architect)',
- due_date: '2026-05-30',
- response: 'Approved alternate sanitary selection to Toto brand. Premium grade models only.',
- is_scope_change: false,
- }
- ])
- setLoading(false)
- }, 400)
- return () => clearTimeout(timer)
+ fetch(`/api/projects/${projectId}/rfis`)
+ .then((r) => r.json())
+ .then((d) => {
+ setRfis(
+ (d.rfis || []).map((r: any) => ({
+ id: r.id,
+ rfi_number: r.rfi_number,
+ title: r.title,
+ description: r.description || '',
+ drawing_ref: r.drawing_ref,
+ status: r.status,
+ raised_by: r.raised_by || '—',
+ assigned_to: r.assigned_to || '—',
+ due_date: r.due_date || '',
+ response: r.response,
+ is_scope_change: !!r.is_scope_change,
+ scope_change_amount: r.scope_change_amount,
+ }))
+ )
+ })
+ .finally(() => setLoading(false))
  }, [projectId])
 
- const handleCreateRfi = (e: React.FormEvent) => {
+ const handleCreateRfi = async (e: React.FormEvent) => {
  e.preventDefault()
- 
- const rfiRecord: RFIItem = {
- id: `rfi-${Date.now()}`,
- rfi_number: rfis.length + 1,
- title: newRfi.title,
- description: newRfi.description,
- drawing_ref: newRfi.drawing_ref,
- status: 'open',
- raised_by: 'Parth Patel (Architect)',
+ const res = await fetch(`/api/projects/${projectId}/rfis`, {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify(newRfi),
+ })
+ const data = await res.json()
+ if (!res.ok) {
+ alert(data.error || 'Failed to create RFI')
+ return
+ }
+ const r = data.rfi
+ setRfis((prev) => [
+ {
+ id: r.id,
+ rfi_number: r.rfi_number,
+ title: r.title,
+ description: r.description || '',
+ drawing_ref: r.drawing_ref,
+ status: r.status,
+ raised_by: 'You',
  assigned_to: newRfi.assigned_to,
- due_date: newRfi.due_date || new Date().toISOString().split('T')[0],
+ due_date: r.due_date || '',
  is_scope_change: false,
+ },
+ ...prev,
+ ])
+ setShowCreateModal(false)
+ setNewRfi({ title: '', description: '', drawing_ref: '', assigned_to: '', due_date: '' })
  }
 
- setRfis(prev => [rfiRecord, ...prev])
- setShowCreateModal(false)
- setNewRfi({ title: '', description: '', drawing_ref: '', assigned_to: 'Amit Sharma', due_date: '' })
+ const handleSaveRfi = async () => {
+ if (!activeRfi) return
+ setSavingRfi(true)
+ try {
+ const res = await fetch(`/api/projects/${projectId}/rfis`, {
+ method: 'PATCH',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({
+ rfi_id: activeRfi.id,
+ status: activeRfi.status,
+ response: activeRfi.response || aiDraftText || undefined,
+ description: activeRfi.description,
+ is_scope_change: activeRfi.is_scope_change,
+ scope_change_amount: activeRfi.scope_change_amount,
+ }),
+ })
+ const data = await res.json()
+ if (!res.ok) {
+ alert(data.error || 'Failed to save RFI')
+ return
+ }
+ const saved = data.rfi || activeRfi
+ setRfis((prev) =>
+ prev.map((r) =>
+ r.id === activeRfi.id
+ ? {
+ ...r,
+ status: saved.status || activeRfi.status,
+ response: saved.response ?? activeRfi.response ?? aiDraftText,
+ description: saved.description ?? activeRfi.description,
+ is_scope_change: activeRfi.is_scope_change,
+ scope_change_amount: activeRfi.scope_change_amount,
+ }
+ : r
+ )
+ )
+ setActiveRfi(null)
+ setAiDraftText('')
+ } finally {
+ setSavingRfi(false)
+ }
  }
 
  const handleRequestAIDraft = async () => {
@@ -117,32 +148,29 @@ export default function RFILog() {
  setAiDraftText('')
 
  try {
- // Simulate Claude RFI Draft API response
- await new Promise(resolve => setTimeout(resolve, 1500))
- 
- const draftedResponse = `Based on drawing S-201, column grid overlap is resolved by shifting the main reinforcement bundle by 50mm to the east. We suggest concrete grade M30 casting to compensate for reinforcement spacing offsets. This change is local and does not imply a major structural scope variance.`
- 
- setAiDraftText(draftedResponse)
+ const res = await fetch('/api/ai/rfi-draft', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({
+ title: activeRfi.title,
+ description: activeRfi.description,
+ drawing_ref: activeRfi.drawing_ref,
+ }),
+ })
+ const data = await res.json()
+ if (res.ok && (data.draft || data.response || data.text)) {
+ setAiDraftText(data.draft || data.response || data.text)
+ } else {
+ setAiDraftText(
+ `Review ${activeRfi.drawing_ref || 'the referenced drawing'} against the query "${activeRfi.title}". Confirm coordination with structural / MEP before issuing a formal response.`
+ )
+ }
  } catch (err) {
  console.error(err)
+ setAiDraftText('Unable to reach AI draft service. Write the response manually.')
  } finally {
  setAiDrafting(false)
  }
- }
-
- const handleSaveResponse = () => {
- if (!activeRfi) return
- 
- setRfis(prev => 
- prev.map(r => r.id === activeRfi.id ? { 
- ...r, 
- status: 'answered', 
- response: activeRfi.response,
- is_scope_change: activeRfi.is_scope_change,
- scope_change_amount: activeRfi.scope_change_amount
- } : r)
- )
- setActiveRfi(null)
  }
 
  const getStatusStyle = (status: RFIItem['status']): React.CSSProperties => {
@@ -283,6 +311,17 @@ export default function RFILog() {
  />
  </div>
 
+ <div>
+ <label className="block text-xs text-stone mb-1 font-medium">Assigned To</label>
+ <input
+ type="text"
+ placeholder="Name or email of assignee"
+ value={newRfi.assigned_to}
+ onChange={(e) => setNewRfi(prev => ({ ...prev, assigned_to: e.target.value }))}
+ className="input-5bloc py-1.5 text-xs"
+ />
+ </div>
+
  <div className="grid grid-cols-2 gap-4">
  <div>
  <label className="block text-xs text-stone mb-1 font-medium">Drawing Sheet Ref</label>
@@ -353,9 +392,34 @@ export default function RFILog() {
  Sheet: {activeRfi.drawing_ref}
  </span>
  )}
- <p className="text-xs leading-relaxed p-4 mt-2" style={{ background: 'var(--surface-container-high)', color: 'var(--stone)', boxShadow: 'var(--shadow-1)' }}>
- {activeRfi.description}
- </p>
+ <div className="mt-2">
+ <label className="block text-xs text-stone mb-1 font-medium">Status</label>
+ <select
+ value={activeRfi.status}
+ onChange={(e) =>
+ setActiveRfi((prev) =>
+ prev ? { ...prev, status: e.target.value as RFIItem['status'] } : null
+ )
+ }
+ className="input-5bloc py-1.5 text-xs"
+ >
+ <option value="open">Open</option>
+ <option value="in_review">In review</option>
+ <option value="answered">Answered</option>
+ <option value="closed">Closed</option>
+ </select>
+ </div>
+ <div className="mt-2">
+ <label className="block text-xs text-stone mb-1 font-medium">Description</label>
+ <textarea
+ rows={4}
+ value={activeRfi.description}
+ onChange={(e) =>
+ setActiveRfi((prev) => (prev ? { ...prev, description: e.target.value } : null))
+ }
+ className="input-5bloc text-xs resize-none"
+ />
+ </div>
  <div className="flex items-center gap-2 mt-3">
  <button
  onClick={() => setEmailComposerData({
@@ -460,10 +524,11 @@ export default function RFILog() {
  Cancel
  </button>
  <button 
- onClick={handleSaveResponse}
+ onClick={handleSaveRfi}
+ disabled={savingRfi}
  className="btn-primary py-1.5 px-6 text-xs"
  >
- Save & Resolve RFI
+ {savingRfi ? 'Saving…' : 'Save RFI'}
  </button>
  </div>
  </div>

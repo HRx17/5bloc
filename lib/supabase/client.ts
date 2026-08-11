@@ -28,3 +28,4 @@ export function createSupabaseClient() {
 }
 
 export const supabaseClient = createSupabaseClient()
+export const createClient = createSupabaseClient

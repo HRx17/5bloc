@@ -24,62 +24,51 @@ export default function PermitsAndCompliance() {
   const [reraNum, setReraNum] = useState('')
 
   useEffect(() => {
-    // Mock load permit checkpoints
-    const timer = setTimeout(() => {
-      setReraNum(projectId === 'proj-2' ? 'PRM/KA/RERA/1251/310' : 'P51800012345')
-      setReraRegistered(projectId !== 'proj-3')
-
-      setPermits([
-        {
-          id: 'p-1',
-          approval_name: 'Municipal Building Sanction (IOD)',
-          authority: 'BMC Mumbai / PMC Pune',
-          status: 'approved',
-          submission_date: '2026-01-20',
-          expiry_date: '2027-01-20',
-          notes: 'Initial construction approval and drawings signed off by planning body.'
-        },
-        {
-          id: 'p-2',
-          approval_name: 'Fire Department NOC Clearance',
-          authority: 'Maharashtra Fire Services',
-          status: 'approved',
-          submission_date: '2026-03-10',
-          notes: 'Temporary NOC obtained for superstructure casting heights.'
-        },
-        {
-          id: 'p-3',
-          approval_name: 'RERA Promoter Registration',
-          authority: 'MahaRERA',
-          status: projectId === 'proj-3' ? 'not_started' : 'approved',
-          submission_date: projectId === 'proj-3' ? undefined : '2026-02-14',
-          notes: projectId === 'proj-3' ? 'Awaiting builder submission files.' : 'RERA registration certified active.'
-        },
-        {
-          id: 'p-4',
-          approval_name: 'Tree Authority Clearance',
-          authority: 'Municipal Corporation Green Committee',
-          status: 'pending',
-          submission_date: '2026-05-28',
-          notes: 'Under review by ward officers regarding layout site offset trees.'
-        },
-        {
-          id: 'p-5',
-          approval_name: 'Final Occupancy Certificate (OC)',
-          authority: 'Local Municipal Commissioner Office',
-          status: 'not_started',
-          notes: 'Requires snag audits and structural engineer Form-4 completion.'
+    Promise.all([
+      fetch(`/api/projects/${projectId}/permits`).then((r) => r.json()),
+      fetch(`/api/projects/${projectId}`).then((r) => r.json()),
+    ])
+      .then(([p, proj]) => {
+        setPermits(p.permits || [])
+        const project = proj.project
+        if (project) {
+          setReraRegistered(!!project.is_rera_registered)
+          setReraNum(project.rera_number || '')
+          if (project.state) setSelectedState(project.state === 'MH' ? 'Maharashtra' : project.state)
         }
-      ])
-      setLoading(false)
-    }, 300)
-    return () => clearTimeout(timer)
+      })
+      .finally(() => setLoading(false))
   }, [projectId])
 
-  const handleTogglePermitStatus = (id: string, newStatus: PermitItem['status']) => {
-    setPermits(prev => 
-      prev.map(p => p.id === id ? { ...p, status: newStatus } : p)
-    )
+  const handleTogglePermitStatus = async (id: string, newStatus: PermitItem['status']) => {
+    const res = await fetch(`/api/projects/${projectId}/permits`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ permit_id: id, status: newStatus }),
+    })
+    if (!res.ok) return
+    setPermits((prev) => prev.map((p) => (p.id === id ? { ...p, status: newStatus } : p)))
+  }
+
+  const seedDefaultPermits = async () => {
+    if (permits.length > 0) return
+    const defaults = [
+      { approval_name: 'Municipal Building Sanction (IOD)', authority: 'Local Municipal Corporation', status: 'not_started' },
+      { approval_name: 'Fire Department NOC', authority: 'State Fire Services', status: 'not_started' },
+      { approval_name: 'RERA Promoter Registration', authority: 'State RERA', status: 'not_started' },
+      { approval_name: 'Final Occupancy Certificate (OC)', authority: 'Municipal Commissioner', status: 'not_started' },
+    ]
+    const created = []
+    for (const d of defaults) {
+      const res = await fetch(`/api/projects/${projectId}/permits`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(d),
+      })
+      const data = await res.json()
+      if (res.ok) created.push(data.permit)
+    }
+    setPermits(created)
   }
 
   const getStatusChipStyle = (st: PermitItem['status']) => {
@@ -126,6 +115,13 @@ export default function PermitsAndCompliance() {
 
             {loading ? (
               <div className="p-8 text-center text-stone animate-pulse">Loading compliance parameters...</div>
+            ) : permits.length === 0 ? (
+              <div className="py-10 text-center space-y-3">
+                <p className="text-sm text-stone">No permits logged yet.</p>
+                <button type="button" className="btn-primary text-xs" onClick={seedDefaultPermits}>
+                  Seed standard checklist
+                </button>
+              </div>
             ) : (
               <div className="divide-y divide-navy-lt/30">
                 {permits.map(permit => (
@@ -221,11 +217,22 @@ export default function PermitsAndCompliance() {
             </div>
 
             <button
-              onClick={() => alert(`Simulated checking project dimensions against local ${selectedState} zoning guidelines...`)}
+              onClick={() => {
+                const notes = [
+                  `${selectedState} zoning quick-check (reference only — verify with local authority)`,
+                  '• Front margin: typically ≥ 4.5m for many municipal bye-laws',
+                  '• Base FSI often ~1.33 (+ paid TDR where allowed)',
+                  '• Height often capped near 24m without special fire NOC',
+                  '• RWH commonly mandatory above ~500 sqm plot',
+                  '',
+                  'This check does not replace a licensed municipal submission.',
+                ].join('\n')
+                alert(notes)
+              }}
               className="w-full btn-primary py-2 text-xs font-bold flex items-center justify-center gap-1"
             >
               <span className="material-icons-outlined text-[15px]">verified_user</span>
-              AUDIT COMPLIANCE DIMENSIONS
+              SHOW COMPLIANCE CHECKLIST
             </button>
           </div>
         </div>

@@ -17,16 +17,17 @@ export function LogoMark({ size = 40 }: { size?: number }) {
  )
 }
 
-export function Logo({ size = 40, showTagline = false }: { size?: number; showTagline?: boolean }) {
+export function Logo({ size = 40, showTagline = false, color }: { size?: number; showTagline?: boolean; color?: string }) {
+ const textColor = color ?? 'var(--on-surface)'
  return (
- <div style={{ display: 'inline-flex', alignItems: 'center', gap: Math.round(size * 0.25) }}>
+ <div style={{ display: 'inline-flex', alignItems: 'center', gap: Math.round(size * 0.28) }}>
  <LogoMark size={size}/>
  <div style={{ lineHeight: 1 }}>
- <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: size * 0.55, letterSpacing: '0.04em', color: '#F7F5F0' }}>
+ <div style={{ fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: size * 0.48, letterSpacing: '0.06em', color: textColor }}>
  5BLOC
  </div>
  {showTagline && size >= 36 && (
- <div style={{ fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: size * 0.215, letterSpacing: '0.18em', color: '#F5A623', textTransform: 'uppercase', marginTop: 2 }}>
+ <div style={{ fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: size * 0.2, letterSpacing: '0.12em', color: 'var(--amber)', textTransform: 'uppercase', marginTop: 2 }}>
  Build Together
  </div>
  )}

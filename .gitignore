@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# supabase local scratch
+supabase/.temp/
+supabase/.temp_seed_body.txt

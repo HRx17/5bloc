@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 
 interface Issue {
@@ -13,102 +13,120 @@ interface Issue {
   assigned_to: string
   reported_by: string
   date_reported: string
-  photo_attached?: string
+  photo_attached?: string | null
 }
 
 export default function IssueTracker() {
   const params = useParams()
   const projectId = params.id as string
+  const photoInputRef = useRef<HTMLInputElement>(null)
 
   const [issues, setIssues] = useState<Issue[]>([])
   const [loading, setLoading] = useState(true)
   const [showReportModal, setShowReportModal] = useState(false)
   const [activeIssue, setActiveIssue] = useState<Issue | null>(null)
-  
-  // Search and filter
+  const [saving, setSaving] = useState(false)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+
   const [searchTerm, setSearchTerm] = useState('')
   const [filterSeverity, setFilterSeverity] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
 
-  // Form state
   const [newIssue, setNewIssue] = useState({
     title: '',
     description: '',
     severity: 'medium' as 'low' | 'medium' | 'high',
-    assigned_to: 'Amit Sharma',
+    assigned_to: '',
+    photo_attached: '' as string,
   })
 
   useEffect(() => {
-    // Mock load issues
-    const timer = setTimeout(() => {
-      setIssues([
-        {
-          id: 'iss-1',
-          issue_number: 1,
-          title: 'Concrete honeycombing at Column C-2 base',
-          description: 'Visible honeycomb structure at the base of pour column C-2. Voids need grouting and verification.',
-          severity: 'high',
-          status: 'open',
-          assigned_to: 'Amit Sharma (Contractor)',
-          reported_by: 'Aritro Roy (Structural)',
-          date_reported: '2026-06-05',
-          photo_attached: 'column_honeycomb_c2.jpg'
-        },
-        {
-          id: 'iss-2',
-          issue_number: 2,
-          title: 'Delayed plumbing shaft bracket arrivals',
-          description: 'Heavy duty pipe mounting brackets for internal ducts are delayed. Structural bracing is pending.',
-          severity: 'medium',
-          status: 'in_progress',
-          assigned_to: 'Rohan Deshmukh (MEP)',
-          reported_by: 'Amit Sharma (Contractor)',
-          date_reported: '2026-06-03'
-        },
-        {
-          id: 'iss-3',
-          issue_number: 3,
-          title: 'Lobby tile layout alignment deviation',
-          description: 'Tile layout deviated by 12mm over 6 meters. Resolved by laying out a layout spacer boundary.',
-          severity: 'low',
-          status: 'resolved',
-          assigned_to: 'Amit Sharma (Contractor)',
-          reported_by: 'Parth Patel (Architect)',
-          date_reported: '2026-05-20'
-        }
-      ])
-      setLoading(false)
-    }, 300)
-    return () => clearTimeout(timer)
+    fetch(`/api/projects/${projectId}/issues`)
+      .then((r) => r.json())
+      .then((d) => setIssues(d.issues || []))
+      .finally(() => setLoading(false))
   }, [projectId])
 
-  const handleReportIssue = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    const issueRecord: Issue = {
-      id: `iss-${Date.now()}`,
-      issue_number: issues.length + 1,
-      title: newIssue.title,
-      description: newIssue.description,
-      severity: newIssue.severity,
-      status: 'open',
-      assigned_to: newIssue.assigned_to,
-      reported_by: 'Parth Patel (Architect)',
-      date_reported: new Date().toISOString().split('T')[0]
+  const handlePhotoUpload = async (file: File) => {
+    setUploadingPhoto(true)
+    try {
+      const form = new FormData()
+      form.append('file', file)
+      form.append('projectId', projectId)
+      const res = await fetch('/api/files/upload', { method: 'POST', body: form })
+      const data = await res.json()
+      if (!res.ok) {
+        alert(data.error || 'Upload failed')
+        return
+      }
+      const url = data.url || data.storage_path || data.r2_key || ''
+      setNewIssue((prev) => ({ ...prev, photo_attached: url }))
+    } finally {
+      setUploadingPhoto(false)
     }
-
-    setIssues(prev => [issueRecord, ...prev])
-    setShowReportModal(false)
-    setNewIssue({ title: '', description: '', severity: 'medium', assigned_to: 'Amit Sharma' })
   }
 
-  const handleUpdateStatus = (issueId: string, status: Issue['status']) => {
-    setIssues(prev => 
-      prev.map(i => i.id === issueId ? { ...i, status } : i)
-    )
-    if (activeIssue && activeIssue.id === issueId) {
-      setActiveIssue(prev => prev ? { ...prev, status } : null)
+  const handleReportIssue = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const res = await fetch(`/api/projects/${projectId}/issues`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...newIssue,
+        photo_attached: newIssue.photo_attached || null,
+      }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      alert(data.error || 'Failed to report')
+      return
     }
+    setIssues((prev) => [data.issue, ...prev])
+    setShowReportModal(false)
+    setNewIssue({ title: '', description: '', severity: 'medium', assigned_to: '', photo_attached: '' })
+  }
+
+  const handleSaveIssue = async () => {
+    if (!activeIssue) return
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/issues`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          issue_id: activeIssue.id,
+          status: activeIssue.status,
+          assigned_to: activeIssue.assigned_to,
+          description: activeIssue.description,
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        alert(data.error || 'Failed to save')
+        return
+      }
+      setIssues((prev) =>
+        prev.map((i) => (i.id === activeIssue.id ? { ...i, ...activeIssue } : i))
+      )
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const openPhoto = (url?: string | null) => {
+    if (!url) return
+    if (url.startsWith('http') || url.startsWith('/')) {
+      window.open(url, '_blank')
+      return
+    }
+    const key = url.replace(/^mock:\/\//, '')
+    fetch(`/api/files/upload?key=${encodeURIComponent(key)}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.url) window.open(d.url, '_blank')
+        else alert('Could not open photo')
+      })
+      .catch(() => alert('Could not open photo'))
   }
 
   const getSeverityStyle = (s: Issue['severity']) => {
@@ -128,8 +146,8 @@ export default function IssueTracker() {
   }
 
   const filtered = issues.filter(i => {
-    const matchesSearch = i.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          i.description.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesSearch = (i.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (i.description || '').toLowerCase().includes(searchTerm.toLowerCase())
     const matchesSeverity = filterSeverity === 'all' || i.severity === filterSeverity
     const matchesStatus = filterStatus === 'all' || i.status === filterStatus
     return matchesSearch && matchesSeverity && matchesStatus
@@ -137,7 +155,6 @@ export default function IssueTracker() {
 
   return (
     <div className="space-y-6 font-body select-none relative h-full">
-      {/* Search & Filters block */}
       <div className="flex flex-wrap gap-4 items-center justify-between">
         <div className="flex flex-wrap gap-3 items-center flex-1 max-w-xl">
           <input
@@ -177,9 +194,7 @@ export default function IssueTracker() {
         </button>
       </div>
 
-      {/* Main Grid Viewport */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Left list of issues */}
         <div className="lg:col-span-2 space-y-4">
           <div className="card-5bloc space-y-4">
             <div className="border-b pb-3 flex items-center justify-between">
@@ -242,7 +257,6 @@ export default function IssueTracker() {
           </div>
         </div>
 
-        {/* Right side Detail panel */}
         <div>
           {activeIssue ? (
             <div className="card-5bloc space-y-5 animate-fade-in">
@@ -262,67 +276,85 @@ export default function IssueTracker() {
                 <h3 className="text-sm font-bold text-white leading-snug">{activeIssue.title}</h3>
                 <div className="flex gap-2 mt-2">
                   <span className="chip" style={getSeverityStyle(activeIssue.severity)}>{activeIssue.severity} severity</span>
-                  <span className={`px-2 py-0.5 border text-[10px] font-semibold uppercase ${getStatusBadge(activeIssue.status)}`}>
-                    {activeIssue.status.replace('_', ' ')}
-                  </span>
                 </div>
               </div>
 
-              <div className="p-3 bg-navy-mid border text-xs text-stone leading-relaxed">
-                {activeIssue.description}
+              <div>
+                <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1 font-mono">Status</label>
+                <select
+                  value={activeIssue.status}
+                  onChange={(e) =>
+                    setActiveIssue((prev) =>
+                      prev ? { ...prev, status: e.target.value as Issue['status'] } : null
+                    )
+                  }
+                  className="input-5bloc py-1.5 text-xs font-medium"
+                >
+                  <option value="open">Open</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="resolved">Resolved</option>
+                </select>
               </div>
 
-              {activeIssue.photo_attached && (
+              <div>
+                <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1 font-mono">Assigned To</label>
+                <input
+                  type="text"
+                  value={activeIssue.assigned_to || ''}
+                  onChange={(e) =>
+                    setActiveIssue((prev) => (prev ? { ...prev, assigned_to: e.target.value } : null))
+                  }
+                  className="input-5bloc py-1.5 text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1 font-mono">Description</label>
+                <textarea
+                  rows={4}
+                  value={activeIssue.description || ''}
+                  onChange={(e) =>
+                    setActiveIssue((prev) => (prev ? { ...prev, description: e.target.value } : null))
+                  }
+                  className="input-5bloc text-xs resize-none"
+                />
+              </div>
+
+              {activeIssue.photo_attached ? (
                 <div className="p-3 bg-navy-lt/30 border flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 text-stone font-mono text-[10px]">
-                    <span className="material-icons-outlined text-[16px] text-amber">photo_camera</span>
-                    <span>{activeIssue.photo_attached}</span>
+                  <div className="flex items-center gap-2 text-stone font-mono text-[10px] min-w-0">
+                    <span className="material-icons-outlined text-[16px] text-amber shrink-0">photo_camera</span>
+                    <span className="truncate">{activeIssue.photo_attached}</span>
                   </div>
-                  <button className="text-[10px] text-blue font-bold uppercase hover:underline">View Photo</button>
+                  <button
+                    type="button"
+                    onClick={() => openPhoto(activeIssue.photo_attached)}
+                    className="text-[10px] text-blue font-bold uppercase hover:underline shrink-0 ml-2"
+                  >
+                    View Photo
+                  </button>
                 </div>
-              )}
+              ) : null}
 
               <div className="grid grid-cols-2 gap-4 text-xs">
-                <div>
-                  <span className="text-stone font-mono text-[9px] uppercase block">Assigned To</span>
-                  <span className="font-semibold text-white mt-1 block truncate">{activeIssue.assigned_to}</span>
-                </div>
                 <div>
                   <span className="text-stone font-mono text-[9px] uppercase block">Reported By</span>
                   <span className="font-semibold text-white mt-1 block truncate">{activeIssue.reported_by}</span>
                 </div>
+                <div>
+                  <span className="text-stone font-mono text-[9px] uppercase block">Date</span>
+                  <span className="font-semibold text-white mt-1 block truncate">{activeIssue.date_reported}</span>
+                </div>
               </div>
 
-              <div className="pt-4 border-t space-y-3">
-                <h5 className="text-[10px] font-bold text-stone font-mono uppercase">Update Issue State</h5>
-                <div className="flex gap-2">
-                  {activeIssue.status !== 'resolved' && (
-                    <>
-                      {activeIssue.status === 'open' && (
-                        <button
-                          onClick={() => handleUpdateStatus(activeIssue.id, 'in_progress')}
-                          className="btn-secondary py-1.5 px-3 text-[11px] font-bold flex-1"
-                        >
-                          START PROGRESS
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleUpdateStatus(activeIssue.id, 'resolved')}
-                        className="btn-primary py-1.5 px-4 text-[11px] font-bold flex-1"
-                      >
-                        RESOLVE ISSUE
-                      </button>
-                    </>
-                  )}
-                  {activeIssue.status === 'resolved' && (
-                    <button
-                      onClick={() => handleUpdateStatus(activeIssue.id, 'open')}
-                      className="btn-secondary py-1.5 px-4 text-[11px] font-bold w-full text-error"
-                    >
-                      REOPEN ISSUE
-                    </button>
-                  )}
-                </div>
+              <div className="pt-4 border-t">
+                <button
+                  onClick={handleSaveIssue}
+                  disabled={saving}
+                  className="btn-primary py-1.5 px-4 text-[11px] font-bold w-full"
+                >
+                  {saving ? 'Saving…' : 'Save Changes'}
+                </button>
               </div>
             </div>
           ) : (
@@ -334,7 +366,6 @@ export default function IssueTracker() {
         </div>
       </div>
 
-      {/* Add Issue Modal */}
       {showReportModal && (
         <div className="fixed inset-0 bg-navy/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-md bg-navy-mid border p-6 space-y-4">
@@ -384,25 +415,44 @@ export default function IssueTracker() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1.5 font-mono">Assign Contractor</label>
-                  <select
+                  <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1.5 font-mono">Assign To</label>
+                  <input
+                    type="text"
+                    placeholder="Contractor name"
                     value={newIssue.assigned_to}
                     onChange={e => setNewIssue(prev => ({ ...prev, assigned_to: e.target.value }))}
                     className="input-5bloc py-1.5 text-xs font-medium"
-                  >
-                    <option value="Amit Sharma (Contractor)">Amit Sharma (Civil)</option>
-                    <option value="Rohan Deshmukh (MEP)">Rohan Deshmukh (MEP)</option>
-                  </select>
+                  />
                 </div>
               </div>
 
-              {/* Upload photo mock */}
               <div>
                 <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-2 font-mono">Attach Defect Photos (Optional)</label>
-                <div className="border border-dashed border-stone/30 p-4 text-center cursor-pointer hover:border-amber transition">
+                <input
+                  ref={photoInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) handlePhotoUpload(file)
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => photoInputRef.current?.click()}
+                  disabled={uploadingPhoto}
+                  className="w-full border border-dashed border-stone/30 p-4 text-center hover:border-amber transition"
+                >
                   <span className="material-icons-outlined text-[20px] text-stone">add_a_photo</span>
-                  <p className="text-[10px] text-stone mt-1">Select photo from device</p>
-                </div>
+                  <p className="text-[10px] text-stone mt-1">
+                    {uploadingPhoto
+                      ? 'Uploading…'
+                      : newIssue.photo_attached
+                        ? 'Photo attached — click to replace'
+                        : 'Select photo from device'}
+                  </p>
+                </button>
               </div>
 
               <div className="pt-4 border-t flex justify-end gap-3">

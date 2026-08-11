@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 5Bloc Web
 
-## Getting Started
+Next.js app for AEC project coordination + contractor marketplace. Canonical product surface for 5Bloc.
 
-First, run the development server:
+**Public release plan:** [`../5bloc-product-spec-v2.md`](../5bloc-product-spec-v2.md) §17 (MVP Weeks 1–4) + [`PRODUCTION.md`](PRODUCTION.md).
+
+## Go live (Supabase)
+
+1. Copy `.env.example` → `.env.local` (create if missing) and set:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `MOCK_AUTH=0` and `NEXT_PUBLIC_MOCK_AUTH=0` for real Auth
+2. Confirm marketplace tables exist (`contractors`, `tenders`, `bids`, `invoices` GST columns, `submittals`, `notifications`, `activity_log`). Migrations were applied to the linked Supabase project via MCP.
+3. Optional: Cloudflare R2 for file bodies. If R2 is unset, uploads use Supabase Storage bucket `documents` automatically.
+4. Optional: Razorpay keys for contractor badge subscriptions / payment links.
+5. Optional: `SUPABASE_SERVICE_ROLE_KEY` for payment webhooks **and** client-portal downloads of files stored in Supabase Storage (R2 downloads do not need it).
+6. Optional: `RESEND_API_KEY` — without it, invites still create shareable links but email is not sent.
+7. `npm install && npm run dev` → sign up as **architect** or **contractor**, complete onboarding, create a project.
+
+### Roles
+
+| Role | Home | Notes |
+|------|------|--------|
+| Architect | `/dashboard` | Projects, CRM, invoices, marketplace award |
+| Contractor / vendor | `/contractor` | Bids, profile, project membership after award |
+| Client | `/portal/[token]` | Token portal (no full app shell) |
+| Builder / consultant | `/builder`, `/consultant` | Slim shells; expand in later phases |
+
+### Smoke test
+
+Automated (needs `npm run dev` + live env):
+
+```bash
+# If local TLS interception breaks Supabase HTTPS:
+#   $env:NODE_TLS_REJECT_UNAUTHORIZED='0'   # PowerShell
+npm run smoke
+```
+
+Manual checklist:
+
+1. Architect signup → firm onboarding → create client → create project  
+2. Upload document, log RFI, edit milestones  
+3. Create invoice (CGST/SGST or IGST) from `/invoices/new`  
+4. Post tender from project overview → contractor bids → architect awards on Marketplace → **Bids to review**  
+5. Log + approve a submittal on the project  
+6. Enable portal on a project → open `/portal/[token]` → approve a shared doc / ask a question  
+
+Seeded smoke users (password `SmokeTest123!`): `smoke.architect@5bloc.test`, `smoke.vendor@5bloc.test`, `smoke.builder@5bloc.test`, `smoke.consultant@5bloc.test`, `smoke.orgmember@5bloc.test` against project **Wadhwa Prime Plaza**.
+
+Portal + invite lookup RPCs remain executable by `anon`; internal helpers (`can_access_project`, messaging, org role checks, etc.) are authenticated-only. Project invite accept uses `accept_project_invite` (SECURITY DEFINER) so membership updates are not blocked by RLS. Project-scoped tables allow accepted members via `can_access_project`; firm-only tables (CRM clients, invoices) stay org-scoped.
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npx tsc --noEmit
+npm run smoke
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Do not commit `.env.local`. Add `SUPABASE_SERVICE_ROLE_KEY` for Razorpay/Stripe webhooks to activate plans.

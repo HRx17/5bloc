@@ -54,10 +54,10 @@ function buildEmailHtml(contentHtml: string) {
 }
 
 // 1. Welcome Email
-export function WelcomeEmail(userName: string) {
+export function WelcomeEmail(userName: string, roleLabel = 'member', dashboardUrl = 'https://app.5bloc.com/dashboard') {
  return buildEmailHtml(`
  <h2 style="${styles.headline}">Welcome to 5Bloc, ${userName}!</h2>
- <p style="${styles.text}">You have successfully registered your firm. Get ready to eliminate the chaos of WhatsApp groups, Excel trackers, and scattered blueprints.</p>
+ <p style="${styles.text}">Your <strong style="color: #F5A623;">${roleLabel}</strong> workspace is ready. Get ready to eliminate the chaos of scattered chats, Excel trackers, and scattered blueprints.</p>
  <p style="${styles.text}">Here is how to set up your workspace in under 3 minutes:</p>
  <table style="${styles.table}">
  <tr>
@@ -78,8 +78,63 @@ export function WelcomeEmail(userName: string) {
  </tr>
  </table>
  <div style="text-align: center;">
- <a href="https://app.5bloc.com/dashboard" style="${styles.button}">GO TO MY DASHBOARD</a>
+ <a href="${dashboardUrl}" style="${styles.button}">GO TO MY DASHBOARD</a>
  </div>
+ `)
+}
+
+export function WaitlistConfirmEmail(userName: string, roleLabel: string, signupUrl: string) {
+ return buildEmailHtml(`
+ <h2 style="${styles.headline}">You're on the list, ${userName}</h2>
+ <p style="${styles.text}">We registered your interest as a <strong style="color: #F5A623;">${roleLabel}</strong>. Private beta invites go out as we onboard new practices each week.</p>
+ <p style="${styles.text}">Want to start exploring now? Create your free account and complete a short onboarding.</p>
+ <div style="text-align: center;">
+ <a href="${signupUrl}" style="${styles.button}">CREATE ACCOUNT →</a>
+ </div>
+ `)
+}
+
+export function PartnerSignupConfirmEmail(
+  userName: string,
+  listingType: 'contractor' | 'vendor',
+  businessName: string,
+  signupUrl: string,
+) {
+  const label = listingType === 'contractor' ? 'contractor' : 'vendor / supplier'
+  return buildEmailHtml(`
+ <h2 style="${styles.headline}">Listing received, ${userName}</h2>
+ <p style="${styles.text}"><strong style="color: #F7F5F0;">${businessName}</strong> is registered for the 5Bloc ${label} marketplace waitlist.</p>
+ <p style="${styles.text}">We'll review your profile and send early access before public launch. Create an app account now so you're ready when invites go out.</p>
+ <div style="text-align: center;">
+ <a href="${signupUrl}" style="${styles.button}">CREATE ${listingType === 'contractor' ? 'CONTRACTOR' : 'VENDOR'} ACCOUNT →</a>
+ </div>
+ `)
+}
+
+export function SignupTeamNotifyEmail(opts: {
+  kind: string
+  name: string
+  email: string
+  role?: string | null
+  firm?: string | null
+  city?: string | null
+  country?: string | null
+  extras?: string | null
+}) {
+  return buildEmailHtml(`
+ <h2 style="${styles.headline}">New signup forward</h2>
+ <p style="${styles.text}">A new lead or account was submitted on 5Bloc.</p>
+ <table style="${styles.table}">
+ <tr><th style="${styles.th}">Field</th><th style="${styles.th}">Value</th></tr>
+ <tr><td style="${styles.td}">Type</td><td style="${styles.td}">${opts.kind}</td></tr>
+ <tr><td style="${styles.td}">Name</td><td style="${styles.td}">${opts.name}</td></tr>
+ <tr><td style="${styles.td}">Email</td><td style="${styles.td}">${opts.email}</td></tr>
+ <tr><td style="${styles.td}">Role</td><td style="${styles.td}">${opts.role || '—'}</td></tr>
+ <tr><td style="${styles.td}">Firm / business</td><td style="${styles.td}">${opts.firm || '—'}</td></tr>
+ <tr><td style="${styles.td}">City</td><td style="${styles.td}">${opts.city || '—'}</td></tr>
+ <tr><td style="${styles.td}">Country</td><td style="${styles.td}">${opts.country || '—'}</td></tr>
+ ${opts.extras ? `<tr><td style="${styles.td}">Details</td><td style="${styles.td}">${opts.extras}</td></tr>` : ''}
+ </table>
  `)
 }
 

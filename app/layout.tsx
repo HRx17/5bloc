@@ -3,17 +3,18 @@ import "./globals.css";
 
 export const metadata: Metadata = {
  title: "5Bloc — Where Projects Get Built",
- description: "Project coordination and contractor marketplace for AEC industry",
+ description:
+   "5Bloc is the project coordination platform for the AEC industry. Architects coordinate, contractors bid and deliver, vendors get discovered. One workspace for everyone on the build.",
  manifest: "/manifest.json",
  appleWebApp: {
  capable: true,
- statusBarStyle: "black-translucent",
+ statusBarStyle: "default",
  title: "5Bloc",
  },
 };
 
 export const viewport: Viewport = {
- themeColor: "#121414",
+ themeColor: "#FAFAF8",
  width: "device-width",
  initialScale: 1,
 };
@@ -26,14 +27,18 @@ export default function RootLayout({
  return (
  <html lang="en" className="h-full select-none">
  <head>
- {/* Load Google Fonts & Material Icons Outlined precisely as per design specification */}
- <link 
- href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&display=swap" 
+ <link
+ href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
  rel="stylesheet"
  />
- <link 
- href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" 
+ <link
+ href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap"
  rel="stylesheet"
+ />
+ <script
+   dangerouslySetInnerHTML={{
+     __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark')document.documentElement.classList.add('dark')}catch(e){}})()`,
+   }}
  />
  </head>
  <body className="h-full bg-[var(--surface-canvas)] text-[var(--on-surface)] min-h-full overflow-hidden font-body">

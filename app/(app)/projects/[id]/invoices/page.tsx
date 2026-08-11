@@ -51,11 +51,7 @@ export default function ProjectInvoices() {
   })
 
   // Expense Tracker state
-  const [expenses, setExpenses] = useState<Expense[]>([
-    { id: 'exp-1', title: 'Site visit travel reimbursement', category: 'Site Travel', amount: 4500, date: '2026-05-12' },
-    { id: 'exp-2', title: 'A0 Blueprint printing for structural review', category: 'Printing/Plotting', amount: 8200, date: '2026-05-15' },
-    { id: 'exp-3', title: 'RERA submission processing fee', category: 'Municipal/Permit Fees', amount: 25000, date: '2026-05-22' },
-  ])
+  const [expenses, setExpenses] = useState<Expense[]>([])
   const [newExpense, setNewExpense] = useState({
     title: '',
     category: 'Site Travel' as Expense['category'],
@@ -80,127 +76,179 @@ export default function ProjectInvoices() {
   const totalCalc = calcSize * calcRate
 
   useEffect(() => {
-    // Mock load invoices & consultant payouts
-    const timer = setTimeout(() => {
-      const pName = projectId === 'proj-2' ? 'Lodha Signature Residences' : projectId === 'proj-3' ? 'Gundecha Industrial Park' : 'Wadhwa Prime Plaza'
-      const cName = projectId === 'proj-2' ? 'Karan Shah' : projectId === 'proj-3' ? 'Parth Patel' : 'Wadhwa Developers'
-
-      setInvoices([
-        {
-          id: 'inv-1',
-          invoice_number: 'INV-001',
-          client_name: cName,
-          project_name: pName,
-          subtotal: 350000,
-          total: 413000, // GST 18% included
-          status: 'paid',
-          due_date: '2026-02-15',
-          milestone_label: 'Initial Brief & Site Analysis'
-        },
-        {
-          id: 'inv-2',
-          invoice_number: 'INV-002',
-          client_name: cName,
-          project_name: pName,
-          subtotal: 1200000,
-          total: 1416000,
-          status: 'sent',
-          due_date: '2026-06-25',
-          milestone_label: 'Design Development signoff'
+    let cancelled = false
+    async function load() {
+      setLoading(true)
+      try {
+        const [invRes, expRes, payRes] = await Promise.all([
+          fetch(`/api/invoices?project_id=${projectId}`),
+          fetch(`/api/projects/${projectId}/expenses`),
+          fetch(`/api/projects/${projectId}/consultant-payments`),
+        ])
+        const invData = await invRes.json()
+        const expData = await expRes.json()
+        const payData = await payRes.json()
+        if (!invRes.ok) throw new Error(invData.error || 'Failed to load')
+        if (cancelled) return
+        setInvoices(
+          (invData.invoices || []).map((inv: any) => ({
+            id: inv.id,
+            invoice_number: inv.invoice_number,
+            client_name: inv.client_name,
+            project_name: inv.project_name,
+            subtotal: Number(inv.subtotal || 0),
+            total: Number(inv.total || 0),
+            status: inv.status,
+            due_date: inv.due_date || '',
+            milestone_label: inv.milestone_label || inv.phase || 'Fee installment',
+          }))
+        )
+        if (expRes.ok) {
+          setExpenses(
+            (expData.expenses || []).map((e: any) => ({
+              id: e.id,
+              title: e.title,
+              category: e.category,
+              amount: Number(e.amount || 0),
+              date: e.date,
+            }))
+          )
         }
-      ])
-
-      setConsultantPayments([
-        {
-          id: 'pay-1',
-          consultant_name: 'Aritro Roy',
-          discipline: 'Structural',
-          milestone_phase: 'Design Development',
-          amount: 120000,
-          status: 'paid',
-          due_date: '2026-05-20',
-          paid_date: '2026-05-18'
-        },
-        {
-          id: 'pay-2',
-          consultant_name: 'Rohan Deshmukh',
-          discipline: 'MEP',
-          milestone_phase: 'Design Development',
-          amount: 80000,
-          status: 'approved',
-          due_date: '2026-06-15'
-        },
-        {
-          id: 'pay-3',
-          consultant_name: 'Aritro Roy',
-          discipline: 'Structural',
-          milestone_phase: 'Construction Docs',
-          amount: 250000,
-          status: 'pending',
-          due_date: '2026-07-30'
+        if (payRes.ok) {
+          setConsultantPayments(
+            (payData.payments || []).map((p: any) => ({
+              id: p.id,
+              consultant_name: p.consultant_name,
+              discipline: p.discipline,
+              milestone_phase: p.milestone_phase || '',
+              amount: Number(p.amount || 0),
+              status: p.status,
+              due_date: p.due_date || '',
+              paid_date: p.paid_date || undefined,
+            }))
+          )
         }
-      ])
-      setLoading(false)
-    }, 300)
-    return () => clearTimeout(timer)
+      } catch {
+        if (!cancelled) setInvoices([])
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    load()
+    return () => {
+      cancelled = true
+    }
   }, [projectId])
 
-  const handleCreateInvoice = (e: React.FormEvent) => {
+  const handleCreateInvoice = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    const pName = projectId === 'proj-2' ? 'Lodha Signature Residences' : projectId === 'proj-3' ? 'Gundecha Industrial Park' : 'Wadhwa Prime Plaza'
-    const cName = projectId === 'proj-2' ? 'Karan Shah' : projectId === 'proj-3' ? 'Parth Patel' : 'Wadhwa Developers'
-    
-    // Tax calculation CGST 9% + SGST 9%
-    const totalTax = Math.round(newInvoice.subtotal * 0.18)
-    const total = newInvoice.subtotal + totalTax
-
-    const invRecord: Invoice = {
-      id: `inv-${Date.now()}`,
-      invoice_number: `INV-00${invoices.length + 1}`,
-      client_name: cName,
-      project_name: pName,
-      subtotal: newInvoice.subtotal,
-      total: total,
-      status: 'draft',
-      due_date: newInvoice.due_date || new Date().toISOString().split('T')[0],
-      milestone_label: newInvoice.milestone_label
+    const res = await fetch('/api/invoices', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        project_id: projectId,
+        milestone_label: newInvoice.milestone_label,
+        subtotal: newInvoice.subtotal,
+        due_date: newInvoice.due_date || null,
+        status: 'draft',
+        is_interstate: false,
+      }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      alert(data.error || 'Failed to create invoice')
+      return
     }
-
-    setInvoices(prev => [invRecord, ...prev])
+    const inv = data.invoice
+    setInvoices((prev) => [
+      {
+        id: inv.id,
+        invoice_number: inv.invoice_number,
+        client_name: inv.client_name,
+        project_name: inv.project_name,
+        subtotal: Number(inv.subtotal || 0),
+        total: Number(inv.total || 0),
+        status: inv.status,
+        due_date: inv.due_date || '',
+        milestone_label: inv.milestone_label || newInvoice.milestone_label,
+      },
+      ...prev,
+    ])
     setShowCreateModal(false)
     setNewInvoice({ milestone_label: 'Schematic Floor layouts approval', subtotal: 1200000, due_date: '' })
   }
 
-  const handleCreateExpense = (e: React.FormEvent) => {
+  const handleCreateExpense = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newExpense.title || !newExpense.amount) return
     const amountVal = parseFloat(newExpense.amount) || 0
-    const expRecord: Expense = {
-      id: `exp-${Date.now()}`,
-      title: newExpense.title,
-      category: newExpense.category,
-      amount: amountVal,
-      date: newExpense.date || new Date().toISOString().split('T')[0]
+    const res = await fetch(`/api/projects/${projectId}/expenses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: newExpense.title,
+        category: newExpense.category,
+        amount: amountVal,
+        date: newExpense.date || new Date().toISOString().split('T')[0],
+      }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      alert(data.error || 'Failed to save expense')
+      return
     }
-    setExpenses(prev => [...prev, expRecord])
+    setExpenses((prev) => [
+      {
+        id: data.expense.id,
+        title: data.expense.title,
+        category: data.expense.category,
+        amount: Number(data.expense.amount || 0),
+        date: data.expense.date,
+      },
+      ...prev,
+    ])
     setNewExpense({
       title: '',
       category: 'Site Travel',
       amount: '',
-      date: new Date().toISOString().split('T')[0]
+      date: new Date().toISOString().split('T')[0],
     })
   }
 
-  const handleDeleteExpense = (id: string) => {
-    setExpenses(prev => prev.filter(exp => exp.id !== id))
+  const handleDeleteExpense = async (id: string) => {
+    const res = await fetch(`/api/projects/${projectId}/expenses?expense_id=${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      alert(data.error || 'Failed to delete expense')
+      return
+    }
+    setExpenses((prev) => prev.filter((exp) => exp.id !== id))
   }
 
-  const handleMarkPaymentPaid = (payId: string) => {
-    setConsultantPayments(prev => 
-      prev.map(p => p.id === payId ? { ...p, status: 'paid', paid_date: new Date().toISOString().split('T')[0] } : p)
+  const handleMarkPaymentPaid = async (payId: string) => {
+    const res = await fetch(`/api/projects/${projectId}/consultant-payments`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ payment_id: payId, status: 'paid' }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      alert(data.error || 'Failed to update payment')
+      return
+    }
+    setConsultantPayments((prev) =>
+      prev.map((p) =>
+        p.id === payId
+          ? {
+              ...p,
+              status: 'paid',
+              paid_date: data.payment?.paid_date || new Date().toISOString().split('T')[0],
+            }
+          : p
+      )
     )
-    alert('Consultant disbursement recorded successfully (simulated)')
   }
 
   const getInvoiceStatusStyle = (st: Invoice['status']) => {
@@ -352,16 +400,36 @@ export default function ProjectInvoices() {
                         <td className="py-4 pr-2 text-right">
                           <div className="flex gap-2 justify-end">
                             <button
-                              onClick={() => alert(`Simulating Razorpay online receipt validation (2% merchant fee audit)`)}
+                              onClick={() =>
+                                alert(
+                                  'Online payment receipts require Razorpay keys. Invoice stays marked unpaid until webhook confirms payment.'
+                                )
+                              }
                               className="p-1 text-stone hover:text-white hover:bg-navy-lt transition"
                               title="Razorpay checkout info"
                             >
                               <span className="material-icons-outlined text-[16px] text-blue">payments</span>
                             </button>
                             <button
-                              onClick={() => alert(`Simulated downloading PDF file`)}
+                              onClick={() => {
+                                const lines = [
+                                  `Invoice ${inv.invoice_number}`,
+                                  `Milestone: ${inv.milestone_label}`,
+                                  `Due: ${inv.due_date}`,
+                                  `Subtotal: ${inv.subtotal}`,
+                                  `Total: ${inv.total}`,
+                                  `Status: ${inv.status}`,
+                                ]
+                                const blob = new Blob([lines.join('\n')], { type: 'text/plain' })
+                                const url = URL.createObjectURL(blob)
+                                const a = document.createElement('a')
+                                a.href = url
+                                a.download = `${inv.invoice_number || 'invoice'}.txt`
+                                a.click()
+                                URL.revokeObjectURL(url)
+                              }}
                               className="p-1 text-stone hover:text-white hover:bg-navy-lt transition"
-                              title="Download PDF"
+                              title="Download invoice summary"
                             >
                               <span className="material-icons-outlined text-[16px]">picture_as_pdf</span>
                             </button>
@@ -563,7 +631,47 @@ export default function ProjectInvoices() {
                 <h3 className="text-xs font-bold font-mono text-amber uppercase tracking-wider">Consultant Disbursements</h3>
                 <p className="text-[10px] text-stone mt-0.5">Fees owed to MEP & structural engineers.</p>
               </div>
-              <span className="material-icons-outlined text-stone text-[18px]">engineering</span>
+              <button
+                type="button"
+                className="btn-secondary text-[10px] py-1 px-2"
+                onClick={async () => {
+                  const name = prompt('Consultant name')
+                  if (!name) return
+                  const amountStr = prompt('Amount (INR)', '50000')
+                  const amount = Number(amountStr)
+                  if (!Number.isFinite(amount)) return
+                  const res = await fetch(`/api/projects/${projectId}/consultant-payments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      consultant_name: name,
+                      discipline: 'Structural',
+                      milestone_phase: 'Design Development',
+                      amount,
+                      status: 'pending',
+                    }),
+                  })
+                  const data = await res.json()
+                  if (!res.ok) {
+                    alert(data.error || 'Failed to add')
+                    return
+                  }
+                  setConsultantPayments((prev) => [
+                    {
+                      id: data.payment.id,
+                      consultant_name: data.payment.consultant_name,
+                      discipline: data.payment.discipline,
+                      milestone_phase: data.payment.milestone_phase || '',
+                      amount: Number(data.payment.amount || 0),
+                      status: data.payment.status,
+                      due_date: data.payment.due_date || '',
+                    },
+                    ...prev,
+                  ])
+                }}
+              >
+                Add payout
+              </button>
             </div>
 
             {loading ? (

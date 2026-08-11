@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Logo } from '@/components/brand/LogoMark'
+import { UpgradePrompt } from '@/components/payments/UpgradePrompt'
 
 interface LineItem {
  category: string
@@ -23,6 +23,12 @@ interface EstimateResult {
  line_items: LineItem[]
 }
 
+function normalizePlan(raw: unknown): 'free' | 'solo' | 'team' {
+  const p = String(raw || 'free').toLowerCase()
+  if (p === 'solo' || p === 'team' || p === 'free') return p
+  return 'free'
+}
+
 export default function AIEstimator() {
  const [form, setForm] = useState({
  projectType: 'residential',
@@ -31,11 +37,16 @@ export default function AIEstimator() {
  floors: '2',
  specLevel: 'premium',
  notes: '',
+ projectId: '',
  })
 
+ const [projects, setProjects] = useState<{ id: string; name: string }[]>([])
  const [loading, setLoading] = useState(false)
+ const [saving, setSaving] = useState(false)
  const [loadingStep, setLoadingStep] = useState(0)
  const [result, setResult] = useState<EstimateResult | null>(null)
+ const [planGateLoading, setPlanGateLoading] = useState(true)
+ const [needsUpgrade, setNeedsUpgrade] = useState(false)
  
  // Free limits counter state
  const [remainingCalls, setRemainingCalls] = useState(3)
@@ -47,6 +58,26 @@ export default function AIEstimator() {
  'Formulating structural concrete volume schedules...',
  'Structuring full itemized Bill of Quantities...'
  ]
+
+ useEffect(() => {
+ fetch('/api/projects')
+ .then((r) => r.json())
+ .then((d) => setProjects((d.projects || []).map((p: any) => ({ id: p.id, name: p.name }))))
+ .catch(() => {})
+ }, [])
+
+ useEffect(() => {
+ fetch('/api/me')
+   .then((r) => r.json())
+   .then((d) => {
+     const profile = d.profile || {}
+     const plan = normalizePlan(profile.plan || profile.organisations?.plan)
+     const aiAddOn = !!profile.ai_add_on
+     setNeedsUpgrade(plan === 'free' && !aiAddOn)
+   })
+   .catch(() => setNeedsUpgrade(false))
+   .finally(() => setPlanGateLoading(false))
+ }, [])
 
  useEffect(() => {
  let interval: any
@@ -71,76 +102,105 @@ export default function AIEstimator() {
  setResult(null)
 
  try {
- // Simulate network request to estimator
- await new Promise(resolve => setTimeout(resolve, 4000))
-
- // Simulate calculations
- const sqft = parseFloat(form.sqft) || 2000
- const floors = parseInt(form.floors) || 1
- const isLuxury = form.specLevel === 'luxury'
- const isPremium = form.specLevel === 'premium'
- 
- const multiplier = isLuxury ? 2.2 : isPremium ? 1.5 : 1.0
- const baseRate = 1800 // base construction cost per sqft in India
- const constCost = sqft * baseRate * multiplier
- 
- // Setup line items
- const lines: LineItem[] = [
- { category: 'Excavation', description: 'Foundation earthwork excavation & backfill', quantity: sqft * 0.05, unit: 'cum', rate: 320 * multiplier, amount: 0 },
- { category: 'Concrete (RCC)', description: 'Reinforced concrete structure (M25 grade)', quantity: sqft * 0.08, unit: 'cum', rate: 9200 * multiplier, amount: 0 },
- { category: 'Brickwork', description: 'Wall structural brick masonry in mortar 1:6', quantity: sqft * 0.12, unit: 'sqm', rate: 1100 * multiplier, amount: 0 },
- { category: 'Flooring', description: isLuxury ? 'Italian Marble finishes' : 'Vitrified tiles tiling', quantity: sqft * 0.9, unit: 'sqft', rate: (isLuxury ? 280 : 85) * multiplier, amount: 0 },
- { category: 'Electrical', description: 'Concealed conduits & fixtures modular wiring', quantity: sqft, unit: 'sqft', rate: 180 * multiplier, amount: 0 },
- { category: 'Plumbing', description: 'Premium CPVC plumbing water lines', quantity: sqft, unit: 'sqft', rate: 120 * multiplier, amount: 0 },
- ]
-
- // Set amounts
- const processedLines = lines.map(line => ({
- ...line,
- rate: Math.round(line.rate),
- amount: Math.round(line.quantity * line.rate)
- }))
-
- const subtotal = processedLines.reduce((sum, line) => sum + line.amount, 0)
- const feePct = isLuxury ? 10 : isPremium ? 9 : 8
- const archFee = Math.round(subtotal * (feePct / 100))
-
- processedLines.push({
- category: 'Architect Fees',
- description: `Professional planning & structural detailing consultation (${feePct}%)`,
- quantity: 1,
- unit: 'lumpsum',
- rate: archFee,
- amount: archFee
- })
-
- const total = subtotal + archFee
-
- setResult({
- total_estimate: total,
- total_min: Math.round(total * 0.92),
- total_max: Math.round(total * 1.08),
- confidence_range_pct: 8,
+ const res = await fetch('/api/ai/estimate', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({
+ projectType: form.projectType,
  city: form.city,
- spec_level: form.specLevel,
- currency: 'INR',
- line_items: processedLines
+ sqft: parseFloat(form.sqft) || 0,
+ floors: parseInt(form.floors, 10) || 1,
+ specLevel: form.specLevel,
+ notes: form.notes,
+ projectId: form.projectId || null,
+ }),
  })
+ const data = await res.json()
+ if (!res.ok) {
+ if (res.status === 402) {
+ setNeedsUpgrade(true)
+ alert(data.error || 'Upgrade required to use the AI estimator')
+ return
+ }
+ if (res.status === 429) {
+ alert(data.error || 'Daily estimate limit reached')
+ setRemainingCalls(0)
+ return
+ }
+ throw new Error(data.error || 'Estimate failed')
+ }
 
- setRemainingCalls(prev => Math.max(0, prev - 1))
+ const estimate = data.data as EstimateResult
+ setResult(estimate)
+ if (typeof data.remaining === 'number') setRemainingCalls(data.remaining)
+ else setRemainingCalls((prev) => Math.max(0, prev - 1))
 
- // Auto check checklist task in localStorage
  const savedChecklist = localStorage.getItem('onboarding_checklist_v1')
  if (savedChecklist) {
  const parsed = JSON.parse(savedChecklist)
  parsed.ai = true
  localStorage.setItem('onboarding_checklist_v1', JSON.stringify(parsed))
  }
-
- } catch (err) {
+ } catch (err: any) {
  console.error(err)
+ alert(err?.message || 'Estimate failed')
  } finally {
  setLoading(false)
+ }
+ }
+
+ const handleExport = () => {
+ if (!result) return
+ const lines = [
+ `5Bloc AI Estimate — ${result.city} / ${result.spec_level}`,
+ `Total: ${result.currency || 'INR'} ${result.total_estimate}`,
+ `Range: ${result.total_min} – ${result.total_max}`,
+ '',
+ 'Category,Description,Qty,Unit,Rate,Amount',
+ ...result.line_items.map(
+ (l) =>
+ `${l.category},"${l.description}",${l.quantity},${l.unit},${l.rate},${l.amount}`
+ ),
+ ]
+ const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' })
+ const url = URL.createObjectURL(blob)
+ const a = document.createElement('a')
+ a.href = url
+ a.download = `5bloc-estimate-${Date.now()}.csv`
+ a.click()
+ URL.revokeObjectURL(url)
+ }
+
+ const handleSaveToProject = async () => {
+ if (!result) return
+ if (!form.projectId) {
+ alert('Select a project before saving')
+ return
+ }
+ setSaving(true)
+ try {
+ const res = await fetch(`/api/projects/${form.projectId}/estimates`, {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({
+ result,
+ estimated_total: result.total_estimate,
+ breakdown: result.line_items,
+ project_type: form.projectType,
+ city: form.city,
+ sqft: parseFloat(form.sqft) || null,
+ floors: parseInt(form.floors, 10) || null,
+ specLevel: form.specLevel,
+ input: form,
+ }),
+ })
+ const data = await res.json()
+ if (!res.ok) throw new Error(data.error || 'Save failed')
+ alert(`Estimate saved to project (id ${data.estimate_id})`)
+ } catch (err: any) {
+ alert(err?.message || 'Save failed')
+ } finally {
+ setSaving(false)
  }
  }
 
@@ -181,6 +241,18 @@ export default function AIEstimator() {
  <p className="text-xs text-stone mt-1">Generate highly accurate quantity surveys and editable BOQ estimates using Claude AI.</p>
  </div>
 
+ {planGateLoading ? (
+   <div className="card-5bloc p-8 text-center text-stone animate-pulse text-xs">
+     Checking plan access…
+   </div>
+ ) : needsUpgrade ? (
+   <UpgradePrompt
+     title="AI Estimator is a paid feature"
+     message="Free plans cannot run AI cost estimates. Upgrade to Solo or Team, or add the AI add-on, to unlock quantity surveys and BOQ generation."
+   />
+ ) : null}
+
+ {!needsUpgrade && !planGateLoading && (
  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
  
  {/* Left Column Form inputs */}
@@ -271,6 +343,21 @@ export default function AIEstimator() {
  </div>
  ))}
  </div>
+ </div>
+
+ <div>
+ <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1.5 font-mono">Save target project</label>
+ <select
+ name="projectId"
+ value={form.projectId}
+ onChange={handleInputChange}
+ className="input-5bloc py-1.5 text-xs font-medium"
+ >
+ <option value="">Select project…</option>
+ {projects.map((p) => (
+ <option key={p.id} value={p.id}>{p.name}</option>
+ ))}
+ </select>
  </div>
 
  <div>
@@ -390,16 +477,17 @@ export default function AIEstimator() {
  {/* Action buttons */}
  <div className="pt-4 flex justify-end gap-3.5">
  <button 
- onClick={() => alert('BOQ estimate exported as PDF (simulated)')}
+ onClick={handleExport}
  className="btn-secondary text-xs py-2 px-5"
  >
- EXPORT PDF
+ EXPORT CSV
  </button>
  <button 
- onClick={() => alert('Estimate saved to project metadata successfully (simulated)')}
+ onClick={handleSaveToProject}
+ disabled={saving || !form.projectId}
  className="btn-primary text-xs py-2 px-6 font-bold"
  >
- SAVE TO PROJECT
+ {saving ? 'SAVING…' : 'SAVE TO PROJECT'}
  </button>
  </div>
  </div>
@@ -414,6 +502,7 @@ export default function AIEstimator() {
  </div>
 
  </div>
+ )}
  </div>
  )
 }

@@ -23,6 +23,21 @@ export default function OnboardingChecklist() {
  const [dismissed, setDismissed] = useState(true) // Start dismissed, then check client side
 
  useEffect(() => {
+ // Prefer first project documents for the upload checklist item
+ fetch('/api/projects')
+   .then((r) => r.json())
+   .then((d) => {
+     const first = (d.projects || [])[0]
+     if (first?.id) {
+       setTasks((prev) =>
+         prev.map((t) =>
+           t.id === 'document' ? { ...t, url: `/projects/${first.id}/documents` } : t
+         )
+       )
+     }
+   })
+   .catch(() => {})
+
  // Read state from localStorage
  const saved = localStorage.getItem('onboarding_checklist_v1')
  if (saved) {

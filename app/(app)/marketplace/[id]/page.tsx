@@ -28,33 +28,46 @@ export default function ContractorProfile() {
 
  const [contractor, setContractor] = useState<ContractorDetail | null>(null)
  const [activeTab, setActiveTab] = useState<'about' | 'portfolio' | 'reviews'>('about')
+ const [projects, setProjects] = useState<{ id: string; name: string }[]>([])
+ const [selectedProjectId, setSelectedProjectId] = useState('')
 
  useEffect(() => {
- // Mock load contractor profile
+ fetch(`/api/contractors/${contractorId}`)
+ .then((r) => r.json())
+ .then((d) => {
+ if (!d.contractor) {
+ setContractor(null)
+ return
+ }
+ const c = d.contractor
  setContractor({
- id: contractorId,
- company_name: 'Amit Sharma Civil Construction Ltd.',
- bio: 'Specialists in foundation layouts, reinforced cement concrete (RCC) frames, structural layout alignments, and block masonry in Mumbai. Serving premium residential developments for over a decade.',
- specializations: ['Civil', 'Foundation', 'Masonry', 'RCC Structs'],
- service_cities: ['Mumbai', 'Thane', 'Pune'],
- years_experience: 12,
- verified: true,
- rating: 4.8,
- reviews_count: 14,
- jobs_completed: 38,
- team_size: 45,
- website: 'www.amitsharmaconstruction.in',
- portfolio: [
- { title: 'Bandra Luxury Villa Substructure', image: 'https://dummyimage.com/600x400/0c1220/f5a623.png&text=Substructure_Bandra' },
- { title: 'Juhu Residential RCC Framing', image: 'https://dummyimage.com/600x400/0c1220/f5a623.png&text=Framing_Juhu' },
- { title: 'Thane Warehousing Foundations', image: 'https://dummyimage.com/600x400/0c1220/f5a623.png&text=Foundation_Thane' },
- ],
- reviews: [
- { clientName: 'Karan Shah (Builder)', rating: 5, text: 'Amit Sharma delivered the concrete frame structure exactly on timeline specifications. Excellent coordination on concrete slip tests.', date: '2026-04-12' },
- { clientName: 'Parth Patel (Architect)', rating: 4, text: 'Strong structural brickwork layouts. RFIs were resolved efficiently. Highly recommended for Bandra area developments.', date: '2026-03-20' },
- ]
+ id: c.id,
+ company_name: c.company_name,
+ bio: c.bio || '',
+ specializations: c.specializations || [],
+ service_cities: c.service_cities || [],
+ years_experience: c.years_experience || 0,
+ verified: !!c.verified,
+ rating: Number(c.rating || 0),
+ reviews_count: c.reviews_count || 0,
+ jobs_completed: c.jobs_completed || 0,
+ team_size: c.team_size || 0,
+ website: c.website || '',
+ portfolio: c.portfolio || [],
+ reviews: c.reviews || [],
+ })
  })
  }, [contractorId])
+
+ useEffect(() => {
+ fetch('/api/projects')
+ .then((r) => r.json())
+ .then((d) => {
+ const list = Array.isArray(d.projects) ? d.projects : []
+ setProjects(list.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })))
+ })
+ .catch(() => setProjects([]))
+ }, [])
 
  if (!contractor) {
  return (
@@ -212,19 +225,29 @@ export default function ContractorProfile() {
  <div className="space-y-3.5 pt-2">
  <div>
  <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1.5 font-mono">Select Project *</label>
- <select className="input-5bloc py-1.5 text-xs font-medium">
- <option value="proj-1">Wadhwa Prime Plaza</option>
- <option value="proj-2">Lodha Signature Residences</option>
- <option value="proj-3">Gundecha Industrial Park</option>
+ <select
+ className="input-5bloc py-1.5 text-xs font-medium"
+ value={selectedProjectId}
+ onChange={(e) => setSelectedProjectId(e.target.value)}
+ >
+ <option value="">Select a project</option>
+ {projects.map((p) => (
+ <option key={p.id} value={p.id}>{p.name}</option>
+ ))}
  </select>
  </div>
  
  <button
  onClick={() => {
- alert(`Invitation sent successfully to Amit Sharma Civil Construction Ltd.`)
+ if (!selectedProjectId) {
+ alert('Select a project first')
+ return
+ }
+ alert(`Invitation sent successfully to ${contractor.company_name}`)
  router.push('/marketplace')
  }}
  className="w-full btn-primary py-2.5 text-xs font-bold"
+ disabled={!selectedProjectId}
  >
  SEND DIRECT INVITATION
  </button>

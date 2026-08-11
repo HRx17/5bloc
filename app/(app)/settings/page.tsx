@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { startRazorpayCheckout } from '@/lib/payments/checkout'
 
 interface OrgMember {
  id: string
@@ -12,30 +13,31 @@ interface OrgMember {
 
 export default function Settings() {
  const [activeTab, setActiveTab] = useState<'profile' | 'organisation' | 'team' | 'billing' | 'notifications' | 'integrations'>('profile')
+ const [hydrated, setHydrated] = useState(false)
  
  // Profile settings
  const [profile, setProfile] = useState({
- name: 'Parth Patel',
- email: 'parth@5bloc.com',
- phone: '9876543210',
+ name: '',
+ email: '',
+ phone: '',
  avatar: '',
  })
 
  // Org settings
  const [org, setOrg] = useState({
- name: 'Apex Architects',
+ name: '',
  logo: '',
- gst: '27AAAAA1111A1Z1',
- city: 'Mumbai',
- address: 'Bandra West, Linking Road',
+ gst: '',
+ city: '',
+ address: '',
  })
 
  // Team settings
- const [team, setTeam] = useState<OrgMember[]>([
- { id: 'tm-1', name: 'Parth Patel', email: 'parth@5bloc.com', role: 'Owner', joined_at: '2026-01-15' },
- { id: 'tm-2', name: 'Aritro Roy', email: 'aritro@5bloc.com', role: 'Admin', joined_at: '2026-02-10' }
- ])
+ const [team, setTeam] = useState<OrgMember[]>([])
+ const [pendingInvites, setPendingInvites] = useState<{ id: string; email: string; role: string }[]>([])
  const [newTeamEmail, setNewTeamEmail] = useState('')
+ const [teamBusy, setTeamBusy] = useState(false)
+ const [billingBusy, setBillingBusy] = useState(false)
 
  // Notifications settings
  const [notifications, setNotifications] = useState({
@@ -46,38 +48,142 @@ export default function Settings() {
  weekly_digest: false,
  })
 
- const handleProfileSave = (e: React.FormEvent) => {
- e.preventDefault()
- alert('Profile saved successfully (simulated)')
+ const loadTeam = async () => {
+ const res = await fetch('/api/org/team')
+ if (!res.ok) return
+ const d = await res.json()
+ setTeam(
+ (d.members || []).map((m: any) => ({
+ id: m.id,
+ name: m.name,
+ email: m.email,
+ role: m.role,
+ joined_at: m.joined_at || '—',
+ }))
+ )
+ setPendingInvites(d.invites || [])
  }
 
- const handleOrgSave = (e: React.FormEvent) => {
+ useEffect(() => {
+ fetch('/api/me')
+ .then((r) => r.json())
+ .then((d) => {
+ const p = d.profile
+ if (!p) return
+ setProfile({
+ name: p.full_name || '',
+ email: p.email || '',
+ phone: p.phone || '',
+ avatar: p.avatar_url || '',
+ })
+ setOrg({
+ name: p.organisations?.name || '',
+ logo: p.organisations?.logo_url || '',
+ gst: p.organisations?.gst_number || '',
+ city: p.organisations?.city || '',
+ address: p.organisations?.address || '',
+ })
+ setNotifications({
+ new_projects: p.notify_email !== false,
+ comments: p.notify_bids !== false,
+ approvals: p.notify_approvals !== false,
+ rfis: p.notify_rfi !== false,
+ weekly_digest: false,
+ })
+ })
+ .finally(() => setHydrated(true))
+ loadTeam().catch(() => {})
+ }, [])
+
+ const handleProfileSave = async (e: React.FormEvent) => {
  e.preventDefault()
- alert('Organisation settings saved successfully (simulated)')
+ const res = await fetch('/api/me', {
+ method: 'PATCH',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({
+ full_name: profile.name,
+ phone: profile.phone,
+ avatar_url: profile.avatar || null,
+ }),
+ })
+ const data = await res.json()
+ alert(res.ok ? 'Profile saved' : data.error || 'Save failed')
  }
 
- const handleInviteTeam = (e: React.FormEvent) => {
+ const handleOrgSave = async (e: React.FormEvent) => {
  e.preventDefault()
- if (!newTeamEmail) return
- setTeam(prev => [...prev, {
- id: `tm-${Date.now()}`,
- name: newTeamEmail.split('@')[0],
- email: newTeamEmail,
- role: 'Member',
- joined_at: new Date().toISOString().split('T')[0]
- }])
+ const res = await fetch('/api/me', {
+ method: 'PATCH',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({
+ org: { name: org.name, gst: org.gst, city: org.city, address: org.address },
+ }),
+ })
+ const data = await res.json()
+ alert(res.ok ? 'Organisation settings saved' : data.error || 'Save failed')
+ }
+
+ const handleInviteTeam = async (e: React.FormEvent) => {
+ e.preventDefault()
+ if (!newTeamEmail || teamBusy) return
+ setTeamBusy(true)
+ try {
+ const res = await fetch('/api/org/team', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ email: newTeamEmail, member_role: 'member' }),
+ })
+ const data = await res.json()
+ if (!res.ok) throw new Error(data.error || 'Invite failed')
  setNewTeamEmail('')
- alert(`Invite sent via Resend email to ${newTeamEmail}`)
+ await loadTeam()
+ alert(
+   data.email_warning
+     ? `${data.email_warning}\n\nLink: ${data.accept_url || ''}`
+     : `Invite sent to ${data.invite?.email || newTeamEmail}`
+ )
+ } catch (err: any) {
+ alert(err?.message || 'Invite failed')
+ } finally {
+ setTeamBusy(false)
+ }
  }
 
- const handleRemoveTeam = (id: string) => {
- if (confirm('Are you sure you want to remove this team member?')) {
- setTeam(prev => prev.filter(m => m.id !== id))
+ const handleRemoveTeam = async (id: string) => {
+ if (!confirm('Are you sure you want to remove this team member?')) return
+ const res = await fetch(`/api/org/team?member_id=${encodeURIComponent(id)}`, { method: 'DELETE' })
+ const data = await res.json()
+ if (!res.ok) {
+ alert(data.error || 'Remove failed')
+ return
+ }
+ await loadTeam()
+ }
+
+ const handleBilling = async (plan: 'solo' | 'team' | 'ai') => {
+ if (billingBusy) return
+ setBillingBusy(true)
+ try {
+ const result = await startRazorpayCheckout({ plan, redirect: '/settings?subscribed=true' })
+ if (result.message) alert(result.message)
+ } finally {
+ setBillingBusy(false)
  }
  }
 
- const handleToggleNotification = (key: keyof typeof notifications) => {
- setNotifications(prev => ({ ...prev, [key]: !prev[key] }))
+ const handleToggleNotification = async (key: keyof typeof notifications) => {
+ const next = { ...notifications, [key]: !notifications[key] }
+ setNotifications(next)
+ await fetch('/api/me', {
+ method: 'PATCH',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({
+ notify_email: next.new_projects,
+ notify_rfi: next.rfis,
+ notify_approvals: next.approvals,
+ notify_bids: next.comments,
+ }),
+ })
  }
 
  return (
@@ -86,7 +192,9 @@ export default function Settings() {
  {/* Header */}
  <div>
  <h1 className="text-2xl font-bold tracking-wide">Workspace Settings</h1>
- <p className="text-xs text-stone mt-1">Configure profile details, user roles, notifications, and invoicing subscriptions.</p>
+ <p className="text-xs text-stone mt-1">
+ {hydrated ? 'Configure profile, firm, notifications, and billing.' : 'Loading your account…'}
+ </p>
  </div>
 
  <div className="flex flex-col md:flex-row gap-6 items-start">
@@ -244,10 +352,30 @@ export default function Settings() {
  className="input-5bloc py-1.5 text-xs"
  />
  </div>
- <button type="submit" className="btn-primary py-2 px-6 text-xs h-[34px]">
- Send invite
+ <button type="submit" disabled={teamBusy} className="btn-primary py-2 px-6 text-xs h-[34px]">
+ {teamBusy ? 'Sending…' : 'Send invite'}
  </button>
  </form>
+ {pendingInvites.length > 0 && (
+ <div className="pt-2 space-y-1">
+ <p className="text-[10px] text-stone uppercase tracking-wider">Pending invites</p>
+ {pendingInvites.map((inv) => (
+ <div key={inv.id} className="flex items-center justify-between text-xs text-stone">
+ <span>{inv.email}</span>
+ <button
+ type="button"
+ className="text-error text-[11px]"
+ onClick={async () => {
+ await fetch(`/api/org/team?invite_id=${encodeURIComponent(inv.id)}`, { method: 'DELETE' })
+ await loadTeam()
+ }}
+ >
+ Revoke
+ </button>
+ </div>
+ ))}
+ </div>
+ )}
  </div>
 
  {/* Members lists */}
@@ -327,10 +455,11 @@ export default function Settings() {
  </span>
  ) : (
  <button 
- onClick={() => alert(`Opening Razorpay checkout modal (subscription ID loading)`)}
+ onClick={() => handleBilling(plan.name.includes('Team') ? 'team' : 'solo')}
+ disabled={billingBusy || plan.current}
  className="w-full btn-primary text-xs py-1.5 font-medium"
  >
- {plan.action}
+ {billingBusy ? 'Opening…' : plan.action}
  </button>
  )}
  </div>
@@ -350,10 +479,11 @@ export default function Settings() {
  </div>
  </div>
  <button 
- onClick={() => alert('Razorpay subscription checkout triggered')}
+ onClick={() => handleBilling('ai')}
+ disabled={billingBusy}
  className="btn-secondary py-1.5 text-xs font-medium text-amber hover:"
  >
- Add to billing
+ {billingBusy ? 'Opening…' : 'Add to billing'}
  </button>
  </div>
  </div>
@@ -412,12 +542,12 @@ export default function Settings() {
  </p>
  </div>
  <div className="flex items-center justify-between mt-4 pt-3">
- <span className="text-[10px] text-stone font-medium">Status: Connected</span>
+ <span className="text-[10px] text-stone font-medium">Status: Not connected</span>
  <button 
- onClick={() => alert('Simulated Gmail connection refreshed')} 
+ onClick={() => alert('Gmail OAuth is not configured yet. Coming soon.')} 
  className="btn-secondary py-1 px-3 text-[10px] font-semibold"
  >
- Refresh Connect
+ Connect
  </button>
  </div>
  </div>
@@ -434,12 +564,12 @@ export default function Settings() {
  </p>
  </div>
  <div className="flex items-center justify-between mt-4 pt-3">
- <span className="text-[10px] text-stone font-medium">Status: Enabled</span>
+ <span className="text-[10px] text-stone font-medium">Status: Not connected</span>
  <button 
- onClick={() => alert('Microsoft Office 365 / Google Sheets sync triggered')} 
+ onClick={() => alert('Sheets sync is not configured yet. Coming soon.')} 
  className="btn-secondary py-1 px-3 text-[10px] font-semibold"
  >
- Sync Now
+ Connect
  </button>
  </div>
  </div>
@@ -456,12 +586,12 @@ export default function Settings() {
  </p>
  </div>
  <div className="flex items-center justify-between mt-4 pt-3">
- <span className="text-[10px] text-stone font-medium">Status: Active</span>
+ <span className="text-[10px] text-stone font-medium">Status: Not connected</span>
  <button 
- onClick={() => alert('Simulating Google Calendar webhook sync...')} 
+ onClick={() => alert('Calendar sync is not configured yet. Coming soon.')} 
  className="btn-secondary py-1 px-3 text-[10px] font-semibold"
  >
- Resync Dates
+ Connect
  </button>
  </div>
  </div>
@@ -478,9 +608,9 @@ export default function Settings() {
  </p>
  </div>
  <div className="flex items-center justify-between mt-4 pt-3">
- <span className="text-[10px] text-stone font-medium">Status: Active Link</span>
+ <span className="text-[10px] text-stone font-medium">Status: Not connected</span>
  <button 
- onClick={() => alert('WhatsApp quick-link integration verified')} 
+ onClick={() => alert('WhatsApp Business API is not configured yet. Coming soon.')} 
  className="btn-secondary py-1 px-3 text-[10px] font-semibold"
  >
  Verify Link

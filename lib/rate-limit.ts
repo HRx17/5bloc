@@ -1,4 +1,5 @@
 import { Redis } from '@upstash/redis'
+import { isProduction } from '@/lib/env'
 
 const hasRedis = !!(
   process.env.UPSTASH_REDIS_REST_URL &&
@@ -13,14 +14,65 @@ export const redis = hasRedis
   : null
 
 const LIMITS: Record<string, { free: number; paid: number }> = {
-  estimate:  { free: 3,  paid: Infinity },
-  rera:      { free: 0,  paid: Infinity },  // paid/add-on only
-  rfi_draft: { free: 5,  paid: Infinity },
-  spec:      { free: 10, paid: Infinity },
+  estimate:      { free: 3,  paid: Infinity },
+  contract_scan: { free: 2,  paid: Infinity },
+  rera:          { free: 0,  paid: Infinity },  // paid/add-on only
+  rfi_draft:     { free: 5,  paid: Infinity },
+  spec:          { free: 10, paid: Infinity },
 }
 
-// In-memory rate limiting cache fallback for local development
-const memoryCache: Record<string, number> = {}
+type MemEntry = { count: number; resetAt: number }
+const memoryStore: Record<string, MemEntry> = {}
+
+function memoryIncr(key: string, windowSec: number): number {
+  const now = Date.now()
+  const entry = memoryStore[key]
+  if (!entry || now >= entry.resetAt) {
+    memoryStore[key] = { count: 1, resetAt: now + windowSec * 1000 }
+    return 1
+  }
+  entry.count += 1
+  return entry.count
+}
+
+function fromMemory(
+  key: string,
+  limit: number,
+  windowSec: number,
+): { allowed: boolean; remaining: number } {
+  const count = memoryIncr(key, windowSec)
+  return { allowed: count <= limit, remaining: Math.max(0, limit - count) }
+}
+
+/**
+ * Public / unauthenticated endpoint rate limit.
+ * Always enforces (memory fallback when Redis is absent).
+ * On Redis errors in production: fail closed.
+ */
+export async function checkPublicRateLimit(
+  key: string,
+  bucket: string,
+  limit: number,
+  windowSec = 86400,
+): Promise<{ allowed: boolean; remaining: number }> {
+  const redisKey = `public:${bucket}:${key}`
+
+  if (!redis) {
+    return fromMemory(redisKey, limit, windowSec)
+  }
+
+  try {
+    const count = await redis.incr(redisKey)
+    if (count === 1) await redis.expire(redisKey, windowSec)
+    return { allowed: count <= limit, remaining: Math.max(0, limit - count) }
+  } catch (e) {
+    console.warn('Upstash Redis public rate-limit error:', e)
+    if (isProduction) {
+      return { allowed: false, remaining: 0 }
+    }
+    return fromMemory(redisKey, limit, windowSec)
+  }
+}
 
 export async function checkAIRateLimit(
   userId: string,
@@ -34,25 +86,20 @@ export async function checkAIRateLimit(
   if (limit === Infinity) return { allowed: true, remaining: 9999 }
   if (limit === 0)        return { allowed: false, remaining: 0 }
 
-  const key   = `ai:${feature}:${userId}:${new Date().toDateString()}`
+  const key = `ai:${feature}:${userId}:${new Date().toDateString()}`
+  const windowSec = 86400
 
   if (!redis) {
-    // Local memory cache rate limiting fallback
-    if (memoryCache[key] === undefined) {
-      memoryCache[key] = 0
-    }
-    memoryCache[key]++
-    const count = memoryCache[key]
-    return { allowed: count <= limit, remaining: Math.max(0, limit - count) }
+    return fromMemory(key, limit, windowSec)
   }
 
   try {
     const count = await redis.incr(key)
-    if (count === 1) await redis.expire(key, 86400) // 1 day expire
+    if (count === 1) await redis.expire(key, windowSec)
     return { allowed: count <= limit, remaining: Math.max(0, limit - count) }
   } catch (e) {
     console.warn('Upstash Redis check error:', e)
-    // Fall back to allow request in case of redis connection problems
-    return { allowed: true, remaining: 1 }
+    // AI: keep memory fallback (do not fail open)
+    return fromMemory(key, limit, windowSec)
   }
 }

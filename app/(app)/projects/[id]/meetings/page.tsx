@@ -9,8 +9,14 @@ interface MeetingRecord {
   title: string
   attendees: string[]
   agenda: string
+  notes: string
+  status: string
   decisions: string[]
   actionItems: { task: string; owner: string; deadline: string }[]
+}
+
+function ensureArray<T>(value: T[] | undefined | null): T[] {
+  return Array.isArray(value) ? value : []
 }
 
 export default function MeetingNotes() {
@@ -22,60 +28,39 @@ export default function MeetingNotes() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [activeMeeting, setActiveMeeting] = useState<MeetingRecord | null>(null)
+  const [saving, setSaving] = useState(false)
 
-  // New meeting form state
   const [newMeeting, setNewMeeting] = useState({
     title: '',
     date: '',
     attendees: '',
     agenda: '',
     decisions: '',
-    actions: '' // formatted as comma-separated task:owner:deadline lines
+    actions: ''
+  })
+
+  const mapMeeting = (m: any): MeetingRecord => ({
+    id: m.id,
+    date: m.date || m.meeting_date || '',
+    title: m.title || '',
+    attendees: ensureArray(m.attendees),
+    agenda: m.agenda || '',
+    notes: m.notes ?? m.agenda ?? '',
+    status: m.status || 'recorded',
+    decisions: ensureArray(m.decisions),
+    actionItems: ensureArray(m.actionItems || m.action_items),
   })
 
   useEffect(() => {
-    // Mock load meeting notes
-    const timer = setTimeout(() => {
-      setMeetings([
-        {
-          id: 'meet-1',
-          date: '2026-05-18',
-          title: 'MEP Services Coordination Meeting',
-          attendees: ['Parth Patel (Arch)', 'Rohan Deshmukh (MEP)', 'Amit Sharma (Contractor)'],
-          agenda: 'Review HVAC duct clearances in the main lobby structural beams.',
-          decisions: [
-            'Reroute the main HVAC trunk through the secondary service shaft B-2.',
-            'Modify lobby false ceiling elevation level to 2.45m.'
-          ],
-          actionItems: [
-            { task: 'Update MEP sheet M-104 with rerouting layout', owner: 'Rohan Deshmukh', deadline: '2026-05-24' },
-            { task: 'Issue updated masonry details for shaft opening clearance', owner: 'Parth Patel', deadline: '2026-05-26' }
-          ]
-        },
-        {
-          id: 'meet-2',
-          date: '2026-06-02',
-          title: 'Structural Steel Pile Review',
-          attendees: ['Parth Patel (Arch)', 'Aritro Roy (Structural)', 'Karan Shah (Builder)'],
-          agenda: 'Evaluate concrete foundation testing logs and rebar deliveries.',
-          decisions: [
-            'Approve structural concrete cube test logs for pile caps #1 to #8.',
-            'Maintain concrete hydration period of 14 days before loading superstructure columns.'
-          ],
-          actionItems: [
-            { task: 'Archive cube test logs in Document Vault under permits folder', owner: 'Amit Sharma', deadline: '2026-06-08' }
-          ]
-        }
-      ])
-      setLoading(false)
-    }, 300)
-    return () => clearTimeout(timer)
+    fetch(`/api/projects/${projectId}/meetings`)
+      .then((r) => r.json())
+      .then((d) => setMeetings((d.meetings || []).map(mapMeeting)))
+      .finally(() => setLoading(false))
   }, [projectId])
 
-  const handleCreateMeeting = (e: React.FormEvent) => {
+  const handleCreateMeeting = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Parse actions: task:owner:deadline
     const parsedActions = newMeeting.actions
       .split('\n')
       .map(line => {
@@ -91,29 +76,65 @@ export default function MeetingNotes() {
       })
       .filter(x => x !== null) as { task: string; owner: string; deadline: string }[]
 
-    const record: MeetingRecord = {
-      id: `meet-${Date.now()}`,
-      date: newMeeting.date || new Date().toISOString().split('T')[0],
-      title: newMeeting.title,
-      attendees: newMeeting.attendees.split(',').map(x => x.trim()),
-      agenda: newMeeting.agenda,
-      decisions: newMeeting.decisions.split('\n').filter(x => x.trim().length > 0),
-      actionItems: parsedActions
+    const res = await fetch(`/api/projects/${projectId}/meetings`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: newMeeting.title,
+        date: newMeeting.date,
+        attendees: newMeeting.attendees,
+        agenda: newMeeting.agenda,
+        notes: newMeeting.agenda,
+        decisions: newMeeting.decisions,
+        action_items: parsedActions,
+      }),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      alert(data.error || 'Failed to save meeting')
+      return
     }
-
-    setMeetings(prev => [record, ...prev])
+    setMeetings(prev => [mapMeeting(data.meeting), ...prev])
     setShowAddModal(false)
     setNewMeeting({ title: '', date: '', attendees: '', agenda: '', decisions: '', actions: '' })
   }
 
+  const handleSaveMeeting = async () => {
+    if (!activeMeeting) return
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/meetings`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          meeting_id: activeMeeting.id,
+          notes: activeMeeting.notes,
+          status: activeMeeting.status,
+          attendees: activeMeeting.attendees,
+          decisions: activeMeeting.decisions,
+          actionItems: activeMeeting.actionItems,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        alert(data.error || 'Failed to save')
+        return
+      }
+      const saved = mapMeeting(data.meeting || activeMeeting)
+      setMeetings((prev) => prev.map((m) => (m.id === saved.id ? saved : m)))
+      setActiveMeeting(saved)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const filtered = meetings.filter(m =>
     m.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    m.agenda.toLowerCase().includes(searchTerm.toLowerCase())
+    (m.agenda || m.notes || '').toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   return (
     <div className="space-y-6 font-body select-none relative h-full">
-      {/* Header controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex-grow max-w-sm">
           <input
@@ -130,9 +151,7 @@ export default function MeetingNotes() {
         </button>
       </div>
 
-      {/* Meetings registry grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Left list of records */}
         <div className="lg:col-span-2 space-y-4">
           <div className="card-5bloc space-y-4">
             <div className="border-b pb-3 flex items-center justify-between">
@@ -159,12 +178,14 @@ export default function MeetingNotes() {
                       <div className="flex items-center gap-2 text-[10px] font-mono text-stone">
                         <span>{m.date}</span>
                         <span>·</span>
-                        <span>{m.attendees.length} Attendees</span>
+                        <span>{ensureArray(m.attendees).length} Attendees</span>
+                        <span>·</span>
+                        <span className="capitalize">{m.status}</span>
                       </div>
                       <h4 className="text-xs font-bold text-white group-hover:text-amber transition-colors">
                         {m.title}
                       </h4>
-                      <p className="text-[11px] text-stone leading-relaxed line-clamp-1">{m.agenda}</p>
+                      <p className="text-[11px] text-stone leading-relaxed line-clamp-1">{m.notes || m.agenda}</p>
                     </div>
                     <span className="material-icons-outlined text-stone group-hover:text-white transition-colors text-[16px] pt-1">
                       chevron_right
@@ -176,7 +197,6 @@ export default function MeetingNotes() {
           </div>
         </div>
 
-        {/* Right side Detail Panel */}
         <div>
           {activeMeeting ? (
             <div className="card-5bloc space-y-5 animate-fade-in">
@@ -194,13 +214,40 @@ export default function MeetingNotes() {
 
               <div>
                 <h3 className="text-sm font-bold text-white leading-snug">{activeMeeting.title}</h3>
-                <p className="text-[11px] text-stone mt-2 italic">"{activeMeeting.agenda}"</p>
+              </div>
+
+              <div>
+                <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1 font-mono">Status</label>
+                <select
+                  value={activeMeeting.status}
+                  onChange={(e) =>
+                    setActiveMeeting((prev) => (prev ? { ...prev, status: e.target.value } : null))
+                  }
+                  className="input-5bloc py-1.5 text-xs font-medium"
+                >
+                  <option value="recorded">Recorded</option>
+                  <option value="draft">Draft</option>
+                  <option value="shared">Shared</option>
+                  <option value="closed">Closed</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1 font-mono">Notes</label>
+                <textarea
+                  rows={4}
+                  value={activeMeeting.notes || ''}
+                  onChange={(e) =>
+                    setActiveMeeting((prev) => (prev ? { ...prev, notes: e.target.value } : null))
+                  }
+                  className="input-5bloc text-xs resize-none"
+                />
               </div>
 
               <div>
                 <h5 className="text-[10px] font-bold text-stone font-mono uppercase mb-2">Attendees</h5>
                 <div className="flex flex-wrap gap-1.5">
-                  {activeMeeting.attendees.map(a => (
+                  {ensureArray(activeMeeting.attendees).map(a => (
                     <span key={a} className="bg-navy border text-white text-[9px] font-mono px-2 py-0.5">
                       {a}
                     </span>
@@ -211,7 +258,7 @@ export default function MeetingNotes() {
               <div className="space-y-2">
                 <h5 className="text-[10px] font-bold text-stone font-mono uppercase">Key Decisions</h5>
                 <ul className="list-disc list-inside text-xs text-stone space-y-1">
-                  {activeMeeting.decisions.map((d, i) => (
+                  {ensureArray(activeMeeting.decisions).map((d, i) => (
                     <li key={i} className="leading-relaxed pl-1 text-white">{d}</li>
                   ))}
                 </ul>
@@ -220,7 +267,7 @@ export default function MeetingNotes() {
               <div className="space-y-3 pt-3 border-t">
                 <h5 className="text-[10px] font-bold text-stone font-mono uppercase">Assigned Action Items</h5>
                 <div className="space-y-2">
-                  {activeMeeting.actionItems.map((act, i) => (
+                  {ensureArray(activeMeeting.actionItems).map((act, i) => (
                     <div key={i} className="p-3 bg-navy/40 border space-y-1.5">
                       <p className="text-xs text-white leading-normal font-semibold">{act.task}</p>
                       <div className="flex justify-between items-center text-[10px] font-mono text-stone">
@@ -231,6 +278,14 @@ export default function MeetingNotes() {
                   ))}
                 </div>
               </div>
+
+              <button
+                onClick={handleSaveMeeting}
+                disabled={saving}
+                className="btn-primary py-1.5 px-4 text-[11px] font-bold w-full"
+              >
+                {saving ? 'Saving…' : 'Save Changes'}
+              </button>
             </div>
           ) : (
             <div className="card-5bloc text-center py-12 text-stone text-xs">
@@ -241,7 +296,6 @@ export default function MeetingNotes() {
         </div>
       </div>
 
-      {/* Add meeting modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-navy/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-md bg-navy-mid border p-6 space-y-4">

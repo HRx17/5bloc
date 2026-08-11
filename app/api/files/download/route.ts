@@ -1,26 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthUser } from '@/lib/supabase/get-user'
-import { getDownloadUrl } from '@/lib/files/r2-client'
+import { resolveStorageDownloadUrl } from '@/lib/files/resolve-download'
 
 export async function GET(req: NextRequest) {
   try {
-    const { supabase } = await getAuthUser()
+    const auth = await getAuthUser()
     const docId = req.nextUrl.searchParams.get('id')
 
     if (!docId) {
       return NextResponse.json({ error: 'Missing document id parameter' }, { status: 400 })
     }
 
-    // Mock fallback for offline local testing
-    if (!supabase) {
-      const dummyUrl = `https://dummyimage.com/600x400/0c1220/f5a623.png&text=Download_Doc_${docId}`
-      return NextResponse.json({ url: dummyUrl, expires_in: 900 })
+    if (!auth.supabase) {
+      return NextResponse.json(
+        { error: 'Auth/storage not configured', provider: 'mock' },
+        { status: 503 }
+      )
     }
 
-    // RLS automatically enforces access — if no row returned, user cannot access
-    const { data: doc, error } = await supabase
+    const { data: doc, error } = await auth.supabase
       .from('documents')
-      .select('r2_key, name, extension')
+      .select('r2_key, storage_path, name, original_filename, extension')
       .eq('id', docId)
       .single()
 
@@ -28,10 +28,23 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Not found or access denied' }, { status: 404 })
     }
 
-    const downloadUrl = await getDownloadUrl(doc.r2_key, `${doc.name}.${doc.extension}`)
-    return NextResponse.json({ url: downloadUrl, expires_in: 900 })
+    const key = doc.r2_key || doc.storage_path
+    if (!key) {
+      return NextResponse.json({ error: 'No file storage key' }, { status: 404 })
+    }
+
+    const filename = `${doc.name || doc.original_filename || 'document'}.${doc.extension || 'pdf'}`
+    const resolved = await resolveStorageDownloadUrl(key, filename, auth.supabase)
+    return NextResponse.json({
+      url: resolved.url,
+      expires_in: 900,
+      provider: resolved.provider,
+    })
   } catch (e) {
     console.error('File download API error:', e)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : 'Internal server error' },
+      { status: 500 }
+    )
   }
 }

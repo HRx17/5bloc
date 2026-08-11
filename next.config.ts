@@ -20,9 +20,46 @@ const withPWA = require('next-pwa')({
   ],
 })
 
+const isProd = process.env.NODE_ENV === 'production'
+
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://*.razorpay.com https://apis.google.com https://accounts.google.com https://*.posthog.com https://browser.sentry-cdn.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com data:",
+  "img-src 'self' data: blob: https:",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.razorpay.com https://*.razorpay.com https://*.googleapis.com https://oauth2.googleapis.com https://accounts.google.com https://*.r2.cloudflarestorage.com https://api.resend.com https://*.posthog.com https://*.sentry.io https://api.anthropic.com",
+  "frame-src 'self' blob: https://checkout.razorpay.com https://*.razorpay.com https://accounts.google.com https://docs.google.com https://drive.google.com https://*.supabase.co https://*.r2.cloudflarestorage.com https://*.cloudflarestorage.com",
+  "media-src 'self' blob:",
+  "worker-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join('; ')
+
+const securityHeaders: { key: string; value: string }[] = [
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=(self)' },
+  { key: 'Content-Security-Policy', value: contentSecurityPolicy },
+]
+
+if (isProd) {
+  securityHeaders.push({
+    key: 'Strict-Transport-Security',
+    value: 'max-age=63072000; includeSubDomains; preload',
+  })
+}
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  /* other config options here */
+  // Allow Cursor browser / local tooling on 127.0.0.1 during `next dev`
+  allowedDevOrigins: ['127.0.0.1', 'localhost'],
+  async headers() {
+    return [{ source: '/:path*', headers: securityHeaders }]
+  },
 }
 
 export default withPWA(nextConfig)

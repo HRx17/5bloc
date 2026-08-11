@@ -1,0 +1,352 @@
+/* Apple-inspired landing page — scoped via .landing-apple */
+
+.landing-apple {
+  --lp-bg: #FAFAF8;
+  --lp-bg-alt: #F5F5F7;
+  --lp-bg-dark: #0C1220;
+  --lp-text: #0C1220;
+  --lp-text-secondary: #5C5750;
+  --lp-text-tertiary: #8C8680;
+  --lp-brand: #F5A623;
+  --lp-brand-hover: #ffb94a;
+  --lp-brand-dk: #CC7A00;
+  --lp-on-brand: #0C1220;
+  --lp-link: var(--lp-brand);
+  --lp-link-hover: var(--lp-brand-dk);
+  --lp-border: #E5E1D8;
+  --lp-nav-bg: rgba(250, 250, 248, 0.72);
+  --lp-nav-bg-scrolled: rgba(250, 250, 248, 0.92);
+  --lp-font: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  font-family: var(--lp-font);
+  background: var(--lp-bg);
+  color: var(--lp-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.landing-apple .lp-headline {
+  font-size: clamp(2.5rem, 6.5vw, 4.5rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  color: var(--lp-text);
+}
+
+.landing-apple .lp-headline-dark {
+  color: #f5f5f7;
+}
+
+.landing-apple .lp-subhead {
+  font-size: clamp(1.125rem, 2.2vw, 1.5rem);
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0.004em;
+  color: var(--lp-text-secondary);
+}
+
+.landing-apple .lp-subhead-dark {
+  color: #a1a1a6;
+}
+
+.landing-apple .lp-eyebrow {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--lp-link);
+}
+
+.landing-apple .lp-section-title {
+  font-size: clamp(2rem, 4.5vw, 3rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+}
+
+.landing-apple .lp-link {
+  color: var(--lp-link);
+  font-size: 1.0625rem;
+  font-weight: 400;
+  transition: color 0.2s ease;
+}
+
+.landing-apple .lp-link:hover {
+  color: var(--lp-link-hover);
+  text-decoration: underline;
+}
+
+.landing-apple .lp-link-dark {
+  color: var(--lp-brand);
+}
+
+.landing-apple .lp-link-dark:hover {
+  color: var(--lp-brand-hover);
+}
+
+.landing-apple .lp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 2.75rem;
+  padding: 0 1.375rem;
+  border-radius: 980px;
+  font-size: 1.0625rem;
+  font-weight: 400;
+  background: var(--lp-brand);
+  color: var(--lp-on-brand);
+  transition: background 0.2s ease;
+}
+
+.landing-apple .lp-btn:hover {
+  background: var(--lp-brand-hover);
+}
+
+.landing-apple .lp-btn-nav {
+  min-height: 1.75rem;
+  padding: 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: #fff;
+}
+
+.landing-apple .lp-btn-outline {
+  background: transparent;
+  color: var(--lp-brand);
+  box-shadow: inset 0 0 0 1px var(--lp-brand);
+}
+
+.landing-apple .lp-btn-outline:hover {
+  background: rgba(245, 166, 35, 0.08);
+}
+
+.landing-apple .lp-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0 1.125rem;
+  border-radius: 980px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  font-family: var(--lp-font);
+  background: transparent;
+  color: var(--lp-text);
+  box-shadow: inset 0 0 0 1px var(--lp-border);
+}
+
+.landing-apple .lp-btn-ghost:hover {
+  background: rgba(245, 166, 35, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(245, 166, 35, 0.45);
+}
+
+.landing-apple .lp-scarcity-pill {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 99px;
+  font-family: var(--lp-font);
+  font-size: 12px;
+  font-weight: 500;
+  background: #FEF3E0;
+  color: #CC7A00;
+  border: 1px solid rgba(245, 166, 35, 0.4);
+}
+
+.landing-apple .lp-section-label {
+  font-family: var(--lp-font);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lp-brand);
+  text-align: center;
+}
+
+.landing-apple .lp-screenshot {
+  border-radius: 12px;
+  border: 1px solid #E5E1D8;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  background: #141E30;
+}
+
+.landing-apple .lp-screenshot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  display: block;
+}
+
+.landing-apple .lp-screenshot-placeholder {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 1.5rem;
+  text-align: center;
+  background: #141E30;
+  color: #F7F5F0;
+}
+
+.landing-apple .lp-mid-cta {
+  background: #FEF3E0;
+  border-top: 1px solid rgba(245, 166, 35, 0.3);
+  border-bottom: 1px solid rgba(245, 166, 35, 0.3);
+}
+
+.landing-apple .lp-mid-cta-input {
+  width: 280px;
+  max-width: 100%;
+  background: #FFFFFF;
+  border: 1px solid #D0CBC0;
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-family: var(--lp-font);
+  font-size: 14px;
+  color: var(--lp-text);
+  outline: none;
+}
+
+.landing-apple .lp-mid-cta-btn {
+  background: #F5A623;
+  color: #0C1220;
+  font-family: var(--lp-font);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+}
+
+.landing-apple .lp-headline-amber {
+  color: var(--lp-brand);
+}
+
+.landing-apple .lp-btn-sm {
+  min-height: 2.25rem;
+  padding: 0 1.125rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.landing-apple .lp-tile-row {
+  gap: 1px;
+}
+
+.landing-apple .lp-tile {
+  background: var(--lp-bg-alt);
+}
+
+.landing-apple .lp-tile:hover {
+  background: #fff;
+}
+
+.landing-apple .lp-feature-item {
+  border: 1px solid var(--lp-border);
+  border-radius: 1rem;
+  padding: 1.5rem 1.75rem;
+  background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.landing-apple .lp-feature-item:hover {
+  border-color: rgba(245, 166, 35, 0.35);
+  box-shadow: 0 0 0 1px rgba(245, 166, 35, 0.12);
+}
+
+.landing-apple .lp-nav-link {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--lp-text);
+  opacity: 0.88;
+  transition: opacity 0.2s ease;
+}
+
+.landing-apple .lp-nav-link:hover {
+  opacity: 1;
+}
+
+.landing-apple .lp-divider {
+  height: 1px;
+  background: var(--lp-border);
+}
+
+.landing-apple .lp-device {
+  border-radius: 1.25rem;
+  overflow: hidden;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    0 12px 48px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.landing-apple .lp-device-dark {
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.3),
+    0 24px 64px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* ── How it works: mobile sticky scroll ── */
+.landing-apple .lp-flow-sticky-preview {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  border-bottom: 1px solid var(--lp-border);
+  padding-bottom: 0.75rem;
+  margin-left: -0.25rem;
+  margin-right: -0.25rem;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
+.landing-apple .lp-flow-mockup-compact {
+  max-height: min(34dvh, 280px);
+  overflow: hidden;
+}
+
+.landing-apple .lp-flow-mockup-compact > div {
+  transform: scale(0.97);
+  transform-origin: top center;
+}
+
+@media (max-width: 639px) {
+  .landing-apple .lp-headline {
+    font-size: clamp(2rem, 9.5vw, 2.625rem);
+    letter-spacing: -0.022em;
+  }
+
+  .landing-apple .lp-section-title {
+    font-size: clamp(1.625rem, 7.5vw, 2.125rem);
+  }
+
+  .landing-apple .lp-subhead {
+    font-size: 1.0625rem;
+    line-height: 1.45;
+  }
+
+  .landing-apple .lp-btn {
+    min-height: 2.5rem;
+    padding: 0 1.125rem;
+    font-size: 1rem;
+  }
+
+  .landing-apple .lp-feature-item {
+    padding: 1.25rem 1.25rem;
+  }
+
+  .landing-apple .lp-flow-mockup-compact {
+    max-height: min(32dvh, 252px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-apple .lp-flow-mockup-compact > div {
+    transform: none;
+  }
+}

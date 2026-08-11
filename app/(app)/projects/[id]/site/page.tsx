@@ -68,130 +68,87 @@ export default function SiteAndField() {
   })
 
   useEffect(() => {
-    // Mock load site logs
-    const timer = setTimeout(() => {
-      setVisitReports([
-        {
-          id: 'v-1',
-          visit_number: 1,
-          date: '2026-05-15',
-          supervisor: 'Parth Patel',
-          gps_coordinates: '19.0542° N, 72.8225° E (Bandra)',
-          observations: 'Inspected lobby column castings and grid framework lines. Rebar counts match the S-201 structural specs.',
-          photos: ['inspection_lobby_col.jpg']
-        },
-        {
-          id: 'v-2',
-          visit_number: 2,
-          date: '2026-06-05',
-          supervisor: 'Amit Sharma',
-          gps_coordinates: '19.0543° N, 72.8227° E',
-          observations: 'Reviewed concrete curing logs. Moisture levels are sufficient. Grouting scheduled for next floor column foundations.',
-          photos: ['curing_slabs.jpg']
-        }
-      ])
-
-      setMaterialLogs([
-        {
-          id: 'm-1',
-          material_name: 'OPC 53 Cement',
-          specified_standard: 'UltraTech Cement OPC 53',
-          delivered_material: 'Ambuja Cement OPC 53',
-          status: 'compliant',
-          contractor: 'Amit Sharma',
-          notes: 'Substituted for Ambuja due to delivery lead times. Confirmed equivalent grade.'
-        },
-        {
-          id: 'm-2',
-          material_name: 'Lobby sanitary plumbing fixtures',
-          specified_standard: 'Kohler Premium Series Faucets',
-          delivered_material: 'Generic Cera Brand Faucets',
-          status: 'substitution_flagged',
-          contractor: 'Amit Sharma (Civil)',
-          notes: 'Warning: Contractor substituted generic brand without design office approval.'
-        }
-      ])
-
-      setPunchList([
-        {
-          id: 'p-1',
-          item_number: 1,
-          defect: 'Lobby wall plaster unevenness',
-          location: 'Main Reception Lobby, east wall',
-          assigned_to: 'Amit Sharma (Contractor)',
-          status: 'open',
-          photo: 'plaster_defect.jpg'
-        },
-        {
-          id: 'p-2',
-          item_number: 2,
-          defect: 'Service shaft door hinges alignment loose',
-          location: '3rd Floor electrical shaft',
-          assigned_to: 'Amit Sharma (Contractor)',
-          status: 'resolved'
-        }
-      ])
-
-      setLoading(false)
-    }, 300)
-    return () => clearTimeout(timer)
+    fetch(`/api/projects/${projectId}/site`)
+      .then((r) => r.json())
+      .then((d) => {
+        setVisitReports(d.visits || [])
+        setMaterialLogs(d.materials || [])
+        setPunchList(d.punch || [])
+      })
+      .finally(() => setLoading(false))
   }, [projectId])
 
-  const handleAddVisit = (e: React.FormEvent) => {
+  const handleAddVisit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const record: VisitReport = {
-      id: `v-${Date.now()}`,
-      visit_number: visitReports.length + 1,
-      date: new Date().toISOString().split('T')[0],
-      supervisor: newVisit.supervisor,
-      gps_coordinates: newVisit.gps_coordinates,
-      observations: newVisit.observations,
-      photos: ['site_snap_capture.jpg']
-    }
-    setVisitReports(prev => [record, ...prev])
+    const res = await fetch(`/api/projects/${projectId}/site`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind: 'visit', ...newVisit }),
+    })
+    const data = await res.json()
+    if (!res.ok) { alert(data.error || 'Failed'); return }
+    setVisitReports(prev => [data.visit, ...prev])
     setNewVisit(prev => ({ ...prev, observations: '' }))
-    alert('Site visit report registered and archived successfully.')
   }
 
-  const handleAddMaterial = (e: React.FormEvent) => {
+  const handleAddMaterial = async (e: React.FormEvent) => {
     e.preventDefault()
-    const record: MaterialLog = {
-      id: `m-${Date.now()}`,
-      material_name: newMaterial.material_name,
-      specified_standard: newMaterial.specified_standard,
-      delivered_material: newMaterial.delivered_material,
-      status: 'pending_testing',
-      contractor: newMaterial.contractor
-    }
-    setMaterialLogs(prev => [record, ...prev])
-    setNewMaterial({ material_name: '', specified_standard: '', delivered_material: '', contractor: 'Amit Sharma' })
-    alert('Material delivery logged and flagged for compliance checks.')
+    const res = await fetch(`/api/projects/${projectId}/site`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind: 'material', ...newMaterial }),
+    })
+    const data = await res.json()
+    if (!res.ok) { alert(data.error || 'Failed'); return }
+    setMaterialLogs(prev => [data.material, ...prev])
+    setNewMaterial({ material_name: '', specified_standard: '', delivered_material: '', contractor: '' })
   }
 
-  const handleAddPunch = (e: React.FormEvent) => {
+  const handleAddPunch = async (e: React.FormEvent) => {
     e.preventDefault()
-    const record: PunchItem = {
-      id: `p-${Date.now()}`,
-      item_number: punchList.length + 1,
-      defect: newPunch.defect,
-      location: newPunch.location,
-      assigned_to: newPunch.assigned_to,
-      status: 'open'
-    }
-    setPunchList(prev => [record, ...prev])
-    setNewPunch({ defect: '', location: '', assigned_to: 'Amit Sharma' })
-    alert('Punch list defect logged and assigned to contractor.')
+    const res = await fetch(`/api/projects/${projectId}/site`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind: 'punch', ...newPunch }),
+    })
+    const data = await res.json()
+    if (!res.ok) { alert(data.error || 'Failed'); return }
+    setPunchList(prev => [data.punch, ...prev])
+    setNewPunch({ defect: '', location: '', assigned_to: '' })
   }
 
-  const handleTogglePunch = (pId: string) => {
-    setPunchList(prev =>
-      prev.map(item => item.id === pId ? { ...item, status: item.status === 'open' ? 'resolved' : 'open' } : item)
-    )
+  const handleResolvePunch = async (id: string) => {
+    const res = await fetch(`/api/projects/${projectId}/site`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ punch_id: id, status: 'resolved' }),
+    })
+    if (!res.ok) return
+    setPunchList(prev => prev.map(p => p.id === id ? { ...p, status: 'resolved' } : p))
   }
 
-  const handleFlagSubstitution = (mId: string) => {
-    setMaterialLogs(prev =>
-      prev.map(item => item.id === mId ? { ...item, status: item.status === 'substitution_flagged' ? 'compliant' : 'substitution_flagged' } : item)
+  const handleTogglePunch = async (id: string) => {
+    const item = punchList.find((p) => p.id === id)
+    if (!item) return
+    const next = item.status === 'open' ? 'resolved' : 'open'
+    const res = await fetch(`/api/projects/${projectId}/site`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ punch_id: id, status: next }),
+    })
+    if (!res.ok) return
+    setPunchList((prev) => prev.map((p) => (p.id === id ? { ...p, status: next } : p)))
+  }
+
+  const handleFlagSubstitution = async (id: string) => {
+    const res = await fetch(`/api/projects/${projectId}/site`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ material_id: id, status: 'substitution_flagged' }),
+    })
+    if (!res.ok) return
+    setMaterialLogs((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, status: 'substitution_flagged' } : m))
     )
   }
 
@@ -249,7 +206,7 @@ export default function SiteAndField() {
                       
                       <div className="pt-2 border-t border-navy-lt flex flex-wrap justify-between items-center text-[10px] font-mono text-stone gap-2">
                         <span>Coordinates: {visit.gps_coordinates}</span>
-                        {visit.photos.map(p => (
+                        {visit.photos?.map(p => (
                           <span key={p} className="flex items-center gap-1 text-blue">
                             <span className="material-icons-outlined text-[13px]">photo_camera</span> {p}
                           </span>
