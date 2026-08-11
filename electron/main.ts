@@ -7,7 +7,7 @@ let mainWindow: BrowserWindow | null = null
 let syncDaemon: SyncDaemon | null = null
 
 const isDev  = process.env.NODE_ENV === 'development'
-const APP_URL = isDev ? 'http://localhost:3000'
+const APP_URL = isDev ? 'http://localhost:3001'
               : `file://${path.join(__dirname, '../out/index.html')}`
 
 function createWindow() {
