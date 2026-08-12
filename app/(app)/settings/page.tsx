@@ -44,13 +44,39 @@ type BillingHistoryItem = {
 
 type TabId = 'profile' | 'organisation' | 'team' | 'billing' | 'notifications' | 'integrations'
 
+const ALL_ROLES: RoleKey[] = ['architect', 'contractor', 'builder', 'consultant', 'client']
+
 const ALL_TABS: { id: TabId; label: string; icon: string; roles: RoleKey[] }[] = [
-  { id: 'profile', label: 'User Profile', icon: 'person_outline', roles: ['architect', 'contractor', 'builder', 'consultant', 'client'] },
+  { id: 'profile', label: 'User Profile', icon: 'person_outline', roles: ALL_ROLES },
   { id: 'organisation', label: 'Organisation', icon: 'domain', roles: ['architect'] },
   { id: 'team', label: 'Org Team', icon: 'contacts', roles: ['architect'] },
   { id: 'billing', label: 'Billing & Payments', icon: 'receipt_long', roles: BILLING_ROLES },
-  { id: 'notifications', label: 'Notifications', icon: 'notifications', roles: ['architect', 'contractor', 'builder', 'consultant', 'client'] },
-  { id: 'integrations', label: 'Integrations', icon: 'sync_alt', roles: ['architect'] },
+  { id: 'notifications', label: 'Notifications', icon: 'notifications', roles: ALL_ROLES },
+  { id: 'integrations', label: 'Integrations', icon: 'sync_alt', roles: ['architect', 'contractor', 'builder', 'consultant'] },
+]
+
+/**
+ * Third-party accounts a user can link. Connecting and revoking lives in the
+ * Integrations workspace; settings only reports status and links across to it.
+ */
+const INTEGRATION_PROVIDERS: {
+  provider: string
+  label: string
+  icon: string
+  desc: string
+}[] = [
+  {
+    provider: 'google',
+    label: 'Google Workspace',
+    icon: 'cloud_queue',
+    desc: 'Drive, Gmail and Calendar — sync sheets, ingest email and mirror milestone dates.',
+  },
+  {
+    provider: 'autodesk',
+    label: 'Autodesk',
+    icon: 'architecture',
+    desc: 'Upload and inspect DWG and Revit models in the CAD viewer.',
+  },
 ]
 
 function initials(name: string) {
@@ -111,7 +137,12 @@ export default function Settings() {
     comments: true,
     approvals: true,
     rfis: true,
+    weekly_digest: false,
   })
+  // Kept verbatim so toggling one preference never drops keys we do not render
+  const [prefsBase, setPrefsBase] = useState<Record<string, unknown>>({})
+
+  const [connected, setConnected] = useState<string[] | null>(null)
 
   const tabs = useMemo(() => ALL_TABS.filter((t) => t.roles.includes(role)), [role])
   const billing = useMemo(() => billingForRole(role), [role])
@@ -170,11 +201,17 @@ export default function Settings() {
           address: p.organisations?.address || '',
         })
         setAiAddOn(!!p.ai_add_on)
+        const prefs =
+          p.notification_preferences && typeof p.notification_preferences === 'object'
+            ? (p.notification_preferences as Record<string, unknown>)
+            : {}
+        setPrefsBase(prefs)
         setNotifications({
           new_projects: p.notify_email !== false,
           comments: p.notify_bids !== false,
           approvals: p.notify_approvals !== false,
           rfis: p.notify_rfi !== false,
+          weekly_digest: prefs.weekly_digest === true,
         })
 
         if (resolvedRole === 'architect') {
@@ -199,6 +236,13 @@ export default function Settings() {
         if (requested && allowedForRole.includes(requested)) setActiveTab(requested)
       })
       .finally(() => setHydrated(true))
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/integrations/status')
+      .then((r) => r.json())
+      .then((d) => setConnected(Array.isArray(d.connected) ? d.connected : []))
+      .catch(() => setConnected([]))
   }, [])
 
   const saveAvatar = async (dataUrl: string | null) => {
@@ -397,9 +441,11 @@ export default function Settings() {
   }
 
   const handleToggleNotification = async (key: keyof typeof notifications) => {
+    const previous = notifications
     const next = { ...notifications, [key]: !notifications[key] }
     setNotifications(next)
-    await fetch('/api/me', {
+    const prefs = { ...prefsBase, weekly_digest: next.weekly_digest }
+    const res = await fetch('/api/me', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -407,8 +453,15 @@ export default function Settings() {
         notify_rfi: next.rfis,
         notify_approvals: next.approvals,
         notify_bids: next.comments,
+        notification_preferences: prefs,
       }),
     })
+    if (!res.ok) {
+      setNotifications(previous)
+      toast('Could not save that preference', 'error')
+      return
+    }
+    setPrefsBase(prefs)
   }
 
   const formatDate = (iso: string | null) =>
@@ -989,6 +1042,11 @@ export default function Settings() {
                   { key: 'comments', label: 'Document comments', desc: 'Notify me when someone comments on a drawing or sheet.' },
                   { key: 'approvals', label: 'Document approvals', desc: 'Notify me when a drawing is approved or revisions are requested.' },
                   { key: 'rfis', label: 'RFI activity', desc: 'Notify me when RFIs are raised or resolved.' },
+                  {
+                    key: 'weekly_digest',
+                    label: 'Weekly summary digest',
+                    desc: 'Send a Monday morning digest of progress across my active projects.',
+                  },
                 ].map((item) => (
                   <div key={item.key} className="flex items-start justify-between gap-4">
                     <div className="max-w-md">
@@ -1015,15 +1073,52 @@ export default function Settings() {
           )}
 
           {activeTab === 'integrations' && (
-            <div className="card-5bloc space-y-4">
-              <h3 className="text-sm font-semibold text-amber pb-2.5">Platform Integrations</h3>
-              <p className="text-[11px] text-stone leading-relaxed">
-                Google Drive, Gmail, Calendar and CAD integrations are managed from the Integrations workspace, where
-                connection status and permissions live.
-              </p>
-              <a href="/integrations" className="btn-secondary py-1.5 px-4 text-xs inline-block w-fit">
-                Open Integrations
-              </a>
+            <div className="card-5bloc space-y-5">
+              <div>
+                <h3 className="text-sm font-semibold text-amber pb-2.5">Connected Accounts</h3>
+                <p className="text-[11px] text-stone leading-relaxed">
+                  These accounts are linked to you personally, not to the whole firm. Connect or revoke them in the
+                  Integrations workspace.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {INTEGRATION_PROVIDERS.map((item) => {
+                  const isConnected = !!connected?.includes(item.provider)
+                  return (
+                    <div key={item.provider} className="flex items-start justify-between gap-4 bg-navy/20 p-4">
+                      <div className="flex items-start gap-3 max-w-md">
+                        <span className="material-icons-outlined text-amber text-[20px]">{item.icon}</span>
+                        <div>
+                          <p className="text-xs font-semibold text-white">{item.label}</p>
+                          <p className="text-[11px] text-stone mt-0.5 leading-relaxed">{item.desc}</p>
+                        </div>
+                      </div>
+                      <span
+                        className="text-[10px] font-semibold px-2 py-1 shrink-0"
+                        style={
+                          connected === null
+                            ? { color: 'var(--stone)', background: 'rgba(138,128,120,.12)' }
+                            : isConnected
+                              ? { color: 'var(--success)', background: 'rgba(46,204,138,.12)' }
+                              : { color: 'var(--stone)', background: 'rgba(138,128,120,.12)' }
+                        }
+                      >
+                        {connected === null ? 'Checking…' : isConnected ? 'Connected' : 'Not connected'}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <a href="/integrations" className="btn-secondary py-1.5 px-4 text-xs inline-block w-fit">
+                  Manage integrations
+                </a>
+                <a href="/cad" className="text-[11px] text-stone hover:text-amber">
+                  Open CAD viewer
+                </a>
+              </div>
             </div>
           )}
         </div>

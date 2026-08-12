@@ -1,27 +1,29 @@
 import type { RoleKey } from './roles'
 
 /**
- * Route-level role access. A path with no entry is open to every signed-in role.
+ * Routes that carry a genuine privacy or entitlement boundary.
+ *
+ * This is deny-by-exception, NOT an allowlist: a path with no entry here is
+ * reachable by every signed-in role, and the page or its API is responsible for
+ * scoping what it shows. Only add a prefix when a role would otherwise see
+ * another tenant's records or a surface they cannot legitimately act on —
+ * everything else stays reachable so real screens are not silently removed.
+ *
  * Longest matching prefix wins, so `/projects/new` can be stricter than `/projects`.
  */
-const ROUTE_ROLES: Array<{ prefix: string; roles: RoleKey[] }> = [
-  // Architect firm operations
+const RESTRICTED_ROUTES: Array<{ prefix: string; roles: RoleKey[] }> = [
+  // Firm-private: other clients' CRM records, firm revenue, firm invoicing
   { prefix: '/dashboard', roles: ['architect'] },
   { prefix: '/clients', roles: ['architect'] },
   { prefix: '/invoices', roles: ['architect'] },
-  { prefix: '/ai', roles: ['architect'] },
-  { prefix: '/integrations', roles: ['architect'] },
-  { prefix: '/coordination', roles: ['architect'] },
-  { prefix: '/documents', roles: ['architect'] },
+
+  // Only architects own projects, so only they can open one
   { prefix: '/projects/new', roles: ['architect'] },
 
-  // Shared tools
-  { prefix: '/cad', roles: ['architect', 'consultant'] },
-  { prefix: '/catalog', roles: ['architect', 'contractor'] },
-  { prefix: '/messages', roles: ['architect', 'contractor', 'consultant'] },
-  { prefix: '/marketplace', roles: ['architect', 'contractor', 'builder'] },
+  // Paid architect capability — matches `can('ai.use')`
+  { prefix: '/ai', roles: ['architect'] },
 
-  // Role workspaces
+  // Personal role home dashboards, keyed to the signed-in user
   { prefix: '/contractor', roles: ['contractor'] },
   { prefix: '/builder', roles: ['builder'] },
   { prefix: '/consultant', roles: ['consultant'] },
@@ -30,7 +32,7 @@ const ROUTE_ROLES: Array<{ prefix: string; roles: RoleKey[] }> = [
 
 export function allowedRolesForPath(pathname: string): RoleKey[] | null {
   let match: { prefix: string; roles: RoleKey[] } | null = null
-  for (const rule of ROUTE_ROLES) {
+  for (const rule of RESTRICTED_ROUTES) {
     const hit = pathname === rule.prefix || pathname.startsWith(`${rule.prefix}/`)
     if (!hit) continue
     if (!match || rule.prefix.length > match.prefix.length) match = rule

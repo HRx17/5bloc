@@ -5,11 +5,23 @@ export type NavItem = {
   name: string
   path: string
   icon: string
+  /** Live counter rendered next to the entry, when the shell can supply one. */
+  badge?: 'unreadMessages'
 }
 
 export type NavGroup = {
   label: string
   items: NavItem[]
+}
+
+const MESSAGES: NavItem = { name: 'Messages', path: '/messages', icon: 'chat', badge: 'unreadMessages' }
+const DOCUMENTS: NavItem = { name: 'Documents', path: '/documents', icon: 'folder_shared' }
+const COORDINATION: NavItem = { name: 'Coordination', path: '/coordination', icon: 'hub' }
+const CAD_VIEWER: NavItem = { name: 'CAD Viewer', path: '/cad', icon: 'view_in_ar' }
+const MARKETPLACE: NavItem = { name: 'Marketplace', path: '/marketplace', icon: 'storefront' }
+const SETTINGS_GROUP: NavGroup = {
+  label: 'Account',
+  items: [{ name: 'Settings', path: '/settings', icon: 'settings' }],
 }
 
 const ARCHITECT_NAV: NavGroup[] = [
@@ -23,18 +35,20 @@ const ARCHITECT_NAV: NavGroup[] = [
     ],
   },
   {
+    label: 'Coordinate',
+    items: [MESSAGES, COORDINATION, DOCUMENTS],
+  },
+  {
     label: 'Tools',
     items: [
-      { name: 'Marketplace', path: '/marketplace', icon: 'storefront' },
+      MARKETPLACE,
+      CAD_VIEWER,
       { name: 'AI Cost Estimator', path: '/ai/estimate', icon: 'auto_awesome' },
       { name: 'AI Contract Scan', path: '/ai/contract-scan', icon: 'gavel' },
       { name: 'Integrations', path: '/integrations', icon: 'extension' },
     ],
   },
-  {
-    label: 'Account',
-    items: [{ name: 'Settings', path: '/settings', icon: 'settings' }],
-  },
+  SETTINGS_GROUP,
 ]
 
 const CONTRACTOR_NAV: NavGroup[] = [
@@ -48,15 +62,14 @@ const CONTRACTOR_NAV: NavGroup[] = [
     ],
   },
   {
-    label: 'Tools',
-    items: [
-      { name: 'Marketplace', path: '/marketplace', icon: 'storefront' },
-    ],
+    label: 'Coordinate',
+    items: [MESSAGES, COORDINATION, DOCUMENTS],
   },
   {
-    label: 'Account',
-    items: [{ name: 'Settings', path: '/settings', icon: 'settings' }],
+    label: 'Tools',
+    items: [MARKETPLACE, { name: 'My Catalog', path: '/catalog', icon: 'inventory_2' }],
   },
+  SETTINGS_GROUP,
 ]
 
 const BUILDER_NAV: NavGroup[] = [
@@ -69,9 +82,14 @@ const BUILDER_NAV: NavGroup[] = [
     ],
   },
   {
-    label: 'Account',
-    items: [{ name: 'Settings', path: '/settings', icon: 'settings' }],
+    label: 'Coordinate',
+    items: [MESSAGES, COORDINATION, DOCUMENTS],
   },
+  {
+    label: 'Tools',
+    items: [MARKETPLACE],
+  },
+  SETTINGS_GROUP,
 ]
 
 const CONSULTANT_NAV: NavGroup[] = [
@@ -83,9 +101,14 @@ const CONSULTANT_NAV: NavGroup[] = [
     ],
   },
   {
-    label: 'Account',
-    items: [{ name: 'Settings', path: '/settings', icon: 'settings' }],
+    label: 'Coordinate',
+    items: [MESSAGES, COORDINATION, DOCUMENTS],
   },
+  {
+    label: 'Tools',
+    items: [CAD_VIEWER, MARKETPLACE, { name: 'Integrations', path: '/integrations', icon: 'extension' }],
+  },
+  SETTINGS_GROUP,
 ]
 
 const CLIENT_NAV: NavGroup[] = [
@@ -97,9 +120,10 @@ const CLIENT_NAV: NavGroup[] = [
     ],
   },
   {
-    label: 'Account',
-    items: [{ name: 'Settings', path: '/settings', icon: 'settings' }],
+    label: 'Coordinate',
+    items: [MESSAGES],
   },
+  SETTINGS_GROUP,
 ]
 
 const NAV_BY_ROLE: Record<RoleKey, NavGroup[]> = {

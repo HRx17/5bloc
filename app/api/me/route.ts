@@ -14,6 +14,7 @@ export async function PATCH(req: Request) {
     'notify_rfi',
     'notify_bids',
     'notify_approvals',
+    'notification_preferences',
   ]
 
   if (shouldServeMockData(auth)) {

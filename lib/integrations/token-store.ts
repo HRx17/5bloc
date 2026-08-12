@@ -69,6 +69,36 @@ export async function deleteToken(userId: string, provider: string) {
     .eq('provider', provider)
 }
 
+/** Connection summary safe to return to the browser — never includes tokens. */
+export interface ConnectionSummary {
+  provider:       string
+  provider_email: string | null
+  provider_name:  string | null
+  connected_at:   string | null
+  expires_at:     string | null
+  scope:          string | null
+  metadata:       Record<string, unknown>
+}
+
+export async function listConnections(userId: string): Promise<ConnectionSummary[]> {
+  const supabase = await createSupabaseServer()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase as any)
+    .from('user_integrations')
+    .select('provider, provider_email, provider_name, connected_at, expires_at, scope, metadata')
+    .eq('user_id', userId)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (data ?? []).map((r: any) => ({
+    provider:       r.provider,
+    provider_email: r.provider_email ?? null,
+    provider_name:  r.provider_name ?? null,
+    connected_at:   r.connected_at ?? null,
+    expires_at:     r.expires_at ?? null,
+    scope:          r.scope ?? null,
+    metadata:       (r.metadata ?? {}) as Record<string, unknown>,
+  }))
+}
+
 export async function listConnectedProviders(userId: string): Promise<string[]> {
   const supabase = await createSupabaseServer()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

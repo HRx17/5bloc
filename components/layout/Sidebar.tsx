@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { Logo } from '../brand/LogoMark'
 import { getNavForRole } from '@/lib/rbac/nav'
 import { ROLES, type RoleKey } from '@/lib/rbac/roles'
+import { useMessages } from '@/components/messages/MessagesProvider'
 
 interface SidebarProps {
   userRole?: string
@@ -21,10 +22,11 @@ export default function Sidebar({
   onClose,
 }: SidebarProps) {
   const pathname = usePathname()
+  const { unreadCount } = useMessages()
   const navGroups = getNavForRole(userRole)
   const roleLabel =
     userRole in ROLES ? ROLES[userRole as RoleKey].shortLabel : userRole
-  const displayOrg =
+  const workspaceLabel =
     userRole === 'contractor'
       ? 'Contractor workspace'
       : userRole === 'builder'
@@ -33,7 +35,8 @@ export default function Sidebar({
           ? 'Consultant workspace'
           : userRole === 'client'
             ? 'Client workspace'
-            : orgName || '5Bloc'
+            : '5Bloc'
+  const displayOrg = orgName || workspaceLabel
   // Only architects and contractors have a subscription of their own
   const showPlan = userRole === 'architect' || userRole === 'contractor'
 
@@ -83,6 +86,7 @@ export default function Sidebar({
             <div className="flex flex-col gap-0.5">
               {group.items.map((item) => {
                 const active = isSelected(item.path)
+                const count = item.badge === 'unreadMessages' ? unreadCount : 0
                 return (
                   <Link
                     key={item.name}
@@ -95,7 +99,15 @@ export default function Sidebar({
                     }}
                   >
                     <span className="material-icons-outlined text-[20px]">{item.icon}</span>
-                    {item.name}
+                    <span className="flex-1 truncate">{item.name}</span>
+                    {count > 0 && (
+                      <span
+                        className="text-[10px] font-bold min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full shrink-0"
+                        style={{ background: 'var(--amber)', color: 'var(--ink-black)' }}
+                      >
+                        {count > 9 ? '9+' : count}
+                      </span>
+                    )}
                   </Link>
                 )
               })}

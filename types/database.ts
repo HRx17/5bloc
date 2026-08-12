@@ -669,19 +669,31 @@ export type Database = {
         Row: {
           badge_active: boolean | null
           bio: string | null
+          city: string | null
           company_name: string
+          contact_email: string | null
+          contact_name: string | null
+          country: string | null
           created_at: string | null
           gst_number: string | null
           id: string
           jobs_completed: number | null
+          listing_type: string
+          phone: string | null
           portfolio_photos: string[] | null
           rating: number | null
           razorpay_subscription_id: string | null
           reviews_count: number | null
           service_cities: string[]
           service_states: string[] | null
+          source: string | null
+          source_signup_id: string | null
+          source_table: string | null
           specializations: string[]
+          state: string | null
+          supply_categories: string[]
           team_size: number | null
+          team_size_label: string | null
           user_id: string | null
           verified: boolean | null
           website: string | null
@@ -690,19 +702,31 @@ export type Database = {
         Insert: {
           badge_active?: boolean | null
           bio?: string | null
+          city?: string | null
           company_name: string
+          contact_email?: string | null
+          contact_name?: string | null
+          country?: string | null
           created_at?: string | null
           gst_number?: string | null
           id?: string
           jobs_completed?: number | null
+          listing_type?: string
+          phone?: string | null
           portfolio_photos?: string[] | null
           rating?: number | null
           razorpay_subscription_id?: string | null
           reviews_count?: number | null
           service_cities?: string[]
           service_states?: string[] | null
+          source?: string | null
+          source_signup_id?: string | null
+          source_table?: string | null
           specializations?: string[]
+          state?: string | null
+          supply_categories?: string[]
           team_size?: number | null
+          team_size_label?: string | null
           user_id?: string | null
           verified?: boolean | null
           website?: string | null
@@ -711,19 +735,31 @@ export type Database = {
         Update: {
           badge_active?: boolean | null
           bio?: string | null
+          city?: string | null
           company_name?: string
+          contact_email?: string | null
+          contact_name?: string | null
+          country?: string | null
           created_at?: string | null
           gst_number?: string | null
           id?: string
           jobs_completed?: number | null
+          listing_type?: string
+          phone?: string | null
           portfolio_photos?: string[] | null
           rating?: number | null
           razorpay_subscription_id?: string | null
           reviews_count?: number | null
           service_cities?: string[]
           service_states?: string[] | null
+          source?: string | null
+          source_signup_id?: string | null
+          source_table?: string | null
           specializations?: string[]
+          state?: string | null
+          supply_categories?: string[]
           team_size?: number | null
+          team_size_label?: string | null
           user_id?: string | null
           verified?: boolean | null
           website?: string | null

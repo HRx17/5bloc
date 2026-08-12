@@ -269,6 +269,27 @@ CREATE INDEX idx_contractors_specs  ON contractors USING GIN(specializations);
 CREATE INDEX idx_contractors_name   ON contractors USING GIN(company_name gin_trgm_ops);
 CREATE INDEX idx_contractors_rating ON contractors(rating DESC);
 
+-- Added by supabase/migrations/20260812090000_marketplace_listing_types.sql
+-- One listing table, two kinds of business: contractors sell services, vendors sell supplies.
+ALTER TABLE contractors
+  ADD COLUMN IF NOT EXISTS listing_type      TEXT NOT NULL DEFAULT 'contractor'
+                             CHECK (listing_type IN ('contractor','vendor')),
+  ADD COLUMN IF NOT EXISTS supply_categories TEXT[] NOT NULL DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS contact_name      TEXT,
+  ADD COLUMN IF NOT EXISTS contact_email     TEXT,
+  ADD COLUMN IF NOT EXISTS phone             TEXT,
+  ADD COLUMN IF NOT EXISTS city              TEXT,
+  ADD COLUMN IF NOT EXISTS state             TEXT,
+  ADD COLUMN IF NOT EXISTS country           TEXT,
+  ADD COLUMN IF NOT EXISTS team_size_label   TEXT,
+  ADD COLUMN IF NOT EXISTS source            TEXT,
+  ADD COLUMN IF NOT EXISTS source_table      TEXT,
+  ADD COLUMN IF NOT EXISTS source_signup_id  UUID;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_contractors_source_signup
+  ON contractors(source_table, source_signup_id) WHERE source_signup_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_contractors_listing_type ON contractors(listing_type);
+CREATE INDEX IF NOT EXISTS idx_contractors_supply_cats  ON contractors USING GIN(supply_categories);
+
 -- CONTRACTOR REVIEWS
 CREATE TABLE contractor_reviews (
   id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -481,3 +502,26 @@ CREATE POLICY "users_read"  ON users FOR SELECT
   USING (id = current_user_id() OR org_id = current_user_org_id());
 CREATE POLICY "users_write" ON users FOR UPDATE
   USING (id = current_user_id());
+
+-- THIRD-PARTY INTEGRATION TOKENS (Google Workspace, Autodesk APS)
+-- Canonical definition lives in supabase/migrations/20260812_user_integrations.sql
+CREATE TABLE IF NOT EXISTS user_integrations (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id         UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  provider        TEXT NOT NULL,
+  access_token    TEXT NOT NULL,
+  refresh_token   TEXT,
+  expires_at      TIMESTAMPTZ,
+  scope           TEXT,
+  provider_email  TEXT,
+  provider_name   TEXT,
+  metadata        JSONB DEFAULT '{}'::JSONB,
+  connected_at    TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (user_id, provider)
+);
+
+ALTER TABLE user_integrations ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users manage own integrations" ON user_integrations FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
