@@ -1,17 +1,33 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 export default function ContractorBidsPage() {
   const [bids, setBids] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<unknown>(null)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/bids')
+      if (!res.ok) throw new Error('Could not load your bids')
+      const d = await res.json()
+      setBids(d.bids || [])
+    } catch (err) {
+      setError(err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    fetch('/api/bids')
-      .then((r) => r.json())
-      .then((d) => setBids(d.bids || []))
-      .finally(() => setLoading(false))
-  }, [])
+    load()
+  }, [load])
 
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto">
@@ -20,11 +36,26 @@ export default function ContractorBidsPage() {
         Track submitted, shortlisted, accepted and rejected bids.
       </p>
       {loading ? (
-        <p style={{ color: 'var(--stone)' }}>Loading…</p>
-      ) : bids.length === 0 ? (
-        <div className="p-8 rounded-2xl" style={{ background: 'var(--surface-container)' }}>
-          No bids yet. Open tenders from your contractor dashboard.
+        <div className="space-y-2">
+          {Array.from({ length: 5 }, (_, i) => (
+            <Skeleton key={i} className="h-14 w-full" />
+          ))}
         </div>
+      ) : error ? (
+        <ErrorState
+          title="Could not load your bids"
+          description="Your submitted bids are safe — we just could not fetch them right now."
+          error={error}
+          onRetry={load}
+        />
+      ) : bids.length === 0 ? (
+        <EmptyState
+          icon="gavel"
+          title="No bids submitted yet"
+          description="Browse projects open for service, read the scope and drawings, then send your price and timeline. Everything you submit is tracked here through shortlisting and award."
+          actionLabel="Find work to bid on"
+          href="/contractor"
+        />
       ) : (
         <div className="overflow-x-auto rounded-2xl" style={{ background: 'var(--surface-container)' }}>
           <table className="w-full text-sm">

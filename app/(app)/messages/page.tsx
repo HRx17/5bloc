@@ -5,6 +5,8 @@ import { useSearchParams } from 'next/navigation'
 import { supabaseClient } from '@/lib/supabase/client'
 import { hasSupabaseEnv } from '@/lib/data/client-data'
 import { useMessages } from '@/components/messages/MessagesProvider'
+import { useToast } from '@/components/ui/Toast'
+import { Skeleton } from '@/components/ui/Skeleton'
 import {
   type ChatConversation,
   type ChatMessage,
@@ -38,6 +40,7 @@ export default function MessagesPage() {
 function Messenger() {
   const searchParams = useSearchParams()
   const { setActiveConversation, refreshUnread } = useMessages()
+  const { toast } = useToast()
 
   const [me, setMe] = useState<ChatProfile | null>(null)
   const [conversations, setConversations] = useState<ChatConversation[]>([])
@@ -148,6 +151,7 @@ function Messenger() {
       )
     } else {
       setDraft(text)
+      toast('Message not sent. Your text is still in the box — try again.', 'error')
     }
   }
 
@@ -204,14 +208,27 @@ function Messenger() {
 
         <div className="flex-1 overflow-y-auto px-2 pb-3">
           {loadingConvs ? (
-            <div className="px-3 py-6 text-center text-[12px]" style={{ color: 'var(--stone)' }}>Loading…</div>
-          ) : filteredConvs.length === 0 ? (
-            <div className="px-4 py-10 text-center">
-              <span className="material-icons-outlined text-[32px] mb-2" style={{ color: 'var(--stone)', opacity: 0.5 }}>forum</span>
-              <p className="text-[13px] font-medium" style={{ color: 'var(--on-surface-variant)' }}>No conversations yet</p>
-              <p className="text-[12px] mt-1 mb-3" style={{ color: 'var(--stone)' }}>Start chatting with your team and collaborators.</p>
-              <button onClick={() => setShowNew(true)} className="btn-primary text-[12px] py-2">New message</button>
+            <div className="px-1 py-2 space-y-1.5">
+              {Array.from({ length: 6 }, (_, i) => (
+                <Skeleton key={i} className="h-14 w-full" />
+              ))}
             </div>
+          ) : filteredConvs.length === 0 ? (
+            convSearch.trim() ? (
+              <div className="px-4 py-10 text-center">
+                <span className="material-icons-outlined text-[32px] mb-2" style={{ color: 'var(--stone)', opacity: 0.5 }}>search_off</span>
+                <p className="text-[13px] font-medium" style={{ color: 'var(--on-surface-variant)' }}>No conversations match “{convSearch.trim()}”</p>
+                <p className="text-[12px] mt-1 mb-3" style={{ color: 'var(--stone)' }}>Search matches the conversation or person’s name. Clear it to see all threads.</p>
+                <button onClick={() => setConvSearch('')} className="btn-secondary text-[12px] py-2">Clear search</button>
+              </div>
+            ) : (
+              <div className="px-4 py-10 text-center">
+                <span className="material-icons-outlined text-[32px] mb-2" style={{ color: 'var(--stone)', opacity: 0.5 }}>forum</span>
+                <p className="text-[13px] font-medium" style={{ color: 'var(--on-surface-variant)' }}>No conversations yet</p>
+                <p className="text-[12px] mt-1 mb-3" style={{ color: 'var(--stone)' }}>Message an architect, consultant or contractor you work with — replies arrive in real time.</p>
+                <button onClick={() => setShowNew(true)} className="btn-primary text-[12px] py-2">New message</button>
+              </div>
+            )
           ) : (
             filteredConvs.map((c) => {
               const title = me ? conversationTitle(c, me.id) : 'Conversation'
@@ -297,7 +314,13 @@ function Messenger() {
             {/* Messages */}
             <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
               {loadingMsgs ? (
-                <div className="text-center text-[12px] py-6" style={{ color: 'var(--stone)' }}>Loading messages…</div>
+                <div className="space-y-4 py-2">
+                  {[64, 40, 56, 44].map((w, i) => (
+                    <div key={i} className={`flex ${i % 2 ? 'justify-end' : 'justify-start'}`}>
+                      <Skeleton className="h-10 rounded-2xl" style={{ width: `${w}%` }} />
+                    </div>
+                  ))}
+                </div>
               ) : messages.length === 0 ? (
                 <div className="text-center py-10">
                   <p className="text-[13px]" style={{ color: 'var(--stone)' }}>No messages yet — say hello.</p>
@@ -363,9 +386,10 @@ function Messenger() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ memberProfileIds: ids, title: extra.title || null, projectId: extra.projectId || null }),
             })
-            const json = await res.json()
+            const json = await res.json().catch(() => ({}))
             setShowNew(false)
             if (res.ok && json.id) await reloadConversations(json.id)
+            else toast(json.error || 'Could not start that conversation. Try again.', 'error')
           }}
         />
       )}
@@ -383,7 +407,12 @@ function Messenger() {
               body: JSON.stringify({ memberProfileIds: ids }),
             })
             setShowAdd(false)
-            if (res.ok) await reloadConversations(active.id)
+            if (res.ok) {
+              await reloadConversations(active.id)
+              toast(ids.length === 1 ? 'Added to the conversation' : `${ids.length} people added to the conversation`, 'success')
+            } else {
+              toast('Could not add those people. Try again.', 'error')
+            }
           }}
         />
       )}

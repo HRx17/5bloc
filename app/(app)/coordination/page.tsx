@@ -1,34 +1,39 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GmailPanel } from '@/components/integrations/GmailPanel'
+import { useToast } from '@/components/ui/Toast'
+import { useConfirm } from '@/components/ui/ConfirmProvider'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { supabaseClient } from '@/lib/supabase/client'
 import { hasSupabaseEnv } from '@/lib/data/client-data'
+import { conversationTitle, getMyProfile, initialsOf, listConversations, relativeTime } from '@/lib/data/messages'
 
 type TabId = 'rfis' | 'messages' | 'meetings' | 'issues' | 'gmail'
 
 interface RFI {
-  id: string; number: string; title: string; project: string
+  id: string; number: string; title: string; project: string; project_id: string
   raised_by: string; status: 'open' | 'answered' | 'overdue' | 'closed'
-  due_date: string; priority: 'high' | 'medium' | 'low'
+  due_date: string; priority: 'high' | 'medium' | 'low'; description: string
 }
 
-interface Message {
-  id: string; sender: string; content: string; project: string
-  channel: string; time: string; unread: boolean
+interface ConversationSummary {
+  id: string; title: string; project: string
+  preview: string; time: string; unread: number
 }
 
 interface Meeting {
-  id: string; title: string; project: string
+  id: string; title: string; project: string; project_id: string
   date: string; attendees: string[]; status: 'upcoming' | 'done'
 }
 
 interface Issue {
-  id: string; title: string; project: string
+  id: string; title: string; project: string; project_id: string
   severity: 'critical' | 'high' | 'medium' | 'low'
-  status: 'open' | 'in_progress' | 'resolved'; assigned_to: string
+  status: 'open' | 'in_progress' | 'resolved'; assigned_to: string; description: string
 }
 
 const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
@@ -58,103 +63,285 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-function EmptyState({ icon, title, sub }: { icon: string; title: string; sub: string }) {
+function TabEmpty({ icon, title, sub }: { icon: string; title: string; sub: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <span className="material-icons-outlined text-[28px] mb-4" style={{ color: 'var(--stone)', opacity: 0.3 }}>{icon}</span>
       <h3 className="text-[15px] font-semibold mb-1" style={{ color: 'var(--on-surface)' }}>{title}</h3>
-      <p className="text-[13px]" style={{ color: 'var(--stone)' }}>{sub}</p>
+      <p className="text-[13px] max-w-sm" style={{ color: 'var(--stone)' }}>{sub}</p>
     </div>
   )
 }
 
+function TabSkeleton({ height = 56 }: { height?: number }) {
+  return (
+    <div className="space-y-2">
+      {[0, 1, 2, 3].map((i) => (
+        <Skeleton key={i} className="w-full" style={{ height }} />
+      ))}
+    </div>
+  )
+}
+
+/** `attendees` may arrive as a jsonb array, a JSON string, or a comma/newline list. */
+function toAttendees(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map((v) => String(v)).filter(Boolean)
+  if (typeof value !== 'string' || !value.trim()) return []
+  try {
+    const parsed = JSON.parse(value)
+    if (Array.isArray(parsed)) return parsed.map((v) => String(v)).filter(Boolean)
+  } catch {
+    // not JSON — fall through to a plain list
+  }
+  return value.split(/[\n,]/).map((s) => s.trim()).filter(Boolean)
+}
+
+function rfiStatusOf(row: any): RFI['status'] {
+  const raw = String(row.status ?? 'open')
+  if (raw === 'closed') return 'closed'
+  if (raw === 'answered') return 'answered'
+  const due = row.due_date ? String(row.due_date).slice(0, 10) : ''
+  if (due && due < new Date().toISOString().slice(0, 10)) return 'overdue'
+  return 'open'
+}
+
 export default function CoordinationHub() {
+  const { toast } = useToast()
+  const confirm = useConfirm()
+
   const [tab,  setTab]  = useState<TabId>('rfis')
   const [loading, setLoading] = useState(true)
   const [rfis,     setRfis]     = useState<RFI[]>([])
-  const [messages, setMessages] = useState<Message[]>([])
   const [meetings, setMeetings] = useState<Meeting[]>([])
   const [issues,   setIssues]   = useState<Issue[]>([])
+  const [rfisError,     setRfisError]     = useState<unknown>(null)
+  const [meetingsError, setMeetingsError] = useState<unknown>(null)
+  const [issuesError,   setIssuesError]   = useState<unknown>(null)
+
+  const [conversations, setConversations] = useState<ConversationSummary[]>([])
+  const [loadingConversations, setLoadingConversations] = useState(true)
+  const [conversationsError, setConversationsError] = useState<unknown>(null)
+
   const [search, setSearch] = useState('')
   const [selectedRfi, setSelectedRfi] = useState<RFI | null>(null)
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null)
+  const [rfiResponse, setRfiResponse] = useState('')
+  const [respondingRfi, setRespondingRfi] = useState(false)
+  const [resolvingIssue, setResolvingIssue] = useState(false)
+
+  const load = useCallback(async (options?: { quiet?: boolean }) => {
+    if (!options?.quiet) setLoading(true)
+    setRfisError(null)
+    setIssuesError(null)
+    setMeetingsError(null)
+
+    if (!hasSupabaseEnv()) {
+      const notConfigured = new Error('Coordination data is not configured in this environment.')
+      setRfisError(notConfigured)
+      setIssuesError(notConfigured)
+      setMeetingsError(notConfigured)
+      setLoading(false)
+      return
+    }
+
+    // Each dataset stands on its own: a failure in one must not blank out the others.
+    let rfiRes, issueRes, meetingRes
+    try {
+      ;[rfiRes, issueRes, meetingRes] = await Promise.all([
+        supabaseClient.from('rfis').select('*, projects(name)').order('rfi_number', { ascending: true }),
+        supabaseClient.from('issues').select('*, projects(name)').order('issue_number', { ascending: true }),
+        supabaseClient.from('meetings').select('*, projects(name)').order('meeting_date', { ascending: false }),
+      ])
+    } catch (err) {
+      setRfisError(err)
+      setIssuesError(err)
+      setMeetingsError(err)
+      setLoading(false)
+      return
+    }
+
+    if (rfiRes.error) {
+      setRfisError(new Error(rfiRes.error.message || 'Could not load RFIs'))
+    } else {
+      setRfis((rfiRes.data || []).map((r: any) => ({
+        id: r.id,
+        number: `RFI-${String(r.rfi_number ?? 0).padStart(3, '0')}`,
+        title: r.title ?? 'Untitled RFI',
+        project: (r as { projects?: { name?: string } | null }).projects?.name ?? '—',
+        project_id: r.project_id ?? '',
+        raised_by: r.raised_by ?? '—',
+        status: rfiStatusOf(r),
+        due_date: r.due_date ? String(r.due_date).slice(0, 10) : '',
+        priority: (r.is_scope_change ? 'high' : 'medium') as RFI['priority'],
+        description: r.description ?? '',
+      })))
+    }
+
+    if (issueRes.error) {
+      setIssuesError(new Error(issueRes.error.message || 'Could not load site issues'))
+    } else {
+      setIssues((issueRes.data || []).map((i: any) => ({
+        id: i.id,
+        title: i.title ?? 'Untitled issue',
+        project: (i as { projects?: { name?: string } | null }).projects?.name ?? '—',
+        project_id: i.project_id ?? '',
+        severity: (['critical', 'high', 'medium', 'low'].includes(i.severity) ? i.severity : 'medium') as Issue['severity'],
+        status: (['open', 'in_progress', 'resolved'].includes(i.status) ? i.status : 'open') as Issue['status'],
+        assigned_to: i.assigned_to ?? '—',
+        description: i.description ?? '',
+      })))
+    }
+
+    if (meetingRes.error) {
+      setMeetingsError(new Error(meetingRes.error.message || 'Could not load meetings'))
+    } else {
+      const today = new Date().toISOString().slice(0, 10)
+      setMeetings((meetingRes.data || []).map((m: any) => {
+        const date = m.meeting_date ?? m.date ?? ''
+        return {
+          id: m.id,
+          title: m.title ?? 'Untitled meeting',
+          project: (m as { projects?: { name?: string } | null }).projects?.name ?? '—',
+          project_id: m.project_id ?? '',
+          date: String(date),
+          attendees: toAttendees(m.attendees),
+          status: (String(date).slice(0, 10) >= today ? 'upcoming' : 'done') as Meeting['status'],
+        }
+      }))
+    }
+
+    setLoading(false)
+  }, [])
+
+  const loadConversations = useCallback(async () => {
+    setLoadingConversations(true)
+    setConversationsError(null)
+    try {
+      if (!hasSupabaseEnv()) throw new Error('Messaging is not configured in this environment.')
+      const profile = await getMyProfile()
+      if (!profile) throw new Error('Could not identify your account')
+
+      const [convs, { data: projectRows }] = await Promise.all([
+        listConversations(profile.id),
+        supabaseClient.from('projects').select('id, name'),
+      ])
+      const projectNames = new Map<string, string>(
+        (projectRows || []).map((p: any) => [String(p.id), String(p.name ?? '')])
+      )
+
+      setConversations(convs.map((c) => ({
+        id: c.id,
+        title: conversationTitle(c, profile.id),
+        project: (c.project_id && projectNames.get(c.project_id)) || '',
+        preview: c.lastMessage?.body || 'No messages yet',
+        time: c.lastMessage ? relativeTime(c.lastMessage.created_at) : '',
+        unread: c.unread,
+      })))
+    } catch (err) {
+      setConversationsError(err)
+    } finally {
+      setLoadingConversations(false)
+    }
+  }, [])
 
   useEffect(() => {
-    let cancelled = false
-    async function loadLive() {
-      try {
-        if (hasSupabaseEnv()) {
-          const [{ data: rfiRows }, { data: issueRows }] = await Promise.all([
-            supabaseClient.from('rfis').select('*, projects(name)').order('rfi_number', { ascending: true }),
-            supabaseClient.from('issues').select('*, projects(name)').order('issue_number', { ascending: true }),
-          ])
-          if (rfiRows && rfiRows.length > 0 && !cancelled) {
-            setRfis(rfiRows.map((r: any) => ({
-              id: r.id,
-              number: `RFI-${String(r.rfi_number).padStart(3, '0')}`,
-              title: r.title,
-              project: (r as { projects?: { name?: string } | null }).projects?.name ?? '—',
-              raised_by: r.raised_by ?? '—',
-              status: (r.status === 'in_review' ? 'open' : r.status === 'answered' ? 'answered' : r.status === 'closed' ? 'closed' : 'open') as RFI['status'],
-              due_date: r.due_date ?? '',
-              priority: (r.is_scope_change ? 'high' : 'medium') as RFI['priority'],
-            })))
-          }
-          if (issueRows && issueRows.length > 0 && !cancelled) {
-            setIssues(issueRows.map((i: any) => ({
-              id: i.id,
-              title: i.title,
-              project: (i as { projects?: { name?: string } | null }).projects?.name ?? '—',
-              severity: (['critical','high','medium','low'].includes(i.severity) ? i.severity : 'medium') as Issue['severity'],
-              status: (i.status as Issue['status']),
-              assigned_to: i.assigned_to ?? '—',
-            })))
-          }
-        }
-      } catch (e) { console.warn('Coordination live load skipped:', e) }
-    }
-    loadLive()
+    load()
+    loadConversations()
+  }, [load, loadConversations])
 
-    const t = setTimeout(() => {
-      setRfis((prev) => prev.length > 0 ? prev : [
-        { id: 'r1', number: 'RFI-008', title: 'Slab reinforcement bar dia clarification', project: 'Wadhwa Prime Plaza',          raised_by: 'Amit Sharma',  status: 'overdue',  due_date: '2026-06-10', priority: 'high'   },
-        { id: 'r2', number: 'RFI-012', title: 'Column footing depth at grid B3',          project: 'Lodha Signature Residences',  raised_by: 'Ravi Gupta',   status: 'open',     due_date: '2026-06-18', priority: 'medium' },
-        { id: 'r3', number: 'RFI-003', title: 'Electrical conduit routing in basement',   project: 'Wadhwa Prime Plaza',          raised_by: 'Priya Mehta',  status: 'answered', due_date: '2026-06-20', priority: 'low'    },
-        { id: 'r4', number: 'RFI-005', title: 'HVAC duct size at level 4 ceiling',        project: 'Gundecha Industrial Park',    raised_by: 'Suresh Nair',  status: 'open',     due_date: '2026-06-22', priority: 'high'   },
-        { id: 'r5', number: 'RFI-009', title: 'Window sill waterproofing specification',  project: 'Lodha Signature Residences',  raised_by: 'Karan Shah',   status: 'closed',   due_date: '2026-06-05', priority: 'low'    },
-      ])
-      setMessages([
-        { id: 'm1', sender: 'Amit Sharma',  content: 'Drawing revision uploaded — please review before Thursday site meeting.',    project: 'Wadhwa Prime Plaza',         channel: 'Project Messages', time: '10m', unread: true  },
-        { id: 'm2', sender: 'Parth Patel',  content: 'Client approved the schematic design. Moving to DD phase.',                  project: 'Lodha Signature Residences', channel: 'Project Messages', time: '1h',  unread: false },
-        { id: 'm3', sender: 'Suresh Nair',  content: 'Requesting clarity on the BOQ line item for structural steel.',              project: 'Gundecha Industrial Park',   channel: 'Project Messages', time: '3h',  unread: true  },
-        { id: 'm4', sender: 'Ravi Gupta',   content: 'Confirmed site visit for 16 June at 10:00 AM. Please bring signed drawings.', project: 'Wadhwa Prime Plaza',         channel: 'Project Messages', time: '1d',  unread: false },
-      ])
-      setMeetings([
-        { id: 'mt1', title: 'Structural Coordination — Week 24',     project: 'Wadhwa Prime Plaza',         date: '2026-06-16 10:00', attendees: ['Parth', 'Amit', 'Ravi'],         status: 'upcoming' },
-        { id: 'mt2', title: 'Client Design Review — DD Phase',       project: 'Lodha Signature Residences', date: '2026-06-18 15:00', attendees: ['Parth', 'Karan Shah', 'MEP Lead'], status: 'upcoming' },
-        { id: 'mt3', title: 'Site Inspection — Foundation Progress', project: 'Wadhwa Prime Plaza',         date: '2026-06-10 09:00', attendees: ['Parth', 'Suresh', 'Contractor'],  status: 'done' },
-        { id: 'mt4', title: 'Pre-Design Kickoff',                    project: 'Gundecha Industrial Park',   date: '2026-06-08 11:00', attendees: ['Parth', 'Developer Team'],         status: 'done' },
-      ])
-      setIssues((prev) => prev.length > 0 ? prev : [
-        { id: 'i1', title: 'Cracked plaster panel near stairwell B2', project: 'Wadhwa Prime Plaza',         severity: 'high',     status: 'open',        assigned_to: 'Amit Sharma' },
-        { id: 'i2', title: 'Missing expansion joint at podium slab',   project: 'Lodha Signature Residences', severity: 'critical', status: 'in_progress', assigned_to: 'Ravi Gupta'  },
-        { id: 'i3', title: 'Incorrect tile grout colour — lobby',      project: 'Lodha Signature Residences', severity: 'medium',   status: 'open',        assigned_to: 'Site Foreman'},
-        { id: 'i4', title: 'Rainwater drain blocked on Level 2 slab',  project: 'Gundecha Industrial Park',   severity: 'high',     status: 'resolved',    assigned_to: 'Suresh Nair' },
-      ])
-      setLoading(false)
-    }, 500)
-    return () => clearTimeout(t)
-  }, [])
+  const respondToRfi = async () => {
+    if (!selectedRfi || respondingRfi) return
+    if (!selectedRfi.project_id) {
+      toast('This RFI is not linked to a project, so it cannot be answered here.', 'error')
+      return
+    }
+    const text = rfiResponse.trim()
+    if (!text) {
+      toast('Write your response before sending it', 'warning')
+      return
+    }
+    setRespondingRfi(true)
+    try {
+      const res = await fetch(`/api/projects/${selectedRfi.project_id}/rfis`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rfi_id: selectedRfi.id, response: text }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast(data.error || 'Could not send your response. Try again.', 'error')
+        return
+      }
+      toast(`Response sent on ${selectedRfi.number} — whoever raised it has been notified`, 'success')
+      setSelectedRfi(null)
+      setRfiResponse('')
+      await load({ quiet: true })
+    } catch (err: any) {
+      toast(err?.message || 'Could not reach the server. Try again.', 'error')
+    } finally {
+      setRespondingRfi(false)
+    }
+  }
+
+  const resolveIssue = async () => {
+    if (!selectedIssue || resolvingIssue) return
+    if (!selectedIssue.project_id) {
+      toast('This issue is not linked to a project, so it cannot be resolved here.', 'error')
+      return
+    }
+    const ok = await confirm({
+      title: 'Mark this issue resolved?',
+      message: `${selectedIssue.title} will be closed for everyone on ${selectedIssue.project}. Reopening it means raising the issue again.`,
+      confirmLabel: 'Mark resolved',
+    })
+    if (!ok) return
+
+    setResolvingIssue(true)
+    try {
+      const res = await fetch(`/api/projects/${selectedIssue.project_id}/issues`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ issue_id: selectedIssue.id, status: 'resolved' }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast(data.error || 'Could not update this issue. Try again.', 'error')
+        return
+      }
+      toast(`${selectedIssue.title} marked resolved`, 'success')
+      setSelectedIssue(null)
+      await load({ quiet: true })
+    } catch (err: any) {
+      toast(err?.message || 'Could not reach the server. Try again.', 'error')
+    } finally {
+      setResolvingIssue(false)
+    }
+  }
 
   const TABS: { id: TabId; label: string; icon: string; count: () => number }[] = [
     { id: 'rfis',     label: 'RFIs',     icon: 'forum',          count: () => rfis.filter(r => r.status !== 'closed').length },
-    { id: 'messages', label: 'Messages', icon: 'chat',           count: () => messages.filter(m => m.unread).length },
+    { id: 'messages', label: 'Messages', icon: 'chat',           count: () => conversations.reduce((n, c) => n + (c.unread > 0 ? 1 : 0), 0) },
     { id: 'meetings', label: 'Meetings', icon: 'event',          count: () => meetings.filter(m => m.status === 'upcoming').length },
     { id: 'issues',   label: 'Issues',   icon: 'warning_amber',  count: () => issues.filter(i => i.status !== 'resolved').length },
     { id: 'gmail',    label: 'Gmail',    icon: 'mail',           count: () => 0 },
   ]
 
   const filterText = search.toLowerCase()
+
+  const visibleRfis = rfis.filter(r =>
+    !filterText || r.title.toLowerCase().includes(filterText) ||
+    r.project.toLowerCase().includes(filterText) || r.number.toLowerCase().includes(filterText)
+  )
+  const visibleConversations = conversations.filter(c =>
+    !filterText || c.title.toLowerCase().includes(filterText) ||
+    c.preview.toLowerCase().includes(filterText) || c.project.toLowerCase().includes(filterText)
+  )
+  const visibleMeetings = meetings.filter(m =>
+    !filterText || m.title.toLowerCase().includes(filterText) || m.project.toLowerCase().includes(filterText)
+  )
+  const visibleIssues = issues.filter(i =>
+    !filterText || i.title.toLowerCase().includes(filterText) || i.project.toLowerCase().includes(filterText)
+  )
 
   return (
     <div className="p-5 lg:p-7 max-w-[1240px] mx-auto space-y-6">
@@ -196,10 +383,10 @@ export default function CoordinationHub() {
         transition={{ duration: 0.45, delay: 0.08 }}
       >
         {[
-          { label: 'Open RFIs',         value: rfis.filter(r => r.status === 'open').length,        color: 'var(--amber)',  icon: 'forum',         tab: 'rfis'     as TabId },
-          { label: 'Overdue RFIs',      value: rfis.filter(r => r.status === 'overdue').length,     color: 'var(--error)',  icon: 'schedule',      tab: 'rfis'     as TabId },
-          { label: 'Upcoming meetings', value: meetings.filter(m => m.status === 'upcoming').length, color: 'var(--blue)',   icon: 'event',         tab: 'meetings' as TabId },
-          { label: 'Open issues',       value: issues.filter(i => i.status !== 'resolved').length,   color: 'var(--purple)', icon: 'warning_amber', tab: 'issues'   as TabId },
+          { label: 'Open RFIs',         value: rfis.filter(r => r.status === 'open').length,        unavailable: !!rfisError,     color: 'var(--amber)',  icon: 'forum',         tab: 'rfis'     as TabId },
+          { label: 'Overdue RFIs',      value: rfis.filter(r => r.status === 'overdue').length,     unavailable: !!rfisError,     color: 'var(--error)',  icon: 'schedule',      tab: 'rfis'     as TabId },
+          { label: 'Upcoming meetings', value: meetings.filter(m => m.status === 'upcoming').length, unavailable: !!meetingsError, color: 'var(--blue)',   icon: 'event',         tab: 'meetings' as TabId },
+          { label: 'Open issues',       value: issues.filter(i => i.status !== 'resolved').length,   unavailable: !!issuesError,   color: 'var(--purple)', icon: 'warning_amber', tab: 'issues'   as TabId },
         ].map((s) => (
           <motion.button
             key={s.label}
@@ -214,7 +401,7 @@ export default function CoordinationHub() {
               <span className="text-[11px] font-medium" style={{ color: 'var(--stone)' }}>{s.label}</span>
             </div>
             <p className="font-display text-[20px]" style={{ color: 'var(--on-surface)' }}>
-              {loading ? '—' : s.value}
+              {loading || s.unavailable ? '—' : s.value}
             </p>
           </motion.button>
         ))}
@@ -264,14 +451,24 @@ export default function CoordinationHub() {
           {/* ─── RFIs ─── */}
           {tab === 'rfis' && (
             loading ? (
-              <div className="space-y-2">
-                {[0,1,2,3].map(i => <div key={i} className="skeleton h-14 rounded-xl" />)}
-              </div>
-            ) : rfis.filter(r =>
-              !filterText || r.title.toLowerCase().includes(filterText) ||
-              r.project.toLowerCase().includes(filterText) || r.number.toLowerCase().includes(filterText)
-            ).length === 0 ? (
-              <EmptyState icon="forum" title="No RFIs found" sub="Raise an RFI from within a project" />
+              <TabSkeleton />
+            ) : rfisError ? (
+              <ErrorState
+                title="Could not load RFIs"
+                description="Your RFIs are still on file — this view could not read them. Try again."
+                error={rfisError}
+                onRetry={() => load()}
+              />
+            ) : visibleRfis.length === 0 ? (
+              <TabEmpty
+                icon={filterText ? 'search_off' : 'forum'}
+                title={filterText ? `No RFIs match “${search}”` : 'No RFIs raised yet'}
+                sub={
+                  filterText
+                    ? 'Search looks at the RFI number, title and project. Clear it to see every open RFI.'
+                    : 'RFIs raised on any project land here so nothing sits unanswered. Open a project to raise the first one.'
+                }
+              />
             ) : (
               <div
                 className="rounded-2xl overflow-hidden"
@@ -289,29 +486,27 @@ export default function CoordinationHub() {
                     </tr>
                   </thead>
                   <tbody>
-                    {rfis
-                      .filter(r => !filterText || r.title.toLowerCase().includes(filterText) || r.project.toLowerCase().includes(filterText) || r.number.toLowerCase().includes(filterText))
-                      .map((rfi, idx) => (
-                        <tr
-                          key={rfi.id}
-                          className="transition-colors cursor-pointer"
-                          style={idx > 0 ? { boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' } : {}}
-                          onClick={() => setSelectedRfi(rfi)}
-                          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.025)')}
-                          onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = '')}
-                        >
-                          <td className="py-3.5 px-4 font-mono text-[11px]" style={{ color: 'var(--stone)' }}>{rfi.number}</td>
-                          <td className="py-3.5 px-4 font-medium" style={{ color: 'var(--on-surface)' }}>
-                            <span className="line-clamp-1">{rfi.title}</span>
-                          </td>
-                          <td className="py-3.5 px-4 hidden md:table-cell" style={{ color: 'var(--on-surface-variant)' }}>
-                            <span className="line-clamp-1">{rfi.project}</span>
-                          </td>
-                          <td className="py-3.5 px-4 hidden lg:table-cell" style={{ color: 'var(--stone)' }}>{rfi.raised_by}</td>
-                          <td className="py-3.5 px-4 hidden lg:table-cell font-mono text-[11px]" style={{ color: rfi.status === 'overdue' ? 'var(--error)' : 'var(--stone)' }}>{rfi.due_date}</td>
-                          <td className="py-3.5 px-4"><StatusBadge status={rfi.status} /></td>
-                        </tr>
-                      ))}
+                    {visibleRfis.map((rfi, idx) => (
+                      <tr
+                        key={rfi.id}
+                        className="transition-colors cursor-pointer"
+                        style={idx > 0 ? { boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' } : {}}
+                        onClick={() => { setSelectedRfi(rfi); setRfiResponse('') }}
+                        onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.025)')}
+                        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = '')}
+                      >
+                        <td className="py-3.5 px-4 font-mono text-[11px]" style={{ color: 'var(--stone)' }}>{rfi.number}</td>
+                        <td className="py-3.5 px-4 font-medium" style={{ color: 'var(--on-surface)' }}>
+                          <span className="line-clamp-1">{rfi.title}</span>
+                        </td>
+                        <td className="py-3.5 px-4 hidden md:table-cell" style={{ color: 'var(--on-surface-variant)' }}>
+                          <span className="line-clamp-1">{rfi.project}</span>
+                        </td>
+                        <td className="py-3.5 px-4 hidden lg:table-cell" style={{ color: 'var(--stone)' }}>{rfi.raised_by}</td>
+                        <td className="py-3.5 px-4 hidden lg:table-cell font-mono text-[11px]" style={{ color: rfi.status === 'overdue' ? 'var(--error)' : 'var(--stone)' }}>{rfi.due_date || '—'}</td>
+                        <td className="py-3.5 px-4"><StatusBadge status={rfi.status} /></td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
@@ -320,19 +515,29 @@ export default function CoordinationHub() {
 
           {/* ─── Messages ─── */}
           {tab === 'messages' && (
-            loading ? (
-              <div className="space-y-2">{[0,1,2,3].map(i => <div key={i} className="skeleton h-16 rounded-xl" />)}</div>
-            ) : messages.filter(m =>
-              !filterText || m.content.toLowerCase().includes(filterText) ||
-              m.sender.toLowerCase().includes(filterText) || m.project.toLowerCase().includes(filterText)
-            ).length === 0 ? (
-              <EmptyState icon="chat" title="No messages yet" sub="Messages sent within projects will appear here" />
+            loadingConversations ? (
+              <TabSkeleton height={64} />
+            ) : conversationsError ? (
+              <ErrorState
+                title="Could not load your conversations"
+                description="Your messages are unaffected — this summary could not be built. Try again, or open Messages directly."
+                error={conversationsError}
+                onRetry={loadConversations}
+              />
+            ) : visibleConversations.length === 0 ? (
+              <TabEmpty
+                icon={filterText ? 'search_off' : 'chat'}
+                title={filterText ? `No conversations match “${search}”` : 'No conversations yet'}
+                sub={
+                  filterText
+                    ? 'Search covers the thread name, project and latest message. Clear it to see every conversation.'
+                    : 'Threads with your architects, consultants and contractors appear here, so you can catch up across every job in one pass.'
+                }
+              />
             ) : (
               <div className="space-y-2">
-                {messages
-                  .filter(m => !filterText || m.content.toLowerCase().includes(filterText) || m.sender.toLowerCase().includes(filterText) || m.project.toLowerCase().includes(filterText))
-                  .map((msg) => (
-                    <Link key={msg.id} href="/projects/proj-1">
+                {visibleConversations.map((conv) => (
+                  <Link key={conv.id} href={`/messages?c=${conv.id}`}>
                     <motion.div
                       className="flex gap-4 rounded-2xl p-4 cursor-pointer transition-all"
                       style={{ background: 'var(--surface-container)' }}
@@ -342,24 +547,26 @@ export default function CoordinationHub() {
                         className="w-9 h-9 shrink-0 flex items-center justify-center rounded-full text-[12px] font-bold"
                         style={{ background: 'rgba(122,184,255,0.12)', color: 'var(--blue)' }}
                       >
-                        {msg.sender.split(' ').map(n => n[0]).join('').slice(0,2)}
+                        {initialsOf(conv.title)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2 mb-1">
                           <div className="flex items-center gap-2">
-                            <span className="text-[13px] font-semibold" style={{ color: 'var(--on-surface)' }}>{msg.sender}</span>
-                            {msg.unread && <span className="h-1.5 w-1.5 rounded-full" style={{ background: 'var(--blue)' }} />}
+                            <span className="text-[13px] font-semibold" style={{ color: 'var(--on-surface)' }}>{conv.title}</span>
+                            {conv.unread > 0 && <span className="h-1.5 w-1.5 rounded-full" style={{ background: 'var(--blue)' }} />}
                           </div>
-                          <span className="font-mono text-[10px] shrink-0" style={{ color: 'var(--stone)' }}>{msg.time}</span>
+                          <span className="font-mono text-[10px] shrink-0" style={{ color: 'var(--stone)' }}>{conv.time}</span>
                         </div>
-                        <p className="text-[12.5px] line-clamp-2" style={{ color: 'var(--on-surface-variant)' }}>{msg.content}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--stone)' }}>{msg.project}</span>
-                        </div>
+                        <p className="text-[12.5px] line-clamp-2" style={{ color: 'var(--on-surface-variant)' }}>{conv.preview}</p>
+                        {conv.project && (
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--stone)' }}>{conv.project}</span>
+                          </div>
+                        )}
                       </div>
                     </motion.div>
-                    </Link>
-                  ))}
+                  </Link>
+                ))}
               </div>
             )
           )}
@@ -367,42 +574,66 @@ export default function CoordinationHub() {
           {/* ─── Meetings ─── */}
           {tab === 'meetings' && (
             loading ? (
-              <div className="space-y-2">{[0,1,2,3].map(i => <div key={i} className="skeleton h-16 rounded-xl" />)}</div>
-            ) : meetings.filter(m =>
-              !filterText || m.title.toLowerCase().includes(filterText) || m.project.toLowerCase().includes(filterText)
-            ).length === 0 ? (
-              <EmptyState icon="event" title="No meetings scheduled" sub="Create a meeting from within a project" />
+              <TabSkeleton height={64} />
+            ) : meetingsError ? (
+              <ErrorState
+                title="Could not load meetings"
+                description="Nothing has been cancelled — the schedule could not be read. Try again."
+                error={meetingsError}
+                onRetry={() => load()}
+              />
+            ) : visibleMeetings.length === 0 ? (
+              <TabEmpty
+                icon={filterText ? 'search_off' : 'event'}
+                title={filterText ? `No meetings match “${search}”` : 'No meetings scheduled'}
+                sub={
+                  filterText
+                    ? 'Search covers the meeting title and project. Clear it to see upcoming and past meetings.'
+                    : 'Site meetings and design reviews scheduled in a project show up here with attendees and dates.'
+                }
+              />
             ) : (
               <div className="space-y-2">
-                {meetings
-                  .filter(m => !filterText || m.title.toLowerCase().includes(filterText) || m.project.toLowerCase().includes(filterText))
-                  .sort((a, b) => (a.status === 'upcoming' ? -1 : 1))
-                  .map((meeting) => (
-                    <div
-                      key={meeting.id}
-                      className="flex items-center gap-4 rounded-2xl p-4"
-                      style={{ background: 'var(--surface-container)' }}
-                    >
+                {visibleMeetings
+                  .slice()
+                  .sort((a, b) => (a.status === b.status ? 0 : a.status === 'upcoming' ? -1 : 1))
+                  .map((meeting) => {
+                    const row = (
                       <div
-                        className="w-12 h-12 shrink-0 flex flex-col items-center justify-center rounded-xl text-center"
-                        style={{ background: meeting.status === 'upcoming' ? 'rgba(122,184,255,0.10)' : 'rgba(138,128,120,0.10)' }}
+                        className="flex items-center gap-4 rounded-2xl p-4"
+                        style={{ background: 'var(--surface-container)' }}
                       >
-                        <span className="text-[18px] font-bold font-display leading-none" style={{ color: meeting.status === 'upcoming' ? 'var(--blue)' : 'var(--stone)' }}>
-                          {new Date(meeting.date).getDate()}
-                        </span>
-                        <span className="text-[9px] uppercase tracking-wider" style={{ color: meeting.status === 'upcoming' ? 'var(--blue)' : 'var(--stone)', opacity: 0.7 }}>
-                          {new Date(meeting.date).toLocaleString('en', { month: 'short' })}
-                        </span>
+                        <div
+                          className="w-12 h-12 shrink-0 flex flex-col items-center justify-center rounded-xl text-center"
+                          style={{ background: meeting.status === 'upcoming' ? 'rgba(122,184,255,0.10)' : 'rgba(138,128,120,0.10)' }}
+                        >
+                          <span className="text-[18px] font-bold font-display leading-none" style={{ color: meeting.status === 'upcoming' ? 'var(--blue)' : 'var(--stone)' }}>
+                            {meeting.date ? new Date(meeting.date).getDate() : '—'}
+                          </span>
+                          <span className="text-[9px] uppercase tracking-wider" style={{ color: meeting.status === 'upcoming' ? 'var(--blue)' : 'var(--stone)', opacity: 0.7 }}>
+                            {meeting.date ? new Date(meeting.date).toLocaleString('en', { month: 'short' }) : ''}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-semibold line-clamp-1" style={{ color: 'var(--on-surface)' }}>{meeting.title}</p>
+                          <p className="text-[11.5px] mt-0.5" style={{ color: 'var(--stone)' }}>
+                            {meeting.project}
+                            {meeting.attendees.length > 0
+                              ? ` · ${meeting.attendees.slice(0, 3).join(', ')}${meeting.attendees.length > 3 ? ` +${meeting.attendees.length - 3}` : ''}`
+                              : ''}
+                          </p>
+                        </div>
+                        <StatusBadge status={meeting.status} />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-semibold line-clamp-1" style={{ color: 'var(--on-surface)' }}>{meeting.title}</p>
-                        <p className="text-[11.5px] mt-0.5" style={{ color: 'var(--stone)' }}>
-                          {meeting.project} · {meeting.attendees.slice(0,3).join(', ')}{meeting.attendees.length > 3 ? ` +${meeting.attendees.length - 3}` : ''}
-                        </p>
-                      </div>
-                      <StatusBadge status={meeting.status} />
-                    </div>
-                  ))}
+                    )
+                    return meeting.project_id ? (
+                      <Link key={meeting.id} href={`/projects/${meeting.project_id}/meetings`}>
+                        {row}
+                      </Link>
+                    ) : (
+                      <div key={meeting.id}>{row}</div>
+                    )
+                  })}
               </div>
             )
           )}
@@ -410,11 +641,24 @@ export default function CoordinationHub() {
           {/* ─── Issues ─── */}
           {tab === 'issues' && (
             loading ? (
-              <div className="space-y-2">{[0,1,2,3].map(i => <div key={i} className="skeleton h-14 rounded-xl" />)}</div>
-            ) : issues.filter(i =>
-              !filterText || i.title.toLowerCase().includes(filterText) || i.project.toLowerCase().includes(filterText)
-            ).length === 0 ? (
-              <EmptyState icon="warning_amber" title="No issues logged" sub="Issues can be raised from a site visit or the project Issues tab" />
+              <TabSkeleton />
+            ) : issuesError ? (
+              <ErrorState
+                title="Could not load site issues"
+                description="Open snags are still logged against their projects — this view could not read them."
+                error={issuesError}
+                onRetry={() => load()}
+              />
+            ) : visibleIssues.length === 0 ? (
+              <TabEmpty
+                icon={filterText ? 'search_off' : 'warning_amber'}
+                title={filterText ? `No issues match “${search}”` : 'No site issues logged'}
+                sub={
+                  filterText
+                    ? 'Search covers the issue title and project. Clear it to see every open issue.'
+                    : 'Snags and defects raised on a site visit collect here by severity, so nothing gets lost between visits.'
+                }
+              />
             ) : (
               <div
                 className="rounded-2xl overflow-hidden"
@@ -431,28 +675,26 @@ export default function CoordinationHub() {
                     </tr>
                   </thead>
                   <tbody>
-                    {issues
-                      .filter(i => !filterText || i.title.toLowerCase().includes(filterText) || i.project.toLowerCase().includes(filterText))
-                      .map((issue, idx) => (
-                        <tr
-                          key={issue.id}
-                          className="transition-colors cursor-pointer"
-                          style={idx > 0 ? { boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' } : {}}
-                          onClick={() => setSelectedIssue(issue)}
-                          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.025)')}
-                          onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = '')}
-                        >
-                          <td className="py-3.5 px-4"><StatusBadge status={issue.severity} /></td>
-                          <td className="py-3.5 px-4 font-medium" style={{ color: 'var(--on-surface)' }}>
-                            <span className="line-clamp-1">{issue.title}</span>
-                          </td>
-                          <td className="py-3.5 px-4 hidden md:table-cell" style={{ color: 'var(--on-surface-variant)' }}>
-                            <span className="line-clamp-1">{issue.project}</span>
-                          </td>
-                          <td className="py-3.5 px-4 hidden lg:table-cell" style={{ color: 'var(--stone)' }}>{issue.assigned_to}</td>
-                          <td className="py-3.5 px-4"><StatusBadge status={issue.status} /></td>
-                        </tr>
-                      ))}
+                    {visibleIssues.map((issue, idx) => (
+                      <tr
+                        key={issue.id}
+                        className="transition-colors cursor-pointer"
+                        style={idx > 0 ? { boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' } : {}}
+                        onClick={() => setSelectedIssue(issue)}
+                        onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.025)')}
+                        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = '')}
+                      >
+                        <td className="py-3.5 px-4"><StatusBadge status={issue.severity} /></td>
+                        <td className="py-3.5 px-4 font-medium" style={{ color: 'var(--on-surface)' }}>
+                          <span className="line-clamp-1">{issue.title}</span>
+                        </td>
+                        <td className="py-3.5 px-4 hidden md:table-cell" style={{ color: 'var(--on-surface-variant)' }}>
+                          <span className="line-clamp-1">{issue.project}</span>
+                        </td>
+                        <td className="py-3.5 px-4 hidden lg:table-cell" style={{ color: 'var(--stone)' }}>{issue.assigned_to}</td>
+                        <td className="py-3.5 px-4"><StatusBadge status={issue.status} /></td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
@@ -509,7 +751,7 @@ export default function CoordinationHub() {
                   {[
                     { label: 'Project',    value: selectedRfi.project },
                     { label: 'Raised by',  value: selectedRfi.raised_by },
-                    { label: 'Due date',   value: selectedRfi.due_date },
+                    { label: 'Due date',   value: selectedRfi.due_date || 'Not set' },
                   ].map(row => (
                     <div key={row.label} className="flex justify-between text-[13px]">
                       <span style={{ color: 'var(--stone)' }}>{row.label}</span>
@@ -521,18 +763,49 @@ export default function CoordinationHub() {
                 <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.03)' }}>
                   <p className="text-[12px] font-semibold mb-2" style={{ color: 'var(--stone)' }}>Description</p>
                   <p className="text-[13px] leading-relaxed" style={{ color: 'var(--on-surface-variant)' }}>
-                    Site team requires clarification on specification detail for <strong style={{ color: 'var(--on-surface)' }}>{selectedRfi.title.toLowerCase()}</strong>. Please review current drawings and provide written response within {selectedRfi.status === 'overdue' ? 'the next 24 hours (overdue)' : '48 hours'}.
+                    {selectedRfi.description || 'No description was given when this RFI was raised.'}
                   </p>
                 </div>
 
+                {selectedRfi.status === 'answered' || selectedRfi.status === 'closed' ? (
+                  <p className="text-[12px]" style={{ color: 'var(--stone)' }}>
+                    This RFI has already been answered. Open the project to review or revise the response.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    <label className="text-[12px] font-semibold" style={{ color: 'var(--stone)' }} htmlFor="rfi-response">
+                      Your response
+                    </label>
+                    <textarea
+                      id="rfi-response"
+                      rows={5}
+                      value={rfiResponse}
+                      onChange={(e) => setRfiResponse(e.target.value)}
+                      placeholder="Answer the question, and reference the drawing or spec you are relying on…"
+                      className="input-5bloc text-[13px] resize-none"
+                    />
+                    <p className="text-[11px]" style={{ color: 'var(--stone)' }}>
+                      Sending marks the RFI answered and notifies whoever raised it.
+                    </p>
+                  </div>
+                )}
+
                 <div className="flex gap-2 pt-2">
-                  <button className="btn-primary flex-1 text-[13px]" onClick={() => setSelectedRfi(null)}>
-                    <span className="material-icons-outlined text-[15px]">reply</span>
-                    Respond
-                  </button>
-                  <Link href={`/projects/proj-1`} className="btn-ghost text-[13px]" onClick={() => setSelectedRfi(null)}>
-                    View project
-                  </Link>
+                  {selectedRfi.status !== 'answered' && selectedRfi.status !== 'closed' && (
+                    <button
+                      className="btn-primary flex-1 text-[13px]"
+                      onClick={respondToRfi}
+                      disabled={respondingRfi || !rfiResponse.trim()}
+                    >
+                      <span className="material-icons-outlined text-[15px]">reply</span>
+                      {respondingRfi ? 'Sending…' : 'Send response'}
+                    </button>
+                  )}
+                  {selectedRfi.project_id && (
+                    <Link href={`/projects/${selectedRfi.project_id}/rfis`} className="btn-ghost text-[13px]" onClick={() => setSelectedRfi(null)}>
+                      View project
+                    </Link>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -588,14 +861,25 @@ export default function CoordinationHub() {
                   ))}
                 </div>
 
+                {selectedIssue.description && (
+                  <div className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                    <p className="text-[12px] font-semibold mb-2" style={{ color: 'var(--stone)' }}>Description</p>
+                    <p className="text-[13px] leading-relaxed" style={{ color: 'var(--on-surface-variant)' }}>{selectedIssue.description}</p>
+                  </div>
+                )}
+
                 <div className="flex gap-2 pt-2">
-                  <button className="btn-primary flex-1 text-[13px]" onClick={() => setSelectedIssue(null)}>
-                    <span className="material-icons-outlined text-[15px]">check_circle</span>
-                    Mark resolved
-                  </button>
-                  <Link href={`/projects/proj-1`} className="btn-ghost text-[13px]" onClick={() => setSelectedIssue(null)}>
-                    View project
-                  </Link>
+                  {selectedIssue.status !== 'resolved' && (
+                    <button className="btn-primary flex-1 text-[13px]" onClick={resolveIssue} disabled={resolvingIssue}>
+                      <span className="material-icons-outlined text-[15px]">check_circle</span>
+                      {resolvingIssue ? 'Saving…' : 'Mark resolved'}
+                    </button>
+                  )}
+                  {selectedIssue.project_id && (
+                    <Link href={`/projects/${selectedIssue.project_id}/issues`} className="btn-ghost text-[13px]" onClick={() => setSelectedIssue(null)}>
+                      View project
+                    </Link>
+                  )}
                 </div>
               </div>
             </motion.div>

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Logo } from '@/components/brand/LogoMark'
@@ -16,21 +16,33 @@ export default function AcceptInvitePage() {
   const [error, setError] = useState('')
   const [invite, setInvite] = useState<any>(null)
 
-  useEffect(() => {
+  const loadInvite = useCallback(() => {
     if (!token) {
-      setError('Missing invite token')
+      setError('This link is missing its invite code. Ask whoever invited you to send it again.')
       setLoading(false)
       return
     }
+    setLoading(true)
+    setError('')
     fetch(`/api/invites/accept?token=${encodeURIComponent(token)}`)
       .then(async (r) => {
         const data = await r.json()
-        if (!r.ok) throw new Error(data.error || 'Invalid invite')
+        if (!r.ok) throw new Error(data.error || 'This invitation is no longer valid.')
         setInvite(data.invite)
       })
-      .catch((e) => setError(e.message))
+      .catch((e) =>
+        setError(
+          /failed to fetch|networkerror/i.test(e?.message || '')
+            ? 'Could not reach the server. Check your connection and try again.'
+            : e.message
+        )
+      )
       .finally(() => setLoading(false))
   }, [token])
+
+  useEffect(() => {
+    loadInvite()
+  }, [loadInvite])
 
   const accept = async () => {
     setAccepting(true)
@@ -64,8 +76,37 @@ export default function AcceptInvitePage() {
         <Logo size={36} showTagline />
         <h1 className="text-2xl font-semibold mt-6">Project invitation</h1>
 
-        {loading && <p className="text-stone text-sm mt-4">Loading invite…</p>}
-        {error && <p className="text-error text-sm mt-4">{error}</p>}
+        {loading && (
+          <div className="mt-6 space-y-3" aria-busy="true">
+            <span className="sr-only">Loading your invitation…</span>
+            <div className="h-4 w-3/4 animate-pulse rounded bg-white/10" />
+            <div className="h-4 w-1/2 animate-pulse rounded bg-white/10" />
+            <div className="h-10 w-full animate-pulse rounded-xl bg-white/10" />
+          </div>
+        )}
+
+        {!loading && error && (
+          <div className="mt-6" role="alert">
+            <p className="text-error text-sm">{error}</p>
+            <p className="text-[12px] text-stone mt-2 leading-relaxed">
+              Invitations expire after a while and can only be used once. If yours has run out, ask the
+              architect to send a new one.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              {token && (
+                <button type="button" onClick={loadInvite} className="btn-secondary btn-sm">
+                  Try again
+                </button>
+              )}
+              <Link href="/login" className="btn-secondary btn-sm">
+                Sign in
+              </Link>
+              <Link href="/" className="btn-secondary btn-sm">
+                Go home
+              </Link>
+            </div>
+          </div>
+        )}
 
         {!loading && invite && (
           <div className="mt-4 space-y-4">

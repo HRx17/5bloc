@@ -3,6 +3,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { writeLocalFile, readLocalFile } from '@/lib/files/file-manager'
+import { useToast } from '@/components/ui/Toast'
+import { useConfirm } from '@/components/ui/ConfirmProvider'
+import { usePrompt } from '@/components/ui/PromptProvider'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 interface DocumentItem {
  id: string
@@ -39,13 +45,18 @@ export default function DocumentVault() {
  const projectId = params.id as string
  const fileInputRef = useRef<HTMLInputElement>(null)
  const imageWrapRef = useRef<HTMLDivElement>(null)
+  const { toast } = useToast()
+  const confirm = useConfirm()
+  const prompt = usePrompt()
 
- const [documents, setDocuments] = useState<DocumentItem[]>([])
+  const [documents, setDocuments] = useState<DocumentItem[]>([])
  const [selectedFolder, setSelectedFolder] = useState<string>('all')
  const [folders, setFolders] = useState<string[]>(['general', 'drawings', 'contracts', 'permits', 'reports', 'Google Drive'])
  const [uploadQueue, setUploadQueue] = useState<{ name: string; progress: number; id: string }[]>([])
  const [viewingDoc, setViewingDoc] = useState<DocumentItem | null>(null)
  const [loading, setLoading] = useState(true)
+ const [loadError, setLoadError] = useState<unknown>(null)
+ const [postingComment, setPostingComment] = useState(false)
  const [annotations, setAnnotations] = useState<AnnotationItem[]>([])
  const [commentDraft, setCommentDraft] = useState('')
  const [pinMode, setPinMode] = useState(false)
@@ -152,22 +163,36 @@ export default function DocumentVault() {
    payload?: any
  }) => {
    if (!viewingDoc) return
-   const res = await fetch(`/api/projects/${projectId}/document-annotations`, {
-     method: 'POST',
-     headers: { 'Content-Type': 'application/json' },
-     body: JSON.stringify({ document_id: viewingDoc.id, ...payload }),
-   })
-   const data = await res.json()
-   if (!res.ok) {
-     alert(data.error || 'Could not save annotation')
-     return
+   setPostingComment(true)
+   try {
+     const res = await fetch(`/api/projects/${projectId}/document-annotations`, {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({ document_id: viewingDoc.id, ...payload }),
+     })
+     const data = await res.json()
+     if (!res.ok) {
+       toast(data.error || 'Could not save the annotation', 'error')
+       return
+     }
+     setAnnotations((prev) => [...prev, data.annotation])
+     setCommentDraft('')
+     toast(payload.kind === 'pin' ? 'Pin added' : 'Comment posted', 'success')
+   } catch (err: any) {
+     toast(err?.message || 'Could not save the annotation', 'error')
+   } finally {
+     setPostingComment(false)
    }
-   setAnnotations((prev) => [...prev, data.annotation])
-   setCommentDraft('')
  }
 
  const restoreVersion = async (versionId: string, versionNum: number) => {
    if (!viewingDoc || restoringVersion) return
+   const ok = await confirm({
+     title: `Restore version ${versionNum}`,
+     message: `Version ${versionNum} of “${viewingDoc.name}” will be copied over the current file as a new version. Anyone opening this document, including the client portal, sees the restored file from now on.`,
+     confirmLabel: 'Restore version',
+   })
+   if (!ok) return
    setRestoringVersion(true)
    try {
      const res = await fetch(`/api/projects/${projectId}/document-versions`, {
@@ -177,7 +202,7 @@ export default function DocumentVault() {
      })
      const data = await res.json()
      if (!res.ok) {
-       alert(data.error || 'Restore failed')
+       toast(data.error || 'Could not restore that version', 'error')
        return
      }
      const nextVer = data.version || viewingDoc.version + 1
@@ -189,36 +214,49 @@ export default function DocumentVault() {
        `/api/projects/${projectId}/document-versions?document_id=${viewingDoc.id}`
      ).then((r) => r.json())
      setDocVersions(Array.isArray(refresh.versions) ? refresh.versions : [])
+     toast(`Version ${versionNum} restored as v${nextVer}`, 'success')
+   } catch (err: any) {
+     toast(err?.message || 'Could not restore that version', 'error')
    } finally {
      setRestoringVersion(false)
    }
  }
 
- useEffect(() => {
- fetch(`/api/projects/${projectId}/documents`)
- .then((r) => r.json())
- .then((d) => {
- setDocuments(
- (d.documents || []).map((doc: any) => ({
- id: doc.id,
- name: doc.name,
- original_filename: doc.original_filename || doc.name,
- extension: doc.extension || 'pdf',
- size_bytes: doc.size_bytes || 0,
- version: doc.version || 1,
- phase: doc.phase || 'construction_docs',
- folder: doc.folder || 'general',
- status: doc.status || 'active',
- approval_status: doc.approval_status || 'pending',
- uploaded_by: doc.uploaded_by || '—',
- created_at: (doc.created_at || '').slice(0, 10),
- shared_with_client: !!doc.shared_with_client,
- r2_key: doc.r2_key,
- }))
- )
- })
- .finally(() => setLoading(false))
+ const loadDocuments = useCallback(async () => {
+   setLoading(true)
+   setLoadError(null)
+   try {
+     const res = await fetch(`/api/projects/${projectId}/documents`)
+     const d = await res.json()
+     if (!res.ok) throw new Error(d.error || 'Failed to load the document vault')
+     setDocuments(
+       (d.documents || []).map((doc: any) => ({
+         id: doc.id,
+         name: doc.name,
+         original_filename: doc.original_filename || doc.name,
+         extension: doc.extension || 'pdf',
+         size_bytes: doc.size_bytes || 0,
+         version: doc.version || 1,
+         phase: doc.phase || 'construction_docs',
+         folder: doc.folder || 'general',
+         status: doc.status || 'active',
+         approval_status: doc.approval_status || 'pending',
+         uploaded_by: doc.uploaded_by || '—',
+         created_at: (doc.created_at || '').slice(0, 10),
+         shared_with_client: !!doc.shared_with_client,
+         r2_key: doc.r2_key,
+       }))
+     )
+   } catch (e) {
+     setLoadError(e)
+   } finally {
+     setLoading(false)
+   }
  }, [projectId])
+
+ useEffect(() => {
+   loadDocuments()
+ }, [loadDocuments])
 
  const handleUploadClick = () => {
  fileInputRef.current?.click()
@@ -254,7 +292,7 @@ export default function DocumentVault() {
  const uploadData = await uploadRes.json()
  if (!uploadRes.ok) throw new Error(uploadData.error || 'Upload failed')
  if (uploadData.warning) {
-   alert(uploadData.warning)
+   toast(uploadData.warning, 'warning', 6000)
  }
  setUploadQueue(prev => prev.map(item => item.id === uploadId ? { ...item, progress: 80 } : item))
 
@@ -293,6 +331,7 @@ export default function DocumentVault() {
  setDocuments(prev => [newDoc, ...prev])
  setUploadQueue(prev => prev.map(item => item.id === uploadId ? { ...item, progress: 100 } : item))
  openDoc(newDoc)
+ toast(`${newDoc.name} uploaded`, 'success')
 
  const savedChecklist = localStorage.getItem('onboarding_checklist_v1')
  if (savedChecklist) {
@@ -302,7 +341,7 @@ export default function DocumentVault() {
  }
  } catch (err) {
  console.error(err)
- alert(err instanceof Error ? err.message : 'Upload failed')
+ toast(err instanceof Error ? err.message : 'Upload failed', 'error')
  } finally {
  setTimeout(() => {
  setUploadQueue(prev => prev.filter(item => item.id !== uploadId))
@@ -315,27 +354,64 @@ export default function DocumentVault() {
  const doc = documents.find((d) => d.id === docId) || (viewingDoc?.id === docId ? viewingDoc : null)
  if (!doc) return
  const next = !doc.shared_with_client
+ const revert = () => {
+ setDocuments((prev) =>
+ prev.map((d) => (d.id === docId ? { ...d, shared_with_client: !next } : d))
+ )
+ setViewingDoc((prev) => (prev?.id === docId ? { ...prev, shared_with_client: !next } : prev))
+ }
  setDocuments((prev) =>
  prev.map((d) => (d.id === docId ? { ...d, shared_with_client: next } : d))
  )
  if (viewingDoc?.id === docId) setViewingDoc({ ...viewingDoc, shared_with_client: next })
- await fetch(`/api/projects/${projectId}/documents`, {
+ try {
+ const res = await fetch(`/api/projects/${projectId}/documents`, {
  method: 'PATCH',
  headers: { 'Content-Type': 'application/json' },
  body: JSON.stringify({ document_id: docId, shared_with_client: next }),
  })
+ if (!res.ok) {
+ const data = await res.json().catch(() => ({}))
+ revert()
+ toast(data.error || 'Could not change the portal visibility', 'error')
+ return
+ }
+ toast(next ? 'Shared to the client portal' : 'Hidden from the client portal', 'success')
+ } catch (err: any) {
+ revert()
+ toast(err?.message || 'Could not change the portal visibility', 'error')
+ }
  }
 
  const handleApprovalUpdate = async (docId: string, status: DocumentItem['approval_status']) => {
+ const previous =
+ documents.find((d) => d.id === docId)?.approval_status ??
+ (viewingDoc?.id === docId ? viewingDoc.approval_status : 'pending')
+ const revert = () => {
+ setDocuments((prev) => prev.map((d) => (d.id === docId ? { ...d, approval_status: previous } : d)))
+ setViewingDoc((prev) => (prev?.id === docId ? { ...prev, approval_status: previous } : prev))
+ }
  setDocuments((prev) =>
  prev.map((d) => (d.id === docId ? { ...d, approval_status: status } : d))
  )
  if (viewingDoc?.id === docId) setViewingDoc({ ...viewingDoc, approval_status: status })
- await fetch(`/api/projects/${projectId}/documents`, {
+ try {
+ const res = await fetch(`/api/projects/${projectId}/documents`, {
  method: 'PATCH',
  headers: { 'Content-Type': 'application/json' },
  body: JSON.stringify({ document_id: docId, approval_status: status }),
  })
+ if (!res.ok) {
+ const data = await res.json().catch(() => ({}))
+ revert()
+ toast(data.error || 'Could not update the approval status', 'error')
+ return
+ }
+ toast(status === 'approved' ? 'Document approved' : `Marked as ${status.replace(/_/g, ' ')}`, 'success')
+ } catch (err: any) {
+ revert()
+ toast(err?.message || 'Could not update the approval status', 'error')
+ }
  }
 
   const getDocTypeIcon = (ext: string) => {
@@ -380,6 +456,10 @@ export default function DocumentVault() {
   const filteredDocs = selectedFolder === 'all' 
     ? allDocs 
     : allDocs.filter(d => d.folder === selectedFolder)
+
+  const activeGoogleUrl = viewingDoc
+    ? googleDocsList.find((g) => g.id === viewingDoc.id || g.title === viewingDoc.name)?.url
+    : undefined
 
  return (
  <div className="space-y-6 font-body select-none relative h-full">
@@ -482,15 +562,34 @@ export default function DocumentVault() {
 
  {/* Files List Table */}
  {loading ? (
- <div className="p-8 flex items-center justify-center text-stone animate-pulse h-48">
- <span>Loading document directory...</span>
+ <div className="mt-4 space-y-3">
+ {Array.from({ length: 6 }, (_, i) => (
+ <Skeleton key={i} className="h-14 w-full" />
+ ))}
  </div>
+ ) : loadError ? (
+ <ErrorState
+ className="mt-4"
+ compact
+ title="Could not load the document vault"
+ error={loadError}
+ onRetry={loadDocuments}
+ />
  ) : filteredDocs.length === 0 ? (
- <div className="py-16 flex flex-col items-center justify-center text-center text-stone flex-1">
- <span className="material-icons-outlined text-[48px] text-stone/30 mb-3">folder_open</span>
- <h4 className="text-sm font-bold text-white">Folder is empty</h4>
- <p className="text-xs max-w-xs mt-1">Upload CAD sheets or regulatory documents to get started.</p>
- </div>
+ <EmptyState
+ className="mt-4 flex-1"
+ icon="folder_open"
+ title={selectedFolder === 'all' ? 'No documents yet' : `Nothing in ${selectedFolder}`}
+ description={
+ selectedFolder === 'all'
+ ? 'Upload drawings, contracts or approvals here. Every file is versioned, and you choose which ones the client can see.'
+ : selectedFolder === 'Google Drive'
+ ? 'Link a Google Doc or Sheet to keep working notes beside the project files.'
+ : `No files have been filed under ${selectedFolder} yet. Upload one, or switch to All Documents to see everything.`
+ }
+ actionLabel={selectedFolder === 'all' ? 'Upload document' : undefined}
+ onClick={selectedFolder === 'all' ? handleUploadClick : undefined}
+ />
  ) : (
  <div className="overflow-x-auto flex-1 mt-4">
  <table className="w-full text-left text-xs ">
@@ -660,10 +759,14 @@ export default function DocumentVault() {
                   window.open(url, '_blank')
                   return
                 }
-                const res = await fetch(`/api/files/download?id=${viewingDoc.id}`)
-                const data = await res.json()
-                if (res.ok && data.url) window.open(data.url, '_blank')
-                else alert(data.error || 'Download unavailable')
+                try {
+                  const res = await fetch(`/api/files/download?id=${viewingDoc.id}`)
+                  const data = await res.json()
+                  if (res.ok && data.url) window.open(data.url, '_blank')
+                  else toast(data.error || 'This file is not available for download', 'error')
+                } catch (err: any) {
+                  toast(err?.message || 'This file is not available for download', 'error')
+                }
               }}
             >
               Download file
@@ -680,9 +783,16 @@ export default function DocumentVault() {
             const rect = imageWrapRef.current.getBoundingClientRect()
             const x_pct = ((e.clientX - rect.left) / rect.width) * 100
             const y_pct = ((e.clientY - rect.top) / rect.height) * 100
-            const note = window.prompt('Pin comment')
-            if (!note?.trim()) return
-            await postAnnotation({ note: note.trim(), kind: 'pin', x_pct, y_pct })
+            const values = await prompt({
+              title: 'Add a pin comment',
+              message: 'This marks the spot you clicked on the drawing and is visible to everyone on the project.',
+              confirmLabel: 'Add pin',
+              fields: [
+                { name: 'note', label: 'Comment', type: 'textarea', placeholder: 'What needs attention here?' },
+              ],
+            })
+            if (!values) return
+            await postAnnotation({ note: values.note, kind: 'pin', x_pct, y_pct })
             setPinMode(false)
           }}
           onMouseDown={(e) => {
@@ -832,22 +942,27 @@ export default function DocumentVault() {
             <p className="text-[11px] text-stone leading-relaxed max-w-md">
               Bye-law AI, BOQ sync, and Gmail draft are not connected. Open the Google link in a new tab to edit.
             </p>
-            <a
-              href={googleDocsList.find((g) => g.title === viewingDoc.name)?.url || '#'}
-              target="_blank"
-              rel="noreferrer"
-              className="btn-secondary py-1 px-3 text-[11px] flex items-center gap-1.5"
-              onClick={(e) => {
-                const url = googleDocsList.find((g) => g.id === viewingDoc.id || g.title === viewingDoc.name)?.url
-                if (!url || url === '#') {
-                  e.preventDefault()
-                  alert('No Google link saved for this item yet')
-                }
-              }}
-            >
-              <span className="material-icons-outlined text-[14px] text-amber">open_in_new</span>
-              Open in Google
-            </a>
+            {activeGoogleUrl ? (
+              <a
+                href={activeGoogleUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-secondary py-1 px-3 text-[11px] flex items-center gap-1.5"
+              >
+                <span className="material-icons-outlined text-[14px] text-amber">open_in_new</span>
+                Open in Google
+              </a>
+            ) : (
+              <p
+                className="text-[11px] flex items-center gap-1.5 px-3 py-1 border rounded-md"
+                style={{ color: 'var(--stone)' }}
+              >
+                <span className="material-icons-outlined text-[14px]" aria-hidden>
+                  link_off
+                </span>
+                No Google link saved — relink this item to open it
+              </p>
+            )}
           </div>
         </div>
       ) : (
@@ -1022,7 +1137,11 @@ export default function DocumentVault() {
         </div>
         <div className="space-y-3">
           {versionsLoading ? (
-            <p className="text-[10px] text-stone">Loading versions…</p>
+            <div className="space-y-2">
+              {Array.from({ length: 2 }, (_, i) => (
+                <Skeleton key={i} className="h-16 w-full" />
+              ))}
+            </div>
           ) : docVersions.length === 0 ? (
             <p className="text-[10px] text-stone">No version history yet. Upload or open a stored file to start tracking.</p>
           ) : (
@@ -1046,7 +1165,7 @@ export default function DocumentVault() {
                       onClick={() => restoreVersion(v.id, v.version)}
                       className="text-[9px] text-blue font-bold uppercase hover:underline disabled:opacity-50"
                     >
-                      Restore
+                      {restoringVersion ? 'Restoring…' : 'Restore'}
                     </button>
                   )}
                 </div>
@@ -1122,9 +1241,11 @@ export default function DocumentVault() {
         </div>
         <div className="max-h-40 overflow-y-auto space-y-2">
           {annotationsLoading ? (
-            <p className="text-[10px] text-stone">Loading…</p>
+            <Skeleton lines={2} />
           ) : annotations.filter((a) => a.kind !== 'stroke').length === 0 ? (
-            <p className="text-[10px] text-stone">No comments yet. Add one below.</p>
+            <p className="text-[10px] text-stone">
+              No comments yet. Add one below, or pin a note directly on the drawing.
+            </p>
           ) : (
             annotations
               .filter((a) => a.kind !== 'stroke')
@@ -1154,17 +1275,25 @@ export default function DocumentVault() {
             placeholder="Add a comment…"
             className="input-5bloc text-xs w-full resize-none"
           />
-          <button type="submit" className="btn-primary w-full py-1.5 text-xs">
-            Post comment
+          <button
+            type="submit"
+            disabled={postingComment || !commentDraft.trim()}
+            className="btn-primary w-full py-1.5 text-xs"
+          >
+            {postingComment ? 'Posting…' : 'Post comment'}
           </button>
         </form>
         <button
           type="button"
           onClick={async () => {
-            const res = await fetch(`/api/files/download?id=${viewingDoc.id}`)
-            const data = await res.json()
-            if (res.ok && data.url) window.open(data.url, '_blank')
-            else alert(data.error || 'Download unavailable')
+            try {
+              const res = await fetch(`/api/files/download?id=${viewingDoc.id}`)
+              const data = await res.json()
+              if (res.ok && data.url) window.open(data.url, '_blank')
+              else toast(data.error || 'This file is not available for download', 'error')
+            } catch (err: any) {
+              toast(err?.message || 'This file is not available for download', 'error')
+            }
           }}
           className="btn-secondary w-full py-1.5 text-xs text-left px-3 flex items-center gap-2"
         >
@@ -1256,17 +1385,17 @@ export default function DocumentVault() {
           <button 
             onClick={() => {
               if (!newGDocTitle.trim() || !newGDocUrl.trim()) {
-                alert('Title and a real Google Docs/Sheets URL are required')
+                toast('Add a title and a Google Docs or Sheets URL', 'error')
                 return
               }
               try {
                 const u = new URL(newGDocUrl.trim())
                 if (!u.hostname.includes('google.com') && !u.hostname.includes('docs.google')) {
-                  alert('URL must be a Google Docs or Sheets link')
+                  toast('That link is not a Google Docs or Sheets URL', 'error')
                   return
                 }
               } catch {
-                alert('Enter a valid URL')
+                toast('That URL is not valid — paste the full https:// link', 'error')
                 return
               }
               const newGDoc = {
@@ -1280,6 +1409,7 @@ export default function DocumentVault() {
               setNewGDocTitle('');
               setNewGDocUrl('');
               setShowLinkGDocModal(false);
+              toast(`${newGDoc.title} linked`, 'success');
             }}
             className="btn-primary py-1.5 px-4 text-xs font-semibold"
           >

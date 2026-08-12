@@ -1,11 +1,14 @@
 'use client'
 
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { startRazorpayCheckout } from '@/lib/payments/checkout'
 import { billingForRole, BILLING_ROLES } from '@/lib/payments/plans'
 import { isRoleKey, type RoleKey } from '@/lib/rbac/roles'
 import { useToast } from '@/components/ui/Toast'
+import { useConfirm } from '@/components/ui/ConfirmProvider'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { fileToAvatarDataUrl } from '@/lib/images/avatar'
 
 interface OrgMember {
@@ -96,9 +99,13 @@ function cardBrand(number: string) {
 
 export default function Settings() {
   const { toast } = useToast()
+  const confirm = useConfirm()
   const [role, setRole] = useState<RoleKey>('architect')
   const [activeTab, setActiveTab] = useState<TabId>('profile')
   const [hydrated, setHydrated] = useState(false)
+  const [loadError, setLoadError] = useState<unknown>(null)
+  const [billingError, setBillingError] = useState<unknown>(null)
+  const [teamError, setTeamError] = useState<unknown>(null)
 
   const [profile, setProfile] = useState({ name: '', email: '', phone: '', avatar: '' })
   const avatarInputRef = useRef<HTMLInputElement>(null)
@@ -149,8 +156,12 @@ export default function Settings() {
   const showsBilling = tabs.some((t) => t.id === 'billing')
 
   const loadTeam = async () => {
-    const res = await fetch('/api/org/team')
-    if (!res.ok) return
+    setTeamError(null)
+    const res = await fetch('/api/org/team').catch(() => null)
+    if (!res || !res.ok) {
+      setTeamError(new Error('Could not load your firm members'))
+      return
+    }
     const d = await res.json()
     setTeam(
       (d.members || []).map((m: any) => ({
@@ -166,25 +177,38 @@ export default function Settings() {
 
   const loadMethods = async () => {
     const res = await fetch('/api/payments/methods')
-    if (!res.ok) return
+    if (!res.ok) throw new Error('Could not load your saved payment methods')
     const d = await res.json()
     setMethods(d.methods || [])
   }
 
   const loadSubscription = async () => {
     const res = await fetch('/api/payments/subscription')
-    if (!res.ok) return
+    if (!res.ok) throw new Error('Could not load your subscription')
     const d = await res.json()
     setSubscription(d.subscription || null)
     setHistory(d.history || [])
   }
 
-  useEffect(() => {
-    fetch('/api/me')
-      .then((r) => r.json())
+  const loadBilling = useCallback(async () => {
+    setBillingError(null)
+    try {
+      await Promise.all([loadMethods(), loadSubscription()])
+    } catch (err) {
+      setBillingError(err)
+    }
+  }, [])
+
+  const loadMe = useCallback(() => {
+    setLoadError(null)
+    return fetch('/api/me')
+      .then((r) => {
+        if (!r.ok) throw new Error('Could not load your account')
+        return r.json()
+      })
       .then(async (d) => {
         const p = d.profile
-        if (!p) return
+        if (!p) throw new Error('Your account could not be found. Try signing in again.')
         const resolvedRole: RoleKey = isRoleKey(p.role) ? p.role : 'architect'
         setRole(resolvedRole)
         setProfile({
@@ -226,8 +250,7 @@ export default function Settings() {
         }
 
         if (BILLING_ROLES.includes(resolvedRole)) {
-          loadMethods().catch(() => {})
-          loadSubscription().catch(() => {})
+          loadBilling()
         }
 
         // Deep links like /settings?tab=billing
@@ -235,8 +258,46 @@ export default function Settings() {
         const allowedForRole = ALL_TABS.filter((t) => t.roles.includes(resolvedRole)).map((t) => t.id)
         if (requested && allowedForRole.includes(requested)) setActiveTab(requested)
       })
+      .catch((err) => setLoadError(err))
       .finally(() => setHydrated(true))
-  }, [])
+  }, [loadBilling])
+
+  useEffect(() => {
+    loadMe()
+  }, [loadMe])
+
+  // Razorpay sends the user back here after checkout; say what actually happened.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const subscribed = params.get('subscribed')
+    const payment = params.get('payment')
+    if (!subscribed && !payment) return
+
+    if (subscribed === 'true') {
+      toast(
+        'Payment received. Your plan is being activated — it can take a few seconds to appear below.',
+        'success',
+        8000
+      )
+      setActiveTab('billing')
+      loadBilling()
+    } else if (payment === 'cancelled') {
+      toast('Checkout was cancelled. You have not been charged and your plan is unchanged.', 'info', 7000)
+      setActiveTab('billing')
+    } else if (payment === 'failed') {
+      toast(
+        'That payment did not go through. Nothing was charged — check your card or UPI details and try again.',
+        'error',
+        9000
+      )
+      setActiveTab('billing')
+    }
+
+    const url = new URL(window.location.href)
+    url.searchParams.delete('subscribed')
+    url.searchParams.delete('payment')
+    window.history.replaceState({}, '', url.toString())
+  }, [loadBilling, toast])
 
   useEffect(() => {
     fetch('/api/integrations/status')
@@ -348,12 +409,40 @@ export default function Settings() {
     await loadTeam()
   }
 
-  const handleBilling = async (plan: 'solo' | 'team' | 'ai' | 'badge') => {
+  const handleBilling = async (
+    plan: 'solo' | 'team' | 'ai' | 'badge',
+    label: string,
+    price: string,
+    term: string
+  ) => {
     if (billingBusy) return
+    const period = term.split('·')[0].trim()
+    const ok = await confirm({
+      title: `Switch to ${label}?`,
+      message: `You will be taken to Razorpay to pay ${price} ${period}, recurring until you cancel. Nothing is charged until you finish checkout there.`,
+      confirmLabel: 'Continue to payment',
+    })
+    if (!ok) return
+
     setBillingBusy(true)
     try {
       const result = await startRazorpayCheckout({ plan, redirect: '/settings?tab=billing&subscribed=true' })
-      if (result.message) toast(result.message, result.ok ? 'success' : 'warning', 6000)
+      if (result.ok) return
+      toast(
+        result.message === 'Checkout cancelled'
+          ? 'Checkout cancelled. You have not been charged and your plan is unchanged.'
+          : `${result.message || 'Checkout could not be started'} — nothing was charged.`,
+        'warning',
+        7000
+      )
+    } catch (err) {
+      toast(
+        err instanceof Error
+          ? `${err.message} — nothing was charged.`
+          : 'Could not reach the payment provider. Nothing was charged, please try again.',
+        'error',
+        7000
+      )
     } finally {
       setBillingBusy(false)
     }
@@ -474,6 +563,22 @@ export default function Settings() {
           m.exp_month && m.exp_year ? ` · ${String(m.exp_month).padStart(2, '0')}/${m.exp_year}` : ''
         }`
 
+  if (loadError) {
+    return (
+      <div className="p-6 font-body max-w-5xl mx-auto space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-wide">Workspace Settings</h1>
+        </div>
+        <ErrorState
+          title="Could not load your settings"
+          error={loadError}
+          description="Your profile, plan and payment details are safe — we just could not read them right now."
+          onRetry={loadMe}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="p-6 font-body select-none max-w-5xl mx-auto space-y-6">
       <div>
@@ -504,7 +609,19 @@ export default function Settings() {
         </div>
 
         <div className="flex-grow w-full">
-          {activeTab === 'profile' && (
+          {!hydrated && (
+            <div className="card-5bloc space-y-4">
+              <Skeleton className="h-5 w-40" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Skeleton className="h-9 w-full" />
+                <Skeleton className="h-9 w-full" />
+              </div>
+              <Skeleton className="h-9 w-full" />
+              <Skeleton className="h-9 w-32" />
+            </div>
+          )}
+
+          {hydrated && activeTab === 'profile' && (
             <div className="card-5bloc space-y-6">
               <h3 className="text-sm font-semibold text-amber pb-2.5">User Profile</h3>
               <form onSubmit={handleProfileSave} className="space-y-4">
@@ -593,7 +710,7 @@ export default function Settings() {
             </div>
           )}
 
-          {activeTab === 'organisation' && (
+          {hydrated && activeTab === 'organisation' && (
             <div className="card-5bloc space-y-6">
               <h3 className="text-sm font-semibold text-amber pb-2.5">Firm Information</h3>
               <form onSubmit={handleOrgSave} className="space-y-4">
@@ -649,7 +766,7 @@ export default function Settings() {
             </div>
           )}
 
-          {activeTab === 'team' && (
+          {hydrated && activeTab === 'team' && (
             <div className="space-y-6">
               <div className="card-5bloc space-y-4">
                 <h3 className="text-sm font-semibold text-amber pb-2.5">Invite Firm Co-Worker</h3>
@@ -694,6 +811,14 @@ export default function Settings() {
 
               <div className="card-5bloc space-y-4">
                 <h3 className="text-xs font-semibold text-stone pb-2.5">Firm Workspace Members</h3>
+                {teamError ? (
+                  <ErrorState
+                    compact
+                    title="Could not load your firm members"
+                    description="Nobody has been removed — we just could not read the list."
+                    onRetry={() => loadTeam()}
+                  />
+                ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
@@ -706,6 +831,13 @@ export default function Settings() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-navy-lt/40 text-stone">
+                      {team.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="py-4 pl-2 text-[11px]">
+                            Nobody else is in this workspace yet. Invite a co-worker above to share projects with them.
+                          </td>
+                        </tr>
+                      )}
                       {team.map((member) => (
                         <tr key={member.id}>
                           <td className="py-3 pl-2 font-semibold text-white">{member.name}</td>
@@ -737,12 +869,22 @@ export default function Settings() {
                     </tbody>
                   </table>
                 </div>
+                )}
               </div>
             </div>
           )}
 
-          {activeTab === 'billing' && (
+          {hydrated && activeTab === 'billing' && (
             <div className="space-y-6">
+              {billingError ? (
+                <ErrorState
+                  compact
+                  title="Could not load your billing details"
+                  description="Your subscription and saved payment methods could not be read, so what you see below may be incomplete. Nothing has changed on your account."
+                  onRetry={loadBilling}
+                />
+              ) : null}
+
               <div className="card-5bloc space-y-3">
                 <h3 className="text-sm font-semibold text-amber">{billing.heading}</h3>
                 <p className="text-[11px] text-stone leading-relaxed">{billing.blurb}</p>
@@ -800,7 +942,7 @@ export default function Settings() {
                             </span>
                           ) : plan.checkout ? (
                             <button
-                              onClick={() => handleBilling(plan.checkout!)}
+                              onClick={() => handleBilling(plan.checkout!, plan.name, plan.price, plan.term)}
                               disabled={billingBusy}
                               className="w-full btn-primary text-xs py-1.5 font-medium"
                             >
@@ -835,7 +977,9 @@ export default function Settings() {
                     </span>
                   ) : (
                     <button
-                      onClick={() => addOn.checkout && handleBilling(addOn.checkout)}
+                      onClick={() =>
+                        addOn.checkout && handleBilling(addOn.checkout, addOn.name, addOn.price, addOn.term)
+                      }
                       disabled={billingBusy}
                       className="btn-secondary py-1.5 text-xs font-medium text-amber"
                     >
@@ -944,7 +1088,7 @@ export default function Settings() {
                   </form>
                 )}
 
-                {methods.length === 0 ? (
+                {billingError ? null : methods.length === 0 ? (
                   <p className="text-[11px] text-stone">
                     No payment method saved yet. Add one so renewals and invoices do not fail.
                   </p>
@@ -1033,7 +1177,7 @@ export default function Settings() {
             </div>
           )}
 
-          {activeTab === 'notifications' && (
+          {hydrated && activeTab === 'notifications' && (
             <div className="card-5bloc space-y-6">
               <h3 className="text-sm font-semibold text-amber pb-2.5">Email Notifications</h3>
               <div className="space-y-4 text-xs">
@@ -1072,7 +1216,7 @@ export default function Settings() {
             </div>
           )}
 
-          {activeTab === 'integrations' && (
+          {hydrated && activeTab === 'integrations' && (
             <div className="card-5bloc space-y-5">
               <div>
                 <h3 className="text-sm font-semibold text-amber pb-2.5">Connected Accounts</h3>

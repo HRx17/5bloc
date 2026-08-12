@@ -1,10 +1,14 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import Link from 'next/link'
 import { useParams, usePathname, useRouter } from 'next/navigation'
 import { getProjectTabs } from '@/lib/rbac/nav'
 import type { RoleKey } from '@/lib/rbac/roles'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { Skeleton } from '@/components/ui/Skeleton'
+import { useToast } from '@/components/ui/Toast'
+import { useConfirm } from '@/components/ui/ConfirmProvider'
 
 interface ProjectData {
   id: string
@@ -25,37 +29,68 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   const pathname = usePathname()
   const router = useRouter()
   const projectId = params.id as string
+  const { toast } = useToast()
+  const confirm = useConfirm()
 
   const [project, setProject] = useState<ProjectData | null>(null)
   const [memberRole, setMemberRole] = useState<RoleKey>('architect')
   const [showActions, setShowActions] = useState(false)
-  const [error, setError] = useState('')
+  const [archiving, setArchiving] = useState(false)
+  const [error, setError] = useState<unknown>(null)
 
-  useEffect(() => {
-    let cancelled = false
-    async function load() {
-      try {
-        const [res, me] = await Promise.all([
-          fetch(`/api/projects/${projectId}`),
-          fetch('/api/me').then((r) => r.json()).catch(() => ({})),
-        ])
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error || 'Failed to load project')
-        if (cancelled) return
-        setProject(data.project)
-        // Fall back to the account role, never to architect, so tabs cannot over-expose
-        setMemberRole((data.membership?.role || me.profile?.role || 'client') as RoleKey)
-      } catch (e: any) {
-        if (!cancelled) setError(e.message)
-      }
-    }
-    load()
-    return () => {
-      cancelled = true
+  const load = useCallback(async () => {
+    setError(null)
+    try {
+      const [res, me] = await Promise.all([
+        fetch(`/api/projects/${projectId}`),
+        fetch('/api/me').then((r) => r.json()).catch(() => ({})),
+      ])
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to load project')
+      setProject(data.project)
+      // Fall back to the account role, never to architect, so tabs cannot over-expose
+      setMemberRole((data.membership?.role || me.profile?.role || 'client') as RoleKey)
+    } catch (e) {
+      setError(e)
     }
   }, [projectId])
 
+  useEffect(() => {
+    load()
+  }, [load])
+
   const tabs = useMemo(() => getProjectTabs(projectId, memberRole), [projectId, memberRole])
+
+  const archiveProject = async () => {
+    if (archiving || !project) return
+    setShowActions(false)
+    const ok = await confirm({
+      title: 'Archive project',
+      message: `“${project.name}” will be closed to day-to-day work and moved out of the active project list. Records stay intact, but the team will no longer see it in their workspace.`,
+      confirmLabel: 'Archive project',
+      variant: 'danger',
+    })
+    if (!ok) return
+    setArchiving(true)
+    try {
+      const res = await fetch(`/api/projects/${projectId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'archived' }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast(data.error || 'Could not archive this project', 'error')
+        return
+      }
+      toast(`${project.name} archived`, 'success')
+      router.push('/projects')
+    } catch (err: any) {
+      toast(err?.message || 'Could not archive this project', 'error')
+    } finally {
+      setArchiving(false)
+    }
+  }
 
   useEffect(() => {
     if (!project || !tabs.length) return
@@ -67,17 +102,43 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
 
   if (error) {
     return (
-      <div className="p-8" style={{ color: 'var(--error)' }}>
-        {error}
+      <div className="p-6 md:p-8 max-w-3xl mx-auto">
+        <ErrorState
+          title="Could not open this project"
+          description="You may not have access to it, or the workspace could not be reached."
+          error={error}
+          onRetry={load}
+        />
       </div>
     )
   }
 
   if (!project) {
     return (
-      <div className="p-8 flex items-center justify-center min-h-[40vh]" style={{ color: 'var(--stone)' }}>
-        <span className="animate-spin material-icons-outlined mr-2">sync</span>
-        Loading project…
+      <div className="flex flex-col h-full" aria-busy="true">
+        <div
+          className="px-6 pt-5 pb-4 shrink-0 space-y-5"
+          style={{ background: 'var(--surface-container)', boxShadow: 'var(--shadow-2)' }}
+        >
+          <div className="max-w-7xl mx-auto space-y-4">
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-9 w-72" />
+              <Skeleton className="h-4 w-48" />
+            </div>
+            <div className="flex gap-2">
+              {Array.from({ length: 6 }, (_, i) => (
+                <Skeleton key={i} className="h-8 w-24" />
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="flex-grow overflow-y-auto">
+          <div className="max-w-7xl mx-auto p-6 space-y-4">
+            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+        </div>
       </div>
     )
   }
@@ -148,15 +209,13 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
                           style={{ background: 'var(--surface-container-high)', boxShadow: 'var(--shadow-4)' }}
                         >
                           <button
-                            onClick={() => {
-                              setShowActions(false)
-                              router.push('/projects')
-                            }}
-                            className="w-full text-left px-4 py-2.5 flex items-center gap-2"
+                            onClick={archiveProject}
+                            disabled={archiving}
+                            className="w-full text-left px-4 py-2.5 flex items-center gap-2 disabled:opacity-50"
                             style={{ color: 'var(--stone)' }}
                           >
                             <span className="material-icons-outlined text-[16px]">archive</span>
-                            Archive Project
+                            {archiving ? 'Archiving…' : 'Archive Project'}
                           </button>
                         </div>
                       </>

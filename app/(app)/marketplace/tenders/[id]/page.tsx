@@ -5,6 +5,9 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 type Tender = {
   id: string
@@ -49,23 +52,34 @@ export default function TenderDetail() {
   const [bidCount, setBidCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [error, setError] = useState<unknown>(null)
 
   const [form, setForm] = useState({ amount: '', weeks: '', methodology: '' })
+  const [amountError, setAmountError] = useState('')
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [busy, setBusy] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
+    setError(null)
+    setNotFound(false)
     try {
       const res = await fetch(`/api/tenders/${params.id}`)
-      if (!res.ok) {
+      if (res.status === 404) {
         setNotFound(true)
         return
       }
       const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Could not load this project')
+      if (!data.tender) {
+        setNotFound(true)
+        return
+      }
       setTender(data.tender)
       setMyBid(data.my_bid)
       setBidCount(data.bid_count || 0)
+    } catch (err) {
+      setError(err)
     } finally {
       setLoading(false)
     }
@@ -104,19 +118,44 @@ export default function TenderDetail() {
 
   if (loading) {
     return (
-      <div className="p-8" style={{ color: 'var(--stone)' }}>
-        Loading project…
+      <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6">
+        <Skeleton className="h-4 w-20" />
+        <div className="space-y-2">
+          <Skeleton className="h-9 w-72" />
+          <Skeleton className="h-4 w-56" />
+        </div>
+        <div className="grid md:grid-cols-3 gap-5">
+          <div className="md:col-span-2 space-y-5">
+            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-48 w-full" />
+          </div>
+          <Skeleton className="h-72 w-full" />
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 md:p-8 max-w-3xl mx-auto space-y-4">
+        <ErrorState title="Could not load this project" error={error} onRetry={load} />
+        <Link href="/marketplace" className="btn-secondary text-xs inline-flex">
+          Back to marketplace
+        </Link>
       </div>
     )
   }
 
   if (notFound || !tender) {
     return (
-      <div className="p-8 space-y-3">
-        <p style={{ color: 'var(--stone)' }}>This project is no longer open for service.</p>
-        <Link href="/marketplace" className="btn-secondary text-xs">
-          Back to marketplace
-        </Link>
+      <div className="p-6 md:p-8 max-w-3xl mx-auto">
+        <EmptyState
+          icon="search_off"
+          title="This project is no longer open for service"
+          description="The architect may have closed bidding or awarded the work. Browse what is still open."
+          actionLabel="Back to marketplace"
+          href="/marketplace"
+        />
       </div>
     )
   }
@@ -229,8 +268,17 @@ export default function TenderDetail() {
                     type="number"
                     min={1}
                     value={form.amount}
-                    onChange={(e) => setForm((p) => ({ ...p, amount: e.target.value }))}
+                    onChange={(e) => {
+                      setForm((p) => ({ ...p, amount: e.target.value }))
+                      setAmountError('')
+                    }}
+                    aria-invalid={!!amountError}
                   />
+                  {amountError && (
+                    <p className="text-[11px] mt-1" style={{ color: 'var(--error)' }}>
+                      {amountError}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-[11px] mb-1" style={{ color: 'var(--stone)' }}>
@@ -257,8 +305,14 @@ export default function TenderDetail() {
                 </div>
                 <button
                   className="btn-primary w-full text-[12px]"
-                  disabled={busy || !form.amount || Number(form.amount) <= 0}
-                  onClick={() => setConfirmOpen(true)}
+                  disabled={busy}
+                  onClick={() => {
+                    if (!form.amount || Number(form.amount) <= 0) {
+                      setAmountError('Enter the amount you are bidding, above zero.')
+                      return
+                    }
+                    setConfirmOpen(true)
+                  }}
                 >
                   Review and submit
                 </button>

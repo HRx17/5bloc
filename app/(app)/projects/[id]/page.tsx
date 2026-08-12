@@ -1,8 +1,11 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import { useToast } from '@/components/ui/Toast'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 const PHASE_LABELS: Record<string, string> = {
   pre_design: 'Pre-Design',
@@ -30,6 +33,7 @@ interface PhaseMilestone {
 export default function ProjectOverview() {
   const params = useParams()
   const projectId = params.id as string
+  const { toast } = useToast()
 
   const [projectStats, setProjectStats] = useState({
     sqft: 0,
@@ -50,77 +54,75 @@ export default function ProjectOverview() {
   const [savingPhase, setSavingPhase] = useState<string | null>(null)
   const [savingSpecs, setSavingSpecs] = useState(false)
   const [editingSpecs, setEditingSpecs] = useState(false)
-  const [message, setMessage] = useState('')
+  const [loadError, setLoadError] = useState<unknown>(null)
 
-  useEffect(() => {
-    let cancelled = false
-    async function load() {
-      try {
-        const [projRes, actRes] = await Promise.all([
-          fetch(`/api/projects/${projectId}`),
-          fetch(`/api/activity?project_id=${projectId}&limit=8`),
-        ])
-        const projData = await projRes.json()
-        const actData = await actRes.json()
-        if (!projRes.ok) throw new Error(projData.error || 'Failed to load')
-        if (cancelled) return
+  const load = useCallback(async () => {
+    setLoading(true)
+    setLoadError(null)
+    try {
+      const [projRes, actRes] = await Promise.all([
+        fetch(`/api/projects/${projectId}`),
+        fetch(`/api/activity?project_id=${projectId}&limit=8`),
+      ])
+      const projData = await projRes.json()
+      const actData = await actRes.json()
+      if (!projRes.ok) throw new Error(projData.error || 'Failed to load this project')
 
-        const p = projData.project
-        setProjectStats({
-          sqft: Number(p.total_sqft || 0),
-          floors: Number(p.floors || 0),
-          cost: Number(p.construction_cost || 0),
-          feePercent: Number(p.architect_fee_pct || 0),
-          feeAmount: Number(p.architect_fee || 0),
-          startDate: p.start_date || '',
-          endDate: p.estimated_end || '',
-          brief: p.brief || '',
-          name: p.name || '',
-          phase: p.phase || '',
-        })
+      const p = projData.project
+      setProjectStats({
+        sqft: Number(p.total_sqft || 0),
+        floors: Number(p.floors || 0),
+        cost: Number(p.construction_cost || 0),
+        feePercent: Number(p.architect_fee_pct || 0),
+        feeAmount: Number(p.architect_fee || 0),
+        startDate: p.start_date || '',
+        endDate: p.estimated_end || '',
+        brief: p.brief || '',
+        name: p.name || '',
+        phase: p.phase || '',
+      })
 
-        const ms = (projData.milestones || []).map((m: any) => ({
-          id: m.id,
-          phase: m.phase,
-          label: PHASE_LABELS[m.phase] || m.phase,
-          date: m.milestone_date || '',
-          completion: m.completion_pct ?? 0,
-          fee: Number(m.fee_amount || 0),
-          paid: !!m.fee_paid,
-          reraCertified: !!m.rera_certified,
-          notes: m.notes || '',
-        }))
-        // Ensure all standard phases exist in UI
-        const phases = Object.keys(PHASE_LABELS)
-        const merged = phases.map((phase) => {
-          const found = ms.find((m: PhaseMilestone) => m.phase === phase)
-          return (
-            found || {
-              phase,
-              label: PHASE_LABELS[phase],
-              date: '',
-              completion: 0,
-              fee: 0,
-              paid: false,
-              reraCertified: false,
-              notes: '',
-            }
-          )
-        })
-        setMilestones(merged)
-        setExpandedPhase(p.phase || merged.find((m) => m.completion < 100)?.phase || merged[0]?.phase)
-        setActivity(actData.activity || [])
-      } catch (e: any) {
-        if (!cancelled) setMessage(e.message)
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-    load()
-    return () => {
-      cancelled = true
+      const ms = (projData.milestones || []).map((m: any) => ({
+        id: m.id,
+        phase: m.phase,
+        label: PHASE_LABELS[m.phase] || m.phase,
+        date: m.milestone_date || '',
+        completion: m.completion_pct ?? 0,
+        fee: Number(m.fee_amount || 0),
+        paid: !!m.fee_paid,
+        reraCertified: !!m.rera_certified,
+        notes: m.notes || '',
+      }))
+      // Ensure all standard phases exist in UI
+      const phases = Object.keys(PHASE_LABELS)
+      const merged = phases.map((phase) => {
+        const found = ms.find((m: PhaseMilestone) => m.phase === phase)
+        return (
+          found || {
+            phase,
+            label: PHASE_LABELS[phase],
+            date: '',
+            completion: 0,
+            fee: 0,
+            paid: false,
+            reraCertified: false,
+            notes: '',
+          }
+        )
+      })
+      setMilestones(merged)
+      setExpandedPhase(p.phase || merged.find((m) => m.completion < 100)?.phase || merged[0]?.phase)
+      setActivity(actRes.ok ? actData.activity || [] : [])
+    } catch (e) {
+      setLoadError(e)
+    } finally {
+      setLoading(false)
     }
   }, [projectId])
+
+  useEffect(() => {
+    load()
+  }, [load])
 
   const handleMilestoneFieldChange = (phase: string, field: keyof PhaseMilestone, value: any) => {
     setMilestones((prev) =>
@@ -130,52 +132,65 @@ export default function ProjectOverview() {
 
   const saveMilestone = async (phase: string) => {
     const milestone = milestones.find((m) => m.phase === phase)
-    if (!milestone) return
+    if (!milestone || savingPhase) return
     setSavingPhase(phase)
-    setMessage('')
-    const res = await fetch(`/api/projects/${projectId}/milestones`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        phase,
-        milestone_date: milestone.date || null,
-        completion_pct: milestone.completion,
-        fee_amount: milestone.fee,
-        fee_paid: milestone.paid,
-        notes: milestone.notes,
-        rera_certified: milestone.reraCertified,
-      }),
-    })
-    const data = await res.json()
-    setSavingPhase(null)
-    setMessage(res.ok ? `${milestone.label} saved` : data.error || 'Save failed')
+    try {
+      const res = await fetch(`/api/projects/${projectId}/milestones`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phase,
+          milestone_date: milestone.date || null,
+          completion_pct: milestone.completion,
+          fee_amount: milestone.fee,
+          fee_paid: milestone.paid,
+          notes: milestone.notes,
+          rera_certified: milestone.reraCertified,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast(data.error || `Could not save ${milestone.label}`, 'error')
+        return
+      }
+      toast(`${milestone.label} saved`, 'success')
+    } catch (err: any) {
+      toast(err?.message || `Could not save ${milestone.label}`, 'error')
+    } finally {
+      setSavingPhase(null)
+    }
   }
 
   const saveSpecs = async () => {
+    if (savingSpecs) return
     setSavingSpecs(true)
-    setMessage('')
-    const res = await fetch(`/api/projects/${projectId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        total_sqft: projectStats.sqft || null,
-        floors: projectStats.floors || null,
-        construction_cost: projectStats.cost || null,
-        architect_fee: projectStats.feeAmount || null,
-        architect_fee_pct: projectStats.feePercent || null,
-        start_date: projectStats.startDate || null,
-        estimated_end: projectStats.endDate || null,
-        brief: projectStats.brief || null,
-      }),
-    })
-    const data = await res.json()
-    setSavingSpecs(false)
-    if (!res.ok) {
-      setMessage(data.error || 'Failed to save specs')
-      return
+    try {
+      const res = await fetch(`/api/projects/${projectId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          total_sqft: projectStats.sqft || null,
+          floors: projectStats.floors || null,
+          construction_cost: projectStats.cost || null,
+          architect_fee: projectStats.feeAmount || null,
+          architect_fee_pct: projectStats.feePercent || null,
+          start_date: projectStats.startDate || null,
+          estimated_end: projectStats.endDate || null,
+          brief: projectStats.brief || null,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast(data.error || 'Failed to save the project specs', 'error')
+        return
+      }
+      setEditingSpecs(false)
+      toast('Project specs saved', 'success')
+    } catch (err: any) {
+      toast(err?.message || 'Failed to save the project specs', 'error')
+    } finally {
+      setSavingSpecs(false)
     }
-    setEditingSpecs(false)
-    setMessage('Project specs saved')
   }
 
   const exportMilestonesToCSV = () => {
@@ -197,25 +212,38 @@ export default function ProjectOverview() {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+    toast('Milestone schedule exported as CSV', 'success')
   }
 
   if (loading) {
     return (
-      <div className="space-y-6 animate-pulse">
-        <div className="card-5bloc h-28" />
-        <div className="card-5bloc h-96" />
+      <div className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Skeleton className="h-56 w-full md:col-span-2" />
+          <Skeleton className="h-56 w-full" />
+        </div>
+        <div className="space-y-2">
+          {Array.from({ length: 6 }, (_, i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
+        </div>
       </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <ErrorState
+        title="Could not load this project"
+        description="The overview, milestones and recent activity could not be fetched."
+        error={loadError}
+        onRetry={load}
+      />
     )
   }
 
   return (
     <div className="space-y-8 max-h-full font-body select-none">
-      {message && (
-        <p className="text-sm" style={{ color: 'var(--amber)' }}>
-          {message}
-        </p>
-      )}
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="card-5bloc space-y-3 md:col-span-2">
           <div className="flex items-center justify-between">
@@ -338,7 +366,7 @@ export default function ProjectOverview() {
           </div>
           {activity.length === 0 ? (
             <p className="text-[12px]" style={{ color: 'var(--stone)' }}>
-              No activity yet
+              Nothing has happened on this project yet. Uploads, RFIs and approvals show up here as the team works.
             </p>
           ) : (
             <ul className="space-y-2">
@@ -481,25 +509,34 @@ function PostTenderButton({
   projectName: string
   city: string
 }) {
+  const { toast } = useToast()
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState('')
   const [trade, setTrade] = useState('Civil')
-  const [msg, setMsg] = useState('')
+  const [posting, setPosting] = useState(false)
 
   const submit = async () => {
-    const res = await fetch(`/api/projects/${projectId}/tenders`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, trade_type: trade, project_name: projectName, city }),
-    })
-    const data = await res.json()
-    if (!res.ok) {
-      setMsg(data.error || 'Failed')
-      return
+    if (posting) return
+    setPosting(true)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/tenders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, trade_type: trade, project_name: projectName, city }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast(data.error || 'Could not post the tender', 'error')
+        return
+      }
+      setOpen(false)
+      setTitle('')
+      toast('Tender posted to the marketplace', 'success')
+    } catch (err: any) {
+      toast(err?.message || 'Could not post the tender', 'error')
+    } finally {
+      setPosting(false)
     }
-    setMsg('Tender posted to marketplace')
-    setOpen(false)
-    setTitle('')
   }
 
   return (
@@ -507,11 +544,6 @@ function PostTenderButton({
       <button type="button" className="btn-secondary text-[11px] w-full" onClick={() => setOpen(true)}>
         Post tender
       </button>
-      {msg && (
-        <p className="text-[11px] mt-2" style={{ color: 'var(--amber)' }}>
-          {msg}
-        </p>
-      )}
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.55)' }}>
           <div className="w-full max-w-md p-6 rounded-2xl space-y-3" style={{ background: 'var(--surface-container-high)' }}>
@@ -525,11 +557,11 @@ function PostTenderButton({
               ))}
             </select>
             <div className="flex justify-end gap-2">
-              <button type="button" className="btn-secondary" onClick={() => setOpen(false)}>
+              <button type="button" className="btn-secondary" onClick={() => setOpen(false)} disabled={posting}>
                 Cancel
               </button>
-              <button type="button" className="btn-primary" onClick={submit} disabled={!title}>
-                Publish
+              <button type="button" className="btn-primary" onClick={submit} disabled={!title || posting}>
+                {posting ? 'Publishing…' : 'Publish'}
               </button>
             </div>
           </div>

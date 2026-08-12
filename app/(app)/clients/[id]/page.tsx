@@ -1,8 +1,11 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useCallback, useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import { useToast } from '@/components/ui/Toast'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 interface CommLog {
   id: string
@@ -39,22 +42,32 @@ interface ClientDetail {
 export default function ClientProfile() {
   const params = useParams()
   const clientId = params.id as string
+  const { toast } = useToast()
 
   const [client, setClient] = useState<ClientDetail | null>(null)
   const [draft, setDraft] = useState({ full_name: '', email: '', phone: '', company: '' })
   const [savingContact, setSavingContact] = useState(false)
   const [savingNotes, setSavingNotes] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState<unknown>(null)
+  const [loading, setLoading] = useState(true)
   const [newLog, setNewLog] = useState({ type: 'call' as const, summary: '' })
+  const [addingLog, setAddingLog] = useState(false)
   const [orgProjects, setOrgProjects] = useState<{ id: string; name: string; client_id?: string | null }[]>([])
   const [linkProjectId, setLinkProjectId] = useState('')
   const [linking, setLinking] = useState(false)
 
-  const load = async () => {
-    const res = await fetch(`/api/clients/${clientId}`)
-    const data = await res.json()
-    if (!res.ok) {
-      setError(data.error || 'Not found')
+  const load = useCallback(async () => {
+    setError(null)
+    const res = await fetch(`/api/clients/${clientId}`).catch(() => null)
+    if (!res) {
+      setError(new Error('Could not reach the server.'))
+      setLoading(false)
+      return
+    }
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok || !data.client) {
+      setError(new Error(data.error || 'This contact could not be found.'))
+      setLoading(false)
       return
     }
     const notes_log = data.notes_log || data.commLogs || data.client?.notes_log || []
@@ -80,29 +93,37 @@ export default function ClientProfile() {
       phone: next.phone,
       company: next.company,
     })
-  }
+    setLoading(false)
+  }, [clientId])
 
   useEffect(() => {
+    setLoading(true)
     load()
     fetch('/api/projects')
       .then((r) => r.json())
       .then((d) => setOrgProjects(d.projects || []))
       .catch(() => {})
-  }, [clientId])
+  }, [clientId, load])
 
   useEffect(() => {
     if (!client) return
     const timer = setTimeout(async () => {
       setSavingNotes(true)
-      await fetch(`/api/clients/${clientId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notes: client.notes }),
-      })
-      setSavingNotes(false)
+      try {
+        const res = await fetch(`/api/clients/${clientId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ notes: client.notes }),
+        })
+        if (!res.ok) throw new Error('save failed')
+      } catch {
+        toast('Notes could not be saved. Copy your text before leaving this page.', 'error', 6000)
+      } finally {
+        setSavingNotes(false)
+      }
     }, 800)
     return () => clearTimeout(timer)
-  }, [client?.notes, clientId])
+  }, [client?.notes, clientId, toast])
 
   const handleSaveContact = async () => {
     if (!client) return
@@ -115,7 +136,7 @@ export default function ClientProfile() {
       })
       const data = await res.json()
       if (!res.ok) {
-        alert(data.error || 'Failed to save')
+        toast(data.error || 'Could not save these contact details', 'error')
         return
       }
       setClient({
@@ -125,6 +146,7 @@ export default function ClientProfile() {
         phone: draft.phone,
         company: draft.company,
       })
+      toast('Contact details saved', 'success')
     } finally {
       setSavingContact(false)
     }
@@ -132,26 +154,39 @@ export default function ClientProfile() {
 
   const handleAddCommLog = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!client || !newLog.summary) return
-    const res = await fetch(`/api/clients/${clientId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ comm_log: newLog }),
-    })
-    if (res.ok) {
+    if (!client || !newLog.summary.trim() || addingLog) return
+    setAddingLog(true)
+    try {
+      const res = await fetch(`/api/clients/${clientId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comm_log: { ...newLog, summary: newLog.summary.trim() } }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        toast(data.error || 'Could not add that log entry', 'error')
+        return
+      }
       setNewLog({ type: 'call', summary: '' })
       await load()
+    } finally {
+      setAddingLog(false)
     }
   }
 
   const updateStage = async (pipeline_stage: string) => {
     if (!client) return
+    const previous = client.pipeline_stage
     setClient({ ...client, pipeline_stage })
-    await fetch(`/api/clients/${clientId}`, {
+    const res = await fetch(`/api/clients/${clientId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ pipeline_stage }),
-    })
+    }).catch(() => null)
+    if (!res || !res.ok) {
+      setClient((prev) => (prev ? { ...prev, pipeline_stage: previous } : prev))
+      toast('Could not move this contact to a new stage', 'error')
+    }
   }
 
   const handleLinkProject = async () => {
@@ -165,10 +200,11 @@ export default function ClientProfile() {
       })
       const data = await res.json()
       if (!res.ok) {
-        alert(data.error || 'Failed to link project')
+        toast(data.error || 'Could not link that project', 'error')
         return
       }
       setLinkProjectId('')
+      toast('Project linked to this contact', 'success')
       await load()
     } finally {
       setLinking(false)
@@ -180,19 +216,39 @@ export default function ClientProfile() {
     (p) => !p.client_id || p.client_id !== clientId
   ).filter((p) => !client?.projects.some((cp) => cp.id === p.id))
 
-  if (error) {
+  if (loading) {
     return (
-      <div className="p-8">
-        <p style={{ color: 'var(--error)' }}>{error}</p>
-        <Link href="/clients" className="btn-secondary mt-4 inline-flex text-[12px]">
-          Back to CRM
-        </Link>
+      <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-9 w-64" />
+          <Skeleton className="h-4 w-40" />
+        </div>
+        <div className="grid md:grid-cols-3 gap-4">
+          <Skeleton className="h-56 w-full md:col-span-2" />
+          <Skeleton className="h-56 w-full" />
+        </div>
+        <Skeleton className="h-40 w-full" />
       </div>
     )
   }
 
-  if (!client) {
-    return <div className="p-8" style={{ color: 'var(--stone)' }}>Loading contact…</div>
+  if (error || !client) {
+    return (
+      <div className="p-6 md:p-8 max-w-3xl mx-auto space-y-4">
+        <ErrorState
+          title="Could not open this contact"
+          error={error}
+          onRetry={() => {
+            setLoading(true)
+            load()
+          }}
+        />
+        <Link href="/clients" className="btn-secondary inline-flex text-[12px]">
+          Back to CRM
+        </Link>
+      </div>
+    )
   }
 
   const logs = client.notes_log?.length ? client.notes_log : client.commLogs
@@ -284,7 +340,9 @@ export default function ClientProfile() {
         <div className="card-5bloc space-y-3">
           <h3 className="text-xs font-semibold text-amber mb-2">Linked projects</h3>
           {client.projects.length === 0 ? (
-            <p className="text-[12px]" style={{ color: 'var(--stone)' }}>None yet</p>
+            <p className="text-[12px]" style={{ color: 'var(--stone)' }}>
+              No projects linked yet. Link one below to share a portal with this contact.
+            </p>
           ) : (
             <ul className="space-y-2">
               {client.projects.map((p) => (
@@ -358,10 +416,15 @@ export default function ClientProfile() {
             value={newLog.summary}
             onChange={(e) => setNewLog({ ...newLog, summary: e.target.value })}
           />
-          <button className="btn-primary text-[12px]" type="submit">
-            Add
+          <button className="btn-primary text-[12px]" type="submit" disabled={addingLog || !newLog.summary.trim()}>
+            {addingLog ? 'Adding…' : 'Add'}
           </button>
         </form>
+        {(logs || []).length === 0 && (
+          <p className="text-[12px]" style={{ color: 'var(--stone)' }}>
+            No calls, emails or meetings logged yet. Add one above so the next person on this account has the history.
+          </p>
+        )}
         <ul className="space-y-2">
           {(logs || []).map((log) => (
             <li key={log.id} className="text-sm">

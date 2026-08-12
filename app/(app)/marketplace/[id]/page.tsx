@@ -1,10 +1,12 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useCallback, useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useToast } from '@/components/ui/Toast'
+import { useConfirm } from '@/components/ui/ConfirmProvider'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { ErrorState } from '@/components/ui/ErrorState'
 import { Skeleton } from '@/components/ui/Skeleton'
 import type { MarketplaceListing } from '@/lib/marketplace/listings'
 
@@ -27,12 +29,14 @@ export default function ListingProfile() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
   const { toast } = useToast()
+  const confirm = useConfirm()
   const listingId = params.id
 
   const [listing, setListing] = useState<MarketplaceListing | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [error, setError] = useState<unknown>(null)
   const [activeTab, setActiveTab] = useState<'about' | 'portfolio' | 'reviews'>('about')
 
   const [projects, setProjects] = useState<{ id: string; name: string }[]>([])
@@ -40,25 +44,34 @@ export default function ListingProfile() {
   const [role, setRole] = useState('architect')
   const [inviting, setInviting] = useState(false)
 
-  useEffect(() => {
-    let cancelled = false
-    fetch(`/api/contractors/${listingId}`)
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('not found'))))
-      .then((d) => {
-        if (cancelled) return
-        if (!d.listing) {
-          setNotFound(true)
-          return
-        }
-        setListing(d.listing)
-        setReviews(d.reviews || [])
-      })
-      .catch(() => !cancelled && setNotFound(true))
-      .finally(() => !cancelled && setLoading(false))
-    return () => {
-      cancelled = true
+  const loadListing = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    setNotFound(false)
+    try {
+      const res = await fetch(`/api/contractors/${listingId}`)
+      if (res.status === 404) {
+        setNotFound(true)
+        return
+      }
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Could not load this listing')
+      if (!data.listing) {
+        setNotFound(true)
+        return
+      }
+      setListing(data.listing)
+      setReviews(data.reviews || [])
+    } catch (err) {
+      setError(err)
+    } finally {
+      setLoading(false)
     }
   }, [listingId])
+
+  useEffect(() => {
+    loadListing()
+  }, [loadListing])
 
   useEffect(() => {
     fetch('/api/projects')
@@ -84,6 +97,15 @@ export default function ListingProfile() {
       )
       return
     }
+
+    const projectName = projects.find((p) => p.id === selectedProjectId)?.name || 'this project'
+    const ok = await confirm({
+      title: `Invite ${listing.company_name}?`,
+      message: `An email invitation goes to ${listing.contact_email}. Once they accept, they can see ${projectName} and coordinate on it.`,
+      confirmLabel: 'Send invitation',
+    })
+    if (!ok) return
+
     setInviting(true)
     try {
       const res = await fetch('/api/invites', {
@@ -111,6 +133,17 @@ export default function ListingProfile() {
           <Skeleton lines={2} />
         </div>
         <Skeleton style={{ height: 180 }} />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 md:p-8 max-w-3xl mx-auto space-y-4">
+        <ErrorState title="Could not load this listing" error={error} onRetry={loadListing} />
+        <Link href="/marketplace" className="btn-secondary text-[12px] inline-flex">
+          Back to marketplace
+        </Link>
       </div>
     )
   }

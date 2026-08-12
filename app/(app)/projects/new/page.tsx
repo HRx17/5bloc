@@ -6,10 +6,13 @@ import Link from 'next/link'
 import { MARKETPLACE_SERVICES } from '@/lib/marketplace/services'
 import { useToast } from '@/components/ui/Toast'
 
+type FieldErrors = Partial<Record<'name' | 'city' | 'sqft' | 'reraNumber' | 'servicesNeeded', string>>
+
 export default function NewProject() {
  const router = useRouter()
  const { toast } = useToast()
  const [loading, setLoading] = useState(false)
+ const [errors, setErrors] = useState<FieldErrors>({})
  const [clients, setClients] = useState<any[]>([])
  const [planGate, setPlanGate] = useState<{ blocked: boolean; count: number }>({ blocked: false, count: 0 })
  const [formData, setFormData] = useState({
@@ -38,7 +41,8 @@ export default function NewProject() {
  fetch('/api/clients').then((r) => r.json()),
  fetch('/api/projects').then((r) => r.json()),
  fetch('/api/me').then((r) => r.json()).catch(() => ({ profile: { plan: 'free' } })),
- ]).then(([c, p, me]) => {
+ ])
+ .then(([c, p, me]) => {
  const list = c.clients || []
  setClients(list)
  if (list[0]) setFormData((prev) => ({ ...prev, client: list[0].id }))
@@ -46,12 +50,16 @@ export default function NewProject() {
  const plan = me.profile?.plan || 'free'
  setPlanGate({ blocked: plan === 'free' && count >= 3, count })
  })
- }, [])
+ .catch(() =>
+ toast('Could not load your CRM contacts. You can still create the project and link a contact later.', 'warning', 6000)
+ )
+ }, [toast])
 
 
  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
  const { name, value } = e.target
  setFormData((prev) => ({ ...prev, [name]: value }))
+ setErrors((prev) => ({ ...prev, [name]: undefined }))
  }
 
  const handleReraToggle = () => {
@@ -60,15 +68,30 @@ export default function NewProject() {
 
  const handleSubmit = async (e: React.FormEvent) => {
  e.preventDefault()
+ if (loading) return
  if (planGate.blocked) {
  toast('Free plan limit reached: 3 projects. Upgrade to Solo to add more.', 'warning')
  router.push('/settings?tab=billing')
  return
  }
+
+ const nextErrors: FieldErrors = {}
+ if (!formData.name.trim()) nextErrors.name = 'Give the project a name your team will recognise.'
+ if (!formData.city.trim()) nextErrors.city = 'Enter the city the site is in.'
+ if (!formData.sqft.trim()) nextErrors.sqft = 'Enter the built-up area in sqft.'
+ else if (!(Number(formData.sqft) > 0)) nextErrors.sqft = 'Area must be a number above zero.'
+ if (formData.isRera && !formData.reraNumber.trim()) {
+ nextErrors.reraNumber = 'Add the RERA registration number, or turn RERA off.'
+ }
  if (formData.openForBidding && formData.servicesNeeded.length === 0) {
- toast('Select at least one service to post for open bidding.', 'warning')
+ nextErrors.servicesNeeded = 'Pick at least one service so contractors know what to bid on.'
+ }
+ if (Object.keys(nextErrors).length) {
+ setErrors(nextErrors)
+ toast('Fix the highlighted fields before creating this project.', 'warning')
  return
  }
+ setErrors({})
  setLoading(true)
 
  try {
@@ -76,7 +99,7 @@ export default function NewProject() {
  method: 'POST',
  headers: { 'Content-Type': 'application/json' },
  body: JSON.stringify({
- name: formData.name,
+ name: formData.name.trim(),
  client_id: formData.client && formData.client !== 'new' ? formData.client : null,
  type: formData.type,
  city: formData.city,
@@ -112,8 +135,13 @@ export default function NewProject() {
  router.push(`/projects/${data.project.id}`)
  } catch (err) {
  console.error(err)
- toast(err instanceof Error ? err.message : 'Failed to create project', 'error')
- } finally {
+ toast(
+ err instanceof Error
+ ? `${err.message} — nothing was created, your details are still here.`
+ : 'Could not create the project. Nothing was created, your details are still here.',
+ 'error',
+ 6000
+ )
  setLoading(false)
  }
  }
@@ -131,7 +159,7 @@ export default function NewProject() {
  </Link>
  </div>
 
- <form onSubmit={handleSubmit} className="space-y-6">
+ <form onSubmit={handleSubmit} noValidate className="space-y-6">
  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
  
  {/* Left Column: Identification and Location */}
@@ -143,12 +171,13 @@ export default function NewProject() {
  <input
  type="text"
  name="name"
- required
  value={formData.name}
  onChange={handleInputChange}
  className="input-5bloc"
  placeholder="e.g. Wadhwa Prime Plaza"
+ aria-invalid={!!errors.name}
  />
+ {errors.name && <p className="text-[11px] mt-1" style={{ color: 'var(--error)' }}>{errors.name}</p>}
  </div>
 
  <div className="grid grid-cols-2 gap-4">
@@ -200,12 +229,13 @@ export default function NewProject() {
  <input
  type="text"
  name="city"
- required
  value={formData.city}
  onChange={handleInputChange}
  className="input-5bloc"
  placeholder="e.g. Mumbai"
+ aria-invalid={!!errors.city}
  />
+ {errors.city && <p className="text-[11px] mt-1" style={{ color: 'var(--error)' }}>{errors.city}</p>}
  </div>
 
  <div>
@@ -256,12 +286,14 @@ export default function NewProject() {
  <input
  type="number"
  name="sqft"
- required
+ min={1}
  value={formData.sqft}
  onChange={handleInputChange}
  className="input-5bloc font-mono"
  placeholder="e.g. 15000"
+ aria-invalid={!!errors.sqft}
  />
+ {errors.sqft && <p className="text-[11px] mt-1" style={{ color: 'var(--error)' }}>{errors.sqft}</p>}
  </div>
 
  <div>
@@ -366,12 +398,15 @@ export default function NewProject() {
  <input
  type="text"
  name="reraNumber"
- required={formData.isRera}
  value={formData.reraNumber}
  onChange={handleInputChange}
  className="input-5bloc font-mono"
  placeholder="e.g. P51800012345"
+ aria-invalid={!!errors.reraNumber}
  />
+ {errors.reraNumber && (
+ <p className="text-[11px] mt-1" style={{ color: 'var(--error)' }}>{errors.reraNumber}</p>
+ )}
  </div>
  )}
  </div>
@@ -420,14 +455,15 @@ export default function NewProject() {
  <button
  key={svc}
  type="button"
- onClick={() =>
+ onClick={() => {
+ setErrors((prev) => ({ ...prev, servicesNeeded: undefined }))
  setFormData((prev) => ({
  ...prev,
  servicesNeeded: on
  ? prev.servicesNeeded.filter((s) => s !== svc)
  : [...prev.servicesNeeded, svc],
  }))
- }
+ }}
  className="chip text-[11px]"
  style={{
  color: on ? 'var(--amber)' : 'var(--stone)',
@@ -439,6 +475,9 @@ export default function NewProject() {
  )
  })}
  </div>
+ {errors.servicesNeeded && (
+ <p className="text-[11px] mt-2" style={{ color: 'var(--error)' }}>{errors.servicesNeeded}</p>
+ )}
  </div>
  <div className="max-w-xs">
  <label className="block text-[11px] font-semibold text-stone mb-1 font-body">Bid deadline</label>

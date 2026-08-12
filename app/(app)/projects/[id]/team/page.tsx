@@ -1,8 +1,12 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { PROJECT_MEMBER_ROLES, type RoleKey } from '@/lib/rbac/roles'
+import { useToast } from '@/components/ui/Toast'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 type Member = {
   id: string
@@ -18,31 +22,39 @@ type Member = {
 export default function ProjectTeam() {
   const params = useParams()
   const projectId = params.id as string
+  const { toast } = useToast()
 
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<unknown>(null)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<RoleKey>('contractor')
   const [sendingInvite, setSendingInvite] = useState(false)
-  const [message, setMessage] = useState('')
   const [lastInviteUrl, setLastInviteUrl] = useState('')
 
-  const load = async () => {
-    const res = await fetch(`/api/projects/${projectId}/members`)
-    const data = await res.json()
-    setMembers(data.members || [])
-    setLoading(false)
-  }
+  const load = useCallback(async () => {
+    setLoading(true)
+    setLoadError(null)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/members`)
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to load the project team')
+      setMembers(data.members || [])
+    } catch (e) {
+      setLoadError(e)
+    } finally {
+      setLoading(false)
+    }
+  }, [projectId])
 
   useEffect(() => {
     load()
-  }, [projectId])
+  }, [load])
 
   const handleInviteSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inviteEmail) return
+    if (!inviteEmail || sendingInvite) return
     setSendingInvite(true)
-    setMessage('')
     try {
       const res = await fetch('/api/invites', {
         method: 'POST',
@@ -59,11 +71,11 @@ export default function ProjectTeam() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Invite failed')
       setLastInviteUrl(data.accept_url || '')
-      setMessage(`Invite sent to ${inviteEmail}`)
+      toast(`Invite sent to ${inviteEmail}`, 'success')
       setInviteEmail('')
       await load()
     } catch (err: any) {
-      setMessage(err.message)
+      toast(err?.message || 'Could not send the invite', 'error')
     } finally {
       setSendingInvite(false)
     }
@@ -74,11 +86,21 @@ export default function ProjectTeam() {
     if (!member) return
     const next = !member[key]
     setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, [key]: next } : m)))
-    await fetch(`/api/projects/${projectId}/members`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ member_id: id, [key]: next }),
-    })
+    try {
+      const res = await fetch(`/api/projects/${projectId}/members`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_id: id, [key]: next }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, [key]: !next } : m)))
+        toast(data.error || 'Could not change that permission', 'error')
+      }
+    } catch (err: any) {
+      setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, [key]: !next } : m)))
+      toast(err?.message || 'Could not change that permission', 'error')
+    }
   }
 
   return (
@@ -119,7 +141,6 @@ export default function ProjectTeam() {
         </button>
       </form>
 
-      {message && <p className="text-sm" style={{ color: 'var(--amber)' }}>{message}</p>}
       {lastInviteUrl && (
         <p className="text-[12px]" style={{ color: 'var(--stone)' }}>
           Accept link: <code style={{ color: 'var(--amber)' }}>{lastInviteUrl}</code>
@@ -127,7 +148,19 @@ export default function ProjectTeam() {
       )}
 
       {loading ? (
-        <p style={{ color: 'var(--stone)' }}>Loading…</p>
+        <div className="space-y-2">
+          {Array.from({ length: 3 }, (_, i) => (
+            <Skeleton key={i} className="h-20 w-full" />
+          ))}
+        </div>
+      ) : loadError ? (
+        <ErrorState title="Could not load the project team" error={loadError} onRetry={load} />
+      ) : members.length === 0 ? (
+        <EmptyState
+          icon="group_add"
+          title="No one else on this project yet"
+          description="Invite the contractor, consultants and client above. Each invite is scoped to the role you pick, and you can fine-tune upload, comment and approve rights per person."
+        />
       ) : (
         <div className="space-y-2">
           {members.map((m) => (

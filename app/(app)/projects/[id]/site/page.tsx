@@ -1,7 +1,11 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
+import { useToast } from '@/components/ui/Toast'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 interface VisitReport {
   id: string
@@ -36,9 +40,12 @@ interface PunchItem {
 export default function SiteAndField() {
   const params = useParams()
   const projectId = params.id as string
+  const { toast } = useToast()
 
   const [activeSubTab, setActiveSubTab] = useState<'visits' | 'materials' | 'punch'>('visits')
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<unknown>(null)
+  const [submitting, setSubmitting] = useState(false)
 
   // Sub-tabs State
   const [visitReports, setVisitReports] = useState<VisitReport[]>([])
@@ -67,89 +74,143 @@ export default function SiteAndField() {
     assigned_to: 'Amit Sharma',
   })
 
-  useEffect(() => {
-    fetch(`/api/projects/${projectId}/site`)
-      .then((r) => r.json())
-      .then((d) => {
-        setVisitReports(d.visits || [])
-        setMaterialLogs(d.materials || [])
-        setPunchList(d.punch || [])
-      })
-      .finally(() => setLoading(false))
+  const load = useCallback(async () => {
+    setLoading(true)
+    setLoadError(null)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/site`)
+      const d = await res.json()
+      if (!res.ok) throw new Error(d.error || 'Failed to load site records')
+      setVisitReports(d.visits || [])
+      setMaterialLogs(d.materials || [])
+      setPunchList(d.punch || [])
+    } catch (e) {
+      setLoadError(e)
+    } finally {
+      setLoading(false)
+    }
   }, [projectId])
+
+  useEffect(() => {
+    load()
+  }, [load])
 
   const handleAddVisit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const res = await fetch(`/api/projects/${projectId}/site`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ kind: 'visit', ...newVisit }),
-    })
-    const data = await res.json()
-    if (!res.ok) { alert(data.error || 'Failed'); return }
-    setVisitReports(prev => [data.visit, ...prev])
-    setNewVisit(prev => ({ ...prev, observations: '' }))
+    if (submitting) return
+    setSubmitting(true)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/site`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: 'visit', ...newVisit }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast(data.error || 'Failed to save the visit report', 'error')
+        return
+      }
+      setVisitReports(prev => [data.visit, ...prev])
+      setNewVisit(prev => ({ ...prev, observations: '' }))
+      toast('Visit report logged', 'success')
+    } catch (err: any) {
+      toast(err?.message || 'Failed to save the visit report', 'error')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const handleAddMaterial = async (e: React.FormEvent) => {
     e.preventDefault()
-    const res = await fetch(`/api/projects/${projectId}/site`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ kind: 'material', ...newMaterial }),
-    })
-    const data = await res.json()
-    if (!res.ok) { alert(data.error || 'Failed'); return }
-    setMaterialLogs(prev => [data.material, ...prev])
-    setNewMaterial({ material_name: '', specified_standard: '', delivered_material: '', contractor: '' })
+    if (submitting) return
+    setSubmitting(true)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/site`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: 'material', ...newMaterial }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast(data.error || 'Failed to log the material delivery', 'error')
+        return
+      }
+      setMaterialLogs(prev => [data.material, ...prev])
+      setNewMaterial({ material_name: '', specified_standard: '', delivered_material: '', contractor: '' })
+      toast('Material delivery logged', 'success')
+    } catch (err: any) {
+      toast(err?.message || 'Failed to log the material delivery', 'error')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const handleAddPunch = async (e: React.FormEvent) => {
     e.preventDefault()
-    const res = await fetch(`/api/projects/${projectId}/site`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ kind: 'punch', ...newPunch }),
-    })
-    const data = await res.json()
-    if (!res.ok) { alert(data.error || 'Failed'); return }
-    setPunchList(prev => [data.punch, ...prev])
-    setNewPunch({ defect: '', location: '', assigned_to: '' })
-  }
-
-  const handleResolvePunch = async (id: string) => {
-    const res = await fetch(`/api/projects/${projectId}/site`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ punch_id: id, status: 'resolved' }),
-    })
-    if (!res.ok) return
-    setPunchList(prev => prev.map(p => p.id === id ? { ...p, status: 'resolved' } : p))
+    if (submitting) return
+    setSubmitting(true)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/site`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: 'punch', ...newPunch }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast(data.error || 'Failed to add the punch item', 'error')
+        return
+      }
+      setPunchList(prev => [data.punch, ...prev])
+      setNewPunch({ defect: '', location: '', assigned_to: '' })
+      toast('Punch item added', 'success')
+    } catch (err: any) {
+      toast(err?.message || 'Failed to add the punch item', 'error')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const handleTogglePunch = async (id: string) => {
     const item = punchList.find((p) => p.id === id)
     if (!item) return
     const next = item.status === 'open' ? 'resolved' : 'open'
-    const res = await fetch(`/api/projects/${projectId}/site`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ punch_id: id, status: next }),
-    })
-    if (!res.ok) return
-    setPunchList((prev) => prev.map((p) => (p.id === id ? { ...p, status: next } : p)))
+    try {
+      const res = await fetch(`/api/projects/${projectId}/site`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ punch_id: id, status: next }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        toast(data.error || 'Could not update the punch item', 'error')
+        return
+      }
+      setPunchList((prev) => prev.map((p) => (p.id === id ? { ...p, status: next } : p)))
+      toast(next === 'resolved' ? 'Punch item resolved' : 'Punch item reopened', 'success')
+    } catch (err: any) {
+      toast(err?.message || 'Could not update the punch item', 'error')
+    }
   }
 
   const handleFlagSubstitution = async (id: string) => {
-    const res = await fetch(`/api/projects/${projectId}/site`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ material_id: id, status: 'substitution_flagged' }),
-    })
-    if (!res.ok) return
-    setMaterialLogs((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, status: 'substitution_flagged' } : m))
-    )
+    try {
+      const res = await fetch(`/api/projects/${projectId}/site`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ material_id: id, status: 'substitution_flagged' }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        toast(data.error || 'Could not flag the substitution', 'error')
+        return
+      }
+      setMaterialLogs((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, status: 'substitution_flagged' } : m))
+      )
+      toast('Material flagged as a substitution', 'success')
+    } catch (err: any) {
+      toast(err?.message || 'Could not flag the substitution', 'error')
+    }
   }
 
   return (
@@ -174,7 +235,16 @@ export default function SiteAndField() {
       </div>
 
       {loading ? (
-        <div className="p-8 text-center text-stone animate-pulse">Loading site reports...</div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          <div className="lg:col-span-2 space-y-4">
+            {Array.from({ length: 3 }, (_, i) => (
+              <Skeleton key={i} className="h-32 w-full" />
+            ))}
+          </div>
+          <Skeleton className="h-72 w-full" />
+        </div>
+      ) : loadError ? (
+        <ErrorState title="Could not load site records" error={loadError} onRetry={load} />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           
@@ -191,6 +261,14 @@ export default function SiteAndField() {
                   </div>
                   <span className="label-sm font-bold text-stone">VISITS: {visitReports.length}</span>
                 </div>
+
+                {visitReports.length === 0 && (
+                  <EmptyState
+                    icon="place"
+                    title="No site visits recorded"
+                    description="Use the form on the right after each inspection — observations logged here become the dated record if workmanship is disputed later."
+                  />
+                )}
 
                 <div className="space-y-4">
                   {visitReports.map(visit => (
@@ -227,6 +305,14 @@ export default function SiteAndField() {
                     <p className="text-[10px] text-stone mt-0.5">Flag substitutions against blueprint specifications.</p>
                   </div>
                 </div>
+
+                {materialLogs.length === 0 && (
+                  <EmptyState
+                    icon="inventory_2"
+                    title="No deliveries verified yet"
+                    description="Record what was specified against what actually arrived on site, so any substitution is caught before it goes into the works."
+                  />
+                )}
 
                 <div className="space-y-4">
                   {materialLogs.map(log => (
@@ -281,6 +367,14 @@ export default function SiteAndField() {
                     <p className="text-[10px] text-stone mt-0.5">Final items to resolve before retention release.</p>
                   </div>
                 </div>
+
+                {punchList.length === 0 && (
+                  <EmptyState
+                    icon="checklist"
+                    title="Snag list is clear"
+                    description="Add defects found during the closeout walkthrough. Everything here must be resolved before retention is released."
+                  />
+                )}
 
                 <div className="space-y-4">
                   {punchList.map(item => (
@@ -349,8 +443,8 @@ export default function SiteAndField() {
                     className="input-5bloc text-xs resize-none"
                   />
                 </div>
-                <button type="submit" className="w-full btn-primary py-2 text-xs font-bold">
-                  SUBMIT VISIT REPORT
+                <button type="submit" disabled={submitting} className="w-full btn-primary py-2 text-xs font-bold">
+                  {submitting ? 'SUBMITTING…' : 'SUBMIT VISIT REPORT'}
                 </button>
               </form>
             )}
@@ -390,8 +484,8 @@ export default function SiteAndField() {
                     className="input-5bloc py-1.5 text-xs"
                   />
                 </div>
-                <button type="submit" className="w-full btn-primary py-2 text-xs font-bold">
-                  LOG MATERIAL DELIVERY
+                <button type="submit" disabled={submitting} className="w-full btn-primary py-2 text-xs font-bold">
+                  {submitting ? 'LOGGING…' : 'LOG MATERIAL DELIVERY'}
                 </button>
               </form>
             )}
@@ -420,8 +514,8 @@ export default function SiteAndField() {
                     className="input-5bloc py-1.5 text-xs"
                   />
                 </div>
-                <button type="submit" className="w-full btn-primary py-2 text-xs font-bold">
-                  ADD PUNCH ITEM
+                <button type="submit" disabled={submitting} className="w-full btn-primary py-2 text-xs font-bold">
+                  {submitting ? 'ADDING…' : 'ADD PUNCH ITEM'}
                 </button>
               </form>
             )}

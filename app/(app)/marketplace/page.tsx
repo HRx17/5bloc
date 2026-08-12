@@ -1,10 +1,11 @@
 'use client'
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import { useToast } from '@/components/ui/Toast'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { ErrorState } from '@/components/ui/ErrorState'
 import { Skeleton } from '@/components/ui/Skeleton'
 import type { ArchitectListing, MarketplaceListing } from '@/lib/marketplace/listings'
 
@@ -18,6 +19,22 @@ const chipStyle = (active: boolean) => ({
   color: active ? 'var(--amber)' : 'var(--stone)',
   background: active ? 'rgba(245,166,35,0.12)' : 'rgba(159,142,122,0.1)',
 })
+
+type Source = 'listings' | 'architects' | 'tenders' | 'bids'
+
+const NO_FAILURES: Record<Source, boolean> = {
+  listings: false,
+  architects: false,
+  tenders: false,
+  bids: false,
+}
+
+async function fetchJson(url: string) {
+  const res = await fetch(url)
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Request failed')
+  return data
+}
 
 function uniqueSorted(values: (string | null | undefined)[]) {
   return Array.from(new Set(values.filter((v): v is string => !!v && !!v.trim()))).sort((a, b) => a.localeCompare(b))
@@ -151,10 +168,14 @@ export default function Marketplace() {
   const [shortlisting, setShortlisting] = useState<string | null>(null)
   const [rejectionNote, setRejectionNote] = useState('Not selected for this package')
 
+  const [failed, setFailed] = useState<Record<Source, boolean>>(NO_FAILURES)
+  const tabPicked = useRef(false)
+
   const isContractor = role === 'contractor'
 
   const load = useCallback(async () => {
     setLoading(true)
+    setFailed(NO_FAILURES)
     try {
       const me = await fetch('/api/me')
         .then((r) => r.json())
@@ -162,20 +183,32 @@ export default function Marketplace() {
       const nextRole = me.profile?.role || 'architect'
       setRole(nextRole)
       const contractorView = nextRole === 'contractor'
-      setTab(contractorView ? 'projects' : 'contractors')
+      // Only choose a default tab on first load, so a retry keeps the user where they were.
+      if (!tabPicked.current) {
+        setTab(contractorView ? 'projects' : 'contractors')
+        tabPicked.current = true
+      }
 
-      const [listingRes, architectRes, tenderRes, bidRes] = await Promise.all([
-        fetch('/api/contractors').then((r) => r.json()).catch(() => ({})),
-        fetch('/api/contractors/architects').then((r) => r.json()).catch(() => ({})),
-        fetch(contractorView ? '/api/tenders?marketplace=1' : '/api/tenders?status=all')
-          .then((r) => r.json())
-          .catch(() => ({})),
-        fetch('/api/bids').then((r) => r.json()).catch(() => ({})),
+      const [listingRes, architectRes, tenderRes, bidRes] = await Promise.allSettled([
+        fetchJson('/api/contractors'),
+        fetchJson('/api/contractors/architects'),
+        fetchJson(contractorView ? '/api/tenders?marketplace=1' : '/api/tenders?status=all'),
+        fetchJson('/api/bids'),
       ])
-      setListings(listingRes.listings || listingRes.contractors || [])
-      setArchitects(architectRes.architects || [])
-      setTenders(tenderRes.tenders || [])
-      setBids(bidRes.bids || [])
+
+      if (listingRes.status === 'fulfilled') {
+        setListings(listingRes.value.listings || listingRes.value.contractors || [])
+      }
+      if (architectRes.status === 'fulfilled') setArchitects(architectRes.value.architects || [])
+      if (tenderRes.status === 'fulfilled') setTenders(tenderRes.value.tenders || [])
+      if (bidRes.status === 'fulfilled') setBids(bidRes.value.bids || [])
+
+      setFailed({
+        listings: listingRes.status === 'rejected',
+        architects: architectRes.status === 'rejected',
+        tenders: tenderRes.status === 'rejected',
+        bids: bidRes.status === 'rejected',
+      })
     } finally {
       setLoading(false)
     }
@@ -398,7 +431,15 @@ export default function Marketplace() {
 
       {!loading && tab === 'projects' && (
         <div className="grid md:grid-cols-2 gap-4">
-          {filteredTenders.length === 0 ? (
+          {failed.tenders ? (
+            <div className="md:col-span-2">
+              <ErrorState
+                title="Could not load open projects"
+                description="This is a loading problem, not an empty marketplace. Try again in a moment."
+                onRetry={load}
+              />
+            </div>
+          ) : filteredTenders.length === 0 ? (
             <div className="md:col-span-2">
               <EmptyState
                 icon="engineering"
@@ -481,14 +522,22 @@ export default function Marketplace() {
 
       {!loading && tab === 'architects' && (
         <div className="grid md:grid-cols-2 gap-4">
-          {filteredArchitects.length === 0 ? (
+          {failed.architects ? (
+            <div className="md:col-span-2">
+              <ErrorState
+                title="Could not load the architect directory"
+                description="This is a loading problem, not an empty directory. Try again in a moment."
+                onRetry={load}
+              />
+            </div>
+          ) : filteredArchitects.length === 0 ? (
             <div className="md:col-span-2">
               <EmptyState
                 icon="architecture"
-                title={architects.length ? 'No architects match those filters' : 'No architects listed yet'}
+                title={architects.length ? 'No architects match your search' : 'No architects listed yet'}
                 description={
                   architects.length
-                    ? 'Try a different city or discipline.'
+                    ? `None of the ${architects.length} listed practices match this city and discipline. Clear a filter to widen the search.`
                     : 'Architect profiles appear here as practices join 5Bloc.'
                 }
               />
@@ -501,20 +550,30 @@ export default function Marketplace() {
 
       {!loading && (tab === 'contractors' || tab === 'vendors') && (
         <div className="grid md:grid-cols-2 gap-4">
-          {filteredListings.length === 0 ? (
+          {failed.listings ? (
+            <div className="md:col-span-2">
+              <ErrorState
+                title={tab === 'vendors' ? 'Could not load the vendor directory' : 'Could not load the contractor directory'}
+                description="This is a loading problem, not an empty directory. Try again in a moment."
+                onRetry={load}
+              />
+            </div>
+          ) : filteredListings.length === 0 ? (
             <div className="md:col-span-2">
               <EmptyState
                 icon={tab === 'vendors' ? 'inventory_2' : 'construction'}
                 title={
                   activeListings.length
-                    ? 'Nothing matches those filters'
+                    ? tab === 'vendors'
+                      ? 'No vendors match your search'
+                      : 'No contractors match your search'
                     : tab === 'vendors'
                       ? 'No vendors listed yet'
                       : 'No contractors listed yet'
                 }
                 description={
                   activeListings.length
-                    ? 'Clear the search or widen the city and category filters.'
+                    ? `None of the ${activeListings.length} listed businesses match this search, city and category. Clear a filter to widen the search.`
                     : tab === 'vendors'
                       ? 'Suppliers appear here once they list their business.'
                       : 'Contractors appear here once they list their business.'
@@ -533,11 +592,21 @@ export default function Marketplace() {
         <div className="space-y-3">
           {loading ? (
             <Skeleton lines={4} />
+          ) : failed.bids ? (
+            <ErrorState
+              title="Could not load bids"
+              description="Any bids contractors have sent you are safe — we just could not read them. Try again in a moment."
+              onRetry={load}
+            />
           ) : reviewBids.length === 0 ? (
             <EmptyState
               icon="gavel"
-              title="No bids awaiting review"
-              description="When contractors submit bids on your open projects, they land here for shortlisting, award or rejection."
+              title={bids.length ? 'No bids left to review' : 'No bids awaiting review'}
+              description={
+                bids.length
+                  ? 'Every bid on your projects has already been awarded or rejected. New ones will appear here.'
+                  : 'When contractors submit bids on your open projects, they land here for shortlisting, award or rejection.'
+              }
             />
           ) : (
             reviewBids.map((b) => (

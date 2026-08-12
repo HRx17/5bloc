@@ -1,8 +1,12 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import EmailComposer from '@/components/modals/EmailComposer'
+import { useToast } from '@/components/ui/Toast'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 interface RFIItem {
  id: string
@@ -22,9 +26,11 @@ interface RFIItem {
 export default function RFILog() {
  const params = useParams()
  const projectId = params.id as string
+ const { toast } = useToast()
 
  const [rfis, setRfis] = useState<RFIItem[]>([])
  const [loading, setLoading] = useState(true)
+ const [loadError, setLoadError] = useState<unknown>(null)
  const [showCreateModal, setShowCreateModal] = useState(false)
  const [activeRfi, setActiveRfi] = useState<RFIItem | null>(null)
  const [emailComposerData, setEmailComposerData] = useState<{ to: string; subject: string; defaultBody: string } | null>(null)
@@ -38,15 +44,19 @@ export default function RFILog() {
  due_date: '',
  })
  const [savingRfi, setSavingRfi] = useState(false)
+ const [creatingRfi, setCreatingRfi] = useState(false)
 
  // AI draft state
  const [aiDrafting, setAiDrafting] = useState(false)
  const [aiDraftText, setAiDraftText] = useState('')
 
- useEffect(() => {
- fetch(`/api/projects/${projectId}/rfis`)
- .then((r) => r.json())
- .then((d) => {
+ const load = useCallback(async () => {
+ setLoading(true)
+ setLoadError(null)
+ try {
+ const res = await fetch(`/api/projects/${projectId}/rfis`)
+ const d = await res.json()
+ if (!res.ok) throw new Error(d.error || 'Failed to load the RFI log')
  setRfis(
  (d.rfis || []).map((r: any) => ({
  id: r.id,
@@ -63,12 +73,22 @@ export default function RFILog() {
  scope_change_amount: r.scope_change_amount,
  }))
  )
- })
- .finally(() => setLoading(false))
+ } catch (e) {
+ setLoadError(e)
+ } finally {
+ setLoading(false)
+ }
  }, [projectId])
+
+ useEffect(() => {
+ load()
+ }, [load])
 
  const handleCreateRfi = async (e: React.FormEvent) => {
  e.preventDefault()
+ if (creatingRfi) return
+ setCreatingRfi(true)
+ try {
  const res = await fetch(`/api/projects/${projectId}/rfis`, {
  method: 'POST',
  headers: { 'Content-Type': 'application/json' },
@@ -76,7 +96,7 @@ export default function RFILog() {
  })
  const data = await res.json()
  if (!res.ok) {
- alert(data.error || 'Failed to create RFI')
+ toast(data.error || 'Failed to create RFI', 'error')
  return
  }
  const r = data.rfi
@@ -97,6 +117,12 @@ export default function RFILog() {
  ])
  setShowCreateModal(false)
  setNewRfi({ title: '', description: '', drawing_ref: '', assigned_to: '', due_date: '' })
+ toast(`RFI-${String(r.rfi_number).padStart(3, '0')} raised`, 'success')
+ } catch (err: any) {
+ toast(err?.message || 'Failed to create RFI', 'error')
+ } finally {
+ setCreatingRfi(false)
+ }
  }
 
  const handleSaveRfi = async () => {
@@ -117,7 +143,7 @@ export default function RFILog() {
  })
  const data = await res.json()
  if (!res.ok) {
- alert(data.error || 'Failed to save RFI')
+ toast(data.error || 'Failed to save RFI', 'error')
  return
  }
  const saved = data.rfi || activeRfi
@@ -137,6 +163,9 @@ export default function RFILog() {
  )
  setActiveRfi(null)
  setAiDraftText('')
+ toast('RFI updated', 'success')
+ } catch (err: any) {
+ toast(err?.message || 'Failed to save RFI', 'error')
  } finally {
  setSavingRfi(false)
  }
@@ -168,6 +197,7 @@ export default function RFILog() {
  } catch (err) {
  console.error(err)
  setAiDraftText('Unable to reach AI draft service. Write the response manually.')
+ toast('AI draft service is unreachable — write the response manually', 'warning')
  } finally {
  setAiDrafting(false)
  }
@@ -216,13 +246,28 @@ export default function RFILog() {
  </div>
 
  {loading ? (
- <div className="p-8 text-center text-stone animate-pulse">Loading RFI log...</div>
- ) : rfis.length === 0 ? (
- <div className="py-16 text-center text-stone flex flex-col items-center">
- <span className="material-icons-outlined text-[48px] text-stone/30 mb-3">forum</span>
- <h4 className="text-sm font-bold text-white">No RFIs logged</h4>
- <p className="text-xs max-w-xs mt-1">Contractors can raise RFIs to clarify drawing specifications.</p>
+ <div className="mt-4 space-y-3">
+ {Array.from({ length: 5 }, (_, i) => (
+ <Skeleton key={i} className="h-12 w-full" />
+ ))}
  </div>
+ ) : loadError ? (
+ <ErrorState
+ className="mt-4"
+ compact
+ title="Could not load the RFI log"
+ error={loadError}
+ onRetry={load}
+ />
+ ) : rfis.length === 0 ? (
+ <EmptyState
+ className="mt-4"
+ icon="forum"
+ title="No RFIs raised yet"
+ description="Raise an RFI when a drawing, spec or site condition needs a written clarification — every question and answer stays on the record here."
+ actionLabel="Raise new RFI"
+ onClick={() => setShowCreateModal(true)}
+ />
  ) : (
  <div className="overflow-x-auto mt-4">
  <table className="w-full text-left text-xs" style={{ borderCollapse: 'collapse' }}>
@@ -348,15 +393,17 @@ export default function RFILog() {
  <button 
  type="button" 
  onClick={() => setShowCreateModal(false)}
+ disabled={creatingRfi}
  className="btn-secondary py-1.5 px-4 text-xs"
  >
  Cancel
  </button>
  <button 
  type="submit"
+ disabled={creatingRfi}
  className="btn-primary py-1.5 px-6 text-xs"
  >
- Submit RFI
+ {creatingRfi ? 'Submitting…' : 'Submit RFI'}
  </button>
  </div>
  </form>

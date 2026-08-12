@@ -1,18 +1,33 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Skeleton } from '@/components/ui/Skeleton'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { useToast } from '@/components/ui/Toast'
+import { useConfirm } from '@/components/ui/ConfirmProvider'
 
 interface LineItem {
   description: string
   amount: number
 }
 
+type FieldErrors = {
+  client?: string
+  dueDate?: string
+  lineItems?: string
+  line?: Record<number, string>
+}
+
 export default function NewInvoice() {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const { toast } = useToast()
+  const confirm = useConfirm()
+  const [submitting, setSubmitting] = useState(false)
+  const [loadingRefs, setLoadingRefs] = useState(true)
+  const [loadError, setLoadError] = useState<unknown>(null)
+  const [errors, setErrors] = useState<FieldErrors>({})
   const [isInterstate, setIsInterstate] = useState(false)
   const [clients, setClients] = useState<any[]>([])
   const [projects, setProjects] = useState<any[]>([])
@@ -30,23 +45,39 @@ export default function NewInvoice() {
     { description: 'Architectural fee installment', amount: 0 },
   ])
 
-  useEffect(() => {
-    Promise.all([fetch('/api/clients').then((r) => r.json()), fetch('/api/projects').then((r) => r.json())])
-      .then(([c, p]) => {
-        setClients(c.clients || [])
-        setProjects(p.projects || [])
-        if (c.clients?.[0]) setFormData((prev) => ({ ...prev, client: c.clients[0].id }))
-        if (p.projects?.[0]) setFormData((prev) => ({ ...prev, project: p.projects[0].id }))
-        setNextNumber(`INV-${String((c.clients?.length || 0) + 1).padStart(3, '0')} (auto)`)
-      })
-      .catch(() => setError('Failed to load clients/projects'))
+  const loadRefs = useCallback(async () => {
+    setLoadingRefs(true)
+    setLoadError(null)
+    try {
+      const [clientRes, projectRes] = await Promise.all([fetch('/api/clients'), fetch('/api/projects')])
+      const [c, p] = await Promise.all([clientRes.json(), projectRes.json()])
+      if (!clientRes.ok) throw new Error(c.error || 'Could not load your CRM contacts')
+      if (!projectRes.ok) throw new Error(p.error || 'Could not load your projects')
+      setClients(c.clients || [])
+      setProjects(p.projects || [])
+      setFormData((prev) => ({
+        ...prev,
+        client: c.clients?.[0]?.id || '',
+        project: p.projects?.[0]?.id || '',
+      }))
+      setNextNumber(`INV-${String((c.clients?.length || 0) + 1).padStart(3, '0')} (auto)`)
+    } catch (err) {
+      setLoadError(err)
+    } finally {
+      setLoadingRefs(false)
+    }
   }, [])
+
+  useEffect(() => {
+    loadRefs()
+  }, [loadRefs])
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+    setErrors((prev) => ({ ...prev, [name]: undefined }))
   }
 
   const handleAddLineItem = () => setLineItems((prev) => [...prev, { description: '', amount: 0 }])
@@ -54,6 +85,7 @@ export default function NewInvoice() {
     setLineItems((prev) => prev.filter((_, i) => i !== idx))
   const handleLineItemChange = (idx: number, field: keyof LineItem, value: any) => {
     setLineItems((prev) => prev.map((item, i) => (i === idx ? { ...item, [field]: value } : item)))
+    setErrors((prev) => ({ ...prev, lineItems: undefined, line: { ...prev.line, [idx]: '' } }))
   }
 
   const subtotal = lineItems.reduce((sum, item) => sum + (item.amount || 0), 0)
@@ -64,12 +96,47 @@ export default function NewInvoice() {
   const igstAmount = isInterstate ? totalGst : 0
   const grandTotal = subtotal + totalGst
 
+  const validate = (): FieldErrors => {
+    const next: FieldErrors = { line: {} }
+    if (!formData.client) next.client = 'Choose who this invoice is billed to.'
+    if (!formData.dueDate) next.dueDate = 'Set the date payment is due.'
+
+    lineItems.forEach((item, idx) => {
+      if (!item.description.trim()) next.line![idx] = 'Describe what this line covers.'
+      else if (!item.amount || item.amount <= 0) next.line![idx] = 'Enter an amount above zero.'
+    })
+    if (!lineItems.some((item) => item.amount > 0)) {
+      next.lineItems = 'An invoice needs at least one line item with an amount.'
+    }
+    return next
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
-    setError('')
+    if (submitting) return
+
+    const found = validate()
+    const hasLineError = Object.values(found.line || {}).some(Boolean)
+    if (found.client || found.dueDate || found.lineItems || hasLineError) {
+      setErrors(found)
+      toast('Fix the highlighted fields before sending this invoice.', 'warning')
+      return
+    }
+    setErrors({})
+
+    const client = clients.find((c) => c.id === formData.client)
+    const clientLabel = client?.full_name || client?.name || 'this client'
+    const ok = await confirm({
+      title: 'Send this invoice?',
+      message: `${clientLabel} will be billed ₹${grandTotal.toLocaleString('en-IN')} (incl. ${
+        isInterstate ? 'IGST' : 'CGST + SGST'
+      }), due ${formData.dueDate}. The invoice number is issued on save and cannot be reused.`,
+      confirmLabel: 'Save & send',
+    })
+    if (!ok) return
+
+    setSubmitting(true)
     try {
-      const client = clients.find((c) => c.id === formData.client)
       const project = projects.find((p) => p.id === formData.project)
       const res = await fetch('/api/invoices', {
         method: 'POST',
@@ -90,11 +157,20 @@ export default function NewInvoice() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to create invoice')
+      toast(
+        `Invoice ${data.invoice?.invoice_number || ''} raised for ${clientLabel}`.replace('  ', ' '),
+        'success'
+      )
       router.push('/invoices')
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
+    } catch (err) {
+      toast(
+        err instanceof Error
+          ? `${err.message} — nothing was billed, your draft is still here.`
+          : 'Could not create this invoice. Nothing was billed, your draft is still here.',
+        'error',
+        7000
+      )
+      setSubmitting(false)
     }
   }
 
@@ -112,13 +188,23 @@ export default function NewInvoice() {
         </Link>
       </div>
 
-      {error && (
-        <p className="text-sm" style={{ color: 'var(--error)' }}>
-          {error}
-        </p>
-      )}
-
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      {loadingRefs ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          <div className="lg:col-span-2 space-y-6">
+            <Skeleton className="h-48 w-full" />
+            <Skeleton className="h-40 w-full" />
+          </div>
+          <Skeleton className="h-72 w-full" />
+        </div>
+      ) : loadError ? (
+        <ErrorState
+          title="Could not load your clients and projects"
+          error={loadError}
+          description="An invoice needs a bill-to contact, so we cannot start one until this loads."
+          onRetry={loadRefs}
+        />
+      ) : (
+      <form onSubmit={handleSubmit} noValidate className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         <div className="lg:col-span-2 space-y-6">
           <div className="card-5bloc space-y-4">
             <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-amber pb-2 mb-2">
@@ -144,24 +230,30 @@ export default function NewInvoice() {
                 <input
                   type="date"
                   name="dueDate"
-                  required
                   value={formData.dueDate}
                   onChange={handleInputChange}
                   className="input-5bloc font-mono py-1.5 text-xs"
+                  aria-invalid={!!errors.dueDate}
                 />
+                {errors.dueDate && (
+                  <p className="text-[11px] mt-1" style={{ color: 'var(--error)' }}>
+                    {errors.dueDate}
+                  </p>
+                )}
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1.5 font-mono">
-                  Select Client
+                  Select Client *
                 </label>
                 <select
                   name="client"
                   value={formData.client}
                   onChange={handleInputChange}
                   className="input-5bloc py-1.5 text-xs font-medium"
+                  aria-invalid={!!errors.client}
                 >
                   <option value="">—</option>
                   {clients.map((c) => (
@@ -170,6 +262,20 @@ export default function NewInvoice() {
                     </option>
                   ))}
                 </select>
+                {errors.client && (
+                  <p className="text-[11px] mt-1" style={{ color: 'var(--error)' }}>
+                    {errors.client}
+                  </p>
+                )}
+                {clients.length === 0 && (
+                  <p className="text-[11px] mt-1 text-stone">
+                    No CRM contacts yet —{' '}
+                    <Link href="/clients" className="underline">
+                      add one
+                    </Link>{' '}
+                    to bill them.
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1.5 font-mono">
@@ -223,45 +329,61 @@ export default function NewInvoice() {
             </div>
 
             <div className="space-y-3">
-              {lineItems.map((item, idx) => (
-                <div key={idx} className="flex gap-4 items-center">
-                  <div className="flex-grow">
-                    <input
-                      type="text"
-                      required
-                      placeholder="Item description / milestone name..."
-                      value={item.description}
-                      onChange={(e) => handleLineItemChange(idx, 'description', e.target.value)}
-                      className="input-5bloc py-1.5 text-xs"
-                    />
+              {lineItems.map((item, idx) => {
+                const lineError = errors.line?.[idx]
+                return (
+                  <div key={idx} className="space-y-1">
+                    <div className="flex gap-4 items-center">
+                      <div className="flex-grow">
+                        <input
+                          type="text"
+                          placeholder="Item description / milestone name..."
+                          value={item.description}
+                          onChange={(e) => handleLineItemChange(idx, 'description', e.target.value)}
+                          className="input-5bloc py-1.5 text-xs"
+                          aria-invalid={!!lineError}
+                        />
+                      </div>
+                      <div className="w-36 shrink-0 relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone text-xs font-mono">
+                          ₹
+                        </span>
+                        <input
+                          type="number"
+                          min={0}
+                          placeholder="Amount"
+                          value={item.amount || ''}
+                          onChange={(e) =>
+                            handleLineItemChange(idx, 'amount', parseInt(e.target.value) || 0)
+                          }
+                          className="input-5bloc pl-7 py-1.5 text-xs font-mono text-right"
+                          aria-invalid={!!lineError}
+                        />
+                      </div>
+                      {lineItems.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveLineItem(idx)}
+                          className="text-stone hover:text-error transition p-1 hover:bg-navy"
+                        >
+                          <span className="material-icons-outlined text-[18px]">delete</span>
+                        </button>
+                      )}
+                    </div>
+                    {lineError && (
+                      <p className="text-[11px]" style={{ color: 'var(--error)' }}>
+                        {lineError}
+                      </p>
+                    )}
                   </div>
-                  <div className="w-36 shrink-0 relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone text-xs font-mono">
-                      ₹
-                    </span>
-                    <input
-                      type="number"
-                      required
-                      placeholder="Amount"
-                      value={item.amount || ''}
-                      onChange={(e) =>
-                        handleLineItemChange(idx, 'amount', parseInt(e.target.value) || 0)
-                      }
-                      className="input-5bloc pl-7 py-1.5 text-xs font-mono text-right"
-                    />
-                  </div>
-                  {lineItems.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveLineItem(idx)}
-                      className="text-stone hover:text-error transition p-1 hover:bg-navy"
-                    >
-                      <span className="material-icons-outlined text-[18px]">delete</span>
-                    </button>
-                  )}
-                </div>
-              ))}
+                )
+              })}
             </div>
+            {errors.lineItems && (
+              <p className="text-[11px]" style={{ color: 'var(--error)' }}>
+                {errors.lineItems}
+              </p>
+            )}
           </div>
         </div>
 
@@ -334,13 +456,14 @@ export default function NewInvoice() {
 
           <button
             type="submit"
-            disabled={loading || subtotal <= 0}
+            disabled={submitting}
             className="w-full btn-primary py-2.5 text-xs font-bold tracking-wider"
           >
-            {loading ? 'GENERATING...' : 'SAVE & SEND INVOICE'}
+            {submitting ? 'SENDING INVOICE...' : 'SAVE & SEND INVOICE'}
           </button>
         </div>
       </form>
+      )}
     </div>
   )
 }

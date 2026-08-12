@@ -1,8 +1,11 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import OnboardingChecklist from '@/components/layout/OnboardingChecklist'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 export default function DashboardPage() {
   const [projects, setProjects] = useState<any[]>([])
@@ -10,22 +13,47 @@ export default function DashboardPage() {
   const [activity, setActivity] = useState<any[]>([])
   const [plan, setPlan] = useState('free')
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<unknown>(null)
+  const [activityError, setActivityError] = useState<unknown>(null)
+
+  const loadActivity = useCallback(async () => {
+    setActivityError(null)
+    try {
+      const res = await fetch('/api/activity?limit=8')
+      if (!res.ok) throw new Error('Could not load recent activity')
+      const a = await res.json()
+      setActivity(a.activity || [])
+    } catch (err) {
+      setActivityError(err)
+    }
+  }, [])
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/projects')
+      if (!res.ok) throw new Error('Could not load your projects')
+      const p = await res.json()
+      setProjects(p.projects || [])
+
+      const [c, me] = await Promise.all([
+        fetch('/api/clients').then((r) => r.json()).catch(() => ({ clients: [] })),
+        fetch('/api/me').then((r) => r.json()).catch(() => ({ profile: {} })),
+      ])
+      setClients(c.clients || [])
+      setPlan(me.profile?.plan || 'free')
+    } catch (err) {
+      setError(err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/projects').then((r) => r.json()),
-      fetch('/api/clients').then((r) => r.json()).catch(() => ({ clients: [] })),
-      fetch('/api/activity?limit=8').then((r) => r.json()).catch(() => ({ activity: [] })),
-      fetch('/api/me').then((r) => r.json()).catch(() => ({ profile: {} })),
-    ])
-      .then(([p, c, a, me]) => {
-        setProjects(p.projects || [])
-        setClients(c.clients || [])
-        setActivity(a.activity || [])
-        setPlan(me.profile?.plan || 'free')
-      })
-      .finally(() => setLoading(false))
-  }, [])
+    load()
+    loadActivity()
+  }, [load, loadActivity])
 
   const active = projects.filter((p) => p.status === 'active').length
   const atLimit = plan === 'free' && projects.length >= 3
@@ -68,7 +96,11 @@ export default function DashboardPage() {
             <p className="text-[12px]" style={{ color: 'var(--stone)' }}>
               {k.label}
             </p>
-            <p className="text-[24px] font-semibold mt-1">{loading ? '—' : k.value}</p>
+            {loading ? (
+              <Skeleton className="h-7 w-20 mt-2" />
+            ) : (
+              <p className="text-[24px] font-semibold mt-1">{error ? '—' : k.value}</p>
+            )}
           </div>
         ))}
       </div>
@@ -82,17 +114,26 @@ export default function DashboardPage() {
             </Link>
           </div>
           {loading ? (
-            <p style={{ color: 'var(--stone)' }}>Loading…</p>
-          ) : projects.length === 0 ? (
-            <div className="p-8 rounded-2xl text-center" style={{ background: 'var(--surface-container)' }}>
-              <p className="font-semibold">No projects yet</p>
-              <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
-                Create your first project to invite contractors and open a client portal.
-              </p>
-              <Link href="/projects/new" className="btn-primary inline-flex mt-4 text-[12px]">
-                Create project
-              </Link>
+            <div className="grid md:grid-cols-2 gap-3">
+              {Array.from({ length: 4 }, (_, i) => (
+                <Skeleton key={i} className="h-20 w-full" />
+              ))}
             </div>
+          ) : error ? (
+            <ErrorState
+              title="Could not load your projects"
+              description="Your workspace is fine — we just could not fetch it. Retry, or refresh in a moment."
+              error={error}
+              onRetry={load}
+            />
+          ) : projects.length === 0 ? (
+            <EmptyState
+              icon="apartment"
+              title="No projects yet"
+              description="Create your first project to invite contractors, share drawings, and open a client portal."
+              actionLabel="Create project"
+              href="/projects/new"
+            />
           ) : (
             <div className="grid md:grid-cols-2 gap-3">
               {projects.slice(0, 4).map((p) => (
@@ -114,22 +155,31 @@ export default function DashboardPage() {
 
         <section>
           <h2 className="text-lg font-semibold mb-4">Activity</h2>
-          <div className="p-4 rounded-2xl space-y-3" style={{ background: 'var(--surface-container)' }}>
-            {activity.length === 0 ? (
-              <p className="text-[12px]" style={{ color: 'var(--stone)' }}>
-                No recent activity
-              </p>
-            ) : (
-              activity.map((a) => (
-                <div key={a.id} className="text-[12px]">
-                  <p className="font-medium">{a.entity_name || a.action}</p>
-                  <p style={{ color: 'var(--stone)' }}>
-                    {a.action} · {a.project_name || 'Project'} · {a.created_at?.slice(0, 10)}
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
+          {activityError ? (
+            <ErrorState
+              compact
+              title="Activity is unavailable"
+              description="The feed did not load. Your project history is unaffected."
+              onRetry={loadActivity}
+            />
+          ) : (
+            <div className="p-4 rounded-2xl space-y-3" style={{ background: 'var(--surface-container)' }}>
+              {activity.length === 0 ? (
+                <p className="text-[12px]" style={{ color: 'var(--stone)' }}>
+                  Nothing yet. Uploads, approvals and invoices show up here as your team works.
+                </p>
+              ) : (
+                activity.map((a) => (
+                  <div key={a.id} className="text-[12px]">
+                    <p className="font-medium">{a.entity_name || a.action}</p>
+                    <p style={{ color: 'var(--stone)' }}>
+                      {a.action} · {a.project_name || 'Project'} · {a.created_at?.slice(0, 10)}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </section>
       </div>
 

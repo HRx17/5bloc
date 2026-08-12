@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useToast } from '@/components/ui/Toast'
 
 interface RiskClause {
   clauseNumber: string
@@ -19,6 +20,7 @@ interface MissingClause {
 }
 
 export default function ContractRiskScan() {
+  const { toast } = useToast()
   const [contractText, setContractText] = useState('')
   const [fileName, setFileName] = useState('')
   const [loading, setLoading] = useState(false)
@@ -78,7 +80,7 @@ export default function ContractRiskScan() {
       })
       const data = await res.json()
       if (!res.ok) {
-        alert(data.error || 'Scan failed')
+        toast(data.error || 'Could not scan this contract. Try again.', 'error')
         return
       }
       setScanResult({
@@ -86,9 +88,10 @@ export default function ContractRiskScan() {
         risks: data.risks || [],
         missing: data.missing || [],
       })
+      toast(`Audit complete — ${(data.risks || []).length} clauses flagged`, 'success')
     } catch (err) {
       console.error(err)
-      alert('Scan failed')
+      toast('Could not reach the scanner. Check your connection and try again.', 'error')
     } finally {
       setLoading(false)
     }
@@ -160,8 +163,8 @@ export default function ContractRiskScan() {
               disabled={loading || (!contractText && !fileName)}
               className="w-full btn-primary py-2.5 font-bold tracking-wider flex items-center justify-center gap-1.5"
             >
-              <span className="material-icons-outlined text-[16px]">sync</span>
-              RUN LIABILITY AUDIT
+              <span className={`material-icons-outlined text-[16px] ${loading ? 'animate-spin' : ''}`}>sync</span>
+              {loading ? 'SCANNING CONTRACT…' : 'RUN LIABILITY AUDIT'}
             </button>
           </form>
         </div>

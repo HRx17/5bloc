@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useToast } from '@/components/ui/Toast'
+import { useConfirm } from '@/components/ui/ConfirmProvider'
 
 interface EmailComposerProps {
  to: string
@@ -17,23 +19,49 @@ export default function EmailComposer({
  onClose,
  onSent
 }: EmailComposerProps) {
+ const { toast } = useToast()
+ const confirm = useConfirm()
  const [to, setTo] = useState(initialTo)
  const [subject, setSubject] = useState(initialSubject)
  const [body, setBody] = useState(defaultBody)
  const [sending, setSending] = useState(false)
  const [error, setError] = useState<string | null>(null)
+ const [fieldErrors, setFieldErrors] = useState<{ to?: string; subject?: string; body?: string }>({})
 
  const handleSubmit = async (e: React.FormEvent) => {
  e.preventDefault()
+ if (sending) return
+
+ const nextErrors: { to?: string; subject?: string; body?: string } = {}
+ if (!/^\S+@\S+\.\S+$/.test(to.trim())) nextErrors.to = 'Enter a valid recipient email address.'
+ if (!subject.trim()) nextErrors.subject = 'Add a subject so the recipient knows what this is about.'
+ if (!body.trim()) nextErrors.body = 'Write a message before sending.'
+ setFieldErrors(nextErrors)
+ if (Object.keys(nextErrors).length) return
+
+ const ok = await confirm({
+ title: 'Send this email?',
+ message: `This sends immediately to ${to.trim()} and cannot be recalled.`,
+ confirmLabel: 'Send email',
+ })
+ if (!ok) return
+
  setSending(true)
  setError(null)
 
- try {
- // Build a simple responsive HTML body template matching 5Bloc style
- const htmlContent = `
+    try {
+      // The body is plain text typed by the sender; `<` and `&` would otherwise
+      // be swallowed or break the surrounding markup.
+      const escapedBody = body
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+
+      // Build a simple responsive HTML body template matching 5Bloc style
+      const htmlContent = `
  <div style="background-color: #0C1220; color: #F7F5F0; font-family: sans-serif; padding: 30px; border-radius: 8px; max-width: 600px; margin: 0 auto; box-sizing: border-box; border: 1px solid #1C2A3E;">
  <h2 style="font-size: 20px; font-weight: bold; color: #F5A623; margin-top: 0; margin-bottom: 16px;">5Bloc Workspace Message</h2>
- <p style="font-size: 14px; line-height: 1.6; color: #EDE9E2; white-space: pre-wrap; margin-bottom: 24px;">${body}</p>
+ <p style="font-size: 14px; line-height: 1.6; color: #EDE9E2; white-space: pre-wrap; margin-bottom: 24px;">${escapedBody}</p>
  <div style="border-top: 1px solid #1C2A3E; padding-top: 16px; font-size: 11px; color: #9E9687;">
  <p style="margin: 0;">Sent directly from the 5Bloc workspace registry.</p>
  </div>
@@ -43,7 +71,7 @@ export default function EmailComposer({
  const res = await fetch('/api/send-email', {
  method: 'POST',
  headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({ to, subject, htmlContent })
+ body: JSON.stringify({ to: to.trim(), subject: subject.trim(), htmlContent })
  })
 
  const data = await res.json()
@@ -52,14 +80,16 @@ export default function EmailComposer({
  throw new Error(data.error || 'Failed to dispatch email')
  }
 
- alert('Email notification sent successfully!')
+ toast(`Email sent to ${to.trim()}`, 'success')
  if (onSent && data.messageId) {
  onSent(data.messageId)
  }
  onClose()
  } catch (err: any) {
  console.error(err)
- setError(err.message || 'An error occurred while sending the email.')
+ setError(
+ `${err.message || 'The email could not be sent.'} Nothing was delivered — your draft is still here.`
+ )
  } finally {
  setSending(false)
  }
@@ -87,41 +117,55 @@ export default function EmailComposer({
  </div>
  )}
 
- <form onSubmit={handleSubmit} className="space-y-4">
+ <form onSubmit={handleSubmit} noValidate className="space-y-4">
  <div>
  <label className="block text-[10px] font-semibold text-stone mb-1 font-body">Recipient Email *</label>
  <input
  type="email"
- required
  placeholder="recipient@example.com"
  value={to}
- onChange={(e) => setTo(e.target.value)}
+ onChange={(e) => {
+ setTo(e.target.value)
+ setFieldErrors((prev) => ({ ...prev, to: undefined }))
+ }}
  className="input-5bloc py-2 text-xs font-mono"
+ aria-invalid={!!fieldErrors.to}
  />
+ {fieldErrors.to && <p className="text-[11px] mt-1" style={{ color: 'var(--error)' }}>{fieldErrors.to}</p>}
  </div>
 
  <div>
  <label className="block text-[10px] font-semibold text-stone mb-1 font-body">Subject *</label>
  <input
  type="text"
- required
  placeholder="e.g. Update regarding Drawing sheet v3"
  value={subject}
- onChange={(e) => setSubject(e.target.value)}
+ onChange={(e) => {
+ setSubject(e.target.value)
+ setFieldErrors((prev) => ({ ...prev, subject: undefined }))
+ }}
  className="input-5bloc py-2 text-xs"
+ aria-invalid={!!fieldErrors.subject}
  />
+ {fieldErrors.subject && (
+ <p className="text-[11px] mt-1" style={{ color: 'var(--error)' }}>{fieldErrors.subject}</p>
+ )}
  </div>
 
  <div>
  <label className="block text-[10px] font-semibold text-stone mb-1 font-body">Message Body *</label>
  <textarea
- required
  rows={6}
  placeholder="Type your email content here..."
  value={body}
- onChange={(e) => setBody(e.target.value)}
+ onChange={(e) => {
+ setBody(e.target.value)
+ setFieldErrors((prev) => ({ ...prev, body: undefined }))
+ }}
  className="input-5bloc text-xs resize-none"
+ aria-invalid={!!fieldErrors.body}
  />
+ {fieldErrors.body && <p className="text-[11px] mt-1" style={{ color: 'var(--error)' }}>{fieldErrors.body}</p>}
  </div>
 
  {/* Action buttons */}

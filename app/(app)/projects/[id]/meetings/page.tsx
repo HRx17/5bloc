@@ -1,7 +1,11 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
+import { useToast } from '@/components/ui/Toast'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 interface MeetingRecord {
   id: string
@@ -19,16 +23,31 @@ function ensureArray<T>(value: T[] | undefined | null): T[] {
   return Array.isArray(value) ? value : []
 }
 
+const mapMeeting = (m: any): MeetingRecord => ({
+  id: m.id,
+  date: m.date || m.meeting_date || '',
+  title: m.title || '',
+  attendees: ensureArray(m.attendees),
+  agenda: m.agenda || '',
+  notes: m.notes ?? m.agenda ?? '',
+  status: m.status || 'recorded',
+  decisions: ensureArray(m.decisions),
+  actionItems: ensureArray(m.actionItems || m.action_items),
+})
+
 export default function MeetingNotes() {
   const params = useParams()
   const projectId = params.id as string
+  const { toast } = useToast()
 
   const [meetings, setMeetings] = useState<MeetingRecord[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<unknown>(null)
   const [showAddModal, setShowAddModal] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [activeMeeting, setActiveMeeting] = useState<MeetingRecord | null>(null)
   const [saving, setSaving] = useState(false)
+  const [creating, setCreating] = useState(false)
 
   const [newMeeting, setNewMeeting] = useState({
     title: '',
@@ -39,27 +58,28 @@ export default function MeetingNotes() {
     actions: ''
   })
 
-  const mapMeeting = (m: any): MeetingRecord => ({
-    id: m.id,
-    date: m.date || m.meeting_date || '',
-    title: m.title || '',
-    attendees: ensureArray(m.attendees),
-    agenda: m.agenda || '',
-    notes: m.notes ?? m.agenda ?? '',
-    status: m.status || 'recorded',
-    decisions: ensureArray(m.decisions),
-    actionItems: ensureArray(m.actionItems || m.action_items),
-  })
+  const load = useCallback(async () => {
+    setLoading(true)
+    setLoadError(null)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/meetings`)
+      const d = await res.json()
+      if (!res.ok) throw new Error(d.error || 'Failed to load meeting minutes')
+      setMeetings((d.meetings || []).map(mapMeeting))
+    } catch (e) {
+      setLoadError(e)
+    } finally {
+      setLoading(false)
+    }
+  }, [projectId])
 
   useEffect(() => {
-    fetch(`/api/projects/${projectId}/meetings`)
-      .then((r) => r.json())
-      .then((d) => setMeetings((d.meetings || []).map(mapMeeting)))
-      .finally(() => setLoading(false))
-  }, [projectId])
+    load()
+  }, [load])
 
   const handleCreateMeeting = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (creating) return
 
     const parsedActions = newMeeting.actions
       .split('\n')
@@ -76,27 +96,35 @@ export default function MeetingNotes() {
       })
       .filter(x => x !== null) as { task: string; owner: string; deadline: string }[]
 
-    const res = await fetch(`/api/projects/${projectId}/meetings`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: newMeeting.title,
-        date: newMeeting.date,
-        attendees: newMeeting.attendees,
-        agenda: newMeeting.agenda,
-        notes: newMeeting.agenda,
-        decisions: newMeeting.decisions,
-        action_items: parsedActions,
-      }),
-    })
-    const data = await res.json()
-    if (!res.ok) {
-      alert(data.error || 'Failed to save meeting')
-      return
+    setCreating(true)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/meetings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newMeeting.title,
+          date: newMeeting.date,
+          attendees: newMeeting.attendees,
+          agenda: newMeeting.agenda,
+          notes: newMeeting.agenda,
+          decisions: newMeeting.decisions,
+          action_items: parsedActions,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast(data.error || 'Failed to save the meeting minutes', 'error')
+        return
+      }
+      setMeetings(prev => [mapMeeting(data.meeting), ...prev])
+      setShowAddModal(false)
+      setNewMeeting({ title: '', date: '', attendees: '', agenda: '', decisions: '', actions: '' })
+      toast('Meeting minutes recorded', 'success')
+    } catch (err: any) {
+      toast(err?.message || 'Failed to save the meeting minutes', 'error')
+    } finally {
+      setCreating(false)
     }
-    setMeetings(prev => [mapMeeting(data.meeting), ...prev])
-    setShowAddModal(false)
-    setNewMeeting({ title: '', date: '', attendees: '', agenda: '', decisions: '', actions: '' })
   }
 
   const handleSaveMeeting = async () => {
@@ -117,12 +145,15 @@ export default function MeetingNotes() {
       })
       const data = await res.json()
       if (!res.ok) {
-        alert(data.error || 'Failed to save')
+        toast(data.error || 'Failed to save the meeting', 'error')
         return
       }
       const saved = mapMeeting(data.meeting || activeMeeting)
       setMeetings((prev) => prev.map((m) => (m.id === saved.id ? saved : m)))
       setActiveMeeting(saved)
+      toast('Meeting minutes saved', 'success')
+    } catch (err: any) {
+      toast(err?.message || 'Failed to save the meeting', 'error')
     } finally {
       setSaving(false)
     }
@@ -163,9 +194,30 @@ export default function MeetingNotes() {
             </div>
 
             {loading ? (
-              <div className="p-8 text-center text-stone animate-pulse">Loading meeting logs...</div>
+              <div className="space-y-3">
+                {Array.from({ length: 4 }, (_, i) => (
+                  <Skeleton key={i} className="h-16 w-full" />
+                ))}
+              </div>
+            ) : loadError ? (
+              <ErrorState
+                compact
+                title="Could not load meeting minutes"
+                error={loadError}
+                onRetry={load}
+              />
             ) : filtered.length === 0 ? (
-              <div className="py-12 text-center text-stone">No meeting records match keywords.</div>
+              <EmptyState
+                icon={searchTerm ? 'search_off' : 'menu_book'}
+                title={searchTerm ? 'No meetings match that search' : 'No meetings recorded yet'}
+                description={
+                  searchTerm
+                    ? `Nothing in the minutes registry mentions “${searchTerm}”. Try a shorter keyword or clear the search.`
+                    : 'Record minutes after each site or design review so decisions and action owners are captured in one place.'
+                }
+                actionLabel={searchTerm ? 'Clear search' : 'Record meeting'}
+                onClick={searchTerm ? () => setSearchTerm('') : () => setShowAddModal(true)}
+              />
             ) : (
               <div className="divide-y divide-navy-lt/30">
                 {filtered.map(m => (
@@ -379,11 +431,16 @@ export default function MeetingNotes() {
               </div>
 
               <div className="pt-4 border-t flex justify-end gap-3">
-                <button type="button" onClick={() => setShowAddModal(false)} className="btn-secondary py-1.5 px-4 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  disabled={creating}
+                  className="btn-secondary py-1.5 px-4 text-xs"
+                >
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary py-1.5 px-6 text-xs font-bold">
-                  Save Minutes
+                <button type="submit" disabled={creating} className="btn-primary py-1.5 px-6 text-xs font-bold">
+                  {creating ? 'Saving…' : 'Save Minutes'}
                 </button>
               </div>
             </form>

@@ -1,9 +1,12 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useToast } from '@/components/ui/Toast'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { DrivePanel } from '@/components/integrations/DrivePanel'
 import { StatCard } from '@/components/ui/StatCard'
 import { supabaseClient } from '@/lib/supabase/client'
@@ -60,7 +63,6 @@ const STATUS_META: Record<string, { label: string; color: string; bg: string }> 
 }
 
 const PHASES = ['All Phases', 'Pre-Design', 'Schematic Design', 'Design Development', 'Construction Docs', 'Construction']
-const PROJECTS = ['All Projects', 'Wadhwa Prime Plaza', 'Lodha Signature Residences', 'Gundecha Industrial Park']
 
 function FileIcon({ type }: { type: string }) {
   const m = TYPE_META[type] ?? TYPE_META.pdf
@@ -77,6 +79,7 @@ function FileIcon({ type }: { type: string }) {
 export default function DocumentVault() {
   const [docs,       setDocs]       = useState<Document[]>([])
   const [loading,    setLoading]    = useState(true)
+  const [loadError,  setLoadError]  = useState<unknown>(null)
   const [search,     setSearch]     = useState('')
   const [project,    setProject]    = useState('All Projects')
   const [phase,      setPhase]      = useState('All Phases')
@@ -85,6 +88,46 @@ export default function DocumentVault() {
   const [uploading,  setUploading]  = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setLoadError(null)
+    try {
+      if (!hasSupabaseEnv()) throw new Error('The document vault is not configured in this environment.')
+      const { data, error } = await supabaseClient
+        .from('documents')
+        .select('*, projects(name)')
+        .order('created_at', { ascending: false })
+      if (error) throw new Error(error.message || 'Could not load the document vault')
+      setDocs(
+        (data || []).map((d: any) => {
+          const projName = (d as { projects?: { name?: string } | null }).projects?.name ?? 'General'
+          const phaseKey = d.phase ?? ''
+          return {
+            id: d.id,
+            name: d.original_filename,
+            type: docTypeFromName(d.original_filename, d.file_type),
+            project: projName,
+            project_id: d.project_id ?? '',
+            phase: PHASE_LABELS[phaseKey] ?? 'General',
+            version: 'v1',
+            uploaded_by: 'Team',
+            uploaded_at: (d.created_at ?? '').split('T')[0],
+            size_kb: Math.round(Number(d.file_size ?? 0) / 1024),
+            status: (['approved', 'pending', 'revision', 'draft'].includes(d.status) ? d.status : 'draft') as Document['status'],
+          }
+        })
+      )
+    } catch (err) {
+      setLoadError(err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    load()
+  }, [load])
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -101,21 +144,7 @@ export default function DocumentVault() {
         return
       }
       toast(`${file.name} uploaded successfully`, 'success')
-      // Optimistically add to list
-      const newDoc: Document = {
-        id: json.document?.id || `d-${Date.now()}`,
-        name: file.name,
-        type: (file.name.endsWith('.dwg') ? 'dwg' : file.type.includes('pdf') ? 'pdf' : file.type.includes('sheet') ? 'xlsx' : file.type.includes('word') ? 'docx' : 'image') as Document['type'],
-        project: project !== 'All Projects' ? project : 'General',
-        project_id: '',
-        phase: phase !== 'All Phases' ? phase : 'General',
-        version: 'v1',
-        uploaded_by: 'You',
-        uploaded_at: new Date().toISOString().split('T')[0],
-        size_kb: Math.round(file.size / 1024),
-        status: 'pending',
-      }
-      setDocs(prev => [newDoc, ...prev])
+      await load()
     } catch {
       toast('Upload failed. Check your connection.', 'error')
     } finally {
@@ -123,57 +152,6 @@ export default function DocumentVault() {
       if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
-
-  useEffect(() => {
-    let cancelled = false
-    async function load() {
-      try {
-        if (hasSupabaseEnv()) {
-          const { data, error } = await supabaseClient
-            .from('documents')
-            .select('*, projects(name)')
-            .order('created_at', { ascending: false })
-          if (!error && data && data.length > 0) {
-            if (!cancelled) {
-              setDocs(data.map((d: any) => {
-                const projName = (d as { projects?: { name?: string } | null }).projects?.name ?? 'General'
-                const phaseKey = d.phase ?? ''
-                return {
-                  id: d.id,
-                  name: d.original_filename,
-                  type: docTypeFromName(d.original_filename, d.file_type),
-                  project: projName,
-                  project_id: d.project_id ?? '',
-                  phase: PHASE_LABELS[phaseKey] ?? 'General',
-                  version: 'v1',
-                  uploaded_by: 'Team',
-                  uploaded_at: (d.created_at ?? '').split('T')[0],
-                  size_kb: Math.round(Number(d.file_size ?? 0) / 1024),
-                  status: (['approved', 'pending', 'revision', 'draft'].includes(d.status) ? d.status : 'draft') as Document['status'],
-                }
-              }))
-              setLoading(false)
-            }
-            return
-          }
-        }
-      } catch (e) { console.warn('Documents Supabase fallback:', e) }
-      if (!cancelled) {
-        setDocs([
-          { id: 'd1',  name: 'Ground Floor Plan — Rev 4',               type: 'dwg',   project: 'Wadhwa Prime Plaza',          project_id: 'proj-1', phase: 'Construction Docs',  version: 'v4', uploaded_by: 'Parth Patel',  uploaded_at: '2026-06-12', size_kb: 2400, status: 'approved' },
-          { id: 'd2',  name: 'Structural Column Schedule',              type: 'dwg',   project: 'Wadhwa Prime Plaza',          project_id: 'proj-1', phase: 'Construction Docs',  version: 'v2', uploaded_by: 'Aritro Roy',   uploaded_at: '2026-06-11', size_kb: 1800, status: 'pending'  },
-          { id: 'd3',  name: 'Project Brief — Lodha Signature',         type: 'docx',  project: 'Lodha Signature Residences',  project_id: 'proj-2', phase: 'Schematic Design',   version: 'v1', uploaded_by: 'Parth Patel',  uploaded_at: '2026-06-10', size_kb: 340,  status: 'approved' },
-          { id: 'd4',  name: 'Schematic Design Presentation',           type: 'pdf',   project: 'Lodha Signature Residences',  project_id: 'proj-2', phase: 'Schematic Design',   version: 'v3', uploaded_by: 'Parth Patel',  uploaded_at: '2026-06-09', size_kb: 8700, status: 'approved' },
-          { id: 'd5',  name: 'BOQ Estimate — Gundecha Industrial',      type: 'xlsx',  project: 'Gundecha Industrial Park',    project_id: 'proj-3', phase: 'Pre-Design',         version: 'v1', uploaded_by: 'Parth Patel',  uploaded_at: '2026-06-08', size_kb: 520,  status: 'draft'    },
-          { id: 'd6',  name: 'Site Photo — Foundation Level',           type: 'image', project: 'Wadhwa Prime Plaza',          project_id: 'proj-1', phase: 'Construction Docs',  version: 'v1', uploaded_by: 'Suresh Nair',  uploaded_at: '2026-06-07', size_kb: 1200, status: 'approved' },
-          { id: 'd7',  name: 'Electrical Load Schedule',                type: 'xlsx',  project: 'Wadhwa Prime Plaza',          project_id: 'proj-1', phase: 'Construction Docs',  version: 'v2', uploaded_by: 'Priya Mehta',  uploaded_at: '2026-06-06', size_kb: 410,  status: 'revision' },
-        ])
-        setLoading(false)
-      }
-    }
-    load()
-    return () => { cancelled = true }
-  }, [])
 
   const filtered = docs.filter((d) => {
     if (project !== 'All Projects' && d.project !== project) return false
@@ -185,6 +163,22 @@ export default function DocumentVault() {
     }
     return true
   })
+
+  const statsPending = loading || !!loadError
+
+  const projectOptions = useMemo(
+    () => ['All Projects', ...Array.from(new Set(docs.map((d) => d.project).filter(Boolean))).sort()],
+    [docs]
+  )
+
+  const filtersActive = project !== 'All Projects' || phase !== 'All Phases' || status !== 'all' || !!search.trim()
+
+  const clearFilters = () => {
+    setProject('All Projects')
+    setPhase('All Phases')
+    setStatus('all')
+    setSearch('')
+  }
 
   const formatSize = (kb: number) =>
     kb >= 1000 ? `${(kb / 1000).toFixed(1)} MB` : `${kb} KB`
@@ -239,7 +233,7 @@ export default function DocumentVault() {
         <StatCard
           variant="filter"
           label="Total files"
-          value={loading ? '—' : docs.length}
+          value={statsPending ? '—' : docs.length}
           icon="folder_open"
           color="var(--amber)"
           active={status === 'all'}
@@ -248,7 +242,7 @@ export default function DocumentVault() {
         <StatCard
           variant="filter"
           label="Pending review"
-          value={loading ? '—' : docs.filter(d => d.status === 'pending').length}
+          value={statsPending ? '—' : docs.filter(d => d.status === 'pending').length}
           icon="schedule"
           color="var(--amber)"
           active={status === 'pending'}
@@ -257,7 +251,7 @@ export default function DocumentVault() {
         <StatCard
           variant="filter"
           label="Needs revision"
-          value={loading ? '—' : docs.filter(d => d.status === 'revision').length}
+          value={statsPending ? '—' : docs.filter(d => d.status === 'revision').length}
           icon="edit"
           color="var(--error)"
           active={status === 'revision'}
@@ -266,7 +260,7 @@ export default function DocumentVault() {
         <StatCard
           variant="filter"
           label="Approved"
-          value={loading ? '—' : docs.filter(d => d.status === 'approved').length}
+          value={statsPending ? '—' : docs.filter(d => d.status === 'approved').length}
           icon="verified"
           color="var(--success)"
           active={status === 'approved'}
@@ -288,7 +282,7 @@ export default function DocumentVault() {
 
         <div className="select-5bloc">
           <select value={project} onChange={(e) => setProject(e.target.value)}>
-            {PROJECTS.map(p => <option key={p} value={p}>{p}</option>)}
+            {projectOptions.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
           <span className="material-icons-outlined chevron">expand_more</span>
         </div>
@@ -344,14 +338,33 @@ export default function DocumentVault() {
         >
           {loading ? (
             <div className="space-y-2">
-              {[0,1,2,3,4].map(i => <div key={i} className="skeleton h-14 rounded-xl" />)}
+              {[0,1,2,3,4].map(i => <Skeleton key={i} className="h-14 w-full" />)}
             </div>
+          ) : loadError ? (
+            <ErrorState
+              title="Could not load the document vault"
+              description="Nothing has been deleted — we could not read your files. Retry, or open the documents tab inside a project."
+              error={loadError}
+              onRetry={load}
+            />
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 text-center">
-              <span className="material-icons-outlined text-[28px] mb-4" style={{ color: 'var(--stone)', opacity: 0.3 }}>folder_open</span>
-              <h3 className="text-[15px] font-semibold mb-1" style={{ color: 'var(--on-surface)' }}>No documents found</h3>
-              <p className="text-[13px]" style={{ color: 'var(--stone)' }}>Try adjusting the filters or upload a document from a project.</p>
-            </div>
+            filtersActive ? (
+              <EmptyState
+                icon="filter_alt_off"
+                title="No documents match these filters"
+                description="There are documents in the vault, just none in this project, phase or status combination."
+                actionLabel="Clear filters"
+                onClick={clearFilters}
+              />
+            ) : (
+              <EmptyState
+                icon="folder_open"
+                title="The vault is empty"
+                description="Every drawing, report and file your team uploads to a project lands here automatically. Upload one now to start the archive."
+                actionLabel="Upload document"
+                onClick={() => fileInputRef.current?.click()}
+              />
+            )
           ) : view === 'list' ? (
             <div
               className="rounded-2xl overflow-hidden"

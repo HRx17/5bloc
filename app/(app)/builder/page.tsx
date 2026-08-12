@@ -1,37 +1,70 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useToast } from '@/components/ui/Toast'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 export default function BuilderHome() {
+  const { toast } = useToast()
   const [projects, setProjects] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<unknown>(null)
   const [recommend, setRecommend] = useState<{ projectId: string; name: string; spec: string; email: string; note: string } | null>(null)
-  const [msg, setMsg] = useState('')
+  const [sending, setSending] = useState(false)
 
-  useEffect(() => {
-    fetch('/api/projects')
-      .then((r) => r.json())
-      .then((d) => setProjects(d.projects || []))
-      .finally(() => setLoading(false))
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/projects')
+      if (!res.ok) throw new Error('Could not load your projects')
+      const d = await res.json()
+      setProjects(d.projects || [])
+    } catch (err) {
+      setError(err)
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
+  useEffect(() => {
+    load()
+  }, [load])
+
   const submitRecommend = async () => {
-    if (!recommend) return
-    const res = await fetch('/api/vendor-recommendations', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        project_id: recommend.projectId,
-        vendor_name: recommend.name,
-        specialization: recommend.spec,
-        email: recommend.email,
-        note: recommend.note,
-      }),
-    })
-    const data = await res.json()
-    setMsg(res.ok ? 'Recommendation sent to architect' : data.error || 'Failed')
-    if (res.ok) setRecommend(null)
+    if (!recommend || sending) return
+    if (!recommend.name.trim()) {
+      toast('Add the vendor or company name first', 'warning')
+      return
+    }
+    setSending(true)
+    try {
+      const res = await fetch('/api/vendor-recommendations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          project_id: recommend.projectId,
+          vendor_name: recommend.name,
+          specialization: recommend.spec,
+          email: recommend.email,
+          note: recommend.note,
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast(data.error || 'Could not send that recommendation. Try again.', 'error')
+        return
+      }
+      toast(`${recommend.name} recommended to the architect`, 'success')
+      setRecommend(null)
+    } catch (err: any) {
+      toast(err?.message || 'Could not reach the server. Try again.', 'error')
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -49,17 +82,25 @@ export default function BuilderHome() {
         </Link>
       </div>
 
-      {msg && <p className="text-sm" style={{ color: 'var(--amber)' }}>{msg}</p>}
-
       {loading ? (
-        <p style={{ color: 'var(--stone)' }}>Loading…</p>
-      ) : projects.length === 0 ? (
-        <div className="p-8 rounded-2xl text-center" style={{ background: 'var(--surface-container)' }}>
-          <p className="font-semibold">No projects yet</p>
-          <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
-            Ask your architect to invite you as Builder on a project.
-          </p>
+        <div className="grid md:grid-cols-2 gap-4">
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={i} className="h-52 w-full" />
+          ))}
         </div>
+      ) : error ? (
+        <ErrorState
+          title="Could not load your projects"
+          description="This is a loading problem, not an empty portfolio — your projects are still there."
+          error={error}
+          onRetry={load}
+        />
+      ) : projects.length === 0 ? (
+        <EmptyState
+          icon="apartment"
+          title="No projects assigned to you yet"
+          description="Ask your architect to invite you as Builder on a project. Once they do, budgets, drawings and approvals show up here."
+        />
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
           {projects.map((p) => (
@@ -117,8 +158,10 @@ export default function BuilderHome() {
             <input className="input-5bloc" placeholder="Email" value={recommend.email} onChange={(e) => setRecommend({ ...recommend, email: e.target.value })} />
             <textarea className="input-5bloc min-h-[80px]" placeholder="Note for architect" value={recommend.note} onChange={(e) => setRecommend({ ...recommend, note: e.target.value })} />
             <div className="flex justify-end gap-2">
-              <button className="btn-secondary" onClick={() => setRecommend(null)}>Cancel</button>
-              <button className="btn-primary" onClick={submitRecommend}>Send</button>
+              <button className="btn-secondary" onClick={() => setRecommend(null)} disabled={sending}>Cancel</button>
+              <button className="btn-primary" onClick={submitRecommend} disabled={sending}>
+                {sending ? 'Sending…' : 'Send'}
+              </button>
             </div>
           </div>
         </div>

@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { ErrorState } from '@/components/ui/ErrorState'
 import { Skeleton } from '@/components/ui/Skeleton'
 import type { ArchitectListing } from '@/lib/marketplace/listings'
 
@@ -38,26 +39,36 @@ export default function ArchitectProfile() {
   const [tenders, setTenders] = useState<OpenTender[]>([])
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [error, setError] = useState<unknown>(null)
 
-  useEffect(() => {
-    let cancelled = false
-    fetch(`/api/contractors/architects/${params.id}`)
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error('not found'))))
-      .then((d) => {
-        if (cancelled) return
-        if (!d.architect) {
-          setNotFound(true)
-          return
-        }
-        setArchitect(d.architect)
-        setTenders(d.tenders || [])
-      })
-      .catch(() => !cancelled && setNotFound(true))
-      .finally(() => !cancelled && setLoading(false))
-    return () => {
-      cancelled = true
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    setNotFound(false)
+    try {
+      const res = await fetch(`/api/contractors/architects/${params.id}`)
+      if (res.status === 404) {
+        setNotFound(true)
+        return
+      }
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Could not load this profile')
+      if (!data.architect) {
+        setNotFound(true)
+        return
+      }
+      setArchitect(data.architect)
+      setTenders(data.tenders || [])
+    } catch (err) {
+      setError(err)
+    } finally {
+      setLoading(false)
     }
   }, [params.id])
+
+  useEffect(() => {
+    load()
+  }, [load])
 
   if (loading) {
     return (
@@ -68,6 +79,17 @@ export default function ArchitectProfile() {
           <Skeleton lines={2} />
         </div>
         <Skeleton style={{ height: 160 }} />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 md:p-8 max-w-3xl mx-auto space-y-4">
+        <ErrorState title="Could not load this architect profile" error={error} onRetry={load} />
+        <Link href="/marketplace" className="btn-secondary text-[12px] inline-flex">
+          Back to marketplace
+        </Link>
       </div>
     )
   }

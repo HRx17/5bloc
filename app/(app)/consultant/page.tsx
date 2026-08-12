@@ -1,7 +1,10 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 const DISCIPLINES = ['all', 'architectural', 'structural', 'mep', 'electrical', 'plumbing', 'hvac', 'facade']
 
@@ -9,6 +12,8 @@ export default function ConsultantHome() {
   const [projects, setProjects] = useState<any[]>([])
   const [discipline, setDiscipline] = useState('structural')
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<unknown>(null)
+  const [reloadKey, setReloadKey] = useState(0)
   const [counts, setCounts] = useState<Record<string, { docs: number; rfis: number; subs: number }>>({})
 
   useEffect(() => {
@@ -24,8 +29,10 @@ export default function ConsultantHome() {
     let cancelled = false
     async function load() {
       setLoading(true)
+      setError(null)
       try {
         const res = await fetch('/api/projects')
+        if (!res.ok) throw new Error('Could not load your projects')
         const d = await res.json()
         const list = d.projects || []
         if (cancelled) return
@@ -50,6 +57,8 @@ export default function ConsultantHome() {
           })
         )
         if (!cancelled) setCounts(next)
+      } catch (err) {
+        if (!cancelled) setError(err)
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -58,7 +67,9 @@ export default function ConsultantHome() {
     return () => {
       cancelled = true
     }
-  }, [discipline])
+  }, [discipline, reloadKey])
+
+  const retry = useCallback(() => setReloadKey((k) => k + 1), [])
 
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
@@ -87,14 +98,24 @@ export default function ConsultantHome() {
       </div>
 
       {loading ? (
-        <p style={{ color: 'var(--stone)' }}>Loading…</p>
-      ) : projects.length === 0 ? (
-        <div className="p-8 rounded-2xl text-center" style={{ background: 'var(--surface-container)' }}>
-          <p className="font-semibold">No invited projects</p>
-          <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
-            Consultants join by invite only. Ask the lead architect to add you.
-          </p>
+        <div className="grid md:grid-cols-2 gap-4">
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={i} className="h-36 w-full" />
+          ))}
         </div>
+      ) : error ? (
+        <ErrorState
+          title="Could not load your projects"
+          description="Nothing has been removed from your workspace — the request failed on the way."
+          error={error}
+          onRetry={retry}
+        />
+      ) : projects.length === 0 ? (
+        <EmptyState
+          icon="engineering"
+          title="No projects have invited you yet"
+          description={`Consultants join by invite only. Ask the lead architect to add you to a project — your ${discipline === 'all' ? '' : `${discipline} `}drawings, RFIs and submittals then appear here, filtered to your discipline.`}
+        />
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
           {projects.map((p) => (

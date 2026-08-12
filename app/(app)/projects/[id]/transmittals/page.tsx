@@ -1,7 +1,12 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
+import { useToast } from '@/components/ui/Toast'
+import { useConfirm } from '@/components/ui/ConfirmProvider'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 interface Transmittal {
   id: string
@@ -18,10 +23,15 @@ interface Transmittal {
 export default function TransmittalsLog() {
   const params = useParams()
   const projectId = params.id as string
+  const { toast } = useToast()
+  const confirm = useConfirm()
 
   const [transmittals, setTransmittals] = useState<Transmittal[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<unknown>(null)
   const [showFormModal, setShowFormModal] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [slipPreview, setSlipPreview] = useState<{ no: string; text: string } | null>(null)
 
   // Form State
   const [newTransmittal, setNewTransmittal] = useState({
@@ -33,45 +43,85 @@ export default function TransmittalsLog() {
     date: new Date().toISOString().split('T')[0]
   })
 
-  useEffect(() => {
-    fetch(`/api/projects/${projectId}/transmittals`)
-      .then((r) => r.json())
-      .then((d) => setTransmittals(d.transmittals || []))
-      .finally(() => setLoading(false))
+  const load = useCallback(async () => {
+    setLoading(true)
+    setLoadError(null)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/transmittals`)
+      const d = await res.json()
+      if (!res.ok) throw new Error(d.error || 'Failed to load the dispatch registry')
+      setTransmittals(d.transmittals || [])
+    } catch (e) {
+      setLoadError(e)
+    } finally {
+      setLoading(false)
+    }
   }, [projectId])
+
+  useEffect(() => {
+    load()
+  }, [load])
 
   const handleCreateTransmittal = async (e: React.FormEvent) => {
     e.preventDefault()
-    const res = await fetch(`/api/projects/${projectId}/transmittals`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newTransmittal),
-    })
-    const data = await res.json()
-    if (!res.ok) {
-      alert(data.error || 'Failed to create transmittal')
-      return
+    if (creating) return
+    setCreating(true)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/transmittals`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTransmittal),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast(data.error || 'Failed to create the transmittal', 'error')
+        return
+      }
+      setTransmittals(prev => [data.transmittal, ...prev])
+      setShowFormModal(false)
+      setNewTransmittal({
+        recipient_name: '',
+        recipient_company: '',
+        via: 'Email',
+        documents: '',
+        purpose: 'For Information',
+        date: new Date().toISOString().split('T')[0]
+      })
+      toast(`Transmittal ${data.transmittal?.transmittal_no || ''} issued`.trim(), 'success')
+    } catch (err: any) {
+      toast(err?.message || 'Failed to create the transmittal', 'error')
+    } finally {
+      setCreating(false)
     }
-    setTransmittals(prev => [data.transmittal, ...prev])
-    setShowFormModal(false)
-    setNewTransmittal({
-      recipient_name: '',
-      recipient_company: '',
-      via: 'Email',
-      documents: '',
-      purpose: 'For Information',
-      date: new Date().toISOString().split('T')[0]
-    })
   }
 
-  const handleUpdateStatus = async (id: string, nextStatus: Transmittal['status']) => {
-    const res = await fetch(`/api/projects/${projectId}/transmittals`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ transmittal_id: id, status: nextStatus }),
-    })
-    if (!res.ok) return
-    setTransmittals(prev => prev.map(t => t.id === id ? { ...t, status: nextStatus } : t))
+  const handleUpdateStatus = async (t: Transmittal, nextStatus: Transmittal['status']) => {
+    if (
+      nextStatus === 'acknowledged' &&
+      !(await confirm({
+        title: 'Acknowledge receipt',
+        message: `${t.transmittal_no} will be closed as acknowledged by ${t.recipient_name}. This completes the dispatch record and cannot be reverted from here.`,
+        confirmLabel: 'Acknowledge',
+      }))
+    ) {
+      return
+    }
+    try {
+      const res = await fetch(`/api/projects/${projectId}/transmittals`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transmittal_id: t.id, status: nextStatus }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        toast(data.error || 'Could not update the transmittal status', 'error')
+        return
+      }
+      setTransmittals(prev => prev.map(x => x.id === t.id ? { ...x, status: nextStatus } : x))
+      toast(nextStatus === 'received' ? 'Marked as received' : 'Receipt acknowledged', 'success')
+    } catch (err: any) {
+      toast(err?.message || 'Could not update the transmittal status', 'error')
+    }
   }
 
   const getStatusBadgeClass = (st: Transmittal['status']) => {
@@ -126,9 +176,26 @@ export default function TransmittalsLog() {
           </div>
 
           {loading ? (
-            <div className="p-8 text-center text-stone animate-pulse">Loading dispatch sheets...</div>
+            <div className="space-y-3">
+              {Array.from({ length: 3 }, (_, i) => (
+                <Skeleton key={i} className="h-28 w-full" />
+              ))}
+            </div>
+          ) : loadError ? (
+            <ErrorState
+              compact
+              title="Could not load the dispatch registry"
+              error={loadError}
+              onRetry={load}
+            />
           ) : transmittals.length === 0 ? (
-            <div className="py-12 text-center text-stone font-mono">No document dispatch transmittals issued.</div>
+            <EmptyState
+              icon="local_shipping"
+              title="No transmittals issued yet"
+              description="Log a dispatch sheet every time drawings leave the office — it records which revision went out, to whom, and for what purpose."
+              actionLabel="Log dispatch sheet"
+              onClick={() => setShowFormModal(true)}
+            />
           ) : (
             <div className="divide-y divide-navy-lt/30">
               {transmittals.map(t => (
@@ -163,7 +230,7 @@ export default function TransmittalsLog() {
                     <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                       {t.status === 'sent' && (
                         <button
-                          onClick={() => handleUpdateStatus(t.id, 'received')}
+                          onClick={() => handleUpdateStatus(t, 'received')}
                           className="bg-amber/15 hover:bg-amber/25 text-amber border border-amber/30 px-2 py-1 text-[9px] font-mono font-bold uppercase transition"
                         >
                           Mark Received
@@ -171,7 +238,7 @@ export default function TransmittalsLog() {
                       )}
                       {t.status === 'received' && (
                         <button
-                          onClick={() => handleUpdateStatus(t.id, 'acknowledged')}
+                          onClick={() => handleUpdateStatus(t, 'acknowledged')}
                           className="bg-success/15 hover:bg-success/25 text-success border border-success/30 px-2 py-1 text-[9px] font-mono font-bold uppercase transition"
                         >
                           Acknowledge Receipt
@@ -192,7 +259,8 @@ export default function TransmittalsLog() {
                           ].join('\n')
                           const w = window.open('', '_blank', 'noopener,noreferrer,width=640,height=720')
                           if (!w) {
-                            alert(slip)
+                            setSlipPreview({ no: t.transmittal_no, text: slip })
+                            toast('Pop-up blocked — showing the slip here instead', 'warning')
                             return
                           }
                           w.document.write(`<pre style="font:12px/1.5 ui-monospace,monospace;padding:24px;white-space:pre-wrap">${slip.replace(/</g, '&lt;')}</pre>`)
@@ -235,6 +303,57 @@ export default function TransmittalsLog() {
           </div>
         </div>
       </div>
+
+      {slipPreview && (
+        <div className="fixed inset-0 bg-navy/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="w-full max-w-md bg-navy-mid border p-6 space-y-4 rounded-2xl">
+            <div className="border-b pb-3 flex justify-between items-center">
+              <div>
+                <h3 className="text-xs font-bold font-mono text-amber uppercase tracking-wider">
+                  Transmittal slip
+                </h3>
+                <p className="text-[10px] text-stone mt-0.5 font-mono">
+                  Allow pop-ups for this site to print directly.
+                </p>
+              </div>
+              <button onClick={() => setSlipPreview(null)} className="text-stone hover:text-white transition">
+                <span className="material-icons-outlined text-[18px]">close</span>
+              </button>
+            </div>
+
+            <pre
+              className="text-[11px] leading-relaxed whitespace-pre-wrap p-3 border font-mono max-h-72 overflow-y-auto"
+              style={{ background: 'var(--surface-container-low)', color: 'var(--on-surface)' }}
+            >
+              {slipPreview.text}
+            </pre>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                className="btn-secondary py-1.5 px-4 text-xs"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(slipPreview.text)
+                    toast('Slip copied to clipboard', 'success')
+                  } catch {
+                    toast('Could not copy the slip — select the text and copy manually', 'error')
+                  }
+                }}
+              >
+                Copy slip
+              </button>
+              <button
+                type="button"
+                className="btn-primary py-1.5 px-6 text-xs font-bold"
+                onClick={() => setSlipPreview(null)}
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Dispatch Creator Modal */}
       {showFormModal && (
@@ -324,11 +443,20 @@ export default function TransmittalsLog() {
               </div>
 
               <div className="pt-4 border-t flex justify-end gap-3">
-                <button type="button" onClick={() => setShowFormModal(false)} className="btn-secondary py-1.5 px-4 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setShowFormModal(false)}
+                  disabled={creating}
+                  className="btn-secondary py-1.5 px-4 text-xs"
+                >
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary py-1.5 px-6 text-xs font-bold font-mono">
-                  ISSUE SHEET
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="btn-primary py-1.5 px-6 text-xs font-bold font-mono"
+                >
+                  {creating ? 'ISSUING…' : 'ISSUE SHEET'}
                 </button>
               </div>
             </form>

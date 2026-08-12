@@ -1,9 +1,10 @@
 import { Suspense } from 'react'
 import Onboarding from './OnboardingClient'
+import { AuthSkeleton } from '@/components/ui/AuthSkeleton'
 
 export default function OnboardingPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-canvas" />}>
+    <Suspense fallback={<AuthSkeleton />}>
       <Onboarding />
     </Suspense>
   )

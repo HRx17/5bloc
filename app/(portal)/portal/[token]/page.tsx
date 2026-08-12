@@ -1,7 +1,9 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
+import { useToast } from '@/components/ui/Toast'
+import { useConfirm } from '@/components/ui/ConfirmProvider'
 
 type PortalData = {
   project: any
@@ -26,6 +28,9 @@ export default function ClientPortal() {
   const params = useParams()
   const token = params.token as string
 
+  const { toast } = useToast()
+  const confirm = useConfirm()
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [data, setData] = useState<PortalData | null>(null)
@@ -33,25 +38,33 @@ export default function ClientPortal() {
   const [askerName, setAskerName] = useState('')
   const [askerEmail, setAskerEmail] = useState('')
   const [questionSent, setQuestionSent] = useState(false)
-  const [actionMsg, setActionMsg] = useState('')
+  const [questionError, setQuestionError] = useState('')
+  const [sendingQuestion, setSendingQuestion] = useState(false)
+  /** Document id currently being approved/rejected or downloaded. */
+  const [busyDoc, setBusyDoc] = useState<string | null>(null)
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true)
+    setError('')
     try {
       const res = await fetch(`/api/portal/${token}`)
       const json = await res.json()
-      if (!res.ok) throw new Error(json.error || 'Portal unavailable')
+      if (!res.ok) throw new Error(json.error || 'This portal link is no longer active.')
       setData(json)
     } catch (e: any) {
-      setError(e.message)
+      setError(
+        /failed to fetch|networkerror/i.test(e?.message || '')
+          ? 'Could not reach the server. Check your connection and try again.'
+          : e.message
+      )
     } finally {
       setLoading(false)
     }
-  }
+  }, [token])
 
   useEffect(() => {
     load()
-  }, [token])
+  }, [load])
 
   const settings = data?.settings || {
     show_overview: true,
@@ -62,43 +75,102 @@ export default function ClientPortal() {
     welcome_note: '',
   }
 
-  const actOnDoc = async (documentId: string, action: 'approve' | 'reject') => {
-    const res = await fetch(`/api/portal/${token}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action, document_id: documentId }),
+  const actOnDoc = async (documentId: string, docName: string, action: 'approve' | 'reject') => {
+    if (busyDoc) return
+    const approving = action === 'approve'
+    const ok = await confirm({
+      title: approving ? 'Approve this document?' : 'Request changes?',
+      message: approving
+        ? `Your architect will be told that you approved “${docName}”, and work will move forward on that basis.`
+        : `Your architect will be told that “${docName}” needs changes before you can approve it.`,
+      confirmLabel: approving ? 'Approve' : 'Request changes',
     })
-    const json = await res.json()
-    if (!res.ok) {
-      setActionMsg(json.error || 'Action failed')
-      return
+    if (!ok) return
+
+    setBusyDoc(documentId)
+    try {
+      const res = await fetch(`/api/portal/${token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, document_id: documentId }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'That did not go through. Please try again.')
+      toast(approving ? 'Approved — your architect has been notified.' : 'Change request sent.', 'success')
+      await load()
+    } catch (e: any) {
+      toast(e.message || 'That did not go through. Please try again.', 'error')
+    } finally {
+      setBusyDoc(null)
     }
-    setActionMsg(action === 'approve' ? 'Approved' : 'Changes requested')
-    load()
+  }
+
+  const downloadDoc = async (documentId: string) => {
+    if (busyDoc) return
+    setBusyDoc(documentId)
+    try {
+      const res = await fetch(`/api/portal/${token}/download?document_id=${documentId}`)
+      const json = await res.json()
+      if (!res.ok || !json.url) throw new Error(json.error || 'This file is not available to download.')
+      window.open(json.url, '_blank')
+    } catch (e: any) {
+      toast(e.message || 'This file is not available to download.', 'error')
+    } finally {
+      setBusyDoc(null)
+    }
   }
 
   const sendQuestion = async () => {
-    if (!question.trim()) return
-    const res = await fetch(`/api/portal/${token}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'question',
-        question,
-        name: askerName,
-        email: askerEmail,
-      }),
-    })
-    if (res.ok) {
+    const body = question.trim()
+    if (!body) {
+      setQuestionError('Type your question first.')
+      return
+    }
+    if (askerEmail.trim() && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(askerEmail.trim())) {
+      setQuestionError('That email address does not look right.')
+      return
+    }
+
+    setSendingQuestion(true)
+    setQuestionError('')
+    try {
+      const res = await fetch(`/api/portal/${token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'question',
+          question: body,
+          name: askerName,
+          email: askerEmail,
+        }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(json.error || 'Your question could not be sent. Please try again.')
       setQuestionSent(true)
       setQuestion('')
+      toast('Question sent to your architect.', 'success')
+    } catch (e: any) {
+      setQuestionError(e.message || 'Your question could not be sent. Please try again.')
+    } finally {
+      setSendingQuestion(false)
     }
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#F7F5F0', color: '#6B7485' }}>
-        Loading portal…
+      <div className="min-h-screen font-body" style={{ background: '#F7F5F0' }} aria-busy="true">
+        <span className="sr-only">Loading your project portal…</span>
+        <header className="px-6 py-5" style={{ background: '#FFFFFF', boxShadow: '0 1px 0 rgba(12,18,32,0.06)' }}>
+          <div className="max-w-4xl mx-auto space-y-2">
+            <div className="h-3 w-40 animate-pulse rounded" style={{ background: '#EDE9E2' }} />
+            <div className="h-7 w-64 animate-pulse rounded" style={{ background: '#EDE9E2' }} />
+          </div>
+        </header>
+        <main className="max-w-4xl mx-auto px-6 py-8 space-y-6">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-40 animate-pulse rounded-2xl" style={{ background: '#FFFFFF' }} />
+          ))}
+        </main>
       </div>
     )
   }
@@ -106,9 +178,25 @@ export default function ClientPortal() {
   if (error || !data) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#F7F5F0' }}>
-        <div className="max-w-md text-center">
-          <h1 className="text-2xl font-semibold" style={{ color: '#0C1220' }}>Portal unavailable</h1>
-          <p className="mt-2 text-sm" style={{ color: '#6B7485' }}>{error || 'Not found'}</p>
+        <div className="max-w-md text-center" role="alert">
+          <h1 className="text-2xl font-semibold" style={{ color: '#0C1220' }}>
+            This portal isn’t available
+          </h1>
+          <p className="mt-2 text-sm" style={{ color: '#6B7485' }}>
+            {error || 'We could not find a project for this link.'}
+          </p>
+          <p className="mt-3 text-[13px] leading-relaxed" style={{ color: '#9E9687' }}>
+            Portal links are private and can be turned off or reissued by your architect. If this keeps
+            happening, ask them to send you a fresh link.
+          </p>
+          <button
+            type="button"
+            onClick={load}
+            className="mt-6 px-4 py-2 text-[13px] font-semibold rounded-lg"
+            style={{ background: '#F5A623', color: '#0C1220' }}
+          >
+            Try again
+          </button>
         </div>
       </div>
     )
@@ -143,12 +231,6 @@ export default function ClientPortal() {
           </p>
         )}
 
-        {actionMsg && (
-          <p className="text-sm font-medium" style={{ color: '#D4891A' }}>
-            {actionMsg}
-          </p>
-        )}
-
         {settings.show_overview !== false && (
           <section className="p-5 rounded-2xl" style={{ background: '#FFFFFF' }}>
             <h2 className="font-semibold text-lg mb-3">Progress</h2>
@@ -158,6 +240,11 @@ export default function ClientPortal() {
                 {PHASE_LABELS[project.phase] || project.phase}
               </strong>
             </p>
+            {(milestones || []).length === 0 ? (
+              <p className="text-sm" style={{ color: '#9E9687' }}>
+                Your architect hasn’t published a phase breakdown yet. The overall phase above is current.
+              </p>
+            ) : (
             <div className="space-y-2">
               {(milestones || []).map((m) => (
                 <div key={m.id || m.phase} className="flex items-center gap-3">
@@ -176,6 +263,7 @@ export default function ClientPortal() {
                 </div>
               ))}
             </div>
+            )}
           </section>
         )}
 
@@ -193,15 +281,17 @@ export default function ClientPortal() {
                   </div>
                   <div className="flex gap-2">
                     <button
-                      onClick={() => actOnDoc(doc.id, 'approve')}
-                      className="px-4 py-2 text-[12px] font-semibold rounded-lg"
+                      onClick={() => actOnDoc(doc.id, doc.name, 'approve')}
+                      disabled={!!busyDoc}
+                      className="px-4 py-2 text-[12px] font-semibold rounded-lg disabled:opacity-50"
                       style={{ background: '#F5A623', color: '#0C1220' }}
                     >
-                      Approve
+                      {busyDoc === doc.id ? 'Working…' : 'Approve'}
                     </button>
                     <button
-                      onClick={() => actOnDoc(doc.id, 'reject')}
-                      className="px-4 py-2 text-[12px] font-semibold rounded-lg"
+                      onClick={() => actOnDoc(doc.id, doc.name, 'reject')}
+                      disabled={!!busyDoc}
+                      className="px-4 py-2 text-[12px] font-semibold rounded-lg disabled:opacity-50"
                       style={{ background: '#EDE9E2', color: '#0C1220' }}
                     >
                       Request changes
@@ -229,18 +319,12 @@ export default function ClientPortal() {
                       </span>
                       <button
                         type="button"
-                        className="text-[12px] font-semibold underline"
+                        className="text-[12px] font-semibold underline disabled:opacity-50"
                         style={{ color: '#D4891A' }}
-                        onClick={async () => {
-                          const res = await fetch(
-                            `/api/portal/${token}/download?document_id=${doc.id}`
-                          )
-                          const json = await res.json()
-                          if (res.ok && json.url) window.open(json.url, '_blank')
-                          else setActionMsg(json.error || 'Download unavailable')
-                        }}
+                        disabled={!!busyDoc}
+                        onClick={() => downloadDoc(doc.id)}
                       >
-                        Download
+                        {busyDoc === doc.id ? 'Opening…' : 'Download'}
                       </button>
                     </div>
                   </li>
@@ -253,6 +337,12 @@ export default function ClientPortal() {
         {settings.show_payments !== false && (
           <section className="p-5 rounded-2xl" style={{ background: '#FFFFFF' }}>
             <h2 className="font-semibold text-lg mb-3">Payment schedule</h2>
+            {(milestones || []).filter((m) => m.fee_amount).length === 0 ? (
+              <p className="text-sm" style={{ color: '#9E9687' }}>
+                No payments have been scheduled yet. Your architect will add them here as the project
+                progresses.
+              </p>
+            ) : (
             <div className="space-y-2">
               {(milestones || [])
                 .filter((m) => m.fee_amount)
@@ -268,6 +358,7 @@ export default function ClientPortal() {
                   </div>
                 ))}
             </div>
+            )}
           </section>
         )}
 
@@ -275,9 +366,19 @@ export default function ClientPortal() {
           <section className="p-5 rounded-2xl" style={{ background: '#FFFFFF' }}>
             <h2 className="font-semibold text-lg mb-3">Ask your architect</h2>
             {questionSent ? (
-              <p className="text-sm" style={{ color: '#2ECC8A' }}>
-                Question sent. Your architect will follow up.
-              </p>
+              <div>
+                <p className="text-sm" style={{ color: '#2ECC8A' }}>
+                  Question sent. Your architect will follow up.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setQuestionSent(false)}
+                  className="mt-3 text-[12px] font-semibold underline"
+                  style={{ color: '#D4891A' }}
+                >
+                  Ask another question
+                </button>
+              </div>
             ) : (
               <div className="space-y-3">
                 <input
@@ -301,12 +402,18 @@ export default function ClientPortal() {
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                 />
+                {questionError && (
+                  <p className="text-[12px]" role="alert" style={{ color: '#C0392B' }}>
+                    {questionError}
+                  </p>
+                )}
                 <button
                   onClick={sendQuestion}
-                  className="px-4 py-2 text-[12px] font-semibold rounded-lg"
+                  disabled={sendingQuestion}
+                  className="px-4 py-2 text-[12px] font-semibold rounded-lg disabled:opacity-50"
                   style={{ background: '#F5A623', color: '#0C1220' }}
                 >
-                  Send question
+                  {sendingQuestion ? 'Sending…' : 'Send question'}
                 </button>
               </div>
             )}

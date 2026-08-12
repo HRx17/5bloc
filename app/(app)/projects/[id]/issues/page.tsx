@@ -1,7 +1,11 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams } from 'next/navigation'
+import { useToast } from '@/components/ui/Toast'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 interface Issue {
   id: string
@@ -20,12 +24,15 @@ export default function IssueTracker() {
   const params = useParams()
   const projectId = params.id as string
   const photoInputRef = useRef<HTMLInputElement>(null)
+  const { toast } = useToast()
 
   const [issues, setIssues] = useState<Issue[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<unknown>(null)
   const [showReportModal, setShowReportModal] = useState(false)
   const [activeIssue, setActiveIssue] = useState<Issue | null>(null)
   const [saving, setSaving] = useState(false)
+  const [reporting, setReporting] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
 
   const [searchTerm, setSearchTerm] = useState('')
@@ -40,12 +47,24 @@ export default function IssueTracker() {
     photo_attached: '' as string,
   })
 
-  useEffect(() => {
-    fetch(`/api/projects/${projectId}/issues`)
-      .then((r) => r.json())
-      .then((d) => setIssues(d.issues || []))
-      .finally(() => setLoading(false))
+  const load = useCallback(async () => {
+    setLoading(true)
+    setLoadError(null)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/issues`)
+      const d = await res.json()
+      if (!res.ok) throw new Error(d.error || 'Failed to load the issue register')
+      setIssues(d.issues || [])
+    } catch (e) {
+      setLoadError(e)
+    } finally {
+      setLoading(false)
+    }
   }, [projectId])
+
+  useEffect(() => {
+    load()
+  }, [load])
 
   const handlePhotoUpload = async (file: File) => {
     setUploadingPhoto(true)
@@ -56,11 +75,14 @@ export default function IssueTracker() {
       const res = await fetch('/api/files/upload', { method: 'POST', body: form })
       const data = await res.json()
       if (!res.ok) {
-        alert(data.error || 'Upload failed')
+        toast(data.error || 'Photo upload failed', 'error')
         return
       }
       const url = data.url || data.storage_path || data.r2_key || ''
       setNewIssue((prev) => ({ ...prev, photo_attached: url }))
+      toast('Photo attached', 'success')
+    } catch (err: any) {
+      toast(err?.message || 'Photo upload failed', 'error')
     } finally {
       setUploadingPhoto(false)
     }
@@ -68,22 +90,31 @@ export default function IssueTracker() {
 
   const handleReportIssue = async (e: React.FormEvent) => {
     e.preventDefault()
-    const res = await fetch(`/api/projects/${projectId}/issues`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...newIssue,
-        photo_attached: newIssue.photo_attached || null,
-      }),
-    })
-    const data = await res.json()
-    if (!res.ok) {
-      alert(data.error || 'Failed to report')
-      return
+    if (reporting) return
+    setReporting(true)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/issues`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...newIssue,
+          photo_attached: newIssue.photo_attached || null,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast(data.error || 'Failed to report the issue', 'error')
+        return
+      }
+      setIssues((prev) => [data.issue, ...prev])
+      setShowReportModal(false)
+      setNewIssue({ title: '', description: '', severity: 'medium', assigned_to: '', photo_attached: '' })
+      toast('Site issue reported', 'success')
+    } catch (err: any) {
+      toast(err?.message || 'Failed to report the issue', 'error')
+    } finally {
+      setReporting(false)
     }
-    setIssues((prev) => [data.issue, ...prev])
-    setShowReportModal(false)
-    setNewIssue({ title: '', description: '', severity: 'medium', assigned_to: '', photo_attached: '' })
   }
 
   const handleSaveIssue = async () => {
@@ -102,12 +133,15 @@ export default function IssueTracker() {
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        alert(data.error || 'Failed to save')
+        toast(data.error || 'Failed to save the issue', 'error')
         return
       }
       setIssues((prev) =>
         prev.map((i) => (i.id === activeIssue.id ? { ...i, ...activeIssue } : i))
       )
+      toast('Issue updated', 'success')
+    } catch (err: any) {
+      toast(err?.message || 'Failed to save the issue', 'error')
     } finally {
       setSaving(false)
     }
@@ -124,9 +158,9 @@ export default function IssueTracker() {
       .then((r) => r.json())
       .then((d) => {
         if (d.url) window.open(d.url, '_blank')
-        else alert('Could not open photo')
+        else toast('Could not open the attached photo', 'error')
       })
-      .catch(() => alert('Could not open photo'))
+      .catch(() => toast('Could not open the attached photo', 'error'))
   }
 
   const getSeverityStyle = (s: Issue['severity']) => {
@@ -144,6 +178,8 @@ export default function IssueTracker() {
       case 'resolved': return 'bg-success/15 text-success '
     }
   }
+
+  const hasFilters = !!searchTerm || filterSeverity !== 'all' || filterStatus !== 'all'
 
   const filtered = issues.filter(i => {
     const matchesSearch = (i.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -206,9 +242,38 @@ export default function IssueTracker() {
             </div>
 
             {loading ? (
-              <div className="p-8 text-center text-stone animate-pulse">Loading issue records...</div>
+              <div className="space-y-3">
+                {Array.from({ length: 5 }, (_, i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
+            ) : loadError ? (
+              <ErrorState
+                compact
+                title="Could not load the issue register"
+                error={loadError}
+                onRetry={load}
+              />
             ) : filtered.length === 0 ? (
-              <div className="py-12 text-center text-stone">No logged issues match filter criteria.</div>
+              <EmptyState
+                icon={hasFilters ? 'filter_alt_off' : 'report_problem'}
+                title={hasFilters ? 'No issues match these filters' : 'No site issues logged'}
+                description={
+                  hasFilters
+                    ? 'Clear the search box or reset the severity and status filters to see the full register.'
+                    : 'Log defects, code violations and delays as you spot them on site so the contractor has a dated record to work from.'
+                }
+                actionLabel={hasFilters ? 'Clear filters' : 'Report site issue'}
+                onClick={
+                  hasFilters
+                    ? () => {
+                        setSearchTerm('')
+                        setFilterSeverity('all')
+                        setFilterStatus('all')
+                      }
+                    : () => setShowReportModal(true)
+                }
+              />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
@@ -456,11 +521,16 @@ export default function IssueTracker() {
               </div>
 
               <div className="pt-4 border-t flex justify-end gap-3">
-                <button type="button" onClick={() => setShowReportModal(false)} className="btn-secondary py-1.5 px-4 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setShowReportModal(false)}
+                  disabled={reporting}
+                  className="btn-secondary py-1.5 px-4 text-xs"
+                >
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary py-1.5 px-6 text-xs font-bold">
-                  Submit Issue
+                <button type="submit" disabled={reporting} className="btn-primary py-1.5 px-6 text-xs font-bold">
+                  {reporting ? 'Submitting…' : 'Submit Issue'}
                 </button>
               </div>
             </form>

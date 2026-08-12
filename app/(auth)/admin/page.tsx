@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import LoginClient from '../login/LoginClient'
+import { AuthSkeleton } from '@/components/ui/AuthSkeleton'
 
 export const metadata: Metadata = {
   title: 'Admin',
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function AdminLoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-canvas" />}>
+    <Suspense fallback={<AuthSkeleton />}>
       <LoginClient mode="admin" />
     </Suspense>
   )

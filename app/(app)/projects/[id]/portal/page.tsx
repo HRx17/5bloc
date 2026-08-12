@@ -1,12 +1,16 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
+import { useToast } from '@/components/ui/Toast'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 export default function ProjectPortalSettings() {
   const params = useParams()
   const projectId = params.id as string
+  const { toast } = useToast()
   const [project, setProject] = useState<any>(null)
   const [settings, setSettings] = useState({
     show_overview: true,
@@ -19,41 +23,84 @@ export default function ProjectPortalSettings() {
     welcome_note: '',
   })
   const [saving, setSaving] = useState(false)
-  const [msg, setMsg] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<unknown>(null)
 
-  useEffect(() => {
-    fetch(`/api/projects/${projectId}`)
-      .then((r) => r.json())
-      .then((d) => {
-        setProject(d.project)
-      })
-    fetch(`/api/projects/${projectId}/portal`)
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.settings) setSettings((s) => ({ ...s, ...d.settings }))
-      })
-      .catch(() => {})
+  const load = useCallback(async () => {
+    setLoading(true)
+    setLoadError(null)
+    try {
+      const [projRes, portalRes] = await Promise.all([
+        fetch(`/api/projects/${projectId}`),
+        fetch(`/api/projects/${projectId}/portal`),
+      ])
+      const projData = await projRes.json()
+      if (!projRes.ok) throw new Error(projData.error || 'Failed to load portal settings')
+      setProject(projData.project)
+      const portalData = await portalRes.json().catch(() => ({}))
+      if (portalRes.ok && portalData.settings) setSettings((s) => ({ ...s, ...portalData.settings }))
+    } catch (e) {
+      setLoadError(e)
+    } finally {
+      setLoading(false)
+    }
   }, [projectId])
 
+  useEffect(() => {
+    load()
+  }, [load])
+
   const save = async () => {
+    if (saving) return
     setSaving(true)
-    const res = await fetch(`/api/projects/${projectId}/portal`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        portal_enabled: true,
-        settings,
-      }),
-    })
-    const data = await res.json()
-    setSaving(false)
-    setMsg(res.ok ? 'Portal enabled and saved' : data.error || 'Save failed')
-    if (res.ok && data.project) setProject(data.project)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/portal`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          portal_enabled: true,
+          settings,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast(data.error || 'Could not save the portal settings', 'error')
+        return
+      }
+      if (data.project) setProject(data.project)
+      toast('Client portal enabled and saved', 'success')
+    } catch (err: any) {
+      toast(err?.message || 'Could not save the portal settings', 'error')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const portalPath = project?.portal_token
     ? `/portal/${project.portal_token}`
     : null
+
+  if (loading) {
+    return (
+      <div className="max-w-2xl space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-48" />
+          <Skeleton className="h-4 w-80" />
+        </div>
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-40 w-full" />
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="max-w-2xl">
+        <ErrorState title="Could not load portal settings" error={loadError} onRetry={load} />
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -79,7 +126,14 @@ export default function ProjectPortalSettings() {
               </Link>
               <button
                 className="btn-secondary text-[11px]"
-                onClick={() => navigator.clipboard.writeText(`${window.location.origin}${portalPath}`)}
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(`${window.location.origin}${portalPath}`)
+                    toast('Portal link copied', 'success')
+                  } catch {
+                    toast('Could not copy the link — copy it manually', 'error')
+                  }
+                }}
               >
                 Copy
               </button>
@@ -124,7 +178,6 @@ export default function ProjectPortalSettings() {
       <button className="btn-primary" onClick={save} disabled={saving}>
         {saving ? 'Saving…' : 'Enable & save portal'}
       </button>
-      {msg && <p className="text-sm" style={{ color: 'var(--amber)' }}>{msg}</p>}
     </div>
   )
 }

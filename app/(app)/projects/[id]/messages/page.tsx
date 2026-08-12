@@ -1,7 +1,11 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams } from 'next/navigation'
+import { useToast } from '@/components/ui/Toast'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 interface Message {
   id: string
@@ -27,6 +31,7 @@ export default function ProjectMessages() {
   const params = useParams()
   const projectId = params.id as string
   const chatEndRef = useRef<HTMLDivElement>(null)
+  const { toast } = useToast()
 
   const [channels] = useState<string[]>(['general', 'structural', 'mep', 'interior-finishes'])
   const [activeChannel, setActiveChannel] = useState('general')
@@ -34,18 +39,17 @@ export default function ProjectMessages() {
   const [textInput, setTextInput] = useState('')
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
-  const [error, setError] = useState('')
+  const [loadError, setLoadError] = useState<unknown>(null)
 
-  useEffect(() => {
-    let cancelled = false
+  const load = useCallback(async () => {
     setLoading(true)
-    setError('')
-    fetch(`/api/projects/${projectId}/messages?channel=${encodeURIComponent(activeChannel)}`)
-      .then(async (r) => {
-        const d = await r.json()
-        if (!r.ok) throw new Error(d.error || 'Failed to load messages')
-        if (cancelled) return
-        const list = (d.messages || []).map((m: any) => ({
+    setLoadError(null)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/messages?channel=${encodeURIComponent(activeChannel)}`)
+      const d = await res.json()
+      if (!res.ok) throw new Error(d.error || 'Failed to load messages')
+      setMessages(
+        (d.messages || []).map((m: any) => ({
           id: m.id,
           sender: m.sender || 'Member',
           role: m.role || 'member',
@@ -54,18 +58,18 @@ export default function ProjectMessages() {
           timestamp: formatTime(m.created_at),
           channel: activeChannel,
         }))
-        setMessages(list)
-      })
-      .catch((e) => {
-        if (!cancelled) setError(e.message || 'Failed to load')
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => {
-      cancelled = true
+      )
+    } catch (e) {
+      setMessages([])
+      setLoadError(e)
+    } finally {
+      setLoading(false)
     }
   }, [projectId, activeChannel])
+
+  useEffect(() => {
+    load()
+  }, [load])
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -75,7 +79,6 @@ export default function ProjectMessages() {
     e.preventDefault()
     if (!textInput.trim() || sending) return
     setSending(true)
-    setError('')
     try {
       const res = await fetch(`/api/projects/${projectId}/messages`, {
         method: 'POST',
@@ -99,7 +102,7 @@ export default function ProjectMessages() {
       ])
       setTextInput('')
     } catch (err: any) {
-      setError(err?.message || 'Send failed')
+      toast(err?.message || 'Message could not be sent', 'error')
     } finally {
       setSending(false)
     }
@@ -112,7 +115,6 @@ export default function ProjectMessages() {
         <p className="text-[11px] text-stone mt-1">
           Channels sync for all project members.
         </p>
-        {error && <p className="text-[11px] text-red-400 mt-2">{error}</p>}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 min-h-[420px]">
@@ -136,11 +138,24 @@ export default function ProjectMessages() {
         <div className="md:col-span-3 card-5bloc flex flex-col">
           <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[320px]">
             {loading ? (
-              <p className="text-xs text-stone text-center py-16">Loading…</p>
+              <div className="space-y-4 py-2">
+                {Array.from({ length: 4 }, (_, i) => (
+                  <Skeleton key={i} lines={2} />
+                ))}
+              </div>
+            ) : loadError ? (
+              <ErrorState
+                compact
+                title={`Could not load #${activeChannel}`}
+                error={loadError}
+                onRetry={load}
+              />
             ) : messages.length === 0 ? (
-              <p className="text-xs text-stone text-center py-16">
-                No messages in #{activeChannel}. Say hi to start the conversation.
-              </p>
+              <EmptyState
+                icon="forum"
+                title={`#${activeChannel} is quiet`}
+                description={`Nothing has been posted in #${activeChannel} yet. Send the first message — everyone on the project sees this channel.`}
+              />
             ) : (
               messages.map((m) => (
                 <div key={m.id} className="text-xs">

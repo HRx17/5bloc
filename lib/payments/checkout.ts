@@ -61,7 +61,8 @@ export async function startRazorpayCheckout(opts: StartCheckoutOpts): Promise<{ 
         resolve({ ok: true })
       },
       modal: {
-        ondismiss: () => resolve({ ok: false, message: 'Checkout cancelled' }),
+        ondismiss: () =>
+          resolve({ ok: false, message: 'Checkout cancelled — you have not been charged and your plan is unchanged.' }),
       },
     })
     rzp.open()
@@ -104,7 +105,8 @@ export async function startInvoiceCheckout(invoiceId: string): Promise<{ ok: boo
           message: 'Payment received. The invoice is marked paid once Razorpay confirms it.',
         }),
       modal: {
-        ondismiss: () => resolve({ ok: false, message: 'Payment cancelled' }),
+        ondismiss: () =>
+          resolve({ ok: false, message: 'Payment cancelled — you have not been charged and the invoice is unchanged.' }),
       },
     })
     rzp.open()

@@ -1,8 +1,11 @@
 'use client'
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Download, FileSpreadsheet, Loader2, Search, Upload } from 'lucide-react'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
 import {
   downloadCatalogTemplate,
   parseCatalogCsv,
@@ -18,62 +21,65 @@ export default function VendorCatalogPage() {
   const [role, setRole] = useState<string>('vendor')
   const [items, setItems] = useState<CatalogItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<unknown>(null)
   const [query, setQuery] = useState('')
   const [importing, setImporting] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [progress, setProgress] = useState(0)
 
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      try {
-        const supabase = createSupabaseClient()
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user?.email) {
-          setLoading(false)
-          return
-        }
-        if (cancelled) return
-        setEmail(user.email)
-
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('auth_id', user.id)
-          .maybeSingle()
-        if (profile?.role) setRole(profile.role)
-
-        const { data, error: qErr } = await (supabase as any)
-          .from('vendor_catalog_items')
-          .select('id, sku, name, category, unit, price, currency, brand, description')
-          .eq('owner_email', user.email)
-          .order('name')
-          .limit(200)
-
-        if (!qErr && data) {
-          setItems(
-            data.map((r: Record<string, unknown>) => ({
-              id: String(r.id),
-              sku: String(r.sku ?? ''),
-              name: String(r.name ?? ''),
-              category: String(r.category ?? ''),
-              unit: String(r.unit ?? 'ea'),
-              price: r.price != null ? String(r.price) : '',
-              currency: String(r.currency ?? 'INR'),
-              brand: String(r.brand ?? ''),
-              description: String(r.description ?? ''),
-            })),
-          )
-        }
-      } catch {
-        /* tables may not exist yet — page still usable for upload */
-      } finally {
-        if (!cancelled) setLoading(false)
+  const load = useCallback(async () => {
+    setLoading(true)
+    setLoadError(null)
+    try {
+      const supabase = createSupabaseClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user?.email) {
+        setLoading(false)
+        return
       }
-    })()
-    return () => { cancelled = true }
+      setEmail(user.email)
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('auth_id', user.id)
+        .maybeSingle()
+      if (profile?.role) setRole(profile.role)
+
+      const { data, error: qErr } = await (supabase as any)
+        .from('vendor_catalog_items')
+        .select('id, sku, name, category, unit, price, currency, brand, description')
+        .eq('owner_email', user.email)
+        .order('name')
+        .limit(200)
+
+      if (qErr) throw new Error('Could not read your catalogue')
+      if (data) {
+        setItems(
+          data.map((r: Record<string, unknown>) => ({
+            id: String(r.id),
+            sku: String(r.sku ?? ''),
+            name: String(r.name ?? ''),
+            category: String(r.category ?? ''),
+            unit: String(r.unit ?? 'ea'),
+            price: r.price != null ? String(r.price) : '',
+            currency: String(r.currency ?? 'INR'),
+            brand: String(r.brand ?? ''),
+            description: String(r.description ?? ''),
+          })),
+        )
+      }
+    } catch (err) {
+      setLoadError(err)
+    } finally {
+      setLoading(false)
+    }
   }, [])
+
+  useEffect(() => {
+    load()
+  }, [load])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -228,18 +234,30 @@ export default function VendorCatalogPage() {
         style={{ background: 'var(--surface-container)', boxShadow: 'inset 0 0 0 1px var(--hairline)' }}
       >
         {loading ? (
-          <div className="flex items-center justify-center gap-2 py-16 text-[13px]" style={{ color: 'var(--stone)' }}>
-            <Loader2 className="h-4 w-4 animate-spin" /> Loading catalogue…
+          <div className="p-4 space-y-2">
+            {Array.from({ length: 6 }, (_, i) => (
+              <Skeleton key={i} className="h-11 w-full" />
+            ))}
           </div>
+        ) : loadError ? (
+          <ErrorState
+            title="Could not load your catalogue"
+            description="Nothing has been deleted — we could not read your items. You can still upload a CSV while this is failing."
+            error={loadError}
+            onRetry={load}
+          />
         ) : filtered.length === 0 ? (
-          <div className="px-6 py-16 text-center">
-            <p className="text-[14px] font-medium" style={{ color: 'var(--on-surface)' }}>
-              No catalogue items yet
-            </p>
-            <p className="mt-1 text-[13px]" style={{ color: 'var(--on-surface-variant)' }}>
-              Upload a CSV to populate thousands of SKUs in one go.
-            </p>
-          </div>
+          <EmptyState
+            icon={query.trim() ? 'search_off' : 'inventory_2'}
+            title={query.trim() ? `No SKUs match “${query.trim()}”` : 'No catalogue items yet'}
+            description={
+              query.trim()
+                ? 'Search covers SKU, name, category and brand. Clear the search to see the full catalogue.'
+                : 'Upload a CSV export from Tally, Zoho, Excel or your ERP to populate thousands of SKUs in one go. Start from the template if you are unsure of the columns.'
+            }
+            actionLabel={query.trim() ? undefined : 'Download template CSV'}
+            onClick={query.trim() ? undefined : downloadCatalogTemplate}
+          />
         ) : (
           <table className="w-full text-left text-[12.5px]">
             <caption className="sr-only">Your product catalogue</caption>

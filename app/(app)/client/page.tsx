@@ -1,7 +1,10 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 type Project = {
   id: string
@@ -34,46 +37,62 @@ export default function ClientHome() {
   const [pending, setPending] = useState<PendingDoc[]>([])
   const [activity, setActivity] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<unknown>(null)
 
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      try {
-        const [projectRes, activityRes] = await Promise.all([
-          fetch('/api/projects').then((r) => r.json()),
-          fetch('/api/activity?limit=8').then((r) => r.json()).catch(() => ({})),
-        ])
-        if (cancelled) return
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const projectRes = await fetch('/api/projects')
+      if (!projectRes.ok) throw new Error('Could not load your projects')
+      const projectData = await projectRes.json()
+      const list: Project[] = projectData.projects || []
+      setProjects(list)
 
-        const list: Project[] = projectRes.projects || []
-        setProjects(list)
-        setActivity(activityRes.activity || [])
+      const activityData = await fetch('/api/activity?limit=8')
+        .then((r) => r.json())
+        .catch(() => ({}))
+      setActivity(activityData.activity || [])
 
-        // Drawings shared with the client that still need a decision
-        const docLists = await Promise.all(
-          list.slice(0, 5).map(async (p) => {
-            const res = await fetch(`/api/projects/${p.id}/documents`)
-            if (!res.ok) return []
-            const data = await res.json()
-            return (data.documents || [])
-              .filter((d: any) => d.shared_with_client && d.approval_status === 'pending')
-              .map((d: any) => ({ id: d.id, name: d.name, project_id: p.id, project_name: p.name }))
-          })
-        )
-        if (!cancelled) setPending(docLists.flat())
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    })()
-    return () => {
-      cancelled = true
+      // Drawings shared with the client that still need a decision
+      const docLists = await Promise.all(
+        list.slice(0, 5).map(async (p) => {
+          const res = await fetch(`/api/projects/${p.id}/documents`)
+          if (!res.ok) return []
+          const data = await res.json()
+          return (data.documents || [])
+            .filter((d: any) => d.shared_with_client && d.approval_status === 'pending')
+            .map((d: any) => ({ id: d.id, name: d.name, project_id: p.id, project_name: p.name }))
+        })
+      )
+      setPending(docLists.flat())
+    } catch (err) {
+      setError(err)
+    } finally {
+      setLoading(false)
     }
   }, [])
 
+  useEffect(() => {
+    load()
+  }, [load])
+
   if (loading) {
     return (
-      <div className="p-8" style={{ color: 'var(--stone)' }}>
-        Loading your projects…
+      <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-8">
+        <div className="space-y-2">
+          <Skeleton className="h-9 w-64" />
+          <Skeleton className="h-4 w-80" />
+        </div>
+        <Skeleton className="h-28 w-full" />
+        <div className="space-y-4">
+          <Skeleton className="h-6 w-32" />
+          <div className="grid md:grid-cols-2 gap-4">
+            {Array.from({ length: 2 }, (_, i) => (
+              <Skeleton key={i} className="h-32 w-full" />
+            ))}
+          </div>
+        </div>
       </div>
     )
   }
@@ -118,15 +137,35 @@ export default function ClientHome() {
         </section>
       )}
 
+      {!error && projects.length > 0 && pending.length === 0 && (
+        <section
+          className="px-5 py-4 rounded-2xl flex items-center gap-3"
+          style={{ background: 'var(--surface-container)' }}
+        >
+          <span className="material-icons-outlined text-[20px]" style={{ color: 'var(--success)' }} aria-hidden>
+            task_alt
+          </span>
+          <p className="text-sm" style={{ color: 'var(--stone)' }}>
+            Nothing needs your approval right now. Your architect will notify you when a drawing is ready to review.
+          </p>
+        </section>
+      )}
+
       <section>
         <h2 className="text-lg font-semibold mb-4">Projects</h2>
-        {projects.length === 0 ? (
-          <div className="p-8 rounded-2xl text-center" style={{ background: 'var(--surface-container)' }}>
-            <p className="font-semibold">No projects yet</p>
-            <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
-              Your architect will invite you here once your project workspace is ready.
-            </p>
-          </div>
+        {error ? (
+          <ErrorState
+            title="Could not load your projects"
+            description="This does not mean your project is gone — we could not reach the server. Try again."
+            error={error}
+            onRetry={load}
+          />
+        ) : projects.length === 0 ? (
+          <EmptyState
+            icon="home_work"
+            title="Your project workspace is not open yet"
+            description="Your architect will invite you as soon as it is ready. You will then see progress, drawings to review, and every update in one place — no email chasing."
+          />
         ) : (
           <div className="grid md:grid-cols-2 gap-4">
             {projects.map((p) => (

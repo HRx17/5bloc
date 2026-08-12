@@ -1,26 +1,40 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { ErrorState } from '@/components/ui/ErrorState'
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<unknown>(null)
   const [q, setQ] = useState('')
   const [canCreate, setCanCreate] = useState(false)
 
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/projects')
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to load projects')
+      setProjects(data.projects || [])
+    } catch (err) {
+      setError(err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
-    fetch('/api/projects')
-      .then((r) => r.json())
-      .then((d) => setProjects(d.projects || []))
-      .finally(() => setLoading(false))
+    load()
     fetch('/api/me')
       .then((r) => r.json())
       .then((d) => setCanCreate(d.profile?.role === 'architect'))
       .catch(() => {})
-  }, [])
+  }, [load])
 
   const filtered = projects.filter((p) =>
     !q || p.name?.toLowerCase().includes(q.toLowerCase()) || p.city?.toLowerCase().includes(q.toLowerCase())
@@ -55,6 +69,8 @@ export default function ProjectsPage() {
             <Skeleton key={i} className="h-28 w-full" />
           ))}
         </div>
+      ) : error ? (
+        <ErrorState title="Could not load your projects" error={error} onRetry={load} />
       ) : filtered.length === 0 ? (
         <EmptyState
           icon="apartment"

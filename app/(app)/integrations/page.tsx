@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/Toast'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { CalendarWidget } from '@/components/integrations/CalendarWidget'
 
 type ProviderId = 'google' | 'autodesk'
@@ -142,6 +144,7 @@ export default function IntegrationsDashboard() {
 
   const [providers, setProviders] = useState<Record<ProviderId, ProviderState>>(EMPTY_PROVIDERS)
   const [loading, setLoading] = useState(true)
+  const [statusError, setStatusError] = useState<unknown>(null)
   const [activeCategory, setActiveCategory] = useState<(typeof CATEGORIES)[number]['id']>('all')
   const [syncing, setSyncing] = useState<ProviderId | 'all' | null>(null)
   const [syncResults, setSyncResults] = useState<Partial<Record<ProviderId, SyncResult>>>({})
@@ -150,19 +153,22 @@ export default function IntegrationsDashboard() {
   const [disconnecting, setDisconnecting] = useState(false)
 
   const loadStatus = useCallback(async () => {
+    setLoading(true)
+    setStatusError(null)
     try {
       const res = await fetch('/api/integrations/status')
-      const data = (await res.json()) as { providers?: Record<string, ProviderState> }
+      const data = (await res.json()) as { error?: string; providers?: Record<string, ProviderState> }
+      if (!res.ok) throw new Error(data.error || 'Could not load integration status')
       setProviders({
         google: { ...EMPTY_PROVIDERS.google, ...(data.providers?.google ?? {}) },
         autodesk: { ...EMPTY_PROVIDERS.autodesk, ...(data.providers?.autodesk ?? {}) },
       })
-    } catch {
-      toast('Could not load integration status.', 'error')
+    } catch (err) {
+      setStatusError(err)
     } finally {
       setLoading(false)
     }
-  }, [toast])
+  }, [])
 
   useEffect(() => {
     loadStatus()
@@ -334,7 +340,7 @@ export default function IntegrationsDashboard() {
 
         <button
           onClick={handleSyncAll}
-          disabled={syncing !== null || loading}
+          disabled={syncing !== null || loading || !!statusError}
           className="btn-primary shrink-0 py-2.5 px-5 flex items-center gap-2"
         >
           <span className={`material-icons-outlined text-[16px] ${syncing === 'all' ? 'animate-spin' : ''}`}>
@@ -382,20 +388,24 @@ export default function IntegrationsDashboard() {
           </p>
           <div className="flex items-center gap-2.5 mt-2">
             <span className="text-[12px] font-medium truncate" style={{ color: 'var(--on-surface)' }}>
-              {loading
-                ? 'Checking...'
-                : unconfigured.length === 0
-                  ? 'All providers configured'
-                  : `${unconfigured.map((p) => PROVIDER_LABEL[p]).join(', ')} not configured`}
+              {statusError
+                ? 'Status unavailable'
+                : loading
+                  ? 'Checking...'
+                  : unconfigured.length === 0
+                    ? 'All providers configured'
+                    : `${unconfigured.map((p) => PROVIDER_LABEL[p]).join(', ')} not configured`}
             </span>
             <div
               className="w-2.5 h-2.5 rounded-full shrink-0"
               style={{
-                background: loading
-                  ? 'var(--stone)'
-                  : unconfigured.length === 0
-                    ? 'var(--success)'
-                    : 'var(--warning, var(--amber))',
+                background: statusError
+                  ? 'var(--error)'
+                  : loading
+                    ? 'var(--stone)'
+                    : unconfigured.length === 0
+                      ? 'var(--success)'
+                      : 'var(--warning, var(--amber))',
               }}
             />
           </div>
@@ -420,7 +430,25 @@ export default function IntegrationsDashboard() {
         ))}
       </div>
 
+      {statusError ? (
+        <ErrorState
+          title="Could not check your connected accounts"
+          error={statusError}
+          description="Nothing has been disconnected — we just could not read the current status. Connecting or syncing now could behave unexpectedly."
+          onRetry={loadStatus}
+        />
+      ) : null}
+
+      {loading && !statusError && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[0, 1].map((i) => (
+            <Skeleton key={i} className="h-64 w-full" />
+          ))}
+        </div>
+      )}
+
       {/* Integration cards */}
+      {!loading && !statusError && (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {filtered.map((item) => {
           const state = providers[item.provider]
@@ -614,6 +642,7 @@ export default function IntegrationsDashboard() {
           )
         })}
       </div>
+      )}
 
       {/* Live calendar preview - the Calendar integration has no other surface yet */}
       {showCalendarWidget && (

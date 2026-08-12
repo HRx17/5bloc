@@ -1,7 +1,12 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
+import { useToast } from '@/components/ui/Toast'
+import { useConfirm } from '@/components/ui/ConfirmProvider'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 interface SubmittalItem {
   id: string
@@ -20,10 +25,12 @@ interface SubmittalItem {
 export default function SubmittalsLog() {
   const params = useParams()
   const projectId = params.id as string
+  const { toast } = useToast()
+  const confirm = useConfirm()
 
   const [submittals, setSubmittals] = useState<SubmittalItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [loadError, setLoadError] = useState<unknown>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [activeSubmittal, setActiveSubmittal] = useState<SubmittalItem | null>(null)
   const [saving, setSaving] = useState(false)
@@ -36,29 +43,29 @@ export default function SubmittalsLog() {
     due_date: '',
   })
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true)
-    setError('')
+    setLoadError(null)
     try {
       const res = await fetch(`/api/projects/${projectId}/submittals`)
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Failed to load')
+      if (!res.ok) throw new Error(data.error || 'Failed to load submittals')
       setSubmittals(data.submittals || [])
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e) {
+      setLoadError(e)
     } finally {
       setLoading(false)
     }
-  }
+  }, [projectId])
 
   useEffect(() => {
     load()
-  }, [projectId])
+  }, [load])
 
   const handleCreateSubmittal = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (saving) return
     setSaving(true)
-    setError('')
     try {
       const res = await fetch(`/api/projects/${projectId}/submittals`, {
         method: 'POST',
@@ -66,19 +73,30 @@ export default function SubmittalsLog() {
         body: JSON.stringify(newSubmittal),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Failed to create')
+      if (!res.ok) throw new Error(data.error || 'Failed to create the submittal')
       setSubmittals((prev) => [data.submittal, ...prev])
       setShowCreateModal(false)
       setNewSubmittal({ title: '', spec_section: '', description: '', contractor: '', due_date: '' })
+      toast('Submittal logged', 'success')
     } catch (err: any) {
-      setError(err.message)
+      toast(err?.message || 'Failed to create the submittal', 'error')
     } finally {
       setSaving(false)
     }
   }
 
   const handleReviewAction = async (status: SubmittalItem['status']) => {
-    if (!activeSubmittal) return
+    if (!activeSubmittal || saving) return
+    if (
+      status === 'approved' &&
+      !(await confirm({
+        title: 'Approve submittal',
+        message: `“${activeSubmittal.title}” will be approved for procurement. The contractor can order against this decision, so make sure the sample and spec section have been checked.`,
+        confirmLabel: 'Approve',
+      }))
+    ) {
+      return
+    }
     setSaving(true)
     try {
       const res = await fetch(`/api/projects/${projectId}/submittals`, {
@@ -94,8 +112,9 @@ export default function SubmittalsLog() {
       if (!res.ok) throw new Error(data.error || 'Review failed')
       setSubmittals((prev) => prev.map((s) => (s.id === data.submittal.id ? data.submittal : s)))
       setActiveSubmittal(null)
+      toast(status === 'approved' ? 'Submittal approved' : 'Sent back for revision', 'success')
     } catch (err: any) {
-      setError(err.message)
+      toast(err?.message || 'Could not record the review decision', 'error')
     } finally {
       setSaving(false)
     }
@@ -117,11 +136,6 @@ export default function SubmittalsLog() {
 
   return (
     <div className="space-y-6 font-body select-none relative h-full">
-      {error && (
-        <p className="text-sm" style={{ color: 'var(--error)' }}>
-          {error}
-        </p>
-      )}
       <div className="card-5bloc flex flex-col justify-between">
         <div className="flex items-center justify-between pb-4 border-b ">
           <div>
@@ -137,15 +151,28 @@ export default function SubmittalsLog() {
         </div>
 
         {loading ? (
-          <div className="p-8 text-center text-stone animate-pulse">Loading submittal files...</div>
-        ) : submittals.length === 0 ? (
-          <div className="py-16 text-center text-stone flex flex-col items-center">
-            <span className="material-icons-outlined text-[48px] text-stone/30 mb-3">fact_check</span>
-            <h4 className="text-sm font-bold text-white">No submittals logged</h4>
-            <p className="text-xs max-w-xs mt-1">
-              Logged submittals must be verified before material procurement.
-            </p>
+          <div className="mt-4 space-y-3">
+            {Array.from({ length: 5 }, (_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
           </div>
+        ) : loadError ? (
+          <ErrorState
+            className="mt-4"
+            compact
+            title="Could not load submittals"
+            error={loadError}
+            onRetry={load}
+          />
+        ) : submittals.length === 0 ? (
+          <EmptyState
+            className="mt-4"
+            icon="fact_check"
+            title="No submittals logged"
+            description="Log the product and material samples the contractor sends for review — each one has to be approved here before procurement can start."
+            actionLabel="Log submittal"
+            onClick={() => setShowCreateModal(true)}
+          />
         ) : (
           <div className="overflow-x-auto mt-4">
             <table className="w-full text-left text-xs ">
@@ -369,7 +396,7 @@ export default function SubmittalsLog() {
                 onClick={() => handleReviewAction('revise_resubmit')}
                 className="btn-secondary text-xs text-error hover: py-1.5 px-4"
               >
-                Revise & Resubmit
+                {saving ? 'Saving…' : 'Revise & Resubmit'}
               </button>
               <button
                 disabled={saving}

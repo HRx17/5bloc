@@ -5,6 +5,8 @@ import Sidebar from './Sidebar'
 import TopNav from './TopNav'
 import NotificationsBell from './NotificationsBell'
 import { ToastProvider } from '@/components/ui/Toast'
+import { ConfirmProvider } from '@/components/ui/ConfirmProvider'
+import { PromptProvider } from '@/components/ui/PromptProvider'
 import { MessagesProvider } from '@/components/messages/MessagesProvider'
 
 interface AppShellProps {
@@ -34,6 +36,8 @@ export default function AppShell({ children, userProfile }: AppShellProps) {
 
   return (
     <ToastProvider>
+    <ConfirmProvider>
+    <PromptProvider>
     <MessagesProvider>
     <div
       className="flex h-screen w-screen overflow-hidden"
@@ -82,6 +86,8 @@ export default function AppShell({ children, userProfile }: AppShellProps) {
       </div>
     </div>
     </MessagesProvider>
+    </PromptProvider>
+    </ConfirmProvider>
     </ToastProvider>
   )
 }

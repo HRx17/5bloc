@@ -4,6 +4,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useToast } from '@/components/ui/Toast'
+import { useConfirm } from '@/components/ui/ConfirmProvider'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { Skeleton } from '@/components/ui/Skeleton'
 import { AutodeskViewer } from '@/components/integrations/AutodeskViewer'
 
 interface CadModel {
@@ -17,7 +20,9 @@ const STORAGE_KEY = '5bloc_cad_models'
 
 export default function CadViewerPage() {
   const { toast } = useToast()
+  const confirm = useConfirm()
   const [connected, setConnected]   = useState<boolean | null>(null)
+  const [statusError, setStatusError] = useState<unknown>(null)
   const [models, setModels]         = useState<CadModel[]>([])
   const [selected, setSelected]     = useState<string | null>(null)
   const [uploading, setUploading]   = useState(false)
@@ -25,12 +30,21 @@ export default function CadViewerPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const pollers = useRef<Record<string, ReturnType<typeof setInterval>>>({})
 
+  const loadStatus = useCallback(() => {
+    setStatusError(null)
+    setConnected(null)
+    fetch('/api/integrations/status')
+      .then(r => {
+        if (!r.ok) throw new Error('Could not check your Autodesk connection')
+        return r.json()
+      })
+      .then(({ connected }) => setConnected((connected ?? []).includes('autodesk')))
+      .catch(err => setStatusError(err))
+  }, [])
+
   // Load connection status + saved models
   useEffect(() => {
-    fetch('/api/integrations/status')
-      .then(r => r.json())
-      .then(({ connected }) => setConnected((connected ?? []).includes('autodesk')))
-      .catch(() => setConnected(false))
+    loadStatus()
 
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]') as CadModel[]
@@ -125,14 +139,56 @@ export default function CadViewerPage() {
     }
   }
 
-  const removeModel = (urn: string) => {
+  const removeModel = async (model: CadModel) => {
+    const ok = await confirm({
+      title: 'Remove this model?',
+      message: `${model.name} will be taken out of your viewer list. To see it again you would have to upload and re-translate the file.`,
+      confirmLabel: 'Remove',
+      variant: 'danger',
+    })
+    if (!ok) return
+    const urn = model.urn
     if (pollers.current[urn]) { clearInterval(pollers.current[urn]); delete pollers.current[urn] }
     const next = models.filter(m => m.urn !== urn)
     persist(next)
     if (selected === urn) setSelected(next[0]?.urn ?? null)
+    toast(`${model.name} removed from your models`, 'info')
   }
 
   const selectedModel = models.find(m => m.urn === selected)
+
+  // ── Connection check failed — do not pretend Autodesk is disconnected ──
+  if (statusError) {
+    return (
+      <div className="p-5 lg:p-7 max-w-[1240px] mx-auto">
+        <PageHeader />
+        <ErrorState
+          className="mt-6"
+          title="Could not check your Autodesk connection"
+          description="We cannot tell whether Autodesk is linked, so the viewer is on hold. Your models and connection are unaffected."
+          error={statusError}
+          onRetry={loadStatus}
+        />
+      </div>
+    )
+  }
+
+  // ── Checking connection ──
+  if (connected === null) {
+    return (
+      <div className="p-5 lg:p-7 max-w-[1240px] mx-auto">
+        <PageHeader />
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5 mt-6">
+          <div className="space-y-4">
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+          <Skeleton className="w-full" style={{ minHeight: 540 }} />
+        </div>
+      </div>
+    )
+  }
 
   // ── Not connected gate ──
   if (connected === false) {
@@ -199,7 +255,9 @@ export default function CadViewerPage() {
               Your Models
             </p>
             {models.length === 0 ? (
-              <p className="text-xs px-1 py-3" style={{ color: 'var(--stone)' }}>No models yet. Upload one to begin.</p>
+              <p className="text-xs px-1 py-3 leading-relaxed" style={{ color: 'var(--stone)' }}>
+                No models yet. Drop a DWG, RVT or IFC above — Autodesk translates it once, then it opens instantly here.
+              </p>
             ) : models.map(m => (
               <div key={m.urn}
                 onClick={() => m.status === 'ready' && setSelected(m.urn)}
@@ -222,7 +280,7 @@ export default function CadViewerPage() {
                     {m.status === 'translating' ? 'Translating…' : m.status === 'ready' ? 'Ready' : 'Failed'}
                   </p>
                 </div>
-                <button onClick={(e) => { e.stopPropagation(); removeModel(m.urn) }}
+                <button onClick={(e) => { e.stopPropagation(); void removeModel(m) }}
                   className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                   style={{ color: 'var(--stone)' }}>
                   <span className="material-icons-outlined text-[15px]">close</span>

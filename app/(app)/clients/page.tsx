@@ -1,48 +1,82 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { useToast } from '@/components/ui/Toast'
 
 const STAGES = ['prospect', 'briefing', 'proposal', 'won', 'lost'] as const
 
+const EMPTY_FORM = { full_name: '', email: '', company: '', city: '', phone: '' }
+
 export default function ClientsPage() {
+  const { toast } = useToast()
   const [clients, setClients] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<unknown>(null)
   const [view, setView] = useState<'table' | 'pipeline'>('pipeline')
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({ full_name: '', email: '', company: '', city: '', phone: '' })
-  const [error, setError] = useState('')
+  const [form, setForm] = useState(EMPTY_FORM)
+  const [saving, setSaving] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<{ full_name?: string; email?: string }>({})
 
-  const load = () =>
-    fetch('/api/clients')
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.error) setError(d.error)
-        setClients(d.clients || [])
-      })
-      .finally(() => setLoading(false))
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/clients')
+      const data = await res.json()
+      if (!res.ok || data.error) throw new Error(data.error || 'Failed to load contacts')
+      setClients(data.clients || [])
+    } catch (err) {
+      setError(err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     load()
-  }, [])
+  }, [load])
+
+  const openForm = () => {
+    setForm(EMPTY_FORM)
+    setFieldErrors({})
+    setShowForm(true)
+  }
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault()
-    const res = await fetch('/api/clients', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    })
-    const data = await res.json()
-    if (!res.ok) {
-      setError(data.error || 'Failed')
-      return
+    if (saving) return
+
+    const nextErrors: { full_name?: string; email?: string } = {}
+    if (!form.full_name.trim()) nextErrors.full_name = 'Enter the contact’s name.'
+    if (form.email.trim() && !/^\S+@\S+\.\S+$/.test(form.email.trim())) {
+      nextErrors.email = 'That does not look like an email address.'
     }
-    setShowForm(false)
-    setForm({ full_name: '', email: '', company: '', city: '', phone: '' })
-    load()
+    setFieldErrors(nextErrors)
+    if (Object.keys(nextErrors).length) return
+
+    setSaving(true)
+    try {
+      const res = await fetch('/api/clients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...form, full_name: form.full_name.trim(), email: form.email.trim() }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Could not save this contact')
+      setShowForm(false)
+      setForm(EMPTY_FORM)
+      toast(`${data.client?.full_name || form.full_name.trim()} added to your pipeline`, 'success')
+      await load()
+    } catch (err) {
+      toast(err instanceof Error ? err.message : 'Could not save this contact', 'error')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -58,13 +92,11 @@ export default function ClientsPage() {
           <button className="btn-secondary text-[12px]" onClick={() => setView(view === 'table' ? 'pipeline' : 'table')}>
             {view === 'table' ? 'Pipeline view' : 'Table view'}
           </button>
-          <button className="btn-primary text-[12px]" onClick={() => setShowForm(true)}>
+          <button className="btn-primary text-[12px]" onClick={openForm}>
             Add contact
           </button>
         </div>
       </div>
-
-      {error && <p className="text-sm" style={{ color: 'var(--error)' }}>{error}</p>}
 
       {loading ? (
         <div className="space-y-3">
@@ -75,40 +107,49 @@ export default function ClientsPage() {
             ))}
           </div>
         </div>
+      ) : error ? (
+        <ErrorState title="Could not load your contacts" error={error} onRetry={load} />
       ) : clients.length === 0 ? (
         <EmptyState
           icon="groups"
           title="No CRM contacts yet"
           description="Add a prospect or client contact to start tracking your firm pipeline."
           actionLabel="Add contact"
-          onClick={() => setShowForm(true)}
+          onClick={openForm}
         />
       ) : view === 'pipeline' ? (
         <div className="grid md:grid-cols-5 gap-3 overflow-x-auto">
-          {STAGES.map((stage) => (
-            <div key={stage} className="min-w-[160px]">
-              <p className="text-[11px] uppercase mb-2 capitalize" style={{ color: 'var(--stone)' }}>
-                {stage}
-              </p>
-              <div className="space-y-2">
-                {clients
-                  .filter((c) => c.pipeline_stage === stage)
-                  .map((c) => (
-                    <Link
-                      key={c.id}
-                      href={`/clients/${c.id}`}
-                      className="block p-3 rounded-xl"
-                      style={{ background: 'var(--surface-container)' }}
-                    >
-                      <p className="text-sm font-semibold">{c.full_name}</p>
-                      <p className="text-[11px]" style={{ color: 'var(--stone)' }}>
-                        {c.company || c.city || '—'}
-                      </p>
-                    </Link>
-                  ))}
+          {STAGES.map((stage) => {
+            const inStage = clients.filter((c) => c.pipeline_stage === stage)
+            return (
+              <div key={stage} className="min-w-[160px]">
+                <p className="text-[11px] uppercase mb-2 capitalize" style={{ color: 'var(--stone)' }}>
+                  {stage} ({inStage.length})
+                </p>
+                <div className="space-y-2">
+                  {inStage.length === 0 ? (
+                    <p className="text-[11px] p-3 rounded-xl" style={{ color: 'var(--stone)', background: 'var(--surface-container-low)' }}>
+                      Nobody at this stage.
+                    </p>
+                  ) : (
+                    inStage.map((c) => (
+                      <Link
+                        key={c.id}
+                        href={`/clients/${c.id}`}
+                        className="block p-3 rounded-xl"
+                        style={{ background: 'var(--surface-container)' }}
+                      >
+                        <p className="text-sm font-semibold">{c.full_name}</p>
+                        <p className="text-[11px]" style={{ color: 'var(--stone)' }}>
+                          {c.company || c.city || '—'}
+                        </p>
+                      </Link>
+                    ))
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       ) : (
         <div className="rounded-2xl overflow-x-auto" style={{ background: 'var(--surface-container)' }}>
@@ -139,16 +180,42 @@ export default function ClientsPage() {
 
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.55)' }}>
-          <form onSubmit={create} className="w-full max-w-md p-6 rounded-2xl space-y-3" style={{ background: 'var(--surface-container-high)' }}>
+          <form onSubmit={create} noValidate className="w-full max-w-md p-6 rounded-2xl space-y-3" style={{ background: 'var(--surface-container-high)' }}>
             <h3 className="font-semibold text-lg">Add CRM contact</h3>
-            <input className="input-5bloc" required placeholder="Full name" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
-            <input className="input-5bloc" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+            <div>
+              <input
+                className="input-5bloc"
+                placeholder="Full name *"
+                value={form.full_name}
+                onChange={(e) => {
+                  setForm({ ...form, full_name: e.target.value })
+                  setFieldErrors((prev) => ({ ...prev, full_name: undefined }))
+                }}
+              />
+              {fieldErrors.full_name && (
+                <p className="text-[11px] mt-1" style={{ color: 'var(--error)' }}>{fieldErrors.full_name}</p>
+              )}
+            </div>
+            <div>
+              <input
+                className="input-5bloc"
+                placeholder="Email"
+                value={form.email}
+                onChange={(e) => {
+                  setForm({ ...form, email: e.target.value })
+                  setFieldErrors((prev) => ({ ...prev, email: undefined }))
+                }}
+              />
+              {fieldErrors.email && (
+                <p className="text-[11px] mt-1" style={{ color: 'var(--error)' }}>{fieldErrors.email}</p>
+              )}
+            </div>
             <input className="input-5bloc" placeholder="Company" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} />
             <input className="input-5bloc" placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
             <input className="input-5bloc" placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
             <div className="flex justify-end gap-2">
-              <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
-              <button type="submit" className="btn-primary">Save</button>
+              <button type="button" className="btn-secondary" disabled={saving} onClick={() => setShowForm(false)}>Cancel</button>
+              <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Saving…' : 'Save'}</button>
             </div>
           </form>
         </div>

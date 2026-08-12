@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { UpgradePrompt } from '@/components/payments/UpgradePrompt'
+import { useToast } from '@/components/ui/Toast'
 
 interface LineItem {
  category: string
@@ -30,6 +31,7 @@ function normalizePlan(raw: unknown): 'free' | 'solo' | 'team' {
 }
 
 export default function AIEstimator() {
+ const { toast } = useToast()
  const [form, setForm] = useState({
  projectType: 'residential',
  city: 'Mumbai',
@@ -119,11 +121,11 @@ export default function AIEstimator() {
  if (!res.ok) {
  if (res.status === 402) {
  setNeedsUpgrade(true)
- alert(data.error || 'Upgrade required to use the AI estimator')
+ toast(data.error || 'Upgrade required to use the AI estimator', 'warning')
  return
  }
  if (res.status === 429) {
- alert(data.error || 'Daily estimate limit reached')
+ toast(data.error || 'Daily estimate limit reached — try again tomorrow', 'warning')
  setRemainingCalls(0)
  return
  }
@@ -143,7 +145,7 @@ export default function AIEstimator() {
  }
  } catch (err: any) {
  console.error(err)
- alert(err?.message || 'Estimate failed')
+ toast(err?.message || 'Could not generate the estimate. Try again.', 'error')
  } finally {
  setLoading(false)
  }
@@ -174,7 +176,7 @@ export default function AIEstimator() {
  const handleSaveToProject = async () => {
  if (!result) return
  if (!form.projectId) {
- alert('Select a project before saving')
+ toast('Pick a project to save this estimate to', 'warning')
  return
  }
  setSaving(true)
@@ -196,9 +198,10 @@ export default function AIEstimator() {
  })
  const data = await res.json()
  if (!res.ok) throw new Error(data.error || 'Save failed')
- alert(`Estimate saved to project (id ${data.estimate_id})`)
+ const projectName = projects.find((p) => p.id === form.projectId)?.name
+ toast(projectName ? `Estimate saved to ${projectName}` : 'Estimate saved to project', 'success')
  } catch (err: any) {
- alert(err?.message || 'Save failed')
+ toast(err?.message || 'Could not save the estimate. Try again.', 'error')
  } finally {
  setSaving(false)
  }
@@ -377,8 +380,10 @@ export default function AIEstimator() {
  disabled={loading || remainingCalls <= 0}
  className="w-full btn-primary py-3 font-bold mt-3 tracking-wider flex items-center justify-center gap-1.5"
  >
- <span className="material-icons-outlined text-[18px]">auto_awesome</span>
- GENERATE COST ESTIMATE
+ <span className={`material-icons-outlined text-[18px] ${loading ? 'animate-spin' : ''}`}>
+ {loading ? 'sync' : 'auto_awesome'}
+ </span>
+ {loading ? 'GENERATING ESTIMATE…' : remainingCalls <= 0 ? 'DAILY LIMIT REACHED' : 'GENERATE COST ESTIMATE'}
  </button>
  </form>
  </div>

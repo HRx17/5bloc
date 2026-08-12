@@ -1,9 +1,10 @@
 import { Suspense } from 'react'
 import Login from './LoginClient'
+import { AuthSkeleton } from '@/components/ui/AuthSkeleton'
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-canvas" />}>
+    <Suspense fallback={<AuthSkeleton />}>
       <Login />
     </Suspense>
   )

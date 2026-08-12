@@ -1,7 +1,12 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
+import { useToast } from '@/components/ui/Toast'
+import { useConfirm } from '@/components/ui/ConfirmProvider'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 interface PermitItem {
   id: string
@@ -16,60 +21,122 @@ interface PermitItem {
 export default function PermitsAndCompliance() {
   const params = useParams()
   const projectId = params.id as string
+  const { toast } = useToast()
+  const confirm = useConfirm()
 
   const [permits, setPermits] = useState<PermitItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<unknown>(null)
+  const [seeding, setSeeding] = useState(false)
+  const [updatingPermit, setUpdatingPermit] = useState<string | null>(null)
   const [selectedState, setSelectedState] = useState('Maharashtra')
   const [reraRegistered, setReraRegistered] = useState(true)
   const [reraNum, setReraNum] = useState('')
+  const [showChecklist, setShowChecklist] = useState(false)
 
-  useEffect(() => {
-    Promise.all([
-      fetch(`/api/projects/${projectId}/permits`).then((r) => r.json()),
-      fetch(`/api/projects/${projectId}`).then((r) => r.json()),
-    ])
-      .then(([p, proj]) => {
-        setPermits(p.permits || [])
-        const project = proj.project
-        if (project) {
-          setReraRegistered(!!project.is_rera_registered)
-          setReraNum(project.rera_number || '')
-          if (project.state) setSelectedState(project.state === 'MH' ? 'Maharashtra' : project.state)
-        }
-      })
-      .finally(() => setLoading(false))
+  const load = useCallback(async () => {
+    setLoading(true)
+    setLoadError(null)
+    try {
+      const [permitRes, projRes] = await Promise.all([
+        fetch(`/api/projects/${projectId}/permits`),
+        fetch(`/api/projects/${projectId}`),
+      ])
+      const p = await permitRes.json()
+      const proj = await projRes.json()
+      if (!permitRes.ok) throw new Error(p.error || 'Failed to load permits')
+      setPermits(p.permits || [])
+      const project = proj.project
+      if (projRes.ok && project) {
+        setReraRegistered(!!project.is_rera_registered)
+        setReraNum(project.rera_number || '')
+        if (project.state) setSelectedState(project.state === 'MH' ? 'Maharashtra' : project.state)
+      }
+    } catch (e) {
+      setLoadError(e)
+    } finally {
+      setLoading(false)
+    }
   }, [projectId])
 
-  const handleTogglePermitStatus = async (id: string, newStatus: PermitItem['status']) => {
-    const res = await fetch(`/api/projects/${projectId}/permits`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ permit_id: id, status: newStatus }),
-    })
-    if (!res.ok) return
-    setPermits((prev) => prev.map((p) => (p.id === id ? { ...p, status: newStatus } : p)))
+  useEffect(() => {
+    load()
+  }, [load])
+
+  const handleTogglePermitStatus = async (permit: PermitItem, newStatus: PermitItem['status']) => {
+    if (updatingPermit) return
+    if (
+      newStatus === 'approved' &&
+      !(await confirm({
+        title: 'Approve clearance',
+        message: `“${permit.approval_name}” will be recorded as approved by ${permit.authority}. Teams rely on this to release drawings for construction, and it cannot be reset from this screen.`,
+        confirmLabel: 'Mark approved',
+      }))
+    ) {
+      return
+    }
+    setUpdatingPermit(permit.id)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/permits`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ permit_id: permit.id, status: newStatus }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        toast(data.error || 'Could not update the permit status', 'error')
+        return
+      }
+      setPermits((prev) => prev.map((p) => (p.id === permit.id ? { ...p, status: newStatus } : p)))
+      toast(
+        newStatus === 'approved' ? `${permit.approval_name} approved` : `${permit.approval_name} marked as submitted`,
+        'success'
+      )
+    } catch (err: any) {
+      toast(err?.message || 'Could not update the permit status', 'error')
+    } finally {
+      setUpdatingPermit(null)
+    }
   }
 
   const seedDefaultPermits = async () => {
-    if (permits.length > 0) return
+    if (permits.length > 0 || seeding) return
     const defaults = [
       { approval_name: 'Municipal Building Sanction (IOD)', authority: 'Local Municipal Corporation', status: 'not_started' },
       { approval_name: 'Fire Department NOC', authority: 'State Fire Services', status: 'not_started' },
       { approval_name: 'RERA Promoter Registration', authority: 'State RERA', status: 'not_started' },
       { approval_name: 'Final Occupancy Certificate (OC)', authority: 'Municipal Commissioner', status: 'not_started' },
     ]
-    const created = []
-    for (const d of defaults) {
-      const res = await fetch(`/api/projects/${projectId}/permits`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(d),
-      })
-      const data = await res.json()
-      if (res.ok) created.push(data.permit)
+    setSeeding(true)
+    try {
+      const created = []
+      let failed = 0
+      for (const d of defaults) {
+        const res = await fetch(`/api/projects/${projectId}/permits`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(d),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (res.ok) created.push(data.permit)
+        else failed += 1
+      }
+      setPermits(created)
+      if (failed) toast(`${created.length} of ${defaults.length} permits added — the rest failed`, 'warning')
+      else toast('Standard clearance checklist added', 'success')
+    } catch (err: any) {
+      toast(err?.message || 'Could not seed the permit checklist', 'error')
+    } finally {
+      setSeeding(false)
     }
-    setPermits(created)
   }
+
+  const complianceChecklist = [
+    'Front margin: typically ≥ 4.5m under most municipal bye-laws',
+    'Base FSI often ~1.33, plus paid TDR where the authority allows it',
+    'Height usually capped near 24m without a special fire NOC',
+    'Rainwater harvesting commonly mandatory above a ~500 sqm plot',
+  ]
 
   const getStatusChipStyle = (st: PermitItem['status']) => {
     switch (st) {
@@ -114,14 +181,26 @@ export default function PermitsAndCompliance() {
             </div>
 
             {loading ? (
-              <div className="p-8 text-center text-stone animate-pulse">Loading compliance parameters...</div>
-            ) : permits.length === 0 ? (
-              <div className="py-10 text-center space-y-3">
-                <p className="text-sm text-stone">No permits logged yet.</p>
-                <button type="button" className="btn-primary text-xs" onClick={seedDefaultPermits}>
-                  Seed standard checklist
-                </button>
+              <div className="space-y-3">
+                {Array.from({ length: 4 }, (_, i) => (
+                  <Skeleton key={i} className="h-20 w-full" />
+                ))}
               </div>
+            ) : loadError ? (
+              <ErrorState
+                compact
+                title="Could not load the clearance checklist"
+                error={loadError}
+                onRetry={load}
+              />
+            ) : permits.length === 0 ? (
+              <EmptyState
+                icon="verified_user"
+                title="No approvals tracked yet"
+                description="Start from the four clearances almost every Indian project needs — building sanction, fire NOC, RERA registration and the occupancy certificate — then add authority-specific ones as they come up."
+                actionLabel={seeding ? 'Adding…' : 'Seed standard checklist'}
+                onClick={seedDefaultPermits}
+              />
             ) : (
               <div className="divide-y divide-navy-lt/30">
                 {permits.map(permit => (
@@ -148,18 +227,20 @@ export default function PermitsAndCompliance() {
                     <div className="flex gap-2 justify-end pt-1">
                       {permit.status !== 'approved' && (
                         <button
-                          onClick={() => handleTogglePermitStatus(permit.id, 'approved')}
-                          className="bg-success/10 hover:bg-success/20 text-success border border-success/30 px-2.5 py-1 text-[10px] font-mono font-bold uppercase transition"
+                          onClick={() => handleTogglePermitStatus(permit, 'approved')}
+                          disabled={updatingPermit === permit.id}
+                          className="bg-success/10 hover:bg-success/20 text-success border border-success/30 px-2.5 py-1 text-[10px] font-mono font-bold uppercase transition disabled:opacity-50"
                         >
-                          Approve Clearance
+                          {updatingPermit === permit.id ? 'Saving…' : 'Approve Clearance'}
                         </button>
                       )}
                       {permit.status !== 'pending' && permit.status !== 'approved' && (
                         <button
-                          onClick={() => handleTogglePermitStatus(permit.id, 'pending')}
-                          className="bg-amber/10 hover:bg-amber/20 text-amber border border-amber/30 px-2.5 py-1 text-[10px] font-mono font-bold uppercase transition"
+                          onClick={() => handleTogglePermitStatus(permit, 'pending')}
+                          disabled={updatingPermit === permit.id}
+                          className="bg-amber/10 hover:bg-amber/20 text-amber border border-amber/30 px-2.5 py-1 text-[10px] font-mono font-bold uppercase transition disabled:opacity-50"
                         >
-                          Mark as Submitted
+                          {updatingPermit === permit.id ? 'Saving…' : 'Mark as Submitted'}
                         </button>
                       )}
                     </div>
@@ -217,23 +298,30 @@ export default function PermitsAndCompliance() {
             </div>
 
             <button
-              onClick={() => {
-                const notes = [
-                  `${selectedState} zoning quick-check (reference only — verify with local authority)`,
-                  '• Front margin: typically ≥ 4.5m for many municipal bye-laws',
-                  '• Base FSI often ~1.33 (+ paid TDR where allowed)',
-                  '• Height often capped near 24m without special fire NOC',
-                  '• RWH commonly mandatory above ~500 sqm plot',
-                  '',
-                  'This check does not replace a licensed municipal submission.',
-                ].join('\n')
-                alert(notes)
-              }}
+              onClick={() => setShowChecklist((v) => !v)}
+              aria-expanded={showChecklist}
               className="w-full btn-primary py-2 text-xs font-bold flex items-center justify-center gap-1"
             >
               <span className="material-icons-outlined text-[15px]">verified_user</span>
-              SHOW COMPLIANCE CHECKLIST
+              {showChecklist ? 'HIDE COMPLIANCE CHECKLIST' : 'SHOW COMPLIANCE CHECKLIST'}
             </button>
+
+            {showChecklist && (
+              <div className="p-3.5 bg-navy/40 border space-y-2 animate-fade-in">
+                <h4 className="text-[11px] font-bold text-white font-mono">
+                  {selectedState} zoning quick-check
+                </h4>
+                <p className="text-[10px] text-stone font-mono">Reference only — verify with the local authority.</p>
+                <ul className="list-disc pl-4 space-y-1.5 text-[10px] text-stone leading-relaxed">
+                  {complianceChecklist.map((line) => (
+                    <li key={line}>{line}</li>
+                  ))}
+                </ul>
+                <p className="text-[10px] pt-1" style={{ color: 'var(--amber)' }}>
+                  This check does not replace a licensed municipal submission.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

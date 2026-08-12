@@ -1,9 +1,14 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { startInvoiceCheckout } from '@/lib/payments/checkout'
 import { useToast } from '@/components/ui/Toast'
+import { useConfirm } from '@/components/ui/ConfirmProvider'
+import { usePrompt } from '@/components/ui/PromptProvider'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 interface Invoice {
   id: string
@@ -40,12 +45,20 @@ export default function ProjectInvoices() {
   const params = useParams()
   const projectId = params.id as string
   const { toast } = useToast()
+  const confirm = useConfirm()
+  const prompt = usePrompt()
   const [payingInvoice, setPayingInvoice] = useState<string | null>(null)
 
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [consultantPayments, setConsultantPayments] = useState<ConsultantPayment[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<unknown>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [creatingInvoice, setCreatingInvoice] = useState(false)
+  const [savingExpense, setSavingExpense] = useState(false)
+  const [deletingExpense, setDeletingExpense] = useState<string | null>(null)
+  const [releasingPayment, setReleasingPayment] = useState<string | null>(null)
+  const [addingPayout, setAddingPayout] = useState(false)
   
   // Invoice Form state
   const [newInvoice, setNewInvoice] = useState({
@@ -79,144 +92,159 @@ export default function ProjectInvoices() {
   ]
   const totalCalc = calcSize * calcRate
 
-  useEffect(() => {
-    let cancelled = false
-    async function load() {
-      setLoading(true)
-      try {
-        const [invRes, expRes, payRes] = await Promise.all([
-          fetch(`/api/invoices?project_id=${projectId}`),
-          fetch(`/api/projects/${projectId}/expenses`),
-          fetch(`/api/projects/${projectId}/consultant-payments`),
-        ])
-        const invData = await invRes.json()
-        const expData = await expRes.json()
-        const payData = await payRes.json()
-        if (!invRes.ok) throw new Error(invData.error || 'Failed to load')
-        if (cancelled) return
-        setInvoices(
-          (invData.invoices || []).map((inv: any) => ({
-            id: inv.id,
-            invoice_number: inv.invoice_number,
-            client_name: inv.client_name,
-            project_name: inv.project_name,
-            subtotal: Number(inv.subtotal || 0),
-            total: Number(inv.total || 0),
-            status: inv.status,
-            due_date: inv.due_date || '',
-            milestone_label: inv.milestone_label || inv.phase || 'Fee installment',
+  const load = useCallback(async () => {
+    setLoading(true)
+    setLoadError(null)
+    try {
+      const [invRes, expRes, payRes] = await Promise.all([
+        fetch(`/api/invoices?project_id=${projectId}`),
+        fetch(`/api/projects/${projectId}/expenses`),
+        fetch(`/api/projects/${projectId}/consultant-payments`),
+      ])
+      const invData = await invRes.json()
+      const expData = await expRes.json()
+      const payData = await payRes.json()
+      if (!invRes.ok) throw new Error(invData.error || 'Failed to load invoices')
+      setInvoices(
+        (invData.invoices || []).map((inv: any) => ({
+          id: inv.id,
+          invoice_number: inv.invoice_number,
+          client_name: inv.client_name,
+          project_name: inv.project_name,
+          subtotal: Number(inv.subtotal || 0),
+          total: Number(inv.total || 0),
+          status: inv.status,
+          due_date: inv.due_date || '',
+          milestone_label: inv.milestone_label || inv.phase || 'Fee installment',
+        }))
+      )
+      if (expRes.ok) {
+        setExpenses(
+          (expData.expenses || []).map((e: any) => ({
+            id: e.id,
+            title: e.title,
+            category: e.category,
+            amount: Number(e.amount || 0),
+            date: e.date,
           }))
         )
-        if (expRes.ok) {
-          setExpenses(
-            (expData.expenses || []).map((e: any) => ({
-              id: e.id,
-              title: e.title,
-              category: e.category,
-              amount: Number(e.amount || 0),
-              date: e.date,
-            }))
-          )
-        }
-        if (payRes.ok) {
-          setConsultantPayments(
-            (payData.payments || []).map((p: any) => ({
-              id: p.id,
-              consultant_name: p.consultant_name,
-              discipline: p.discipline,
-              milestone_phase: p.milestone_phase || '',
-              amount: Number(p.amount || 0),
-              status: p.status,
-              due_date: p.due_date || '',
-              paid_date: p.paid_date || undefined,
-            }))
-          )
-        }
-      } catch {
-        if (!cancelled) setInvoices([])
-      } finally {
-        if (!cancelled) setLoading(false)
       }
-    }
-    load()
-    return () => {
-      cancelled = true
+      if (payRes.ok) {
+        setConsultantPayments(
+          (payData.payments || []).map((p: any) => ({
+            id: p.id,
+            consultant_name: p.consultant_name,
+            discipline: p.discipline,
+            milestone_phase: p.milestone_phase || '',
+            amount: Number(p.amount || 0),
+            status: p.status,
+            due_date: p.due_date || '',
+            paid_date: p.paid_date || undefined,
+          }))
+        )
+      }
+    } catch (e) {
+      setInvoices([])
+      setLoadError(e)
+    } finally {
+      setLoading(false)
     }
   }, [projectId])
 
+  useEffect(() => {
+    load()
+  }, [load])
+
   const handleCreateInvoice = async (e: React.FormEvent) => {
     e.preventDefault()
-    const res = await fetch('/api/invoices', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        project_id: projectId,
-        milestone_label: newInvoice.milestone_label,
-        subtotal: newInvoice.subtotal,
-        due_date: newInvoice.due_date || null,
-        status: 'draft',
-        is_interstate: false,
-      }),
-    })
-    const data = await res.json()
-    if (!res.ok) {
-      alert(data.error || 'Failed to create invoice')
-      return
+    if (creatingInvoice) return
+    setCreatingInvoice(true)
+    try {
+      const res = await fetch('/api/invoices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          project_id: projectId,
+          milestone_label: newInvoice.milestone_label,
+          subtotal: newInvoice.subtotal,
+          due_date: newInvoice.due_date || null,
+          status: 'draft',
+          is_interstate: false,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast(data.error || 'Failed to create the invoice', 'error')
+        return
+      }
+      const inv = data.invoice
+      setInvoices((prev) => [
+        {
+          id: inv.id,
+          invoice_number: inv.invoice_number,
+          client_name: inv.client_name,
+          project_name: inv.project_name,
+          subtotal: Number(inv.subtotal || 0),
+          total: Number(inv.total || 0),
+          status: inv.status,
+          due_date: inv.due_date || '',
+          milestone_label: inv.milestone_label || newInvoice.milestone_label,
+        },
+        ...prev,
+      ])
+      setShowCreateModal(false)
+      setNewInvoice({ milestone_label: 'Schematic Floor layouts approval', subtotal: 1200000, due_date: '' })
+      toast(`Invoice ${inv.invoice_number || ''} created as a draft`.replace('  ', ' '), 'success')
+    } catch (err: any) {
+      toast(err?.message || 'Failed to create the invoice', 'error')
+    } finally {
+      setCreatingInvoice(false)
     }
-    const inv = data.invoice
-    setInvoices((prev) => [
-      {
-        id: inv.id,
-        invoice_number: inv.invoice_number,
-        client_name: inv.client_name,
-        project_name: inv.project_name,
-        subtotal: Number(inv.subtotal || 0),
-        total: Number(inv.total || 0),
-        status: inv.status,
-        due_date: inv.due_date || '',
-        milestone_label: inv.milestone_label || newInvoice.milestone_label,
-      },
-      ...prev,
-    ])
-    setShowCreateModal(false)
-    setNewInvoice({ milestone_label: 'Schematic Floor layouts approval', subtotal: 1200000, due_date: '' })
   }
 
   const handleCreateExpense = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newExpense.title || !newExpense.amount) return
+    if (!newExpense.title || !newExpense.amount || savingExpense) return
     const amountVal = parseFloat(newExpense.amount) || 0
-    const res = await fetch(`/api/projects/${projectId}/expenses`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: newExpense.title,
-        category: newExpense.category,
-        amount: amountVal,
-        date: newExpense.date || new Date().toISOString().split('T')[0],
-      }),
-    })
-    const data = await res.json()
-    if (!res.ok) {
-      alert(data.error || 'Failed to save expense')
-      return
+    setSavingExpense(true)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/expenses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newExpense.title,
+          category: newExpense.category,
+          amount: amountVal,
+          date: newExpense.date || new Date().toISOString().split('T')[0],
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast(data.error || 'Failed to save the expense', 'error')
+        return
+      }
+      setExpenses((prev) => [
+        {
+          id: data.expense.id,
+          title: data.expense.title,
+          category: data.expense.category,
+          amount: Number(data.expense.amount || 0),
+          date: data.expense.date,
+        },
+        ...prev,
+      ])
+      setNewExpense({
+        title: '',
+        category: 'Site Travel',
+        amount: '',
+        date: new Date().toISOString().split('T')[0],
+      })
+      toast('Expense logged', 'success')
+    } catch (err: any) {
+      toast(err?.message || 'Failed to save the expense', 'error')
+    } finally {
+      setSavingExpense(false)
     }
-    setExpenses((prev) => [
-      {
-        id: data.expense.id,
-        title: data.expense.title,
-        category: data.expense.category,
-        amount: Number(data.expense.amount || 0),
-        date: data.expense.date,
-      },
-      ...prev,
-    ])
-    setNewExpense({
-      title: '',
-      category: 'Site Travel',
-      amount: '',
-      date: new Date().toISOString().split('T')[0],
-    })
   }
 
   const handleCollectPayment = async (inv: Invoice) => {
@@ -245,40 +273,71 @@ export default function ProjectInvoices() {
     }
   }
 
-  const handleDeleteExpense = async (id: string) => {
-    const res = await fetch(`/api/projects/${projectId}/expenses?expense_id=${encodeURIComponent(id)}`, {
-      method: 'DELETE',
+  const handleDeleteExpense = async (exp: Expense) => {
+    if (deletingExpense) return
+    const ok = await confirm({
+      title: 'Delete expense',
+      message: `“${exp.title}” (₹${exp.amount.toLocaleString()}) will be removed from the project expense log and from the profit calculation. This cannot be undone.`,
+      confirmLabel: 'Delete',
+      variant: 'danger',
     })
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}))
-      alert(data.error || 'Failed to delete expense')
-      return
+    if (!ok) return
+    setDeletingExpense(exp.id)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/expenses?expense_id=${encodeURIComponent(exp.id)}`, {
+        method: 'DELETE',
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        toast(data.error || 'Failed to delete the expense', 'error')
+        return
+      }
+      setExpenses((prev) => prev.filter((e) => e.id !== exp.id))
+      toast('Expense deleted', 'success')
+    } catch (err: any) {
+      toast(err?.message || 'Failed to delete the expense', 'error')
+    } finally {
+      setDeletingExpense(null)
     }
-    setExpenses((prev) => prev.filter((exp) => exp.id !== id))
   }
 
-  const handleMarkPaymentPaid = async (payId: string) => {
-    const res = await fetch(`/api/projects/${projectId}/consultant-payments`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ payment_id: payId, status: 'paid' }),
+  const handleMarkPaymentPaid = async (pay: ConsultantPayment) => {
+    if (releasingPayment) return
+    const ok = await confirm({
+      title: 'Release consultant payout',
+      message: `₹${pay.amount.toLocaleString()} to ${pay.consultant_name} will be recorded as paid and dated today. Paid payouts cannot be reopened from this screen.`,
+      confirmLabel: 'Mark paid',
     })
-    const data = await res.json()
-    if (!res.ok) {
-      alert(data.error || 'Failed to update payment')
-      return
-    }
-    setConsultantPayments((prev) =>
-      prev.map((p) =>
-        p.id === payId
-          ? {
-              ...p,
-              status: 'paid',
-              paid_date: data.payment?.paid_date || new Date().toISOString().split('T')[0],
-            }
-          : p
+    if (!ok) return
+    setReleasingPayment(pay.id)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/consultant-payments`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment_id: pay.id, status: 'paid' }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast(data.error || 'Failed to update the payout', 'error')
+        return
+      }
+      setConsultantPayments((prev) =>
+        prev.map((p) =>
+          p.id === pay.id
+            ? {
+                ...p,
+                status: 'paid',
+                paid_date: data.payment?.paid_date || new Date().toISOString().split('T')[0],
+              }
+            : p
+        )
       )
-    )
+      toast(`Payout to ${pay.consultant_name} marked paid`, 'success')
+    } catch (err: any) {
+      toast(err?.message || 'Failed to update the payout', 'error')
+    } finally {
+      setReleasingPayment(null)
+    }
   }
 
   const getInvoiceStatusStyle = (st: Invoice['status']) => {
@@ -396,9 +455,26 @@ export default function ProjectInvoices() {
             </div>
 
             {loading ? (
-              <div className="p-8 text-center text-stone animate-pulse">Loading billing logs...</div>
+              <div className="space-y-3">
+                {Array.from({ length: 4 }, (_, i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
+            ) : loadError ? (
+              <ErrorState
+                compact
+                title="Could not load the billing log"
+                error={loadError}
+                onRetry={load}
+              />
             ) : invoices.length === 0 ? (
-              <div className="py-12 text-center text-stone">No invoice records logged.</div>
+              <EmptyState
+                icon="receipt_long"
+                title="No fee invoices raised"
+                description="Raise an invoice against a milestone to bill the client. GST is calculated for you and the invoice can be collected online."
+                actionLabel="New invoice"
+                onClick={() => setShowCreateModal(true)}
+              />
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
@@ -492,6 +568,13 @@ export default function ProjectInvoices() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-navy-lt/30">
+                  {!loading && expenses.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="py-6 text-center text-[11px] text-stone">
+                        No expenses logged yet. Add travel, printing or municipal fees below to track them against project profit.
+                      </td>
+                    </tr>
+                  )}
                   {expenses.map(exp => (
                     <tr key={exp.id} className="hover:bg-navy-lt/20 transition-colors">
                       <td className="py-2.5 pl-2 font-mono text-stone">{exp.date}</td>
@@ -500,8 +583,9 @@ export default function ProjectInvoices() {
                       <td className="py-2.5 text-right font-mono text-white font-bold">{exp.amount.toLocaleString()}</td>
                       <td className="py-2.5 pr-2 text-right">
                         <button
-                          onClick={() => handleDeleteExpense(exp.id)}
-                          className="p-1 text-stone hover:text-error transition"
+                          onClick={() => handleDeleteExpense(exp)}
+                          disabled={deletingExpense === exp.id}
+                          className="p-1 text-stone hover:text-error transition disabled:opacity-40"
                           title="Delete Expense"
                         >
                           <span className="material-icons-outlined text-[15px]">delete</span>
@@ -557,8 +641,14 @@ export default function ProjectInvoices() {
                     className="input-5bloc py-1.5 text-xs font-mono"
                   />
                 </div>
-                <button type="submit" className="btn-primary py-1.5 px-3 shrink-0" style={{ height: '32px' }} title="Log Expense">
-                  <span className="material-icons-outlined text-[16px]">add</span>
+                <button
+                  type="submit"
+                  disabled={savingExpense}
+                  className="btn-primary py-1.5 px-3 shrink-0 disabled:opacity-50"
+                  style={{ height: '32px' }}
+                  title={savingExpense ? 'Saving expense…' : 'Log Expense'}
+                >
+                  <span className="material-icons-outlined text-[16px]">{savingExpense ? 'hourglass_empty' : 'add'}</span>
                 </button>
               </div>
             </form>
@@ -660,51 +750,90 @@ export default function ProjectInvoices() {
               </div>
               <button
                 type="button"
-                className="btn-secondary text-[10px] py-1 px-2"
+                className="btn-secondary text-[10px] py-1 px-2 disabled:opacity-50"
+                disabled={addingPayout}
                 onClick={async () => {
-                  const name = prompt('Consultant name')
-                  if (!name) return
-                  const amountStr = prompt('Amount (INR)', '50000')
-                  const amount = Number(amountStr)
-                  if (!Number.isFinite(amount)) return
-                  const res = await fetch(`/api/projects/${projectId}/consultant-payments`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      consultant_name: name,
-                      discipline: 'Structural',
-                      milestone_phase: 'Design Development',
-                      amount,
-                      status: 'pending',
-                    }),
+                  const values = await prompt({
+                    title: 'Add consultant payout',
+                    message: 'Records a fee owed to a consultant on this project. It is logged as pending until you mark it paid.',
+                    confirmLabel: 'Add payout',
+                    fields: [
+                      { name: 'consultant_name', label: 'Consultant', placeholder: 'e.g. Rao & Associates' },
+                      { name: 'discipline', label: 'Discipline', placeholder: 'e.g. Structural' },
+                      {
+                        name: 'amount',
+                        label: 'Amount (INR)',
+                        type: 'number',
+                        placeholder: '50000',
+                        validate: (v) =>
+                          Number.isFinite(Number(v)) && Number(v) > 0 ? null : 'Enter an amount greater than zero.',
+                      },
+                    ],
                   })
-                  const data = await res.json()
-                  if (!res.ok) {
-                    alert(data.error || 'Failed to add')
-                    return
+                  if (!values) return
+                  const name = values.consultant_name
+                  const amount = Number(values.amount)
+                  setAddingPayout(true)
+                  try {
+                    const res = await fetch(`/api/projects/${projectId}/consultant-payments`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        consultant_name: name,
+                        discipline: values.discipline,
+                        milestone_phase: 'Design Development',
+                        amount,
+                        status: 'pending',
+                      }),
+                    })
+                    const data = await res.json()
+                    if (!res.ok) {
+                      toast(data.error || 'Failed to add the payout', 'error')
+                      return
+                    }
+                    setConsultantPayments((prev) => [
+                      {
+                        id: data.payment.id,
+                        consultant_name: data.payment.consultant_name,
+                        discipline: data.payment.discipline,
+                        milestone_phase: data.payment.milestone_phase || '',
+                        amount: Number(data.payment.amount || 0),
+                        status: data.payment.status,
+                        due_date: data.payment.due_date || '',
+                      },
+                      ...prev,
+                    ])
+                    toast(`Payout to ${data.payment.consultant_name} added`, 'success')
+                  } catch (err: any) {
+                    toast(err?.message || 'Failed to add the payout', 'error')
+                  } finally {
+                    setAddingPayout(false)
                   }
-                  setConsultantPayments((prev) => [
-                    {
-                      id: data.payment.id,
-                      consultant_name: data.payment.consultant_name,
-                      discipline: data.payment.discipline,
-                      milestone_phase: data.payment.milestone_phase || '',
-                      amount: Number(data.payment.amount || 0),
-                      status: data.payment.status,
-                      due_date: data.payment.due_date || '',
-                    },
-                    ...prev,
-                  ])
                 }}
               >
-                Add payout
+                {addingPayout ? 'Adding…' : 'Add payout'}
               </button>
             </div>
 
             {loading ? (
-              <div className="p-8 text-center text-stone animate-pulse">Loading payout records...</div>
+              <div className="space-y-3">
+                {Array.from({ length: 2 }, (_, i) => (
+                  <Skeleton key={i} className="h-24 w-full" />
+                ))}
+              </div>
+            ) : loadError ? (
+              <ErrorState
+                compact
+                title="Could not load consultant payouts"
+                error={loadError}
+                onRetry={load}
+              />
             ) : consultantPayments.length === 0 ? (
-              <div className="py-12 text-center text-stone">No consultant payouts recorded.</div>
+              <EmptyState
+                icon="engineering"
+                title="No payouts scheduled"
+                description="Track what you owe structural, MEP and landscape consultants here so project profit reflects the fees going back out."
+              />
             ) : (
               <div className="space-y-4">
                 {consultantPayments.map(p => (
@@ -732,10 +861,11 @@ export default function ProjectInvoices() {
 
                     {p.status !== 'paid' ? (
                       <button
-                        onClick={() => handleMarkPaymentPaid(p.id)}
-                        className="w-full btn-secondary py-1 text-[11px] font-bold"
+                        onClick={() => handleMarkPaymentPaid(p)}
+                        disabled={releasingPayment === p.id}
+                        className="w-full btn-secondary py-1 text-[11px] font-bold disabled:opacity-50"
                       >
-                        MARK PAID & RELEASE
+                        {releasingPayment === p.id ? 'RELEASING…' : 'MARK PAID & RELEASE'}
                       </button>
                     ) : (
                       <div className="text-[10px] text-stone font-mono italic text-center py-1 bg-navy/25">
@@ -818,11 +948,16 @@ export default function ProjectInvoices() {
               </div>
 
               <div className="pt-4 border-t flex justify-end gap-3">
-                <button type="button" onClick={() => setShowCreateModal(false)} className="btn-secondary py-1.5 px-4 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  disabled={creatingInvoice}
+                  className="btn-secondary py-1.5 px-4 text-xs"
+                >
                   Cancel
                 </button>
-                <button type="submit" className="btn-primary py-1.5 px-6 text-xs font-bold">
-                  Generate Invoice
+                <button type="submit" disabled={creatingInvoice} className="btn-primary py-1.5 px-6 text-xs font-bold">
+                  {creatingInvoice ? 'Generating…' : 'Generate Invoice'}
                 </button>
               </div>
             </form>

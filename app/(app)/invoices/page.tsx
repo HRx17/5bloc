@@ -1,9 +1,12 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useCallback, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { useToast } from '@/components/ui/Toast'
+import { useConfirm } from '@/components/ui/ConfirmProvider'
 
 interface Invoice {
   id: string
@@ -17,36 +20,34 @@ interface Invoice {
   paid_at?: string
 }
 
+const money = (v?: number | null) => `₹${Number(v || 0).toLocaleString('en-IN')}`
+
 export default function InvoicesList() {
+  const { toast } = useToast()
+  const confirm = useConfirm()
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [toast, setToast] = useState('')
+  const [error, setError] = useState<unknown>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
 
-  const showToast = (msg: string) => {
-    setToast(msg)
-    window.setTimeout(() => setToast(''), 3200)
-  }
-
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true)
-    setError('')
+    setError(null)
     try {
       const res = await fetch('/api/invoices')
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to load invoices')
       setInvoices(data.invoices || [])
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e) {
+      setError(e)
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     load()
-  }, [])
+  }, [load])
 
   const getStatusStyle = (status: Invoice['status']): React.CSSProperties => {
     switch (status) {
@@ -65,44 +66,77 @@ export default function InvoicesList() {
     }
   }
 
-  const handleMarkPaid = async (invId: string) => {
-    const res = await fetch(`/api/invoices/${invId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: 'paid' }),
+  const handleMarkPaid = async (inv: Invoice) => {
+    if (busyId) return
+    const ok = await confirm({
+      title: `Mark ${inv.invoice_number} as paid?`,
+      message: `This records ${money(inv.total)} from ${
+        inv.client_name || 'this client'
+      } as collected and stops any overdue chasing. It does not take a payment.`,
+      confirmLabel: 'Mark paid',
     })
-    const data = await res.json()
-    if (!res.ok) {
-      setError(data.error || 'Could not mark paid')
-      return
-    }
-    setInvoices((prev) =>
-      prev.map((i) =>
-        i.id === invId
-          ? { ...i, status: 'paid', paid_at: data.invoice?.paid_at || new Date().toISOString() }
-          : i
+    if (!ok) return
+
+    setBusyId(inv.id)
+    try {
+      const res = await fetch(`/api/invoices/${inv.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'paid' }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Could not mark this invoice paid')
+      setInvoices((prev) =>
+        prev.map((i) =>
+          i.id === inv.id
+            ? { ...i, status: 'paid', paid_at: data.invoice?.paid_at || new Date().toISOString() }
+            : i
+        )
       )
-    )
-    showToast('Invoice marked paid')
+      toast(`${inv.invoice_number} marked paid`, 'success')
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Could not mark this invoice paid', 'error')
+    } finally {
+      setBusyId(null)
+    }
   }
 
   const handlePdf = (invId: string) => {
     window.open(`/api/invoices/${invId}/pdf`, '_blank', 'noopener,noreferrer')
   }
 
-  const handleSend = async (invId: string) => {
-    setBusyId(invId)
-    setError('')
+  const handleSend = async (inv: Invoice) => {
+    if (busyId) return
+    const ok = await confirm({
+      title: `Email ${inv.invoice_number} to the client?`,
+      message: `${
+        inv.client_name || 'The client'
+      } will receive this invoice for ${money(inv.total)} by email, and it will be marked as sent.`,
+      confirmLabel: 'Send invoice',
+    })
+    if (!ok) return
+
+    setBusyId(inv.id)
     try {
-      const res = await fetch(`/api/invoices/${invId}/send`, { method: 'POST' })
+      const res = await fetch(`/api/invoices/${inv.id}/send`, { method: 'POST' })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Send failed')
+      if (!res.ok) throw new Error(data.error || 'Could not send this invoice')
       setInvoices((prev) =>
-        prev.map((i) => (i.id === invId && i.status === 'draft' ? { ...i, status: 'sent' } : i))
+        prev.map((i) => (i.id === inv.id && i.status === 'draft' ? { ...i, status: 'sent' } : i))
       )
-      showToast(data.mock ? `Email queued (mock) to ${data.emailed_to}` : `Invoice sent to ${data.emailed_to}`)
-    } catch (e: any) {
-      setError(e.message || 'Send failed')
+      toast(
+        data.mock
+          ? `Email not actually delivered — no mail provider is configured. It would have gone to ${data.emailed_to}.`
+          : `Invoice sent to ${data.emailed_to}`,
+        data.mock ? 'warning' : 'success',
+        data.mock ? 8000 : undefined
+      )
+    } catch (e) {
+      toast(
+        e instanceof Error ? e.message : 'Could not send this invoice. Nothing was emailed — try again.',
+        'error',
+        6000
+      )
     } finally {
       setBusyId(null)
     }
@@ -130,20 +164,6 @@ export default function InvoicesList() {
           CREATE NEW INVOICE
         </Link>
       </div>
-
-      {error && (
-        <p className="text-sm" style={{ color: 'var(--error)' }}>
-          {error}
-        </p>
-      )}
-      {toast && (
-        <p
-          className="text-sm px-3 py-2 rounded-lg"
-          style={{ background: 'rgba(111,220,140,.12)', color: 'var(--success)' }}
-        >
-          {toast}
-        </p>
-      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         {[
@@ -191,11 +211,18 @@ export default function InvoicesList() {
             <Skeleton className="h-8 w-3/4" />
             <Skeleton className="h-8 w-full" />
           </div>
+        ) : error ? (
+          <ErrorState
+            title="Could not load your invoices"
+            error={error}
+            onRetry={load}
+            style={{ background: 'transparent' }}
+          />
         ) : invoices.length === 0 ? (
           <EmptyState
             icon="receipt_long"
-            title="No invoice records logged"
-            description="Generate your first fee invoice to release project milestone payments."
+            title="No invoices raised yet"
+            description="Raise your first fee invoice — GST is calculated for you and the invoice number is issued server-side."
             actionLabel="Create invoice"
             href="/invoices/new"
             style={{ background: 'transparent' }}
@@ -254,18 +281,19 @@ export default function InvoicesList() {
                           </button>
                           {inv.status !== 'paid' && inv.status !== 'cancelled' && (
                             <button
-                              onClick={() => handleSend(inv.id)}
-                              disabled={busyId === inv.id}
+                              onClick={() => handleSend(inv)}
+                              disabled={busyId !== null}
                               className="p-1 text-stone hover:text-blue hover:bg-navy-lt transition disabled:opacity-40"
-                              title="Send to client"
+                              title="Email to client"
                             >
                               <span className="material-icons-outlined text-[16px]">send</span>
                             </button>
                           )}
                           {inv.status !== 'paid' && (
                             <button
-                              onClick={() => handleMarkPaid(inv.id)}
-                              className="p-1 text-stone hover:text-success hover:bg-navy-lt transition"
+                              onClick={() => handleMarkPaid(inv)}
+                              disabled={busyId !== null}
+                              className="p-1 text-stone hover:text-success hover:bg-navy-lt transition disabled:opacity-40"
                               title="Mark Paid"
                             >
                               <span className="material-icons-outlined text-[16px]">check_circle</span>
