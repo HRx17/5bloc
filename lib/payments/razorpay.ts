@@ -19,6 +19,10 @@ export const PLANS = {
   ai:    process.env.RAZORPAY_PLAN_AI || 'plan_ai_mock',     // ₹1,499/mo add-on
 }
 
+export function isRazorpayConfigured(): boolean {
+  return !!razorpay
+}
+
 export async function createSubscription(planId: string, userId: string) {
   if (!razorpay) {
     console.log('Razorpay is not initialized. Simulating subscription creation.');
@@ -30,6 +34,49 @@ export async function createSubscription(planId: string, userId: string) {
     total_count: 120,
     notes: { user_id: userId },
   })
+}
+
+/** One-off order used to collect payment against a client invoice. */
+export async function createInvoiceOrder(opts: {
+  amountRupees: number
+  receipt: string
+  notes: Record<string, string>
+}) {
+  if (!razorpay) return null
+  return razorpay.orders.create({
+    // Razorpay works in the smallest currency unit
+    amount: Math.round(opts.amountRupees * 100),
+    currency: 'INR',
+    receipt: opts.receipt.slice(0, 40),
+    notes: opts.notes,
+  })
+}
+
+export async function fetchSubscription(subscriptionId: string) {
+  if (!razorpay || !subscriptionId || subscriptionId.startsWith('sub_mock_')) return null
+  try {
+    return await razorpay.subscriptions.fetch(subscriptionId)
+  } catch (err) {
+    console.error('Razorpay subscription fetch failed:', err)
+    return null
+  }
+}
+
+/** Cancels at the end of the paid period so the customer keeps what they paid for. */
+export async function cancelSubscription(subscriptionId: string, atCycleEnd = true) {
+  if (!razorpay) return null
+  return razorpay.subscriptions.cancel(subscriptionId, atCycleEnd)
+}
+
+export async function listSubscriptionInvoices(subscriptionId: string) {
+  if (!razorpay || !subscriptionId || subscriptionId.startsWith('sub_mock_')) return []
+  try {
+    const res: any = await razorpay.invoices.all({ subscription_id: subscriptionId, count: 12 })
+    return res?.items || []
+  } catch (err) {
+    console.error('Razorpay invoice list failed:', err)
+    return []
+  }
 }
 
 // Frontend checkout (use Razorpay JS SDK — NOT a redirect)

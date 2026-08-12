@@ -60,7 +60,7 @@ export const ROLES: Record<RoleKey, RoleDef> = {
     invitedOnly: true,
     canSelfRegister: false,
     createsOrg: false,
-    homePath: '/projects',
+    homePath: '/client',
   },
 }
 

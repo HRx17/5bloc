@@ -67,3 +67,46 @@ export async function startRazorpayCheckout(opts: StartCheckoutOpts): Promise<{ 
     rzp.open()
   })
 }
+
+/**
+ * Collects payment for a client invoice. The invoice is only marked paid once the
+ * Razorpay webhook confirms capture, so the caller should re-fetch afterwards.
+ */
+export async function startInvoiceCheckout(invoiceId: string): Promise<{ ok: boolean; message?: string }> {
+  const res = await fetch('/api/payments/invoice', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ invoice_id: invoiceId }),
+  })
+  const data = await res.json()
+  if (!res.ok) return { ok: false, message: data.error || 'Could not start the payment' }
+  if (data.mock) return { ok: false, message: data.message }
+
+  const loaded = await loadRazorpayScript()
+  if (!loaded || !(window as any).Razorpay) {
+    return { ok: false, message: 'Razorpay checkout script failed to load' }
+  }
+
+  return new Promise((resolve) => {
+    const rzp = new (window as any).Razorpay({
+      key: data.key_id,
+      order_id: data.order_id,
+      amount: data.amount,
+      currency: data.currency,
+      name: '5Bloc',
+      description: `Invoice ${data.invoice_number || ''}`.trim(),
+      image: '/icons/icon-192.png',
+      prefill: { email: data.email || '' },
+      theme: { color: '#F5A623' },
+      handler: () =>
+        resolve({
+          ok: true,
+          message: 'Payment received. The invoice is marked paid once Razorpay confirms it.',
+        }),
+      modal: {
+        ondismiss: () => resolve({ ok: false, message: 'Payment cancelled' }),
+      },
+    })
+    rzp.open()
+  })
+}

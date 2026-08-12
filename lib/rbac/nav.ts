@@ -92,6 +92,7 @@ const CLIENT_NAV: NavGroup[] = [
   {
     label: 'Workspace',
     items: [
+      { name: 'Home', path: '/client', icon: 'home' },
       { name: 'Projects', path: '/projects', icon: 'space_dashboard' },
     ],
   },

@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
+import { startInvoiceCheckout } from '@/lib/payments/checkout'
+import { useToast } from '@/components/ui/Toast'
 
 interface Invoice {
   id: string
@@ -37,6 +39,8 @@ interface Expense {
 export default function ProjectInvoices() {
   const params = useParams()
   const projectId = params.id as string
+  const { toast } = useToast()
+  const [payingInvoice, setPayingInvoice] = useState<string | null>(null)
 
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [consultantPayments, setConsultantPayments] = useState<ConsultantPayment[]>([])
@@ -213,6 +217,32 @@ export default function ProjectInvoices() {
       amount: '',
       date: new Date().toISOString().split('T')[0],
     })
+  }
+
+  const handleCollectPayment = async (inv: Invoice) => {
+    if (payingInvoice) return
+    setPayingInvoice(inv.id)
+    try {
+      const result = await startInvoiceCheckout(inv.id)
+      if (result.message) toast(result.message, result.ok ? 'success' : 'warning', 6000)
+      if (!result.ok) return
+
+      // Razorpay confirms capture over the webhook, so poll once for the settled status
+      setInvoices((prev) =>
+        prev.map((i) => (i.id === inv.id ? { ...i, status: i.status === 'draft' ? 'sent' : i.status } : i))
+      )
+      setTimeout(async () => {
+        const res = await fetch(`/api/invoices?project_id=${projectId}`)
+        if (!res.ok) return
+        const data = await res.json()
+        const fresh = (data.invoices || []).find((i: any) => i.id === inv.id)
+        if (fresh?.status) {
+          setInvoices((prev) => prev.map((i) => (i.id === inv.id ? { ...i, status: fresh.status } : i)))
+        }
+      }, 4000)
+    } finally {
+      setPayingInvoice(null)
+    }
   }
 
   const handleDeleteExpense = async (id: string) => {
@@ -400,13 +430,10 @@ export default function ProjectInvoices() {
                         <td className="py-4 pr-2 text-right">
                           <div className="flex gap-2 justify-end">
                             <button
-                              onClick={() =>
-                                alert(
-                                  'Online payment receipts require Razorpay keys. Invoice stays marked unpaid until webhook confirms payment.'
-                                )
-                              }
-                              className="p-1 text-stone hover:text-white hover:bg-navy-lt transition"
-                              title="Razorpay checkout info"
+                              onClick={() => handleCollectPayment(inv)}
+                              disabled={inv.status === 'paid' || payingInvoice === inv.id}
+                              className="p-1 text-stone hover:text-white hover:bg-navy-lt transition disabled:opacity-40"
+                              title={inv.status === 'paid' ? 'Already paid' : 'Collect payment online'}
                             >
                               <span className="material-icons-outlined text-[16px] text-blue">payments</span>
                             </button>

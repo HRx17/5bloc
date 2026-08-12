@@ -153,6 +153,9 @@ export async function PATCH(req: Request) {
   if (!body.bid_id || !body.status) {
     return NextResponse.json({ error: 'bid_id and status required' }, { status: 400 })
   }
+  if (!['shortlisted', 'accepted', 'rejected'].includes(body.status)) {
+    return NextResponse.json({ error: 'status must be shortlisted, accepted, or rejected' }, { status: 400 })
+  }
 
   if (shouldServeMockData(auth)) {
     const bid = MOCK_BIDS.find((b) => b.id === body.bid_id)
@@ -261,17 +264,20 @@ export async function PATCH(req: Request) {
         href: `/projects/${bid.tenders.project_id}`,
       })
     }
-  } else if (body.status === 'rejected') {
+  } else if (body.status === 'rejected' || body.status === 'shortlisted') {
     const { data: contractor } = await auth.supabase
       .from('contractors')
       .select('user_id')
       .eq('id', bid.contractor_id)
       .single()
     if (contractor?.user_id) {
+      const shortlisted = body.status === 'shortlisted'
       await notifyUser(auth.supabase, {
         userId: contractor.user_id,
-        title: 'Bid not selected',
-        body: `Your bid on ${bid.tenders?.title || 'a tender'} was not selected.`,
+        title: shortlisted ? 'Bid shortlisted' : 'Bid not selected',
+        body: shortlisted
+          ? `Your bid on ${bid.tenders?.title || 'a project'} was shortlisted.`
+          : `Your bid on ${bid.tenders?.title || 'a tender'} was not selected.`,
         type: 'bid',
         href: '/contractor/bids',
       })

@@ -29,17 +29,22 @@ export async function POST(req: Request) {
   const planId = PLANS[plan]
   const subscription = await createSubscription(planId, auth.profile.id)
 
-  if (
-    hasSupabaseEnv() &&
-    !auth.isMock &&
-    subscription?.id &&
-    !String(subscription.id).startsWith('sub_mock_') &&
-    plan === 'badge'
-  ) {
+  const persistable =
+    hasSupabaseEnv() && !auth.isMock && subscription?.id && !String(subscription.id).startsWith('sub_mock_')
+
+  if (persistable && plan === 'badge') {
     await auth.supabase
       .from('contractors')
       .update({ razorpay_subscription_id: subscription.id })
       .eq('user_id', auth.profile.id)
+  }
+
+  // Firm plans hang off the organisation so any co-worker sees the same subscription
+  if (persistable && (plan === 'solo' || plan === 'team') && auth.orgId) {
+    await auth.supabase
+      .from('organisations')
+      .update({ razorpay_subscription_id: subscription.id })
+      .eq('id', auth.orgId)
   }
 
   return NextResponse.json({

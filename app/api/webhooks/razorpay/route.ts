@@ -25,11 +25,13 @@ export async function POST(req: Request) {
 
   try {
     const event = JSON.parse(body)
-    const sub = event.payload.subscription?.entity
+    const sub = event.payload?.subscription?.entity
+    const payment = event.payload?.payment?.entity
     const userId = sub?.notes?.user_id
+    const invoiceId = payment?.notes?.invoice_id
 
-    if (!userId) {
-      return new Response('No user_id found in metadata notes', { status: 200 })
+    if (!userId && !invoiceId) {
+      return new Response('No user_id or invoice_id found in metadata notes', { status: 200 })
     }
 
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -44,6 +46,30 @@ export async function POST(req: Request) {
     }
 
     const supabase = createServiceRoleClient()
+
+    // Client invoice paid through the project billing screen
+    if (invoiceId && (event.event === 'payment.captured' || event.event === 'order.paid')) {
+      const { data: invoice } = await supabase
+        .from('invoices')
+        .select('id, status')
+        .eq('id', invoiceId)
+        .maybeSingle()
+
+      // Razorpay retries webhooks, so ignore anything already reconciled
+      if (invoice && invoice.status !== 'paid') {
+        await supabase
+          .from('invoices')
+          .update({
+            status: 'paid',
+            paid_at: new Date().toISOString(),
+            razorpay_payment_id: payment.id,
+          })
+          .eq('id', invoiceId)
+      }
+      return new Response('OK')
+    }
+
+    if (!userId) return new Response('OK')
 
     switch (event.event) {
       case 'subscription.activated':

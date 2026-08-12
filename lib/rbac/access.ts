@@ -25,6 +25,7 @@ const ROUTE_ROLES: Array<{ prefix: string; roles: RoleKey[] }> = [
   { prefix: '/contractor', roles: ['contractor'] },
   { prefix: '/builder', roles: ['builder'] },
   { prefix: '/consultant', roles: ['consultant'] },
+  { prefix: '/client', roles: ['client'] },
 ]
 
 export function allowedRolesForPath(pathname: string): RoleKey[] | null {

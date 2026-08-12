@@ -35,6 +35,7 @@ export default function Marketplace() {
   const [loading, setLoading] = useState(true)
   const [busyBid, setBusyBid] = useState<string | null>(null)
   const [award, setAward] = useState<{ bid: any; status: 'accepted' | 'rejected' } | null>(null)
+  const [shortlisting, setShortlisting] = useState<string | null>(null)
   const [rejectionNote, setRejectionNote] = useState('Not selected for this package')
 
   const isContractor = role === 'contractor'
@@ -114,6 +115,23 @@ export default function Marketplace() {
         : 'Bid rejected and the contractor was notified',
       'success'
     )
+    await load()
+  }
+
+  const shortlistBid = async (bid: any) => {
+    setShortlisting(bid.id)
+    const res = await fetch('/api/bids', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bid_id: bid.id, status: 'shortlisted' }),
+    })
+    const data = await res.json().catch(() => ({}))
+    setShortlisting(null)
+    if (!res.ok) {
+      toast(data.error || 'Could not shortlist this bid', 'error')
+      return
+    }
+    toast('Bid shortlisted — the contractor was notified', 'success')
     await load()
   }
 
@@ -324,7 +342,17 @@ export default function Marketplace() {
               <div key={b.id} className="p-5 rounded-2xl space-y-3" style={{ background: 'var(--surface-container)' }}>
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
                   <div>
-                    <p className="font-semibold">{b.tenders?.title || b.tender_title || 'Bid'}</p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold">{b.tenders?.title || b.tender_title || 'Bid'}</p>
+                      {b.status === 'shortlisted' && (
+                        <span
+                          className="chip text-[10px]"
+                          style={{ color: 'var(--amber)', background: 'rgba(245,166,35,0.12)' }}
+                        >
+                          Shortlisted
+                        </span>
+                      )}
+                    </div>
                     <p className="text-[12px] mt-1" style={{ color: 'var(--stone)' }}>
                       {b.contractors?.company_name || 'Contractor'} · {money(b.amount)} ·{' '}
                       {b.timeline_weeks ? `${b.timeline_weeks} weeks` : 'Timeline not stated'}
@@ -347,6 +375,15 @@ export default function Marketplace() {
                     )}
                   </div>
                   <div className="flex gap-2 shrink-0">
+                    {b.status !== 'shortlisted' && (
+                      <button
+                        className="btn-secondary text-[12px]"
+                        disabled={shortlisting === b.id}
+                        onClick={() => shortlistBid(b)}
+                      >
+                        {shortlisting === b.id ? 'Saving…' : 'Shortlist'}
+                      </button>
+                    )}
                     <button
                       className="btn-primary text-[12px]"
                       disabled={busyBid === b.id}

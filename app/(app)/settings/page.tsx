@@ -1,11 +1,12 @@
 'use client'
 
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { startRazorpayCheckout } from '@/lib/payments/checkout'
 import { billingForRole, BILLING_ROLES } from '@/lib/payments/plans'
 import { isRoleKey, type RoleKey } from '@/lib/rbac/roles'
 import { useToast } from '@/components/ui/Toast'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { fileToAvatarDataUrl } from '@/lib/images/avatar'
 
 interface OrgMember {
   id: string
@@ -26,6 +27,21 @@ type PaymentMethod = {
   is_default: boolean
 }
 
+type Subscription = {
+  id: string
+  status: string
+  current_end: string | null
+  cancelled_at_cycle_end: boolean
+}
+
+type BillingHistoryItem = {
+  id: string
+  amount: number | null
+  status: string
+  paid_at: string | null
+  receipt_url: string | null
+}
+
 type TabId = 'profile' | 'organisation' | 'team' | 'billing' | 'notifications' | 'integrations'
 
 const ALL_TABS: { id: TabId; label: string; icon: string; roles: RoleKey[] }[] = [
@@ -36,6 +52,12 @@ const ALL_TABS: { id: TabId; label: string; icon: string; roles: RoleKey[] }[] =
   { id: 'notifications', label: 'Notifications', icon: 'notifications', roles: ['architect', 'contractor', 'builder', 'consultant', 'client'] },
   { id: 'integrations', label: 'Integrations', icon: 'sync_alt', roles: ['architect'] },
 ]
+
+function initials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return '👤'
+  return (parts[0][0] + (parts[1]?.[0] || '')).toUpperCase()
+}
 
 function cardBrand(number: string) {
   const n = number.replace(/\D/g, '')
@@ -53,6 +75,8 @@ export default function Settings() {
   const [hydrated, setHydrated] = useState(false)
 
   const [profile, setProfile] = useState({ name: '', email: '', phone: '', avatar: '' })
+  const avatarInputRef = useRef<HTMLInputElement>(null)
+  const [avatarBusy, setAvatarBusy] = useState(false)
   const [org, setOrg] = useState({ name: '', logo: '', gst: '', city: '', address: '' })
   const [planKey, setPlanKey] = useState('free')
   const [aiAddOn, setAiAddOn] = useState(false)
@@ -63,6 +87,11 @@ export default function Settings() {
   const [teamBusy, setTeamBusy] = useState(false)
   const [billingBusy, setBillingBusy] = useState(false)
   const [removeMember, setRemoveMember] = useState<OrgMember | null>(null)
+
+  const [subscription, setSubscription] = useState<Subscription | null>(null)
+  const [history, setHistory] = useState<BillingHistoryItem[]>([])
+  const [cancelOpen, setCancelOpen] = useState(false)
+  const [cancelBusy, setCancelBusy] = useState(false)
 
   const [methods, setMethods] = useState<PaymentMethod[]>([])
   const [methodBusy, setMethodBusy] = useState(false)
@@ -111,6 +140,14 @@ export default function Settings() {
     setMethods(d.methods || [])
   }
 
+  const loadSubscription = async () => {
+    const res = await fetch('/api/payments/subscription')
+    if (!res.ok) return
+    const d = await res.json()
+    setSubscription(d.subscription || null)
+    setHistory(d.history || [])
+  }
+
   useEffect(() => {
     fetch('/api/me')
       .then((r) => r.json())
@@ -151,7 +188,10 @@ export default function Settings() {
           setPlanKey(me?.badge_active ? 'badge' : 'free')
         }
 
-        if (BILLING_ROLES.includes(resolvedRole)) loadMethods().catch(() => {})
+        if (BILLING_ROLES.includes(resolvedRole)) {
+          loadMethods().catch(() => {})
+          loadSubscription().catch(() => {})
+        }
 
         // Deep links like /settings?tab=billing
         const requested = new URLSearchParams(window.location.search).get('tab') as TabId | null
@@ -160,6 +200,39 @@ export default function Settings() {
       })
       .finally(() => setHydrated(true))
   }, [])
+
+  const saveAvatar = async (dataUrl: string | null) => {
+    setAvatarBusy(true)
+    try {
+      const res = await fetch('/api/me', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatar_url: dataUrl }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Could not save avatar')
+      setProfile((prev) => ({ ...prev, avatar: dataUrl || '' }))
+      toast(dataUrl ? 'Avatar updated' : 'Avatar removed', 'success')
+    } catch (err: any) {
+      toast(err?.message || 'Could not save avatar', 'error')
+    } finally {
+      setAvatarBusy(false)
+    }
+  }
+
+  const handleAvatarPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setAvatarBusy(true)
+    try {
+      const dataUrl = await fileToAvatarDataUrl(file)
+      await saveAvatar(dataUrl)
+    } catch (err: any) {
+      toast(err?.message || 'Could not read that image', 'error')
+      setAvatarBusy(false)
+    }
+  }
 
   const handleProfileSave = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -240,6 +313,20 @@ export default function Settings() {
     } finally {
       setBillingBusy(false)
     }
+  }
+
+  const confirmCancelSubscription = async () => {
+    setCancelBusy(true)
+    const res = await fetch('/api/payments/subscription', { method: 'DELETE' })
+    const data = await res.json().catch(() => ({}))
+    setCancelBusy(false)
+    setCancelOpen(false)
+    if (!res.ok) {
+      toast(data.error || 'Could not cancel the subscription', 'error')
+      return
+    }
+    toast(data.message || 'Subscription cancelled', 'success', 6000)
+    await loadSubscription()
   }
 
   const addMethod = async (e: React.FormEvent) => {
@@ -324,6 +411,9 @@ export default function Settings() {
     })
   }
 
+  const formatDate = (iso: string | null) =>
+    iso ? new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'
+
   const methodLabel = (m: PaymentMethod) =>
     m.kind === 'upi'
       ? m.upi_vpa || 'UPI'
@@ -365,6 +455,50 @@ export default function Settings() {
             <div className="card-5bloc space-y-6">
               <h3 className="text-sm font-semibold text-amber pb-2.5">User Profile</h3>
               <form onSubmit={handleProfileSave} className="space-y-4">
+                <div className="flex items-center gap-4 pb-2">
+                  <div
+                    className="w-14 h-14 border flex items-center justify-center font-bold text-lg text-amber overflow-hidden bg-navy-lt"
+                    style={{ borderRadius: '50%' }}
+                  >
+                    {profile.avatar ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={profile.avatar} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      initials(profile.name)
+                    )}
+                  </div>
+                  <div>
+                    <input
+                      ref={avatarInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      onChange={handleAvatarPick}
+                    />
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={avatarBusy}
+                        onClick={() => avatarInputRef.current?.click()}
+                        className="btn-secondary py-1 px-3 text-xs"
+                      >
+                        {avatarBusy ? 'Uploading…' : 'Upload avatar'}
+                      </button>
+                      {profile.avatar && (
+                        <button
+                          type="button"
+                          disabled={avatarBusy}
+                          onClick={() => saveAvatar(null)}
+                          className="text-[11px] text-stone hover:text-error"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-stone mt-1">PNG, JPG, or WebP. Cropped to a square automatically.</p>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-stone text-xs font-medium mb-1.5">Full Name *</label>
@@ -556,9 +690,32 @@ export default function Settings() {
 
           {activeTab === 'billing' && (
             <div className="space-y-6">
-              <div className="card-5bloc space-y-2">
+              <div className="card-5bloc space-y-3">
                 <h3 className="text-sm font-semibold text-amber">{billing.heading}</h3>
                 <p className="text-[11px] text-stone leading-relaxed">{billing.blurb}</p>
+
+                {subscription && (
+                  <div
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-3 py-2.5 rounded-xl"
+                    style={{ background: 'var(--surface-container-low)' }}
+                  >
+                    <div>
+                      <p className="text-xs font-medium capitalize">Subscription {subscription.status}</p>
+                      <p className="text-[11px]" style={{ color: 'var(--stone)' }}>
+                        {subscription.cancelled_at_cycle_end
+                          ? `Ends on ${formatDate(subscription.current_end)} — no further charges.`
+                          : subscription.current_end
+                            ? `Renews on ${formatDate(subscription.current_end)}.`
+                            : 'Renewal date unavailable.'}
+                      </p>
+                    </div>
+                    {!subscription.cancelled_at_cycle_end && subscription.status !== 'cancelled' && (
+                      <button className="btn-secondary py-1.5 px-4 text-xs" onClick={() => setCancelOpen(true)}>
+                        Cancel subscription
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
 
               {billing.showsPlans && (
@@ -782,6 +939,44 @@ export default function Settings() {
                   </div>
                 )}
               </div>
+
+              {history.length > 0 && (
+                <div className="card-5bloc space-y-3">
+                  <div>
+                    <h3 className="text-sm font-semibold text-amber">Billing history</h3>
+                    <p className="text-[11px] text-stone mt-0.5">Receipts for your last twelve charges.</p>
+                  </div>
+                  <div className="space-y-2">
+                    {history.map((h) => (
+                      <div
+                        key={h.id}
+                        className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl"
+                        style={{ background: 'var(--surface-container-low)' }}
+                      >
+                        <div>
+                          <p className="text-xs font-medium">
+                            {h.amount != null ? `₹${h.amount.toLocaleString('en-IN')}` : '—'}
+                          </p>
+                          <p className="text-[11px] capitalize" style={{ color: 'var(--stone)' }}>
+                            {h.status} · {formatDate(h.paid_at)}
+                          </p>
+                        </div>
+                        {h.receipt_url && (
+                          <a
+                            href={h.receipt_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[11px]"
+                            style={{ color: 'var(--amber)' }}
+                          >
+                            View receipt
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -843,6 +1038,22 @@ export default function Settings() {
         loading={teamBusy}
         onConfirm={confirmRemoveTeam}
         onCancel={() => setRemoveMember(null)}
+      />
+
+      <ConfirmDialog
+        open={cancelOpen}
+        title="Cancel subscription?"
+        message={
+          subscription?.current_end
+            ? `Your plan stays active until ${formatDate(subscription.current_end)}, then drops to the free tier with no further charges.`
+            : 'Your plan will drop to the free tier at the end of the current billing period.'
+        }
+        confirmLabel="Cancel subscription"
+        cancelLabel="Keep plan"
+        variant="danger"
+        loading={cancelBusy}
+        onConfirm={confirmCancelSubscription}
+        onCancel={() => setCancelOpen(false)}
       />
 
       <ConfirmDialog

@@ -24,6 +24,18 @@ export async function PATCH(req: Request) {
   }
 
 
+  if ('avatar_url' in body && body.avatar_url) {
+    const value = String(body.avatar_url)
+    const isHttp = /^https?:\/\//i.test(value)
+    const isInlineImage = /^data:image\/(png|jpeg|jpg|webp);base64,/i.test(value)
+    if (!isHttp && !isInlineImage) {
+      return NextResponse.json({ error: 'Unsupported avatar format' }, { status: 400 })
+    }
+    if (isInlineImage && value.length > 300_000) {
+      return NextResponse.json({ error: 'Avatar is too large. Use an image under 2MB.' }, { status: 413 })
+    }
+  }
+
   const updates: Record<string, unknown> = {}
   for (const key of allowed) {
     if (key in body) updates[key] = body[key]
