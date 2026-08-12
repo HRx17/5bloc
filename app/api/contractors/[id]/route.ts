@@ -34,9 +34,21 @@ export async function GET(_req: Request, ctx: Ctx) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   if (!data) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
+  // Architects need a contact address to send a project invitation
+  let contactEmail: string | null = null
+  if (auth.profile.role === 'architect' && data.user_id) {
+    const { data: owner } = await auth.supabase
+      .from('profiles')
+      .select('email')
+      .eq('id', data.user_id)
+      .maybeSingle()
+    contactEmail = owner?.email || null
+  }
+
   return NextResponse.json({
     contractor: {
       ...data,
+      contact_email: contactEmail,
       portfolio: (data.portfolio_photos || []).map((url: string, i: number) => ({
         title: `Project ${i + 1}`,
         image: url || null,

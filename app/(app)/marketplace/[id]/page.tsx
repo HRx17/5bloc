@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useToast } from '@/components/ui/Toast'
 
 interface ContractorDetail {
  id: string
@@ -19,17 +20,21 @@ interface ContractorDetail {
  website: string
  portfolio: { title: string; image: string }[]
  reviews: { clientName: string; rating: number; text: string; date: string }[]
+ contact_email?: string | null
 }
 
 export default function ContractorProfile() {
  const params = useParams()
  const router = useRouter()
+ const { toast } = useToast()
  const contractorId = params.id as string
 
  const [contractor, setContractor] = useState<ContractorDetail | null>(null)
  const [activeTab, setActiveTab] = useState<'about' | 'portfolio' | 'reviews'>('about')
  const [projects, setProjects] = useState<{ id: string; name: string }[]>([])
  const [selectedProjectId, setSelectedProjectId] = useState('')
+ const [role, setRole] = useState('architect')
+ const [inviting, setInviting] = useState(false)
 
  useEffect(() => {
  fetch(`/api/contractors/${contractorId}`)
@@ -55,6 +60,7 @@ export default function ContractorProfile() {
  website: c.website || '',
  portfolio: c.portfolio || [],
  reviews: c.reviews || [],
+ contact_email: c.contact_email || null,
  })
  })
  }, [contractorId])
@@ -67,7 +73,39 @@ export default function ContractorProfile() {
  setProjects(list.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })))
  })
  .catch(() => setProjects([]))
+ fetch('/api/me')
+ .then((r) => r.json())
+ .then((d) => setRole(d.profile?.role || 'architect'))
+ .catch(() => {})
  }, [])
+
+ const sendInvite = async () => {
+ if (!contractor || !selectedProjectId || inviting) return
+ if (!contractor.contact_email) {
+ toast('This vendor has no contact email on file. Post the project for open bidding instead.', 'warning', 6000)
+ return
+ }
+ setInviting(true)
+ try {
+ const res = await fetch('/api/invites', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({
+ project_id: selectedProjectId,
+ email: contractor.contact_email,
+ role: 'contractor',
+ }),
+ })
+ const data = await res.json()
+ if (!res.ok) throw new Error(data.error || 'Invite failed')
+ toast(`Invitation sent to ${contractor.company_name}`, 'success')
+ router.push(`/projects/${selectedProjectId}/team`)
+ } catch (err: any) {
+ toast(err?.message || 'Invite failed', 'error')
+ } finally {
+ setInviting(false)
+ }
+ }
 
  if (!contractor) {
  return (
@@ -217,10 +255,11 @@ export default function ContractorProfile() {
  </div>
 
  {/* Sidebar invitation (Right Col Span 1) */}
+ {role === 'architect' && (
  <div className="card-5bloc space-y-4">
  <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-amber border-b pb-2">Invite Contractor</h3>
  <p className="text-xs text-stone leading-relaxed">
- Invite this contractor to bid on your active projects. They will be notified via email and receive draft access to files.
+ Invite this contractor into a project workspace. They get an email invite and coordination access once they accept.
  </p>
  <div className="space-y-3.5 pt-2">
  <div>
@@ -236,23 +275,17 @@ export default function ContractorProfile() {
  ))}
  </select>
  </div>
- 
+
  <button
- onClick={() => {
- if (!selectedProjectId) {
- alert('Select a project first')
- return
- }
- alert(`Invitation sent successfully to ${contractor.company_name}`)
- router.push('/marketplace')
- }}
+ onClick={sendInvite}
  className="w-full btn-primary py-2.5 text-xs font-bold"
- disabled={!selectedProjectId}
+ disabled={!selectedProjectId || inviting}
  >
- SEND DIRECT INVITATION
+ {inviting ? 'SENDING…' : 'SEND DIRECT INVITATION'}
  </button>
  </div>
  </div>
+ )}
 
  </div>
  </div>
