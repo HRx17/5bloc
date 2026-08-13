@@ -34,6 +34,7 @@ export default function RFILog() {
  const [showCreateModal, setShowCreateModal] = useState(false)
  const [activeRfi, setActiveRfi] = useState<RFIItem | null>(null)
  const [emailComposerData, setEmailComposerData] = useState<{ to: string; subject: string; defaultBody: string } | null>(null)
+ const [members, setMembers] = useState<{ full_name?: string; invite_email?: string; email?: string; role?: string }[]>([])
  
  // Create Form State
  const [newRfi, setNewRfi] = useState({
@@ -50,13 +51,33 @@ export default function RFILog() {
  const [aiDrafting, setAiDrafting] = useState(false)
  const [aiDraftText, setAiDraftText] = useState('')
 
+ const appOrigin =
+   (typeof window !== 'undefined' && window.location.origin) ||
+   process.env.NEXT_PUBLIC_APP_URL ||
+   ''
+
+ const resolveAssigneeEmail = (assignedTo: string) => {
+   const needle = (assignedTo || '').trim().toLowerCase()
+   if (!needle || needle === '—') return ''
+   if (needle.includes('@')) return assignedTo.trim()
+   const match = members.find((m) => {
+     const name = (m.full_name || '').toLowerCase()
+     const role = (m.role || '').toLowerCase()
+     return name === needle || name.includes(needle) || role === needle || needle.includes(role)
+   })
+   return match?.email || match?.invite_email || ''
+ }
+
  const load = useCallback(async () => {
  setLoading(true)
  setLoadError(null)
  try {
- const res = await fetch(`/api/projects/${projectId}/rfis`)
- const d = await res.json()
- if (!res.ok) throw new Error(d.error || 'Failed to load the RFI log')
+ const [rfiRes, memberRes] = await Promise.all([
+   fetch(`/api/projects/${projectId}/rfis`),
+   fetch(`/api/projects/${projectId}/members`),
+ ])
+ const d = await rfiRes.json()
+ if (!rfiRes.ok) throw new Error(d.error || 'Failed to load the RFI log')
  setRfis(
  (d.rfis || []).map((r: any) => ({
  id: r.id,
@@ -73,6 +94,10 @@ export default function RFILog() {
  scope_change_amount: r.scope_change_amount,
  }))
  )
+ if (memberRes.ok) {
+   const md = await memberRes.json()
+   setMembers(md.members || [])
+ }
  } catch (e) {
  setLoadError(e)
  } finally {
@@ -469,18 +494,29 @@ export default function RFILog() {
  </div>
  <div className="flex items-center gap-2 mt-3">
  <button
- onClick={() => setEmailComposerData({
- to: activeRfi.assigned_to.includes('Architect') ? 'parth@5bloc.com' : 'contractor@5bloc.com',
- subject: `Action Required: RFI #${activeRfi.rfi_number} - ${activeRfi.title}`,
- defaultBody: `Hi ${activeRfi.assigned_to},\n\nPlease review RFI #${activeRfi.rfi_number}: "${activeRfi.title}".\nDescription: ${activeRfi.description}\nDue Date: ${activeRfi.due_date}\n\nLink: http://app.5bloc.com/projects/${projectId}/rfis`
- })}
+ onClick={() => {
+   const to = resolveAssigneeEmail(activeRfi.assigned_to)
+   const link = `${appOrigin}/projects/${projectId}/rfis`
+   if (!to) {
+     toast(
+       `No email on file for “${activeRfi.assigned_to}”. Invite them on the Team tab, or type their address in the composer.`,
+       'warning',
+       7000
+     )
+   }
+   setEmailComposerData({
+     to,
+     subject: `Action Required: RFI #${activeRfi.rfi_number} - ${activeRfi.title}`,
+     defaultBody: `Hi ${activeRfi.assigned_to},\n\nPlease review RFI #${activeRfi.rfi_number}: "${activeRfi.title}".\nDescription: ${activeRfi.description}\nDue Date: ${activeRfi.due_date || '—'}\n\nOpen in 5Bloc: ${link}`,
+   })
+ }}
  className="btn-secondary py-1.5 px-3 text-xs"
  >
  <span className="material-icons-outlined text-[15px]">mail</span>
  Email Assignee
  </button>
  <a
- href={`https://wa.me/?text=${encodeURIComponent(`RFI Alert: Project ID: ${projectId}\nRFI #${activeRfi.rfi_number} - ${activeRfi.title}\nDue: ${activeRfi.due_date}\nAssigned: ${activeRfi.assigned_to}\nDetails: http://app.5bloc.com/projects/${projectId}/rfis`)}`}
+ href={`https://wa.me/?text=${encodeURIComponent(`RFI Alert\nRFI #${activeRfi.rfi_number} - ${activeRfi.title}\nDue: ${activeRfi.due_date || '—'}\nAssigned: ${activeRfi.assigned_to}\nDetails: ${appOrigin}/projects/${projectId}/rfis`)}`}
  target="_blank" rel="noopener noreferrer"
  className="btn-secondary py-1.5 px-3 text-xs"
  >

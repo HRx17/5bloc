@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useToast } from '@/components/ui/Toast'
@@ -18,6 +18,8 @@ const PHASE_LABELS: Record<string, string> = {
   complete: 'Close Out & Handover',
 }
 
+const FIRST_STEPS_DISMISS_KEY = (id: string) => `project_first_steps_dismissed_${id}`
+
 interface PhaseMilestone {
   id?: string
   phase: string
@@ -28,6 +30,12 @@ interface PhaseMilestone {
   paid: boolean
   reraCertified: boolean
   notes: string
+}
+
+type FirstStep = {
+  id: string
+  title: string
+  href: string
 }
 
 export default function ProjectOverview() {
@@ -46,7 +54,14 @@ export default function ProjectOverview() {
     brief: '',
     name: '',
     phase: '',
+    city: '',
+    state: '',
+    portalEnabled: false,
   })
+  const [documentCount, setDocumentCount] = useState(0)
+  const [memberCount, setMemberCount] = useState(0)
+  const [role, setRole] = useState<string | null>(null)
+  const [firstStepsDismissed, setFirstStepsDismissed] = useState(true)
   const [milestones, setMilestones] = useState<PhaseMilestone[]>([])
   const [activity, setActivity] = useState<any[]>([])
   const [expandedPhase, setExpandedPhase] = useState<string | null>(null)
@@ -60,15 +75,19 @@ export default function ProjectOverview() {
     setLoading(true)
     setLoadError(null)
     try {
-      const [projRes, actRes] = await Promise.all([
+      const [projRes, actRes, membersRes, meRes] = await Promise.all([
         fetch(`/api/projects/${projectId}`),
         fetch(`/api/activity?project_id=${projectId}&limit=8`),
+        fetch(`/api/projects/${projectId}/members`),
+        fetch('/api/me'),
       ])
       const projData = await projRes.json()
       const actData = await actRes.json()
       if (!projRes.ok) throw new Error(projData.error || 'Failed to load this project')
 
       const p = projData.project
+      const docs = projData.documents || []
+      setDocumentCount(docs.length)
       setProjectStats({
         sqft: Number(p.total_sqft || 0),
         floors: Number(p.floors || 0),
@@ -80,7 +99,22 @@ export default function ProjectOverview() {
         brief: p.brief || '',
         name: p.name || '',
         phase: p.phase || '',
+        city: p.city || '',
+        state: p.state || '',
+        portalEnabled: !!p.portal_enabled,
       })
+
+      if (membersRes.ok) {
+        const membersData = await membersRes.json()
+        setMemberCount((membersData.members || []).length)
+      } else {
+        setMemberCount(0)
+      }
+
+      if (meRes.ok) {
+        const meData = await meRes.json()
+        setRole(meData.profile?.role || null)
+      }
 
       const ms = (projData.milestones || []).map((m: any) => ({
         id: m.id,
@@ -123,6 +157,69 @@ export default function ProjectOverview() {
   useEffect(() => {
     load()
   }, [load])
+
+  useEffect(() => {
+    try {
+      setFirstStepsDismissed(localStorage.getItem(FIRST_STEPS_DISMISS_KEY(projectId)) === 'true')
+    } catch {
+      setFirstStepsDismissed(false)
+    }
+  }, [projectId])
+
+  const firstSteps = useMemo((): FirstStep[] => {
+    const steps: FirstStep[] = []
+    if (memberCount <= 1) {
+      steps.push({
+        id: 'invite',
+        title: 'Invite team',
+        href: `/projects/${projectId}/team`,
+      })
+    }
+    if (!projectStats.portalEnabled) {
+      steps.push({
+        id: 'portal',
+        title: 'Enable portal',
+        href: `/projects/${projectId}/portal`,
+      })
+    }
+    if (documentCount === 0) {
+      steps.push({
+        id: 'drawings',
+        title: 'Upload drawings',
+        href: `/projects/${projectId}/documents`,
+      })
+    }
+    // Post for bids when early / bidding phases and project is still thin
+    const phase = projectStats.phase
+    const bidPhases = new Set([
+      'pre_design',
+      'schematic_design',
+      'design_development',
+      'construction_docs',
+      'bidding',
+      '',
+    ])
+    if (bidPhases.has(phase) && (memberCount <= 1 || documentCount === 0 || !projectStats.portalEnabled)) {
+      steps.push({
+        id: 'bids',
+        title: 'Post for bids',
+        href: `#post-tender`,
+      })
+    }
+    return steps
+  }, [memberCount, projectStats.portalEnabled, projectStats.phase, documentCount, projectId])
+
+  const showFirstSteps =
+    role === 'architect' && !firstStepsDismissed && firstSteps.length > 0 && !loading && !loadError
+
+  const dismissFirstSteps = () => {
+    setFirstStepsDismissed(true)
+    try {
+      localStorage.setItem(FIRST_STEPS_DISMISS_KEY(projectId), 'true')
+    } catch {
+      /* ignore */
+    }
+  }
 
   const handleMilestoneFieldChange = (phase: string, field: keyof PhaseMilestone, value: any) => {
     setMilestones((prev) =>
@@ -244,6 +341,44 @@ export default function ProjectOverview() {
 
   return (
     <div className="space-y-8 max-h-full font-body select-none">
+      {showFirstSteps && (
+        <section
+          className="rounded-2xl p-4 md:p-5 space-y-3"
+          style={{ background: 'var(--surface-container)', boxShadow: 'var(--shadow-2)' }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold">Get this project running</h3>
+              <p className="text-[12px] mt-0.5" style={{ color: 'var(--stone)' }}>
+                A few setup steps so the team, client portal, and bidding can work.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="text-[11px] shrink-0"
+              style={{ color: 'var(--stone)' }}
+              onClick={dismissFirstSteps}
+            >
+              Dismiss
+            </button>
+          </div>
+          <ul className="flex flex-wrap gap-2">
+            {firstSteps.map((step, i) => (
+              <li key={step.id}>
+                <Link
+                  href={step.href}
+                  className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-[12px] font-medium"
+                  style={{ background: 'var(--surface-container-low)', color: 'var(--on-surface)' }}
+                >
+                  <span style={{ color: 'var(--amber)' }}>{i + 1}.</span>
+                  {step.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="card-5bloc space-y-3 md:col-span-2">
           <div className="flex items-center justify-between">
@@ -380,7 +515,12 @@ export default function ProjectOverview() {
               ))}
             </ul>
           )}
-          <PostTenderButton projectId={projectId} projectName={projectStats.name} city="" />
+          <PostTenderButton
+            projectId={projectId}
+            projectName={projectStats.name}
+            city={projectStats.city}
+            state={projectStats.state}
+          />
         </div>
       </div>
 
@@ -504,10 +644,12 @@ function PostTenderButton({
   projectId,
   projectName,
   city,
+  state,
 }: {
   projectId: string
   projectName: string
   city: string
+  state?: string
 }) {
   const { toast } = useToast()
   const [open, setOpen] = useState(false)
@@ -522,7 +664,13 @@ function PostTenderButton({
       const res = await fetch(`/api/projects/${projectId}/tenders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, trade_type: trade, project_name: projectName, city }),
+        body: JSON.stringify({
+          title,
+          trade_type: trade,
+          project_name: projectName,
+          city: city || undefined,
+          state: state || undefined,
+        }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -540,7 +688,7 @@ function PostTenderButton({
   }
 
   return (
-    <div className="pt-3" style={{ boxShadow: '0 -1px 0 rgba(159,142,122,0.1)' }}>
+    <div id="post-tender" className="pt-3" style={{ boxShadow: '0 -1px 0 rgba(159,142,122,0.1)' }}>
       <button type="button" className="btn-secondary text-[11px] w-full" onClick={() => setOpen(true)}>
         Post tender
       </button>

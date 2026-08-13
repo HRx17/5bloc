@@ -57,7 +57,36 @@ export default function Onboarding() {
     }))
   }
 
+  const canContinue = () => {
+    if (step === 1) return !!form.full_name.trim()
+    if (step === 2 && createsOrg) {
+      return !!form.firm_name.trim() && !!form.city.trim()
+    }
+    if (step === 2 && role === 'contractor' && !inviteToken) {
+      return !!form.company_name.trim() || !!form.firm_name.trim()
+    }
+    return true
+  }
+
+  const continueBlockedReason = () => {
+    if (step === 1 && !form.full_name.trim()) return 'Enter your name to continue.'
+    if (step === 2 && createsOrg && !form.firm_name.trim()) return 'Enter your firm name.'
+    if (step === 2 && createsOrg && !form.city.trim()) return 'Enter your city — clients and marketplace listings use it.'
+    if (step === 2 && role === 'contractor' && !inviteToken && !(form.company_name.trim() || form.firm_name.trim())) {
+      return 'Enter your company name.'
+    }
+    return ''
+  }
+
   const handleFinish = async () => {
+    if (createsOrg && (!form.firm_name.trim() || !form.city.trim())) {
+      setError('Firm name and city are required to create your workspace.')
+      return
+    }
+    if (!form.full_name.trim()) {
+      setError('Enter your name to continue.')
+      return
+    }
     setLoading(true)
     setError('')
     try {
@@ -382,16 +411,36 @@ export default function Onboarding() {
               Back
             </button>
             {step < steps ? (
+              <div className="flex flex-col items-end gap-1">
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={() => {
+                    const reason = continueBlockedReason()
+                    if (reason) {
+                      setError(reason)
+                      return
+                    }
+                    setError('')
+                    setStep((s) => s + 1)
+                  }}
+                  disabled={!canContinue()}
+                >
+                  Continue
+                </button>
+                {!canContinue() && (
+                  <p className="text-[11px]" style={{ color: 'var(--stone)' }}>
+                    {continueBlockedReason()}
+                  </p>
+                )}
+              </div>
+            ) : (
               <button
                 type="button"
                 className="btn-primary"
-                onClick={() => setStep((s) => s + 1)}
-                disabled={!form.full_name}
+                onClick={handleFinish}
+                disabled={loading || (createsOrg && (!form.firm_name.trim() || !form.city.trim()))}
               >
-                Continue
-              </button>
-            ) : (
-              <button type="button" className="btn-primary" onClick={handleFinish} disabled={loading}>
                 {loading ? 'Setting up…' : 'Enter workspace'}
               </button>
             )}

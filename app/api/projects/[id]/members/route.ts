@@ -29,6 +29,7 @@ export async function GET(_req: Request, ctx: Ctx) {
   const members = (data || []).map((m: any) => ({
     ...m,
     full_name: m.profiles?.full_name || m.invite_email,
+    email: m.profiles?.email || m.invite_email || null,
   }))
   return NextResponse.json({ members })
 }

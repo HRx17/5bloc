@@ -70,7 +70,15 @@ export default function ClientsPage() {
       if (!res.ok) throw new Error(data.error || 'Could not save this contact')
       setShowForm(false)
       setForm(EMPTY_FORM)
-      toast(`${data.client?.full_name || form.full_name.trim()} added to your pipeline`, 'success')
+      if (!form.email.trim()) {
+        toast(
+          `${data.client?.full_name || form.full_name.trim()} added — add an email later before sending invoices.`,
+          'warning',
+          7000
+        )
+      } else {
+        toast(`${data.client?.full_name || form.full_name.trim()} added to your pipeline`, 'success')
+      }
       await load()
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Could not save this contact', 'error')
@@ -199,7 +207,8 @@ export default function ClientsPage() {
             <div>
               <input
                 className="input-5bloc"
-                placeholder="Email"
+                placeholder="Email (needed to send invoices)"
+                type="email"
                 value={form.email}
                 onChange={(e) => {
                   setForm({ ...form, email: e.target.value })
@@ -208,6 +217,12 @@ export default function ClientsPage() {
               />
               {fieldErrors.email && (
                 <p className="text-[11px] mt-1" style={{ color: 'var(--error)' }}>{fieldErrors.email}</p>
+              )}
+              {!form.email.trim() && (
+                <p className="text-[11px] mt-1" style={{ color: 'var(--stone)' }}>
+                  Without an email you can still track this contact, but you cannot email tax invoices or
+                  payment links until one is added.
+                </p>
               )}
             </div>
             <input className="input-5bloc" placeholder="Company" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} />

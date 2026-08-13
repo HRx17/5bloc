@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -80,6 +80,13 @@ export default function NewInvoice() {
     loadRefs()
   }, [loadRefs])
 
+  const selectedClient = useMemo(
+    () => (billTo === 'client' ? clients.find((c) => c.id === formData.client) : null),
+    [billTo, clients, formData.client]
+  )
+  const selectedClientEmail = (selectedClient?.email || '').trim()
+  const canEmailClient = billTo === 'client' && !!formData.client && !!selectedClientEmail
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -136,6 +143,22 @@ export default function NewInvoice() {
     return next
   }
 
+  const copyPayLink = async (invoiceId: string): Promise<string | null> => {
+    try {
+      const res = await fetch(`/api/invoices/${invoiceId}/pay-link`)
+      const data = await res.json()
+      if (!res.ok || !data.url) return null
+      try {
+        await navigator.clipboard.writeText(data.url)
+      } catch {
+        /* clipboard may be blocked — still return the URL for the toast */
+      }
+      return data.url as string
+    } catch {
+      return null
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (submitting) return
@@ -144,18 +167,27 @@ export default function NewInvoice() {
     const hasLineError = Object.values(found.line || {}).some(Boolean)
     if (found.billTo || found.client || found.partyName || found.dueDate || found.lineItems || hasLineError) {
       setErrors(found)
-      toast('Fix the highlighted fields before sending this invoice.', 'warning')
+      toast('Fix the highlighted fields before saving this invoice.', 'warning')
       return
     }
     setErrors({})
 
     const partyLabel = resolveBillToName()
+    const willEmail = canEmailClient
     const ok = await confirm({
-      title: 'Send this invoice?',
-      message: `${partyLabel} will be billed ₹${grandTotal.toLocaleString('en-IN')} (incl. ${
-        isInterstate ? 'IGST' : 'CGST + SGST'
-      }), due ${formData.dueDate}. The invoice number is issued on save and cannot be reused.`,
-      confirmLabel: 'Save & send',
+      title: willEmail ? 'Create & email invoice?' : 'Save invoice?',
+      message: willEmail
+        ? `${partyLabel} will be billed ₹${grandTotal.toLocaleString('en-IN')} (incl. ${
+            isInterstate ? 'IGST' : 'CGST + SGST'
+          }), due ${formData.dueDate}. We'll email the invoice and pay link to ${selectedClientEmail}. The invoice number is issued on save and cannot be reused.`
+        : billTo === 'client' && formData.client && !selectedClientEmail
+          ? `${partyLabel} will be billed ₹${grandTotal.toLocaleString('en-IN')} (incl. ${
+              isInterstate ? 'IGST' : 'CGST + SGST'
+            }), due ${formData.dueDate}. This client has no email on file — the invoice will be saved as a draft and will not be emailed. Add an email on the client record to send it later.`
+          : `${partyLabel} will be billed ₹${grandTotal.toLocaleString('en-IN')} (incl. ${
+              isInterstate ? 'IGST' : 'CGST + SGST'
+            }), due ${formData.dueDate}. The invoice will be saved as a draft (no email). The invoice number is issued on save and cannot be reused.`,
+      confirmLabel: willEmail ? 'Create & email invoice' : 'Save invoice',
     })
     if (!ok) return
 
@@ -177,13 +209,72 @@ export default function NewInvoice() {
           line_items: lineItems,
           subtotal,
           is_interstate: isInterstate,
-          status: 'sent',
+          status: 'draft',
         }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to create invoice')
+
+      const invoiceId = data.invoice?.id as string | undefined
+      const invoiceNumber = data.invoice?.invoice_number || ''
+
+      if (billTo === 'client' && formData.client && invoiceId) {
+        const sendRes = await fetch(`/api/invoices/${invoiceId}/send`, { method: 'POST' })
+        const sendData = await sendRes.json().catch(() => ({}))
+
+        if (sendRes.ok) {
+          const to = sendData.emailed_to || selectedClientEmail
+          if (sendData.email_warning || sendData.mock) {
+            toast(
+              sendData.email_warning ||
+                `Invoice ${invoiceNumber} saved — email not actually delivered (mail provider not configured). Pay link was prepared for ${to}.`,
+              'warning',
+              8000
+            )
+          } else {
+            toast(
+              `Invoice ${invoiceNumber} emailed to ${to} with a pay link.`,
+              'success',
+              7000
+            )
+          }
+          router.push('/invoices')
+          return
+        }
+
+        const sendError = String(sendData.error || '')
+        if (/no client email/i.test(sendError)) {
+          toast(
+            'Invoice saved as draft — add an email on the client to send it',
+            'warning',
+            8000
+          )
+          router.push('/invoices')
+          return
+        }
+
+        const payUrl = await copyPayLink(invoiceId)
+        if (payUrl) {
+          toast(
+            `Invoice ${invoiceNumber} saved, but email failed (${sendError || 'send error'}). Pay link copied to clipboard.`,
+            'warning',
+            9000
+          )
+        } else {
+          toast(
+            `Invoice ${invoiceNumber} saved as draft, but could not email it${
+              sendError ? `: ${sendError}` : ''
+            }. You can send or copy the pay link from the invoices list.`,
+            'warning',
+            9000
+          )
+        }
+        router.push('/invoices')
+        return
+      }
+
       toast(
-        `Invoice ${data.invoice?.invoice_number || ''} raised for ${partyLabel}`.replace('  ', ' '),
+        `Invoice ${invoiceNumber} saved as draft for ${partyLabel}`.replace('  ', ' '),
         'success'
       )
       router.push('/invoices')
@@ -298,12 +389,23 @@ export default function NewInvoice() {
                   {clients.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.full_name || c.name}
+                      {c.email ? ` · ${c.email}` : ''}
                     </option>
                   ))}
                 </select>
                 {errors.client && (
                   <p className="text-[11px] mt-1" style={{ color: 'var(--error)' }}>
                     {errors.client}
+                  </p>
+                )}
+                {formData.client && !selectedClientEmail && (
+                  <p className="text-[11px] mt-1.5" style={{ color: 'var(--amber)' }}>
+                    This client has no email on file — the invoice will be saved as a draft and will
+                    not be emailed.{' '}
+                    <Link href={`/clients/${formData.client}`} className="underline">
+                      Add an email on the client
+                    </Link>{' '}
+                    before you can send a pay link.
                   </p>
                 )}
                 {clients.length === 0 && (
@@ -563,7 +665,13 @@ export default function NewInvoice() {
             disabled={submitting}
             className="w-full btn-primary py-2.5 text-xs font-bold tracking-wider"
           >
-            {submitting ? 'SENDING INVOICE...' : 'SAVE & SEND INVOICE'}
+            {submitting
+              ? canEmailClient
+                ? 'CREATING & EMAILING…'
+                : 'SAVING INVOICE…'
+              : canEmailClient
+                ? 'CREATE & EMAIL INVOICE'
+                : 'SAVE INVOICE'}
           </button>
         </div>
       </form>

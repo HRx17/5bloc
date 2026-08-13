@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
-import { PROJECT_MEMBER_ROLES, type RoleKey } from '@/lib/rbac/roles'
+import { PROJECT_MEMBER_ROLES, ROLES, type RoleKey } from '@/lib/rbac/roles'
 import { useToast } from '@/components/ui/Toast'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -70,8 +70,23 @@ export default function ProjectTeam() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Invite failed')
-      setLastInviteUrl(data.accept_url || '')
-      toast(`Invite sent to ${inviteEmail}`, 'success')
+      const acceptUrl = data.accept_url || ''
+      setLastInviteUrl(acceptUrl)
+      if (data.email_warning) {
+        toast(
+          `Invite created for ${inviteEmail}, but email was not delivered: ${data.email_warning}. Copy the link below and share it manually.`,
+          'warning',
+          9000
+        )
+      } else if (data.email_sent === false) {
+        toast(
+          `Invite created for ${inviteEmail}. Email was not sent — copy the accept link and share it.`,
+          'warning',
+          8000
+        )
+      } else {
+        toast(`Invite emailed to ${inviteEmail}`, 'success')
+      }
       setInviteEmail('')
       await load()
     } catch (err: any) {
@@ -132,7 +147,7 @@ export default function ProjectTeam() {
         >
           {PROJECT_MEMBER_ROLES.map((r) => (
             <option key={r} value={r}>
-              {r}
+              {ROLES[r]?.label || r}
             </option>
           ))}
         </select>
@@ -142,9 +157,29 @@ export default function ProjectTeam() {
       </form>
 
       {lastInviteUrl && (
-        <p className="text-[12px]" style={{ color: 'var(--stone)' }}>
-          Accept link: <code style={{ color: 'var(--amber)' }}>{lastInviteUrl}</code>
-        </p>
+        <div
+          className="p-3 rounded-xl flex flex-col sm:flex-row sm:items-center gap-2"
+          style={{ background: 'var(--surface-container)' }}
+        >
+          <p className="text-[12px] flex-1 break-all" style={{ color: 'var(--stone)' }}>
+            Accept link:{' '}
+            <code style={{ color: 'var(--amber)' }}>{lastInviteUrl}</code>
+          </p>
+          <button
+            type="button"
+            className="btn-secondary btn-sm shrink-0"
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(lastInviteUrl)
+                toast('Invite link copied', 'success')
+              } catch {
+                toast('Could not copy — select the link manually', 'warning')
+              }
+            }}
+          >
+            Copy link
+          </button>
+        </div>
       )}
 
       {loading ? (

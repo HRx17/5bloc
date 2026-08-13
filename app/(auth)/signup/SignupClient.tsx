@@ -29,6 +29,7 @@ export default function Signup() {
   const [loading, setLoading] = useState(false)
   const [oauthLoading, setOauthLoading] = useState(false)
   const [error, setError] = useState('')
+  const [awaitingEmail, setAwaitingEmail] = useState(false)
 
   useEffect(() => {
     if (prefillEmail) setFormData((p) => ({ ...p, email: prefillEmail }))
@@ -39,6 +40,13 @@ export default function Signup() {
     }
   }, [prefillEmail, prefillRole, inviteRole])
 
+  const onboardingQuery = () => {
+    const qs = new URLSearchParams({ role: formData.role })
+    if (inviteToken) qs.set('invite_token', inviteToken)
+    if (orgInviteToken) qs.set('org_invite', orgInviteToken)
+    return qs.toString()
+  }
+
   const handleGoogle = async () => {
     if (!supabaseConfigured) return
     setOauthLoading(true)
@@ -48,7 +56,9 @@ export default function Signup() {
       const origin = window.location.origin
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${origin}/api/auth/callback` },
+        options: {
+          redirectTo: `${origin}/api/auth/callback?next=${encodeURIComponent(`/onboarding?${onboardingQuery()}`)}`,
+        },
       })
       if (oauthError) throw oauthError
     } catch (err: any) {
@@ -88,10 +98,11 @@ export default function Signup() {
       }
 
       const supabase = createClient()
-      const { error: signError } = await supabase.auth.signUp({
+      const { data: signData, error: signError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(`/onboarding?${onboardingQuery()}`)}`,
           data: {
             full_name: formData.name,
             role: formData.role,
@@ -102,15 +113,54 @@ export default function Signup() {
       })
       if (signError) throw signError
 
-      const qs = new URLSearchParams({ role: formData.role })
-      if (inviteToken) qs.set('invite_token', inviteToken)
-      if (orgInviteToken) qs.set('org_invite', orgInviteToken)
-      router.push(`/onboarding?${qs.toString()}`)
+      // When email confirmation is required, Supabase returns a user but no session.
+      if (!signData.session) {
+        setAwaitingEmail(true)
+        return
+      }
+
+      router.push(`/onboarding?${onboardingQuery()}`)
     } catch (err: any) {
       setError(err?.message || 'Signup failed. Please try again.')
     } finally {
       setLoading(false)
     }
+  }
+
+  if (awaitingEmail) {
+    return (
+      <AuthShell title="Check your email">
+        <div className="space-y-4 text-center">
+          <span
+            className="material-icons-outlined text-[40px]"
+            style={{ color: 'var(--amber)' }}
+            aria-hidden
+          >
+            mark_email_unread
+          </span>
+          <p className="text-sm" style={{ color: 'var(--on-surface)' }}>
+            We sent a confirmation link to{' '}
+            <span className="font-semibold">{formData.email}</span>.
+          </p>
+          <p className="text-[13px] leading-relaxed" style={{ color: 'var(--stone)' }}>
+            Open that email and click the link to finish creating your workspace. Check spam if you
+            do not see it within a minute.
+          </p>
+          <div className="pt-2 flex flex-col gap-2">
+            <Link href="/login" className="btn-primary text-[13px]">
+              Go to sign in
+            </Link>
+            <button
+              type="button"
+              className="btn-secondary text-[13px]"
+              onClick={() => setAwaitingEmail(false)}
+            >
+              Use a different email
+            </button>
+          </div>
+        </div>
+      </AuthShell>
+    )
   }
 
   return (

@@ -109,7 +109,11 @@ export async function POST(_req: Request, ctx: Ctx) {
   return NextResponse.json({
     ok: true,
     emailed_to: clientEmail,
+    payment_url: paymentUrl,
     mock: !!result.mock,
+    email_warning: result.mock
+      ? `Email not actually delivered — no mail provider is configured. It would have gone to ${clientEmail}.`
+      : undefined,
     status: 'sent',
   })
 }

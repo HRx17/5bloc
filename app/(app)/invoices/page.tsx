@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { useToast } from '@/components/ui/Toast'
 import { useConfirm } from '@/components/ui/ConfirmProvider'
+import { startInvoiceCheckout } from '@/lib/payments/checkout'
 
 interface Invoice {
   id: string
@@ -66,6 +67,8 @@ export default function InvoicesList() {
     }
   }
 
+  const isUnpaid = (inv: Invoice) => inv.status !== 'paid' && inv.status !== 'cancelled'
+
   const handleMarkPaid = async (inv: Invoice) => {
     if (busyId) return
     const ok = await confirm({
@@ -111,8 +114,8 @@ export default function InvoicesList() {
       title: `Email ${inv.invoice_number} to the client?`,
       message: `${
         inv.client_name || 'The client'
-      } will receive this invoice for ${money(inv.total)} by email, and it will be marked as sent.`,
-      confirmLabel: 'Send invoice',
+      } will receive this invoice for ${money(inv.total)} by email with a pay link, and it will be marked as sent.`,
+      confirmLabel: 'Email invoice',
     })
     if (!ok) return
 
@@ -124,19 +127,67 @@ export default function InvoicesList() {
       setInvoices((prev) =>
         prev.map((i) => (i.id === inv.id && i.status === 'draft' ? { ...i, status: 'sent' } : i))
       )
-      toast(
-        data.mock
-          ? `Email not actually delivered — no mail provider is configured. It would have gone to ${data.emailed_to}.`
-          : `Invoice sent to ${data.emailed_to}`,
-        data.mock ? 'warning' : 'success',
-        data.mock ? 8000 : undefined
-      )
+      if (data.email_warning || data.mock) {
+        toast(
+          data.email_warning ||
+            `Email not actually delivered — no mail provider is configured. It would have gone to ${data.emailed_to}.`,
+          'warning',
+          8000
+        )
+      } else {
+        toast(`Invoice emailed to ${data.emailed_to} with a pay link.`, 'success')
+      }
     } catch (e) {
       toast(
         e instanceof Error ? e.message : 'Could not send this invoice. Nothing was emailed — try again.',
         'error',
         6000
       )
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  const handleCopyPayLink = async (inv: Invoice) => {
+    if (busyId) return
+    setBusyId(inv.id)
+    try {
+      const res = await fetch(`/api/invoices/${inv.id}/pay-link`)
+      const data = await res.json()
+      if (!res.ok || !data.url) throw new Error(data.error || 'Could not create a pay link')
+      try {
+        await navigator.clipboard.writeText(data.url)
+        toast(`Pay link for ${inv.invoice_number} copied`, 'success')
+      } catch {
+        toast(`Pay link: ${data.url}`, 'success', 10000)
+      }
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Could not copy pay link', 'error')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
+  const handleCollectPayment = async (inv: Invoice) => {
+    if (busyId) return
+    setBusyId(inv.id)
+    try {
+      const result = await startInvoiceCheckout(inv.id)
+      if (result.message) toast(result.message, result.ok ? 'success' : 'warning', 6000)
+      if (!result.ok) return
+
+      setInvoices((prev) =>
+        prev.map((i) => (i.id === inv.id ? { ...i, status: i.status === 'draft' ? 'sent' : i.status } : i))
+      )
+      setTimeout(async () => {
+        const res = await fetch('/api/invoices')
+        if (!res.ok) return
+        const data = await res.json()
+        const fresh = (data.invoices || []).find((i: Invoice) => i.id === inv.id)
+        if (fresh?.status) {
+          setInvoices((prev) => prev.map((i) => (i.id === inv.id ? { ...i, status: fresh.status } : i)))
+        }
+      }, 4000)
     } finally {
       setBusyId(null)
     }
@@ -244,7 +295,9 @@ export default function InvoicesList() {
               </thead>
               <tbody>
                 {invoices.map((inv) => {
+                  const unpaid = isUnpaid(inv)
                   const isOverdue = inv.status === 'overdue'
+                  const rowBusy = busyId === inv.id
                   return (
                     <tr
                       key={inv.id}
@@ -279,17 +332,37 @@ export default function InvoicesList() {
                           >
                             <span className="material-icons-outlined text-[16px]">picture_as_pdf</span>
                           </button>
-                          {inv.status !== 'paid' && inv.status !== 'cancelled' && (
+                          {unpaid && (
                             <button
                               onClick={() => handleSend(inv)}
                               disabled={busyId !== null}
                               className="p-1 text-stone hover:text-blue hover:bg-navy-lt transition disabled:opacity-40"
-                              title="Email to client"
+                              title={rowBusy ? 'Working…' : inv.status === 'draft' ? 'Email invoice' : 'Re-email invoice'}
                             >
                               <span className="material-icons-outlined text-[16px]">send</span>
                             </button>
                           )}
-                          {inv.status !== 'paid' && (
+                          {unpaid && (
+                            <button
+                              onClick={() => handleCopyPayLink(inv)}
+                              disabled={busyId !== null}
+                              className="p-1 text-stone hover:text-amber hover:bg-navy-lt transition disabled:opacity-40"
+                              title={rowBusy ? 'Working…' : 'Copy pay link'}
+                            >
+                              <span className="material-icons-outlined text-[16px]">link</span>
+                            </button>
+                          )}
+                          {unpaid && (
+                            <button
+                              onClick={() => handleCollectPayment(inv)}
+                              disabled={busyId !== null}
+                              className="p-1 text-stone hover:text-blue hover:bg-navy-lt transition disabled:opacity-40"
+                              title={rowBusy ? 'Working…' : 'Collect payment online'}
+                            >
+                              <span className="material-icons-outlined text-[16px] text-blue">payments</span>
+                            </button>
+                          )}
+                          {unpaid && (
                             <button
                               onClick={() => handleMarkPaid(inv)}
                               disabled={busyId !== null}
