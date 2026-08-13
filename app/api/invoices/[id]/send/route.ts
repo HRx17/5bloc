@@ -4,6 +4,7 @@ import { getAuthUserOrNull } from '@/lib/supabase/get-user'
 import { MOCK_INVOICES, MOCK_CLIENTS } from '@/lib/data/mock-store'
 import { send } from '@/lib/email/resend'
 import { InvoiceEmail } from '@/lib/email/templates'
+import { signInvoicePayToken } from '@/lib/payments/invoice-pay-token'
 
 type Ctx = { params: Promise<{ id: string }> }
 
@@ -53,8 +54,21 @@ export async function POST(_req: Request, ctx: Ctx) {
     )
   }
 
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://app.5bloc.com').replace(/\/$/, '')
-  const paymentUrl = `${appUrl}/invoices`
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || '').replace(/\/$/, '')
+  if (!appUrl) {
+    return NextResponse.json(
+      { error: 'NEXT_PUBLIC_APP_URL is not set — cannot build a payment link for the email.' },
+      { status: 500 }
+    )
+  }
+  const payToken = signInvoicePayToken(invoice.id)
+  if (!payToken) {
+    return NextResponse.json(
+      { error: 'Could not sign a payment link. Check PAYMENT_LINK_SECRET or Razorpay/Supabase secrets.' },
+      { status: 500 }
+    )
+  }
+  const paymentUrl = `${appUrl}/pay/${encodeURIComponent(payToken)}`
   const total = Number(invoice.total ?? invoice.amount ?? 0)
   const html = InvoiceEmail(
     invoice.invoice_number,

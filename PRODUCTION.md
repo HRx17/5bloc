@@ -30,6 +30,7 @@ Copy from [`.env.example`](.env.example) and set in Vercel (or your host).
 |---|---|
 | `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` / `NEXT_PUBLIC_RAZORPAY_KEY_ID` | Checkout |
 | `RAZORPAY_PLAN_*` | Plan ID mapping (solo / team / badge / ai) |
+| `PAYMENT_LINK_SECRET` | Signs client invoice pay links in emails (falls back to Razorpay/Supabase secrets) |
 | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` / `R2_BUCKET_NAME` / `R2_PUBLIC_URL` / `CLOUDFLARE_ACCOUNT_ID` | Cloudflare R2 file storage (else use Supabase `documents` bucket) |
 | `AUTODESK_*` / `GOOGLE_*` | CAD / Drive integrations |
 | `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | Optional error reporting (`lib/observability/reportError`) — light envelope POST, no `@sentry/nextjs` |
@@ -43,11 +44,13 @@ Analytics and error reporting are **env-gated stubs**:
 - **PostHog:** `components/Observability.tsx` calls `initAnalytics()` on mount. If `NEXT_PUBLIC_POSTHOG_KEY` is unset, nothing loads.
 - **Sentry:** `reportError()` always `console.error`s; if `SENTRY_DSN` or `NEXT_PUBLIC_SENTRY_DSN` is set, it POSTs a minimal envelope. Prefer `NEXT_PUBLIC_SENTRY_DSN` for client boundaries (`app/error.tsx`). Do not add heavy `@sentry/nextjs` unless you intentionally adopt the full SDK later.
 
-### Must be off in production
+### Must be off / unset in production
 
 | Variable | Notes |
 |---|---|
-| `NEXT_PUBLIC_DEMO_MODE` | Set to `false` or omit. Demo login must not ship to real users. |
+| `NEXT_PUBLIC_ENABLE_DEMO_LOGIN` | Omit or set `false`. Passwordless demo role login is off in production unless this is explicitly `true`. |
+| `ENABLE_SMOKE_ADMIN` | Omit or set `0`. `/admin` smoke role aliases (hardcoded test password) are off in production unless this is `1`. |
+| `MOCK_AUTH` / `NEXT_PUBLIC_MOCK_AUTH` | Must be `0` / unset. Mock APIs are also hard-disabled when `NODE_ENV=production`. |
 
 Never commit secrets. Never expose `SUPABASE_SERVICE_ROLE_KEY`, Razorpay secrets, or webhook secrets to the client.
 

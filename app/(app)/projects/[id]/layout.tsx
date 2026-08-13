@@ -146,7 +146,7 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
   const isTabActive = (tabPath: string) =>
     tabPath === `/projects/${projectId}` ? pathname === tabPath : pathname.startsWith(tabPath)
 
-  const portalUrl = `/portal/${project.portal_token || 'demo-portal-token'}`
+  const portalUrl = project.portal_token ? `/portal/${project.portal_token}` : null
   const canConfigurePortal = memberRole === 'architect'
 
   return (
@@ -189,10 +189,16 @@ export default function ProjectLayout({ children }: { children: React.ReactNode 
                   <Link href={`/projects/${projectId}/portal`} className="btn-secondary text-[12px]">
                     Portal settings
                   </Link>
-                  <Link href={portalUrl} target="_blank" className="btn-secondary text-[12px]">
-                    <span className="material-icons-outlined text-[15px]">open_in_new</span>
-                    Open portal
-                  </Link>
+                  {portalUrl ? (
+                    <Link href={portalUrl} target="_blank" className="btn-secondary text-[12px]">
+                      <span className="material-icons-outlined text-[15px]">open_in_new</span>
+                      Open portal
+                    </Link>
+                  ) : (
+                    <Link href={`/projects/${projectId}/portal`} className="btn-secondary text-[12px]">
+                      Enable portal
+                    </Link>
+                  )}
                   <div>
                     <button
                       onClick={() => setShowActions(!showActions)}

@@ -164,7 +164,14 @@ export async function POST(req: Request) {
   }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const acceptUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/signup?email=${encodeURIComponent(email)}&role=architect&org_invite=${token}`
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || '').replace(/\/$/, '')
+  if (!appUrl) {
+    return NextResponse.json(
+      { error: 'NEXT_PUBLIC_APP_URL is not set — cannot build an invite link.' },
+      { status: 500 }
+    )
+  }
+  const acceptUrl = `${appUrl}/signup?email=${encodeURIComponent(email)}&role=architect&org_invite=${token}`
 
   const mail = await send(
     email,
@@ -188,7 +195,7 @@ export async function POST(req: Request) {
       title: 'Organisation invitation',
       body: `Join ${auth.profile.organisations?.name || 'a firm'} on 5Bloc`,
       type: 'invite',
-      href: acceptUrl.replace(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000', '') || '/signup',
+      href: `/signup?email=${encodeURIComponent(email)}&role=architect&org_invite=${token}`,
     })
   }
 

@@ -156,7 +156,6 @@ export const PROJECT_TAB_META: Record<
   invoices: { name: 'Invoices', suffix: '/invoices' },
   team: { name: 'Team', suffix: '/team' },
   portal: { name: 'Client Portal', suffix: '/portal' },
-  settings: { name: 'Settings', suffix: '/settings' },
 }
 
 export function getProjectTabs(

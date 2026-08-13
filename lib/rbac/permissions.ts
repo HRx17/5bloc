@@ -168,7 +168,6 @@ export type ProjectTabKey =
   | 'invoices'
   | 'team'
   | 'portal'
-  | 'settings'
 
 const TABS_BY_ROLE: Record<RoleKey, ProjectTabKey[]> = {
   architect: [
@@ -185,7 +184,6 @@ const TABS_BY_ROLE: Record<RoleKey, ProjectTabKey[]> = {
     'invoices',
     'team',
     'portal',
-    'settings',
   ],
   contractor: ['overview', 'documents', 'rfis', 'submittals', 'messages', 'meetings', 'issues', 'site'],
   builder: ['overview', 'documents', 'rfis', 'issues', 'site', 'invoices'],

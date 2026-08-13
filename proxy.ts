@@ -10,6 +10,7 @@ const PUBLIC_PREFIXES = [
   '/signup',
   '/forgot-password',
   '/portal',
+  '/pay',
   '/accept-invite',
   '/auth',
 ]

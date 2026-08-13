@@ -101,9 +101,7 @@ export function openCheckout(subscriptionId: string, email: string) {
     const rzp = new (window as any).Razorpay(options)
     rzp.open()
   } else {
-    console.warn('Razorpay SDK script not loaded in window. Simulating successful checkout.')
-    if (typeof window !== 'undefined') {
-      window.location.href = '/dashboard?subscribed=true'
-    }
+    console.error('Razorpay SDK script not loaded — checkout aborted (no simulated success).')
+    throw new Error('Razorpay checkout failed to load. Refresh and try again.')
   }
 }

@@ -992,9 +992,10 @@ export default function Settings() {
               <div className="card-5bloc space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-semibold text-amber">Payment methods</h3>
+                    <h3 className="text-sm font-semibold text-amber">Saved payment references</h3>
                     <p className="text-[11px] text-stone mt-0.5">
-                      Used for subscription renewals and invoices. Only the last 4 digits are stored.
+                      Saved for your records only (last 4 digits / UPI ID). Subscriptions and invoice
+                      payments still run through Razorpay checkout — these are not charged automatically.
                     </p>
                   </div>
                   <button className="btn-secondary py-1.5 px-4 text-xs" onClick={() => setShowAddMethod((v) => !v)}>
@@ -1090,7 +1091,7 @@ export default function Settings() {
 
                 {billingError ? null : methods.length === 0 ? (
                   <p className="text-[11px] text-stone">
-                    No payment method saved yet. Add one so renewals and invoices do not fail.
+                    No payment reference saved yet. Optional — useful so your firm remembers which card or UPI you usually use.
                   </p>
                 ) : (
                   <div className="space-y-2">
@@ -1298,7 +1299,7 @@ export default function Settings() {
       <ConfirmDialog
         open={!!removeMethod}
         title="Remove payment method"
-        message={`${removeMethod ? methodLabel(removeMethod) : 'This method'} will no longer be used for renewals or invoices.`}
+        message={`${removeMethod ? methodLabel(removeMethod) : 'This method'} will be removed from your saved references. Subscriptions and invoice payments are unaffected.`}
         confirmLabel="Remove"
         variant="danger"
         loading={methodBusy}
