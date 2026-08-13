@@ -88,14 +88,41 @@ export async function POST(req: Request) {
   const phase = body.phase || null
   const notes = body.notes || null
 
-  let clientName = body.client_name || body.clientName || ''
+  const billToRaw = String(body.bill_to || body.billTo || 'client').toLowerCase()
+  const BILL_TO = new Set(['client', 'contractor', 'consultant', 'other'])
+  const billTo = BILL_TO.has(billToRaw) ? billToRaw : 'client'
+
+  let clientName = String(body.client_name || body.clientName || '').trim()
   let projectName = body.project_name || body.projectName || ''
   let clientId = body.client_id || body.client || null
   let projectId = body.project_id || body.project || null
 
+  // Client invoices must name a real CRM contact — never invent a bill-to.
+  if (billTo === 'client' && !clientId) {
+    return NextResponse.json(
+      { error: 'Select the client this invoice is billed to.' },
+      { status: 400 }
+    )
+  }
+  if (billTo !== 'client' && !clientName) {
+    return NextResponse.json(
+      { error: 'Enter who this invoice is billed to.' },
+      { status: 400 }
+    )
+  }
+  if (billTo !== 'client') {
+    clientId = null
+  }
+
   if (shouldServeMockData(auth)) {
     if (clientId && !clientName) {
-      clientName = MOCK_CLIENTS.find((c) => c.id === clientId)?.full_name || 'Client'
+      clientName = MOCK_CLIENTS.find((c) => c.id === clientId)?.full_name || ''
+    }
+    if (billTo === 'client' && !clientName) {
+      return NextResponse.json(
+        { error: 'Select the client this invoice is billed to.' },
+        { status: 400 }
+      )
     }
     if (projectId && !projectName) {
       projectName = MOCK_PROJECTS.find((p) => p.id === projectId)?.name || 'Project'
@@ -106,7 +133,7 @@ export async function POST(req: Request) {
       project_id: projectId,
       client_id: clientId,
       invoice_number: `INV-${String(MOCK_INVOICES.length + 1).padStart(3, '0')}`,
-      client_name: clientName || 'Client',
+      client_name: clientName,
       project_name: projectName || 'Project',
       phase,
       milestone_label: milestoneLabel,
@@ -139,7 +166,13 @@ export async function POST(req: Request) {
       .select('name, full_name')
       .eq('id', clientId)
       .maybeSingle()
-    clientName = client?.full_name || client?.name || 'Client'
+    clientName = client?.full_name || client?.name || ''
+  }
+  if (billTo === 'client' && !clientName) {
+    return NextResponse.json(
+      { error: 'Select the client this invoice is billed to.' },
+      { status: 400 }
+    )
   }
   if (projectId && !projectName) {
     const { data: project } = await auth.supabase
@@ -148,18 +181,7 @@ export async function POST(req: Request) {
       .eq('id', projectId)
       .maybeSingle()
     projectName = project?.name || 'Project'
-    if (!clientId && project?.client_id) {
-      clientId = project.client_id
-      const { data: client } = await auth.supabase
-        .from('clients')
-        .select('name, full_name')
-        .eq('id', clientId)
-        .maybeSingle()
-      clientName = client?.full_name || client?.name || clientName || 'Client'
-    }
   }
-
-  if (!clientName) clientName = 'Client'
 
   const { data: numberRow } = await auth.supabase.rpc('next_invoice_number', {
     p_org_id: auth.orgId,

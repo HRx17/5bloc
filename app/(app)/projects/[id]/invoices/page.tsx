@@ -59,13 +59,46 @@ export default function ProjectInvoices() {
   const [deletingExpense, setDeletingExpense] = useState<string | null>(null)
   const [releasingPayment, setReleasingPayment] = useState<string | null>(null)
   const [addingPayout, setAddingPayout] = useState(false)
-  
+  const [clients, setClients] = useState<{ id: string; full_name?: string; name?: string }[]>([])
+  const [projectClientId, setProjectClientId] = useState<string>('')
+
   // Invoice Form state
   const [newInvoice, setNewInvoice] = useState({
+    bill_to: '' as '' | 'client' | 'contractor' | 'consultant' | 'other',
+    client_id: '',
+    party_name: '',
     milestone_label: 'Schematic Floor layouts approval',
     subtotal: 1200000,
     due_date: '',
   })
+
+  const openCreateModal = async (
+    prefill?: Partial<{
+      milestone_label: string
+      subtotal: number
+      due_date: string
+    }>
+  ) => {
+    setShowCreateModal(true)
+    setNewInvoice((prev) => ({
+      ...prev,
+      ...prefill,
+      bill_to: '',
+      client_id: '',
+      party_name: '',
+    }))
+    try {
+      const [clientRes, projectRes] = await Promise.all([
+        fetch('/api/clients'),
+        fetch(`/api/projects/${projectId}`),
+      ])
+      const [c, p] = await Promise.all([clientRes.json(), projectRes.json()])
+      if (clientRes.ok) setClients(c.clients || [])
+      setProjectClientId(p.project?.client_id || '')
+    } catch {
+      // Modal still opens; submit will surface missing bill-to.
+    }
+  }
 
   // Expense Tracker state
   const [expenses, setExpenses] = useState<Expense[]>([])
@@ -158,12 +191,35 @@ export default function ProjectInvoices() {
   const handleCreateInvoice = async (e: React.FormEvent) => {
     e.preventDefault()
     if (creatingInvoice) return
+
+    if (!newInvoice.bill_to) {
+      toast('Choose who this invoice should go to.', 'warning')
+      return
+    }
+    if (newInvoice.bill_to === 'client' && !newInvoice.client_id) {
+      toast('Select the client this invoice is billed to.', 'warning')
+      return
+    }
+    if (newInvoice.bill_to !== 'client' && !newInvoice.party_name.trim()) {
+      toast('Enter who this invoice is billed to.', 'warning')
+      return
+    }
+
+    const client = clients.find((c) => c.id === newInvoice.client_id)
+    const partyLabel =
+      newInvoice.bill_to === 'client'
+        ? client?.full_name || client?.name || ''
+        : newInvoice.party_name.trim()
+
     setCreatingInvoice(true)
     try {
       const res = await fetch('/api/invoices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          bill_to: newInvoice.bill_to,
+          client_id: newInvoice.bill_to === 'client' ? newInvoice.client_id : null,
+          client_name: partyLabel,
           project_id: projectId,
           milestone_label: newInvoice.milestone_label,
           subtotal: newInvoice.subtotal,
@@ -193,8 +249,15 @@ export default function ProjectInvoices() {
         ...prev,
       ])
       setShowCreateModal(false)
-      setNewInvoice({ milestone_label: 'Schematic Floor layouts approval', subtotal: 1200000, due_date: '' })
-      toast(`Invoice ${inv.invoice_number || ''} created as a draft`.replace('  ', ' '), 'success')
+      setNewInvoice({
+        bill_to: '',
+        client_id: '',
+        party_name: '',
+        milestone_label: 'Schematic Floor layouts approval',
+        subtotal: 1200000,
+        due_date: '',
+      })
+      toast(`Invoice ${inv.invoice_number || ''} created as a draft for ${partyLabel}`.replace('  ', ' '), 'success')
     } catch (err: any) {
       toast(err?.message || 'Failed to create the invoice', 'error')
     } finally {
@@ -448,7 +511,7 @@ export default function ProjectInvoices() {
                 <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Client Fee Invoices</h3>
                 <p className="text-[10px] text-stone mt-0.5">Calculated tax distributions and online payments status.</p>
               </div>
-              <button onClick={() => setShowCreateModal(true)} className="btn-primary py-1.5 text-xs font-bold">
+              <button onClick={() => void openCreateModal()} className="btn-primary py-1.5 text-xs font-bold">
                 <span className="material-icons-outlined text-[16px]">add</span>
                 NEW INVOICE
               </button>
@@ -473,7 +536,7 @@ export default function ProjectInvoices() {
                 title="No fee invoices raised"
                 description="Raise an invoice against a milestone to bill the client. GST is calculated for you and the invoice can be collected online."
                 actionLabel="New invoice"
-                onClick={() => setShowCreateModal(true)}
+                onClick={() => void openCreateModal()}
               />
             ) : (
               <div className="overflow-x-auto">
@@ -724,15 +787,13 @@ export default function ProjectInvoices() {
               </div>
 
               <button
-                onClick={() => {
-                  // Pre-fill modal floor layouts or milestone amount
-                  setNewInvoice({
-                    milestone_label: `Schematic Design Stage fee (calculated)`,
+                onClick={() =>
+                  void openCreateModal({
+                    milestone_label: 'Schematic Design Stage fee (calculated)',
                     subtotal: Math.round(totalCalc * 0.15),
-                    due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+                    due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
                   })
-                  setShowCreateModal(true)
-                }}
+                }
                 className="w-full btn-secondary py-1.5 text-xs font-bold font-mono uppercase flex items-center justify-center gap-1.5"
               >
                 <span className="material-icons-outlined text-[15px]">send_and_archive</span>
@@ -893,6 +954,88 @@ export default function ProjectInvoices() {
             </div>
 
             <form onSubmit={handleCreateInvoice} className="space-y-4">
+              <div>
+                <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1.5 font-mono">
+                  Who should this invoice go to? *
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(
+                    [
+                      { value: 'client', label: 'Client' },
+                      { value: 'contractor', label: 'Contractor' },
+                      { value: 'consultant', label: 'Consultant' },
+                      { value: 'other', label: 'Other' },
+                    ] as const
+                  ).map((opt) => {
+                    const selected = newInvoice.bill_to === opt.value
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() =>
+                          setNewInvoice((prev) => ({
+                            ...prev,
+                            bill_to: opt.value,
+                            client_id: opt.value === 'client' ? projectClientId || prev.client_id : '',
+                            party_name: opt.value === 'client' ? '' : prev.party_name,
+                          }))
+                        }
+                        className="rounded-lg px-3 py-2 text-[12px] font-semibold text-left"
+                        style={{
+                          background: selected ? 'rgba(245,166,35,0.14)' : 'var(--surface)',
+                          boxShadow: selected
+                            ? 'inset 0 0 0 1.5px var(--amber)'
+                            : 'inset 0 0 0 1px var(--hairline)',
+                          color: 'var(--on-surface)',
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {newInvoice.bill_to === 'client' && (
+                <div>
+                  <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1 font-mono">
+                    Bill-to client *
+                  </label>
+                  <select
+                    required
+                    value={newInvoice.client_id}
+                    onChange={(e) => setNewInvoice((prev) => ({ ...prev, client_id: e.target.value }))}
+                    className="input-5bloc py-1.5 text-xs"
+                  >
+                    <option value="">Select a client…</option>
+                    {clients.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.full_name || c.name}
+                      </option>
+                    ))}
+                  </select>
+                  {projectClientId && newInvoice.client_id === projectClientId && (
+                    <p className="text-[10px] text-stone mt-1">Pre-filled from this project’s linked client — change if needed.</p>
+                  )}
+                </div>
+              )}
+
+              {newInvoice.bill_to && newInvoice.bill_to !== 'client' && (
+                <div>
+                  <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1 font-mono">
+                    Bill-to name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newInvoice.party_name}
+                    onChange={(e) => setNewInvoice((prev) => ({ ...prev, party_name: e.target.value }))}
+                    className="input-5bloc py-1.5 text-xs"
+                    placeholder="Name on the invoice"
+                  />
+                </div>
+              )}
+
               <div>
                 <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1 font-mono">Milestone Scope Label *</label>
                 <input

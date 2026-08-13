@@ -13,12 +13,23 @@ interface LineItem {
   amount: number
 }
 
+type BillToParty = 'client' | 'contractor' | 'consultant' | 'other'
+
 type FieldErrors = {
+  billTo?: string
   client?: string
+  partyName?: string
   dueDate?: string
   lineItems?: string
   line?: Record<number, string>
 }
+
+const BILL_TO_OPTIONS: { value: BillToParty; label: string; hint: string }[] = [
+  { value: 'client', label: 'Client', hint: 'Bill a CRM client for project fees' },
+  { value: 'contractor', label: 'Contractor', hint: 'Bill a contractor or trade firm' },
+  { value: 'consultant', label: 'Consultant', hint: 'Bill a consultant (MEP, structural, etc.)' },
+  { value: 'other', label: 'Other party', hint: 'Anyone else who should receive this invoice' },
+]
 
 export default function NewInvoice() {
   const router = useRouter()
@@ -32,6 +43,8 @@ export default function NewInvoice() {
   const [clients, setClients] = useState<any[]>([])
   const [projects, setProjects] = useState<any[]>([])
   const [nextNumber, setNextNumber] = useState('INV-…')
+  const [billTo, setBillTo] = useState<BillToParty | ''>('')
+  const [partyName, setPartyName] = useState('')
 
   const [formData, setFormData] = useState({
     client: '',
@@ -55,11 +68,6 @@ export default function NewInvoice() {
       if (!projectRes.ok) throw new Error(p.error || 'Could not load your projects')
       setClients(c.clients || [])
       setProjects(p.projects || [])
-      setFormData((prev) => ({
-        ...prev,
-        client: c.clients?.[0]?.id || '',
-        project: p.projects?.[0]?.id || '',
-      }))
       setNextNumber(`INV-${String((c.clients?.length || 0) + 1).padStart(3, '0')} (auto)`)
     } catch (err) {
       setLoadError(err)
@@ -96,9 +104,26 @@ export default function NewInvoice() {
   const igstAmount = isInterstate ? totalGst : 0
   const grandTotal = subtotal + totalGst
 
+  const billToLabel = (party: BillToParty | '') =>
+    BILL_TO_OPTIONS.find((o) => o.value === party)?.label || 'this party'
+
+  const resolveBillToName = () => {
+    if (billTo === 'client') {
+      const client = clients.find((c) => c.id === formData.client)
+      return client?.full_name || client?.name || ''
+    }
+    return partyName.trim()
+  }
+
   const validate = (): FieldErrors => {
     const next: FieldErrors = { line: {} }
-    if (!formData.client) next.client = 'Choose who this invoice is billed to.'
+    if (!billTo) next.billTo = 'Choose who this invoice should go to.'
+    if (billTo === 'client' && !formData.client) {
+      next.client = 'Select the client this invoice is billed to.'
+    }
+    if (billTo && billTo !== 'client' && !partyName.trim()) {
+      next.partyName = `Enter the ${billToLabel(billTo).toLowerCase()} name.`
+    }
     if (!formData.dueDate) next.dueDate = 'Set the date payment is due.'
 
     lineItems.forEach((item, idx) => {
@@ -117,18 +142,17 @@ export default function NewInvoice() {
 
     const found = validate()
     const hasLineError = Object.values(found.line || {}).some(Boolean)
-    if (found.client || found.dueDate || found.lineItems || hasLineError) {
+    if (found.billTo || found.client || found.partyName || found.dueDate || found.lineItems || hasLineError) {
       setErrors(found)
       toast('Fix the highlighted fields before sending this invoice.', 'warning')
       return
     }
     setErrors({})
 
-    const client = clients.find((c) => c.id === formData.client)
-    const clientLabel = client?.full_name || client?.name || 'this client'
+    const partyLabel = resolveBillToName()
     const ok = await confirm({
       title: 'Send this invoice?',
-      message: `${clientLabel} will be billed ₹${grandTotal.toLocaleString('en-IN')} (incl. ${
+      message: `${partyLabel} will be billed ₹${grandTotal.toLocaleString('en-IN')} (incl. ${
         isInterstate ? 'IGST' : 'CGST + SGST'
       }), due ${formData.dueDate}. The invoice number is issued on save and cannot be reused.`,
       confirmLabel: 'Save & send',
@@ -142,9 +166,10 @@ export default function NewInvoice() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          client_id: formData.client || null,
+          bill_to: billTo,
+          client_id: billTo === 'client' ? formData.client : null,
           project_id: formData.project || null,
-          client_name: client?.full_name || client?.name,
+          client_name: partyLabel,
           project_name: project?.name,
           phase: formData.phase,
           due_date: formData.dueDate || null,
@@ -158,7 +183,7 @@ export default function NewInvoice() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to create invoice')
       toast(
-        `Invoice ${data.invoice?.invoice_number || ''} raised for ${clientLabel}`.replace('  ', ' '),
+        `Invoice ${data.invoice?.invoice_number || ''} raised for ${partyLabel}`.replace('  ', ' '),
         'success'
       )
       router.push('/invoices')
@@ -200,12 +225,124 @@ export default function NewInvoice() {
         <ErrorState
           title="Could not load your clients and projects"
           error={loadError}
-          description="An invoice needs a bill-to contact, so we cannot start one until this loads."
+          description="We need your CRM contacts and projects before you can choose who this invoice goes to."
           onRetry={loadRefs}
         />
       ) : (
       <form onSubmit={handleSubmit} noValidate className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         <div className="lg:col-span-2 space-y-6">
+          <div className="card-5bloc space-y-4">
+            <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-amber pb-2 mb-2">
+              Who should this invoice go to?
+            </h3>
+            <p className="text-[12px] -mt-2 mb-1" style={{ color: 'var(--stone)' }}>
+              Pick the party that will pay. If you choose Client, you must select a CRM contact so the
+              bill-to name on the tax invoice is correct.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" role="radiogroup" aria-label="Bill to party">
+              {BILL_TO_OPTIONS.map((opt) => {
+                const selected = billTo === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => {
+                      setBillTo(opt.value)
+                      setErrors((prev) => ({ ...prev, billTo: undefined, client: undefined, partyName: undefined }))
+                      if (opt.value !== 'client') {
+                        setFormData((prev) => ({ ...prev, client: '' }))
+                      } else {
+                        setPartyName('')
+                      }
+                    }}
+                    className="text-left rounded-xl px-3 py-3 transition-colors"
+                    style={{
+                      background: selected ? 'rgba(245,166,35,0.12)' : 'var(--surface)',
+                      boxShadow: selected
+                        ? 'inset 0 0 0 1.5px var(--amber)'
+                        : 'inset 0 0 0 1px var(--hairline)',
+                    }}
+                  >
+                    <p className="text-[13px] font-semibold" style={{ color: 'var(--on-surface)' }}>
+                      {opt.label}
+                    </p>
+                    <p className="text-[11px] mt-0.5" style={{ color: 'var(--stone)' }}>
+                      {opt.hint}
+                    </p>
+                  </button>
+                )
+              })}
+            </div>
+            {errors.billTo && (
+              <p className="text-[11px]" style={{ color: 'var(--error)' }}>
+                {errors.billTo}
+              </p>
+            )}
+
+            {billTo === 'client' && (
+              <div>
+                <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1.5 font-mono">
+                  Bill-to client *
+                </label>
+                <select
+                  name="client"
+                  value={formData.client}
+                  onChange={handleInputChange}
+                  className="input-5bloc py-1.5 text-xs font-medium"
+                  aria-invalid={!!errors.client}
+                >
+                  <option value="">Select a client…</option>
+                  {clients.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.full_name || c.name}
+                    </option>
+                  ))}
+                </select>
+                {errors.client && (
+                  <p className="text-[11px] mt-1" style={{ color: 'var(--error)' }}>
+                    {errors.client}
+                  </p>
+                )}
+                {clients.length === 0 && (
+                  <p className="text-[11px] mt-1 text-stone">
+                    No CRM contacts yet —{' '}
+                    <Link href="/clients" className="underline">
+                      add one
+                    </Link>{' '}
+                    before billing a client.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {billTo && billTo !== 'client' && (
+              <div>
+                <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1.5 font-mono">
+                  {billToLabel(billTo)} name *
+                </label>
+                <input
+                  type="text"
+                  value={partyName}
+                  onChange={(e) => {
+                    setPartyName(e.target.value)
+                    setErrors((prev) => ({ ...prev, partyName: undefined }))
+                  }}
+                  className="input-5bloc py-1.5 text-xs"
+                  placeholder={`Name of the ${billToLabel(billTo).toLowerCase()}`}
+                  aria-invalid={!!errors.partyName}
+                />
+                {errors.partyName && (
+                  <p className="text-[11px] mt-1" style={{ color: 'var(--error)' }}>
+                    {errors.partyName}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
           <div className="card-5bloc space-y-4">
             <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-amber pb-2 mb-2">
               Invoice Details
@@ -243,40 +380,7 @@ export default function NewInvoice() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1.5 font-mono">
-                  Select Client *
-                </label>
-                <select
-                  name="client"
-                  value={formData.client}
-                  onChange={handleInputChange}
-                  className="input-5bloc py-1.5 text-xs font-medium"
-                  aria-invalid={!!errors.client}
-                >
-                  <option value="">—</option>
-                  {clients.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.full_name || c.name}
-                    </option>
-                  ))}
-                </select>
-                {errors.client && (
-                  <p className="text-[11px] mt-1" style={{ color: 'var(--error)' }}>
-                    {errors.client}
-                  </p>
-                )}
-                {clients.length === 0 && (
-                  <p className="text-[11px] mt-1 text-stone">
-                    No CRM contacts yet —{' '}
-                    <Link href="/clients" className="underline">
-                      add one
-                    </Link>{' '}
-                    to bill them.
-                  </p>
-                )}
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1.5 font-mono">
                   Associated Project
