@@ -150,7 +150,12 @@ export async function proxy(req: NextRequest) {
         return NextResponse.redirect(new URL(home, req.url))
       }
 
-      if (isRoleKey(role) && !isMarketing && !canRoleAccessPath(role, pathname)) {
+      if (
+        isRoleKey(role) &&
+        !isMarketing &&
+        !isPublic &&
+        !canRoleAccessPath(role, pathname)
+      ) {
         return NextResponse.redirect(new URL(home, req.url))
       }
     }

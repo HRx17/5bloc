@@ -49,7 +49,7 @@ Analytics and error reporting are **env-gated stubs**:
 | Variable | Notes |
 |---|---|
 | `NEXT_PUBLIC_ENABLE_DEMO_LOGIN` | Omit or set `false`. Passwordless demo role login is off in production unless this is explicitly `true`. |
-| `ENABLE_SMOKE_ADMIN` | Omit or set `0`. `/admin` smoke role aliases (hardcoded test password) are off in production unless this is `1`. |
+| `ENABLE_SMOKE_ADMIN` | Leave unset so `/admin` smoke role logins stay available. Set `0` only when you are ready to hide that test window. |
 | `MOCK_AUTH` / `NEXT_PUBLIC_MOCK_AUTH` | Must be `0` / unset. Mock APIs are also hard-disabled when `NODE_ENV=production`. |
 
 Never commit secrets. Never expose `SUPABASE_SERVICE_ROLE_KEY`, Razorpay secrets, or webhook secrets to the client.
