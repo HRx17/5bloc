@@ -1,13 +1,15 @@
 'use client'
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-import Link from 'next/link'
 import { useToast } from '@/components/ui/Toast'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { Skeleton } from '@/components/ui/Skeleton'
 import type { ArchitectListing, MarketplaceListing } from '@/lib/marketplace/listings'
+import { architectCover, initialsOf, listingCover, tenderCover } from '@/lib/marketplace/covers'
+import { CardBadge, PhotoCard, PhotoCardSkeleton } from '@/components/marketplace/PhotoCard'
+import { useLiveReload } from '@/lib/live/useLiveReload'
 
 type Category = 'projects' | 'architects' | 'contractors' | 'vendors' | 'bids'
 
@@ -42,13 +44,9 @@ function uniqueSorted(values: (string | null | undefined)[]) {
 
 function CardGridSkeleton() {
   return (
-    <div className="grid md:grid-cols-2 gap-4">
-      {[0, 1, 2, 3].map((i) => (
-        <div key={i} className="p-5 rounded-2xl space-y-3" style={{ background: 'var(--surface-container)' }}>
-          <Skeleton style={{ height: 18, width: '55%' }} />
-          <Skeleton lines={2} />
-          <Skeleton style={{ height: 14, width: '35%' }} />
-        </div>
+    <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <PhotoCardSkeleton key={i} />
       ))}
     </div>
   )
@@ -74,22 +72,27 @@ function TagRow({ tags, max = 4 }: { tags: string[]; max?: number }) {
 
 function ListingCard({ listing }: { listing: MarketplaceListing }) {
   const place = listing.service_cities.length ? listing.service_cities.join(', ') : listing.city
+  const cover = listingCover(listing)
   return (
-    <Link
+    <PhotoCard
       href={`/marketplace/${listing.id}`}
-      className="p-5 rounded-2xl block"
-      style={{ background: 'var(--surface-container)', boxShadow: 'var(--shadow-2)' }}
+      cover={cover}
+      alt={listing.company_name}
+      overlay={
+        <>
+          <div className="flex flex-wrap gap-1">
+            {listing.verified && <CardBadge tone="success">Verified</CardBadge>}
+            {listing.badge_active && <CardBadge tone="amber">Badge</CardBadge>}
+          </div>
+          {listing.reviews_count > 0 && (
+            <CardBadge tone="dark">★ {Number(listing.rating).toFixed(1)}</CardBadge>
+          )}
+        </>
+      }
     >
-      <div className="flex justify-between gap-2 items-start">
-        <p className="font-semibold">{listing.company_name}</p>
-        {listing.reviews_count > 0 && (
-          <span className="text-sm shrink-0" style={{ color: 'var(--amber)' }}>
-            ★ {listing.rating}
-          </span>
-        )}
-      </div>
+      <p className="font-semibold text-[15px] leading-snug">{listing.company_name}</p>
       <p className="text-[12px] mt-1" style={{ color: 'var(--stone)' }}>
-        {[place, listing.years_experience ? `${listing.years_experience} yrs experience` : null]
+        {[place, listing.years_experience ? `${listing.years_experience} yrs` : null]
           .filter(Boolean)
           .join(' · ') || 'Location not shared yet'}
       </p>
@@ -99,34 +102,49 @@ function ListingCard({ listing }: { listing: MarketplaceListing }) {
         </p>
       )}
       <TagRow tags={listing.tags} />
-      <div className="flex flex-wrap gap-1 mt-2">
-        {listing.verified && (
-          <span className="chip text-[10px]" style={{ color: 'var(--success)' }}>
-            Verified
-          </span>
-        )}
-        {listing.badge_active && (
-          <span className="chip text-[10px]" style={{ color: 'var(--amber)' }}>
-            Badge
-          </span>
-        )}
-      </div>
-    </Link>
+    </PhotoCard>
   )
 }
 
 function ArchitectCard({ architect }: { architect: ArchitectListing }) {
   const place = [architect.city, architect.state].filter(Boolean).join(', ')
+  const name = architect.full_name || architect.firm_name || 'Architect'
+  const { cover, portrait } = architectCover(architect)
   return (
-    <Link
+    <PhotoCard
       href={`/marketplace/architects/${architect.id}`}
-      className="p-5 rounded-2xl block"
-      style={{ background: 'var(--surface-container)', boxShadow: 'var(--shadow-2)' }}
+      cover={cover}
+      alt={name}
+      overlay={
+        architect.open_tenders > 0 ? (
+          <CardBadge tone="amber">
+            {architect.open_tenders} open project{architect.open_tenders === 1 ? '' : 's'}
+          </CardBadge>
+        ) : undefined
+      }
     >
-      <p className="font-semibold">{architect.full_name || architect.firm_name || 'Architect'}</p>
-      <p className="text-[12px] mt-1" style={{ color: 'var(--stone)' }}>
-        {[architect.firm_name, place].filter(Boolean).join(' · ') || 'Independent practice'}
-      </p>
+      <div className="flex items-start gap-3">
+        <div
+          className="h-10 w-10 shrink-0 overflow-hidden rounded-full"
+          style={{ background: 'rgba(245,166,35,0.16)' }}
+        >
+          {portrait ? (
+            <CoverPortrait src={portrait} name={name} />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-[11px] font-semibold" style={{ color: 'var(--amber)' }}>
+              {initialsOf(name)}
+            </div>
+          )}
+        </div>
+        <div className="min-w-0">
+          <p className="font-semibold text-[15px] leading-snug truncate">{name}</p>
+          <p className="text-[12px] mt-0.5 truncate" style={{ color: 'var(--stone)' }}>
+            {[architect.firm_name && architect.firm_name !== name ? architect.firm_name : null, place]
+              .filter(Boolean)
+              .join(' · ') || 'Independent practice'}
+          </p>
+        </div>
+      </div>
       <div className="flex flex-wrap gap-1 mt-3">
         {architect.discipline && (
           <span className="chip text-[10px]" style={{ color: 'var(--stone)' }}>
@@ -138,13 +156,15 @@ function ArchitectCard({ architect }: { architect: ArchitectListing }) {
             {architect.firm_type}
           </span>
         )}
-        {architect.open_tenders > 0 && (
-          <span className="chip text-[10px]" style={{ color: 'var(--amber)' }}>
-            {architect.open_tenders} project{architect.open_tenders === 1 ? '' : 's'} open for service
-          </span>
-        )}
       </div>
-    </Link>
+    </PhotoCard>
+  )
+}
+
+function CoverPortrait({ src, name }: { src: string; name: string }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt={name} className="h-full w-full object-cover" />
   )
 }
 
@@ -173,9 +193,11 @@ export default function Marketplace() {
 
   const isContractor = role === 'contractor'
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setFailed(NO_FAILURES)
+  const load = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) {
+      setLoading(true)
+      setFailed(NO_FAILURES)
+    }
     try {
       const me = await fetch('/api/me')
         .then((r) => r.json())
@@ -210,13 +232,15 @@ export default function Marketplace() {
         bids: bidRes.status === 'rejected',
       })
     } finally {
-      setLoading(false)
+      if (!opts?.quiet) setLoading(false)
     }
   }, [])
 
   useEffect(() => {
     load()
   }, [load])
+
+  useLiveReload(load, ['bids', 'tenders', 'contractors'])
 
   // Filters mean different things per category, so reset them on every switch.
   const switchTab = (next: Category) => {
@@ -327,7 +351,8 @@ export default function Marketplace() {
         : 'Bid rejected and the contractor was notified',
       'success'
     )
-    await load()
+    setBids((prev) => prev.map((b) => (b.id === award.bid.id ? { ...b, status: award.status } : b)))
+    await load({ quiet: true })
   }
 
   const shortlistBid = async (bid: any) => {
@@ -344,7 +369,8 @@ export default function Marketplace() {
       return
     }
     toast('Bid shortlisted — the contractor was notified', 'success')
-    await load()
+    setBids((prev) => prev.map((b) => (b.id === bid.id ? { ...b, status: 'shortlisted' } : b)))
+    await load({ quiet: true })
   }
 
   const categories: [Category, string][] = [
@@ -430,9 +456,9 @@ export default function Marketplace() {
       {loading && tab !== 'bids' && <CardGridSkeleton />}
 
       {!loading && tab === 'projects' && (
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
           {failed.tenders ? (
-            <div className="md:col-span-2">
+            <div className="sm:col-span-2 xl:col-span-3">
               <ErrorState
                 title="Could not load open projects"
                 description="This is a loading problem, not an empty marketplace. Try again in a moment."
@@ -440,7 +466,7 @@ export default function Marketplace() {
               />
             </div>
           ) : filteredTenders.length === 0 ? (
-            <div className="md:col-span-2">
+            <div className="sm:col-span-2 xl:col-span-3">
               <EmptyState
                 icon="engineering"
                 title={openTenders.length ? 'No projects match those filters' : 'No projects open for service yet'}
@@ -457,63 +483,47 @@ export default function Marketplace() {
             filteredTenders.map((t) => {
               const services =
                 Array.isArray(t.services) && t.services.length ? t.services : t.trade_type ? [t.trade_type] : []
-              const card = (
+              const cover = tenderCover(t)
+              const overlay = (
                 <>
-                  <div>
-                    <p className="font-semibold text-lg">{t.project_name || t.title}</p>
-                    <p className="text-[12px] mt-1" style={{ color: 'var(--stone)' }}>
-                      {t.city || '—'} · Bid due {t.deadline || 'Open'}
-                    </p>
-                    {t.scope && (
-                      <p className="text-[12px] mt-2 line-clamp-3" style={{ color: 'var(--stone)' }}>
-                        {t.scope}
-                      </p>
-                    )}
-                    <div className="flex flex-wrap gap-1 mt-3">
-                      {services.map((s: string) => (
-                        <span key={s} className="chip text-[10px]" style={{ color: 'var(--amber)' }}>
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                    {(t.budget_min || t.budget_max) && (
-                      <p className="text-[12px] mt-2" style={{ color: 'var(--stone)' }}>
-                        Budget {money(t.budget_min)} – {money(t.budget_max)}
-                      </p>
-                    )}
-                  </div>
+                  <CardBadge tone="dark">{t.city || 'India'}</CardBadge>
                   {isContractor && (
-                    <span
-                      className="chip text-[11px] w-fit"
-                      style={
-                        t.my_bid
-                          ? { color: 'var(--success)', background: 'rgba(46,204,138,0.12)' }
-                          : { color: 'var(--amber)', background: 'rgba(245,166,35,0.12)' }
-                      }
-                    >
-                      {t.my_bid ? `Bid submitted · ${money(t.my_bid.amount)}` : 'View details & bid'}
-                    </span>
+                    <CardBadge tone={t.my_bid ? 'success' : 'amber'}>
+                      {t.my_bid ? `Bid ${money(t.my_bid.amount)}` : 'Open to bid'}
+                    </CardBadge>
+                  )}
+                </>
+              )
+              const body = (
+                <>
+                  <p className="font-semibold text-[15px] leading-snug">{t.project_name || t.title}</p>
+                  <p className="text-[12px] mt-1" style={{ color: 'var(--stone)' }}>
+                    Bid due {t.deadline || 'Open'}
+                  </p>
+                  {t.scope && (
+                    <p className="text-[12px] mt-2 line-clamp-2" style={{ color: 'var(--stone)' }}>
+                      {t.scope}
+                    </p>
+                  )}
+                  <TagRow tags={services} />
+                  {(t.budget_min || t.budget_max) && (
+                    <p className="text-[12px] mt-2 font-medium" style={{ color: 'var(--amber)' }}>
+                      {money(t.budget_min)} – {money(t.budget_max)}
+                    </p>
                   )}
                 </>
               )
 
-              return isContractor ? (
-                <Link
+              return (
+                <PhotoCard
                   key={t.id}
-                  href={`/marketplace/tenders/${t.id}`}
-                  className="p-5 rounded-2xl flex flex-col justify-between gap-3"
-                  style={{ background: 'var(--surface-container)', boxShadow: 'var(--shadow-2)' }}
+                  href={isContractor ? `/marketplace/tenders/${t.id}` : undefined}
+                  cover={cover}
+                  alt={t.project_name || t.title || 'Project'}
+                  overlay={overlay}
                 >
-                  {card}
-                </Link>
-              ) : (
-                <div
-                  key={t.id}
-                  className="p-5 rounded-2xl flex flex-col justify-between gap-3"
-                  style={{ background: 'var(--surface-container)', boxShadow: 'var(--shadow-2)' }}
-                >
-                  {card}
-                </div>
+                  {body}
+                </PhotoCard>
               )
             })
           )}
@@ -521,9 +531,9 @@ export default function Marketplace() {
       )}
 
       {!loading && tab === 'architects' && (
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
           {failed.architects ? (
-            <div className="md:col-span-2">
+            <div className="sm:col-span-2 xl:col-span-3">
               <ErrorState
                 title="Could not load the architect directory"
                 description="This is a loading problem, not an empty directory. Try again in a moment."
@@ -531,7 +541,7 @@ export default function Marketplace() {
               />
             </div>
           ) : filteredArchitects.length === 0 ? (
-            <div className="md:col-span-2">
+            <div className="sm:col-span-2 xl:col-span-3">
               <EmptyState
                 icon="architecture"
                 title={architects.length ? 'No architects match your search' : 'No architects listed yet'}
@@ -549,9 +559,9 @@ export default function Marketplace() {
       )}
 
       {!loading && (tab === 'contractors' || tab === 'vendors') && (
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
           {failed.listings ? (
-            <div className="md:col-span-2">
+            <div className="sm:col-span-2 xl:col-span-3">
               <ErrorState
                 title={tab === 'vendors' ? 'Could not load the vendor directory' : 'Could not load the contractor directory'}
                 description="This is a loading problem, not an empty directory. Try again in a moment."
@@ -559,7 +569,7 @@ export default function Marketplace() {
               />
             </div>
           ) : filteredListings.length === 0 ? (
-            <div className="md:col-span-2">
+            <div className="sm:col-span-2 xl:col-span-3">
               <EmptyState
                 icon={tab === 'vendors' ? 'inventory_2' : 'construction'}
                 title={

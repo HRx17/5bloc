@@ -2,6 +2,8 @@
 
 import React, { useCallback, useEffect, useState } from 'react'
 import { startRazorpayCheckout } from '@/lib/payments/checkout'
+import { isTestPeriod } from '@/lib/payments/gates'
+import { PlanPrice } from '@/components/payments/PlanPrice'
 import { useToast } from '@/components/ui/Toast'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { Skeleton } from '@/components/ui/Skeleton'
@@ -215,8 +217,9 @@ export default function ContractorProfilePage() {
               <button
                 className="btn-secondary text-[12px]"
                 type="button"
-                disabled={badgeLoading}
+                disabled={badgeLoading || isTestPeriod()}
                 onClick={async () => {
+                  if (isTestPeriod()) return
                   setBadgeLoading(true)
                   try {
                     const result = await startRazorpayCheckout({
@@ -229,7 +232,15 @@ export default function ContractorProfilePage() {
                   }
                 }}
               >
-                {badgeLoading ? 'Opening checkout…' : 'Get verified badge (₹999/mo)'}
+                {isTestPeriod() ? (
+                  <>
+                    Verified badge — <PlanPrice price="₹999/mo" size="sm" />
+                  </>
+                ) : badgeLoading ? (
+                  'Opening checkout…'
+                ) : (
+                  'Get verified badge (₹999/mo)'
+                )}
               </button>
               <button className="btn-primary" onClick={save} disabled={saving}>
                 {saving ? 'Saving…' : 'Save profile'}

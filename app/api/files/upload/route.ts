@@ -33,8 +33,23 @@ export async function POST(req: Request) {
   const form = await req.formData()
   const file = form.get('file') as File | null
   const projectId = String(form.get('projectId') || '')
-  if (!file || !projectId) {
-    return NextResponse.json({ error: 'file and projectId required' }, { status: 400 })
+  const conversationId = String(form.get('conversationId') || '')
+  const folder = String(form.get('folder') || '')
+  if (!file) {
+    return NextResponse.json({ error: 'file required' }, { status: 400 })
+  }
+  const prefix = conversationId
+    ? `messages/${conversationId}`
+    : projectId
+      ? `projects/${projectId}`
+      : folder === 'messages'
+        ? `messages/${auth.user?.id || 'user'}`
+        : ''
+  if (!prefix) {
+    return NextResponse.json({ error: 'file and projectId or conversationId required' }, { status: 400 })
+  }
+  if (file.size > 25 * 1024 * 1024) {
+    return NextResponse.json({ error: 'File is over 25 MB' }, { status: 413 })
   }
 
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
@@ -43,7 +58,7 @@ export async function POST(req: Request) {
 
   // Prefer Cloudflare R2 when configured
   if (r2 && !isMockAuthEnabled()) {
-    const r2Key = `projects/${projectId}/${Date.now()}-${safeName}`
+    const r2Key = `${prefix}/${Date.now()}-${safeName}`
     await r2.send(
       new PutObjectCommand({
         Bucket: R2_BUCKET,
@@ -65,7 +80,7 @@ export async function POST(req: Request) {
 
   // Live Supabase without R2 → Storage bucket
   if (hasSupabaseEnv() && !auth.isMock && auth.supabase && auth.user?.id) {
-    const storagePath = `${auth.user.id}/projects/${projectId}/${Date.now()}-${safeName}`
+    const storagePath = `${auth.user.id}/${prefix}/${Date.now()}-${safeName}`
     const { error } = await auth.supabase.storage
       .from(SUPABASE_BUCKET)
       .upload(storagePath, buffer, { contentType, upsert: false })
@@ -94,7 +109,7 @@ export async function POST(req: Request) {
 
   // Explicit mock auth only — never pretend upload succeeded for live users
   if (isMockAuthEnabled()) {
-    const mockKey = `projects/${projectId}/${Date.now()}-${safeName}`
+    const mockKey = `${prefix}/${Date.now()}-${safeName}`
     return NextResponse.json({
       r2_key: mockKey,
       storage_path: mockKey,
@@ -125,6 +140,7 @@ export async function GET(req: Request) {
   const url = new URL(req.url)
   const key = url.searchParams.get('key')
   const filename = url.searchParams.get('filename') || 'download'
+  const inline = url.searchParams.get('inline') === '1'
   if (!key) return NextResponse.json({ error: 'key required' }, { status: 400 })
 
   if (key.startsWith('supabase:') || (!r2 && hasSupabaseEnv() && !auth.isMock && auth.supabase)) {
@@ -153,7 +169,7 @@ export async function GET(req: Request) {
     new GetObjectCommand({
       Bucket: R2_BUCKET,
       Key: key,
-      ResponseContentDisposition: `attachment; filename="${filename}"`,
+      ResponseContentDisposition: `${inline ? 'inline' : 'attachment'}; filename="${filename}"`,
     }),
     { expiresIn: 900 }
   )

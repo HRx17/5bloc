@@ -24,12 +24,13 @@ const isProd = process.env.NODE_ENV === 'production'
 
 const contentSecurityPolicy = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://*.razorpay.com https://apis.google.com https://accounts.google.com https://*.posthog.com https://browser.sentry-cdn.com",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com data:",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://*.razorpay.com https://apis.google.com https://accounts.google.com https://*.posthog.com https://browser.sentry-cdn.com https://developer.api.autodesk.com https://in.heycatch.ai",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://developer.api.autodesk.com",
+  "font-src 'self' https://fonts.gstatic.com data: https://developer.api.autodesk.com",
   "img-src 'self' data: blob: https:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.razorpay.com https://*.razorpay.com https://*.googleapis.com https://oauth2.googleapis.com https://accounts.google.com https://*.r2.cloudflarestorage.com https://api.resend.com https://*.posthog.com https://*.sentry.io https://api.anthropic.com",
-  "frame-src 'self' blob: https://checkout.razorpay.com https://*.razorpay.com https://accounts.google.com https://docs.google.com https://drive.google.com https://*.supabase.co https://*.r2.cloudflarestorage.com https://*.cloudflarestorage.com",
+  // Autodesk APS: viewer SDK + OSS signed uploads land on S3 buckets
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.razorpay.com https://*.razorpay.com https://*.googleapis.com https://oauth2.googleapis.com https://accounts.google.com https://*.r2.cloudflarestorage.com https://api.resend.com https://*.posthog.com https://*.sentry.io https://api.anthropic.com https://developer.api.autodesk.com https://*.autodesk.com https://*.s3.amazonaws.com https://*.s3.us-east-1.amazonaws.com https://*.s3.us-west-2.amazonaws.com https://s3.amazonaws.com https://in.heycatch.ai",
+  "frame-src 'self' blob: https://checkout.razorpay.com https://*.razorpay.com https://accounts.google.com https://docs.google.com https://drive.google.com https://*.supabase.co https://*.r2.cloudflarestorage.com https://*.cloudflarestorage.com https://developer.api.autodesk.com",
   "media-src 'self' blob:",
   "worker-src 'self' blob:",
   "object-src 'none'",
@@ -59,6 +60,15 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ['127.0.0.1', 'localhost'],
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }]
+  },
+  async redirects() {
+    return [
+      {
+        source: '/:l([a-z0-9])',
+        destination: '/?utm_source=heycatch&utm_campaign=:l',
+        permanent: false,
+      },
+    ]
   },
 }
 

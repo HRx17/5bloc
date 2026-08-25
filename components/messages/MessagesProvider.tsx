@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react'
 import { supabaseClient } from '@/lib/supabase/client'
 import { getMyProfile, listConversations } from '@/lib/data/messages'
+import { messagePreview } from '@/lib/messages/files'
 import { hasSupabaseEnv } from '@/lib/data/client-data'
 import { useToast } from '@/components/ui/Toast'
 
@@ -13,6 +14,7 @@ export interface MessageNotification {
   body: string
   at: string
   read: boolean
+  projectName?: string | null
 }
 
 interface MessagesContextValue {
@@ -44,6 +46,27 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<MessageNotification[]>([])
   const activeConvRef = useRef<string | null>(null)
   const myIdRef = useRef<string | null>(null)
+  const projectNameCache = useRef<Map<string, string | null>>(new Map())
+
+  /** Which project a conversation belongs to, so alerts can say where the message came from. */
+  const projectNameFor = useCallback(async (conversationId: string) => {
+    const cached = projectNameCache.current.get(conversationId)
+    if (cached !== undefined) return cached
+    let name: string | null = null
+    try {
+      const { data } = await supabaseClient
+        .from('conversations')
+        .select('project_id, projects(name)')
+        .eq('id', conversationId)
+        .maybeSingle()
+      const project = (data as { projects?: { name?: string } | null } | null)?.projects
+      name = project?.name ?? null
+    } catch {
+      /* ignore */
+    }
+    projectNameCache.current.set(conversationId, name)
+    return name
+  }, [])
 
   const setActiveConversation = useCallback((id: string | null) => {
     activeConvRef.current = id
@@ -98,6 +121,8 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
               conversation_id: string
               sender_id: string | null
               body: string
+              attachment_name?: string | null
+              attachment_url?: string | null
               created_at: string
             }
             // Ignore our own messages
@@ -114,14 +139,18 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
               senderName = data?.full_name || data?.email || 'New message'
             } catch { /* ignore */ }
 
+            const projectName = await projectNameFor(msg.conversation_id)
+            const previewRaw = messagePreview(msg) || 'Sent an attachment'
+            const preview = previewRaw.length > 80 ? previewRaw.slice(0, 80) + '…' : previewRaw
             setNotifications((prev) => [
               {
                 id: msg.id,
                 conversationId: msg.conversation_id,
                 senderName,
-                body: msg.body,
+                body: previewRaw,
                 at: msg.created_at,
                 read: false,
+                projectName,
               },
               ...prev,
             ].slice(0, 25))
@@ -129,16 +158,30 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
             const isActive = activeConvRef.current === msg.conversation_id
             if (!isActive) {
               setUnreadCount((c) => c + 1)
-              const preview = msg.body.length > 80 ? msg.body.slice(0, 80) + '…' : msg.body
-              toast(`${senderName}: ${preview}`, 'info')
+              const where = projectName ? ` · ${projectName}` : ''
+              toast(`${senderName}${where}: ${preview}`, 'info')
+
+              // Alert whenever this tab is not the one the user is looking at,
+              // the way WhatsApp Web does — not only when the tab is fully hidden.
+              const unattended =
+                typeof document !== 'undefined' &&
+                (document.visibilityState === 'hidden' || !document.hasFocus())
               if (
                 typeof window !== 'undefined' &&
                 'Notification' in window &&
                 Notification.permission === 'granted' &&
-                document.visibilityState === 'hidden'
+                unattended
               ) {
                 try {
-                  new Notification(senderName, { body: preview, tag: msg.conversation_id })
+                  const note = new Notification(`${senderName}${where}`, {
+                    body: preview,
+                    tag: msg.conversation_id,
+                  })
+                  note.onclick = () => {
+                    window.focus()
+                    window.location.href = `/messages?c=${msg.conversation_id}`
+                    note.close()
+                  }
                 } catch { /* ignore */ }
               }
             }
@@ -151,7 +194,14 @@ export function MessagesProvider({ children }: { children: React.ReactNode }) {
       cancelled = true
       if (channel) supabaseClient.removeChannel(channel)
     }
-  }, [refreshUnread, toast])
+  }, [refreshUnread, toast, projectNameFor])
+
+  // Unread badge in the browser tab title, like WhatsApp Web
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    const base = document.title.replace(/^\(\d+\)\s*/, '')
+    document.title = unreadCount > 0 ? `(${unreadCount}) ${base}` : base
+  }, [unreadCount])
 
   return (
     <MessagesContext.Provider

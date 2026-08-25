@@ -7,6 +7,8 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { Skeleton } from '@/components/ui/Skeleton'
 import type { ArchitectListing } from '@/lib/marketplace/listings'
+import { architectCover, initialsOf } from '@/lib/marketplace/covers'
+import { CoverImage } from '@/components/marketplace/PhotoCard'
 
 type OpenTender = {
   id: string
@@ -109,6 +111,8 @@ export default function ArchitectProfile() {
   }
 
   const location = [architect.city, architect.state].filter(Boolean).join(', ')
+  const name = architect.full_name || architect.firm_name || 'Architect'
+  const { cover, portrait } = architectCover(architect)
 
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6">
@@ -116,16 +120,41 @@ export default function ArchitectProfile() {
         <span className="material-icons-outlined text-[14px]">arrow_back</span> Back to marketplace
       </Link>
 
-      <div className="card-5bloc flex flex-col md:flex-row justify-between gap-6">
+      <div className="overflow-hidden rounded-2xl" style={{ background: 'var(--surface-container)', boxShadow: 'var(--shadow-2)' }}>
+        <div className="relative h-48 md:h-64">
+          <CoverImage src={cover} alt={name} className="absolute inset-0 h-full w-full object-cover" />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'linear-gradient(to top, rgba(8,9,9,0.78) 0%, rgba(8,9,9,0.22) 50%, rgba(8,9,9,0.06) 100%)',
+            }}
+          />
+        </div>
+        <div className="flex flex-col md:flex-row justify-between gap-6 p-6">
         <div className="space-y-3">
-          <span
-            className="chip text-[10px] uppercase w-fit"
-            style={{ color: 'var(--amber)', background: 'rgba(245,166,35,0.12)' }}
-          >
-            Architect
-          </span>
+          <div className="flex items-center gap-3">
+            <div
+              className="h-14 w-14 shrink-0 overflow-hidden rounded-full"
+              style={{ background: 'rgba(245,166,35,0.16)', marginTop: '-2.75rem', boxShadow: '0 0 0 3px var(--surface-container)' }}
+            >
+              {portrait ? (
+                <CoverImage src={portrait} alt={name} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-sm font-semibold" style={{ color: 'var(--amber)' }}>
+                  {initialsOf(name)}
+                </div>
+              )}
+            </div>
+            <span
+              className="chip text-[10px] uppercase w-fit"
+              style={{ color: 'var(--amber)', background: 'rgba(245,166,35,0.12)' }}
+            >
+              Architect
+            </span>
+          </div>
           <h1 className="font-display text-[32px] leading-tight">
-            {architect.full_name || architect.firm_name || 'Architect'}
+            {name}
           </h1>
           <p className="text-sm" style={{ color: 'var(--stone)' }}>
             {[architect.firm_name, location].filter(Boolean).join(' · ') || 'Independent practice'}
@@ -144,6 +173,7 @@ export default function ArchitectProfile() {
           <p className="text-xs font-mono" style={{ color: 'var(--stone)' }}>
             project{architect.open_tenders === 1 ? '' : 's'} open for service
           </p>
+        </div>
         </div>
       </div>
 

@@ -6,6 +6,7 @@ export async function GET(req: NextRequest) {
   try {
     const auth = await getAuthUser()
     const docId = req.nextUrl.searchParams.get('id')
+    const inline = req.nextUrl.searchParams.get('inline') === '1'
 
     if (!docId) {
       return NextResponse.json({ error: 'Missing document id parameter' }, { status: 400 })
@@ -33,8 +34,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'No file storage key' }, { status: 404 })
     }
 
-    const filename = `${doc.name || doc.original_filename || 'document'}.${doc.extension || 'pdf'}`
-    const resolved = await resolveStorageDownloadUrl(key, filename, auth.supabase)
+    const base = doc.original_filename || doc.name || 'document'
+    const ext = (doc.extension || '').replace(/^\./, '')
+    const filename = ext && !base.toLowerCase().endsWith(`.${ext.toLowerCase()}`)
+      ? `${base}.${ext}`
+      : base
+    const resolved = await resolveStorageDownloadUrl(key, filename, auth.supabase, { inline })
     return NextResponse.json({
       url: resolved.url,
       expires_in: 900,

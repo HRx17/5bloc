@@ -7,6 +7,8 @@ import { AuthShell } from '@/components/auth/AuthShell'
 import { createClient } from '@/lib/supabase/client'
 import { SELF_REGISTER_ROLES, ROLES, type RoleKey, isRoleKey } from '@/lib/rbac/roles'
 import { hasSupabaseEnv, isMockAuthEnabled } from '@/lib/rbac/mock'
+import { sendConfirmEmail } from '@/lib/auth/send-confirm-email'
+import { analytics } from '@heycatch/sdk'
 
 export default function Signup() {
   const router = useRouter()
@@ -30,6 +32,8 @@ export default function Signup() {
   const [oauthLoading, setOauthLoading] = useState(false)
   const [error, setError] = useState('')
   const [awaitingEmail, setAwaitingEmail] = useState(false)
+  const [resending, setResending] = useState(false)
+  const [resendNote, setResendNote] = useState('')
 
   useEffect(() => {
     if (prefillEmail) setFormData((p) => ({ ...p, email: prefillEmail }))
@@ -114,9 +118,21 @@ export default function Signup() {
       if (signError) throw signError
 
       // When email confirmation is required, Supabase returns a user but no session.
+      // Only a session proves this is a completed signup — do not identify on data.user alone.
       if (!signData.session) {
+        const redirectTo = `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(`/onboarding?${onboardingQuery()}`)}`
+        await sendConfirmEmail(formData.email, redirectTo).catch(() => null)
         setAwaitingEmail(true)
         return
+      }
+
+      if (signData.user) {
+        analytics.setIdentity(
+          signData.user.id,
+          { email: signData.user.email, name: formData.name },
+          { signup_date: signData.user.created_at },
+        )
+        analytics.trackEvent('signup_completed')
       }
 
       router.push(`/onboarding?${onboardingQuery()}`)
@@ -124,6 +140,33 @@ export default function Signup() {
       setError(err?.message || 'Signup failed. Please try again.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const resendConfirmation = async () => {
+    if (resending) return
+    setResending(true)
+    setResendNote('')
+    try {
+      const redirectTo = `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(`/onboarding?${onboardingQuery()}`)}`
+      const sent = await sendConfirmEmail(formData.email, redirectTo)
+      if (!sent.ok) {
+        const supabase = createClient()
+        const { error: resendError } = await supabase.auth.resend({
+          type: 'signup',
+          email: formData.email,
+          options: { emailRedirectTo: redirectTo },
+        })
+        if (resendError) throw resendError
+      }
+      setResendNote(`Sent again to ${formData.email}. Check spam and promotions.`)
+    } catch (err: any) {
+      setResendNote(
+        err?.message ||
+          'Could not resend. Wait a minute and try again, or contact support@5bloc.com.'
+      )
+    } finally {
+      setResending(false)
     }
   }
 
@@ -146,10 +189,23 @@ export default function Signup() {
             Open that email and click the link to finish creating your workspace. Check spam if you
             do not see it within a minute.
           </p>
+          {resendNote && (
+            <p className="text-[12px]" style={{ color: 'var(--amber)' }}>
+              {resendNote}
+            </p>
+          )}
           <div className="pt-2 flex flex-col gap-2">
             <Link href="/login" className="btn-primary text-[13px]">
               Go to sign in
             </Link>
+            <button
+              type="button"
+              className="btn-secondary text-[13px]"
+              disabled={resending}
+              onClick={resendConfirmation}
+            >
+              {resending ? 'Sending…' : 'Resend confirmation email'}
+            </button>
             <button
               type="button"
               className="btn-secondary text-[13px]"

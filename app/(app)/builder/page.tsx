@@ -6,6 +6,7 @@ import { useToast } from '@/components/ui/Toast'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useLiveReload } from '@/lib/live/useLiveReload'
 
 export default function BuilderHome() {
   const { toast } = useToast()
@@ -15,24 +16,28 @@ export default function BuilderHome() {
   const [recommend, setRecommend] = useState<{ projectId: string; name: string; spec: string; email: string; note: string } | null>(null)
   const [sending, setSending] = useState(false)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+  const load = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) {
+      setLoading(true)
+      setError(null)
+    }
     try {
       const res = await fetch('/api/projects')
       if (!res.ok) throw new Error('Could not load your projects')
       const d = await res.json()
       setProjects(d.projects || [])
     } catch (err) {
-      setError(err)
+      if (!opts?.quiet) setError(err)
     } finally {
-      setLoading(false)
+      if (!opts?.quiet) setLoading(false)
     }
   }, [])
 
   useEffect(() => {
     load()
   }, [load])
+
+  useLiveReload(load, ['projects'])
 
   const submitRecommend = async () => {
     if (!recommend || sending) return

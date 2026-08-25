@@ -7,6 +7,13 @@ import { useConfirm } from '@/components/ui/ConfirmProvider'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useLiveReload } from '@/lib/live/useLiveReload'
+import {
+  byeLawsFor,
+  complianceNotesFor,
+  defaultPermitsFor,
+  typologyLabel,
+} from '@/lib/compliance/typology'
 
 interface PermitItem {
   id: string
@@ -33,10 +40,23 @@ export default function PermitsAndCompliance() {
   const [reraRegistered, setReraRegistered] = useState(true)
   const [reraNum, setReraNum] = useState('')
   const [showChecklist, setShowChecklist] = useState(false)
+  const [projectType, setProjectType] = useState<string>('residential')
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [addingPermit, setAddingPermit] = useState(false)
+  const [newPermit, setNewPermit] = useState({
+    approval_name: '',
+    authority: '',
+    status: 'not_started' as PermitItem['status'],
+    submission_date: '',
+    expiry_date: '',
+    notes: '',
+  })
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setLoadError(null)
+  const load = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) {
+      setLoading(true)
+      setLoadError(null)
+    }
     try {
       const [permitRes, projRes] = await Promise.all([
         fetch(`/api/projects/${projectId}/permits`),
@@ -50,18 +70,21 @@ export default function PermitsAndCompliance() {
       if (projRes.ok && project) {
         setReraRegistered(!!project.is_rera_registered)
         setReraNum(project.rera_number || '')
+        setProjectType(project.type || 'residential')
         if (project.state) setSelectedState(project.state === 'MH' ? 'Maharashtra' : project.state)
       }
     } catch (e) {
-      setLoadError(e)
+      if (!opts?.quiet) setLoadError(e)
     } finally {
-      setLoading(false)
+      if (!opts?.quiet) setLoading(false)
     }
   }, [projectId])
 
   useEffect(() => {
     load()
   }, [load])
+
+  useLiveReload(load, ['permits'])
 
   const handleTogglePermitStatus = async (permit: PermitItem, newStatus: PermitItem['status']) => {
     if (updatingPermit) return
@@ -76,6 +99,7 @@ export default function PermitsAndCompliance() {
       return
     }
     setUpdatingPermit(permit.id)
+    setPermits((prev) => prev.map((p) => (p.id === permit.id ? { ...p, status: newStatus } : p)))
     try {
       const res = await fetch(`/api/projects/${projectId}/permits`, {
         method: 'PATCH',
@@ -83,30 +107,66 @@ export default function PermitsAndCompliance() {
         body: JSON.stringify({ permit_id: permit.id, status: newStatus }),
       })
       if (!res.ok) {
+        setPermits((prev) => prev.map((p) => (p.id === permit.id ? { ...p, status: permit.status } : p)))
         const data = await res.json().catch(() => ({}))
         toast(data.error || 'Could not update the permit status', 'error')
         return
       }
-      setPermits((prev) => prev.map((p) => (p.id === permit.id ? { ...p, status: newStatus } : p)))
       toast(
         newStatus === 'approved' ? `${permit.approval_name} approved` : `${permit.approval_name} marked as submitted`,
         'success'
       )
     } catch (err: any) {
+      setPermits((prev) => prev.map((p) => (p.id === permit.id ? { ...p, status: permit.status } : p)))
       toast(err?.message || 'Could not update the permit status', 'error')
     } finally {
       setUpdatingPermit(null)
     }
   }
 
+  const addPermit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (addingPermit || !newPermit.approval_name.trim()) return
+    setAddingPermit(true)
+    try {
+      const res = await fetch(`/api/projects/${projectId}/permits`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          approval_name: newPermit.approval_name.trim(),
+          authority: newPermit.authority.trim() || 'Not specified',
+          status: newPermit.status,
+          submission_date: newPermit.submission_date || null,
+          expiry_date: newPermit.expiry_date || null,
+          notes: newPermit.notes.trim() || null,
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        toast(data.error || 'Could not add that clearance', 'error')
+        return
+      }
+      setPermits((prev) => [...prev, data.permit])
+      setShowAddModal(false)
+      setNewPermit({
+        approval_name: '',
+        authority: '',
+        status: 'not_started',
+        submission_date: '',
+        expiry_date: '',
+        notes: '',
+      })
+      toast(`${data.permit.approval_name} added`, 'success')
+    } catch (err: any) {
+      toast(err?.message || 'Could not add that clearance', 'error')
+    } finally {
+      setAddingPermit(false)
+    }
+  }
+
   const seedDefaultPermits = async () => {
     if (permits.length > 0 || seeding) return
-    const defaults = [
-      { approval_name: 'Municipal Building Sanction (IOD)', authority: 'Local Municipal Corporation', status: 'not_started' },
-      { approval_name: 'Fire Department NOC', authority: 'State Fire Services', status: 'not_started' },
-      { approval_name: 'RERA Promoter Registration', authority: 'State RERA', status: 'not_started' },
-      { approval_name: 'Final Occupancy Certificate (OC)', authority: 'Municipal Commissioner', status: 'not_started' },
-    ]
+    const defaults = defaultPermitsFor(projectType).map((d) => ({ ...d, status: 'not_started' }))
     setSeeding(true)
     try {
       const created = []
@@ -123,7 +183,7 @@ export default function PermitsAndCompliance() {
       }
       setPermits(created)
       if (failed) toast(`${created.length} of ${defaults.length} permits added — the rest failed`, 'warning')
-      else toast('Standard clearance checklist added', 'success')
+      else toast(`${typologyLabel(projectType)} clearance checklist added`, 'success')
     } catch (err: any) {
       toast(err?.message || 'Could not seed the permit checklist', 'error')
     } finally {
@@ -131,12 +191,8 @@ export default function PermitsAndCompliance() {
     }
   }
 
-  const complianceChecklist = [
-    'Front margin: typically ≥ 4.5m under most municipal bye-laws',
-    'Base FSI often ~1.33, plus paid TDR where the authority allows it',
-    'Height usually capped near 24m without a special fire NOC',
-    'Rainwater harvesting commonly mandatory above a ~500 sqm plot',
-  ]
+  const complianceChecklist = complianceNotesFor(projectType)
+  const byeLaws = byeLawsFor(projectType)
 
   const getStatusChipStyle = (st: PermitItem['status']) => {
     switch (st) {
@@ -175,9 +231,20 @@ export default function PermitsAndCompliance() {
             <div className="border-b pb-3 flex justify-between items-center">
               <div>
                 <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Sanction & NOC Checklist</h3>
-                <p className="text-[10px] text-stone mt-0.5 font-mono">Verify state building codes and certificate filings.</p>
+                <p className="text-[10px] text-stone mt-0.5 font-mono">
+                  {typologyLabel(projectType)} project — verify state building codes and certificate filings.
+                </p>
               </div>
-              <span className="label-sm font-bold text-stone">PERMITS: {permits.length}</span>
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="label-sm font-bold text-stone">PERMITS: {permits.length}</span>
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="btn-secondary py-1 px-2.5 text-[10px] font-mono font-bold uppercase"
+                >
+                  <span className="material-icons-outlined text-[13px]">add</span>
+                  Add clearance
+                </button>
+              </div>
             </div>
 
             {loading ? (
@@ -197,8 +264,8 @@ export default function PermitsAndCompliance() {
               <EmptyState
                 icon="verified_user"
                 title="No approvals tracked yet"
-                description="Start from the four clearances almost every Indian project needs — building sanction, fire NOC, RERA registration and the occupancy certificate — then add authority-specific ones as they come up."
-                actionLabel={seeding ? 'Adding…' : 'Seed standard checklist'}
+                description={`Seed the standard ${typologyLabel(projectType).toLowerCase()} checklist — ${defaultPermitsFor(projectType).length} clearances tuned to this typology — or add your own with “Add clearance”.`}
+                actionLabel={seeding ? 'Adding…' : `Seed ${typologyLabel(projectType).toLowerCase()} checklist`}
                 onClick={seedDefaultPermits}
               />
             ) : (
@@ -275,27 +342,28 @@ export default function PermitsAndCompliance() {
             <div className="p-3.5 bg-navy/40 border space-y-3">
               <h4 className="text-xs font-bold text-white flex items-center gap-1.5 font-mono">
                 <span className="material-icons-outlined text-amber text-[15px]">info</span>
-                Zoning Bye-Laws (residential)
+                Zoning Bye-Laws ({typologyLabel(projectType).toLowerCase()})
               </h4>
               <div className="space-y-2 text-[10px] text-stone font-mono leading-normal">
-                <div className="flex justify-between border-b pb-1 border-navy-lt/60">
-                  <span>Front Margin Space:</span>
-                  <span className="text-white">Min 4.5 meters</span>
-                </div>
-                <div className="flex justify-between border-b pb-1 border-navy-lt/60">
-                  <span>Permissible FSI Limit:</span>
-                  <span className="text-white">1.33 base + 0.5 paid TDR</span>
-                </div>
-                <div className="flex justify-between border-b pb-1 border-navy-lt/60">
-                  <span>Maximum Height:</span>
-                  <span className="text-white">IS 24m fire safety limit</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Rainwater Harvesting:</span>
-                  <span className="text-success font-bold font-mono">Mandatory for &gt;500 sqm</span>
-                </div>
+                {byeLaws.map((rule, i) => (
+                  <div
+                    key={rule.label}
+                    className={`flex justify-between gap-3 ${i < byeLaws.length - 1 ? 'border-b pb-1 border-navy-lt/60' : ''}`}
+                  >
+                    <span>{rule.label}:</span>
+                    <span className="text-white text-right">{rule.value}</span>
+                  </div>
+                ))}
               </div>
             </div>
+
+            <a
+              href="/ai/building-code"
+              className="w-full btn-secondary py-2 text-xs font-bold flex items-center justify-center gap-1"
+            >
+              <span className="material-icons-outlined text-[15px]">auto_awesome</span>
+              RUN AI CODE CHECK
+            </a>
 
             <button
               onClick={() => setShowChecklist((v) => !v)}
@@ -325,6 +393,121 @@ export default function PermitsAndCompliance() {
           </div>
         </div>
       </div>
+
+      {showAddModal && (
+        <div className="fixed inset-0 bg-navy/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-navy-mid border rounded-lg shadow-xl">
+            <div className="px-5 py-4 border-b flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-white">Add a clearance</h3>
+                <p className="text-[10px] text-stone mt-0.5">
+                  Track any approval this project needs, beyond the standard checklist.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="text-stone hover:text-white p-1 rounded-md hover:bg-navy-lt"
+                aria-label="Close"
+              >
+                <span className="material-icons-outlined text-[18px]">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={addPermit} className="p-5 space-y-4">
+              <div>
+                <label className="block text-xs text-stone mb-1 font-medium">Clearance name *</label>
+                <input
+                  type="text"
+                  required
+                  autoFocus
+                  placeholder="e.g. Coastal Zone NOC"
+                  value={newPermit.approval_name}
+                  onChange={(e) => setNewPermit((p) => ({ ...p, approval_name: e.target.value }))}
+                  className="input-5bloc py-1.5 text-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-stone mb-1 font-medium">Authority</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. State Coastal Zone Authority"
+                    value={newPermit.authority}
+                    onChange={(e) => setNewPermit((p) => ({ ...p, authority: e.target.value }))}
+                    className="input-5bloc py-1.5 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-stone mb-1 font-medium">Status</label>
+                  <select
+                    value={newPermit.status}
+                    onChange={(e) =>
+                      setNewPermit((p) => ({ ...p, status: e.target.value as PermitItem['status'] }))
+                    }
+                    className="input-5bloc py-1.5 text-xs"
+                  >
+                    <option value="not_started">Not started</option>
+                    <option value="pending">Submitted / pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="expired">Expired</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-stone mb-1 font-medium">Submitted on</label>
+                  <input
+                    type="date"
+                    value={newPermit.submission_date}
+                    onChange={(e) => setNewPermit((p) => ({ ...p, submission_date: e.target.value }))}
+                    className="input-5bloc py-1.5 text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-stone mb-1 font-medium">Expires on</label>
+                  <input
+                    type="date"
+                    value={newPermit.expiry_date}
+                    onChange={(e) => setNewPermit((p) => ({ ...p, expiry_date: e.target.value }))}
+                    className="input-5bloc py-1.5 text-xs"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs text-stone mb-1 font-medium">Notes</label>
+                <textarea
+                  rows={3}
+                  placeholder="Conditions, file numbers, who is following up…"
+                  value={newPermit.notes}
+                  onChange={(e) => setNewPermit((p) => ({ ...p, notes: e.target.value }))}
+                  className="input-5bloc text-xs resize-none"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-3 border-t">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  disabled={addingPermit}
+                  className="btn-secondary py-1.5 px-4 text-xs mt-3"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={addingPermit || !newPermit.approval_name.trim()}
+                  className="btn-primary py-1.5 px-6 text-xs mt-3 disabled:opacity-50"
+                >
+                  {addingPermit ? 'Adding…' : 'Add clearance'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

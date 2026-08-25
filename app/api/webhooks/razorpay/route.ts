@@ -1,5 +1,6 @@
 import crypto from 'crypto'
 import { createServiceRoleClient } from '@/lib/supabase/server'
+import { analytics, resolveAuthUserId } from '@/lib/analytics/heycatch'
 
 export async function POST(req: Request) {
   const body = await req.text()
@@ -101,6 +102,14 @@ export async function POST(req: Request) {
             .eq('owner_id', userId)
           await supabase.from('profiles').update({ plan }).eq('id', userId)
         }
+
+        const personId = await resolveAuthUserId(supabase, userId)
+        await analytics.setIdentity(personId, { plan })
+        await analytics.trackEvent(
+          event.event === 'subscription.activated' ? 'subscription_started' : 'subscription_renewed',
+          { plan },
+          { userId: personId },
+        )
         break
       }
 
@@ -123,6 +132,10 @@ export async function POST(req: Request) {
             .eq('owner_id', userId)
           await supabase.from('profiles').update({ plan: 'free' }).eq('id', userId)
         }
+
+        const personId = await resolveAuthUserId(supabase, userId)
+        await analytics.setIdentity(personId, { plan: 'free' })
+        await analytics.trackEvent('subscription_cancelled', { plan: 'free' }, { userId: personId })
         break
       }
     }

@@ -6,6 +6,7 @@ import { useToast } from '@/components/ui/Toast'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useLiveReload } from '@/lib/live/useLiveReload'
 
 interface VisitReport {
   id: string
@@ -74,9 +75,11 @@ export default function SiteAndField() {
     assigned_to: 'Amit Sharma',
   })
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setLoadError(null)
+  const load = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) {
+      setLoading(true)
+      setLoadError(null)
+    }
     try {
       const res = await fetch(`/api/projects/${projectId}/site`)
       const d = await res.json()
@@ -85,15 +88,17 @@ export default function SiteAndField() {
       setMaterialLogs(d.materials || [])
       setPunchList(d.punch || [])
     } catch (e) {
-      setLoadError(e)
+      if (!opts?.quiet) setLoadError(e)
     } finally {
-      setLoading(false)
+      if (!opts?.quiet) setLoading(false)
     }
   }, [projectId])
 
   useEffect(() => {
     load()
   }, [load])
+
+  useLiveReload(load, ['site_visits', 'issues'])
 
   const handleAddVisit = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -9,6 +9,8 @@ import { usePrompt } from '@/components/ui/PromptProvider'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useLiveReload } from '@/lib/live/useLiveReload'
+import { DocumentCadViewer } from '@/components/cad/DocumentCadViewer'
 
 interface DocumentItem {
  id: string
@@ -70,9 +72,6 @@ export default function DocumentVault() {
  const [newGDocTitle, setNewGDocTitle] = useState('')
  const [newGDocType, setNewGDocType] = useState<'doc' | 'sheet'>('doc')
  const [showLinkGDocModal, setShowLinkGDocModal] = useState(false)
- const [cadViewMode, setCadViewMode] = useState<'2d' | '3d'>('2d')
- const [visibleLayers, setVisibleLayers] = useState({ walls: true, columns: true, dimensions: true, ducts: false })
- const [clashStatus, setClashStatus] = useState<'idle' | 'running' | 'done'>('idle')
  const [docVersions, setDocVersions] = useState<{
    id: string
    version: number
@@ -86,6 +85,9 @@ export default function DocumentVault() {
  const [newGDocUrl, setNewGDocUrl] = useState('')
 
  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+ const [previewError, setPreviewError] = useState<string | null>(null)
+ const [uploadingVersion, setUploadingVersion] = useState(false)
+ const newVersionInputRef = useRef<HTMLInputElement>(null)
 
  const openDoc = useCallback(
    (doc: DocumentItem | null) => {
@@ -124,6 +126,7 @@ export default function DocumentVault() {
    if (!viewingDoc?.id) {
      setDocVersions([])
      setPreviewUrl(null)
+     setPreviewError(null)
      setAnnotations([])
      return
    }
@@ -136,14 +139,25 @@ export default function DocumentVault() {
 
    loadAnnotations(viewingDoc.id)
 
-   const ext = (viewingDoc.extension || '').toLowerCase()
+   const ext = (viewingDoc.extension || '').toLowerCase().replace(/^\./, '')
    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf'].includes(ext)) {
-     fetch(`/api/files/download?id=${viewingDoc.id}`)
-       .then((r) => r.json())
-       .then((data) => setPreviewUrl(data.url || null))
-       .catch(() => setPreviewUrl(null))
+     setPreviewError(null)
+     // inline=1 so the browser renders the file instead of downloading it
+     fetch(`/api/files/download?id=${viewingDoc.id}&inline=1`)
+       .then(async (r) => {
+         const data = await r.json().catch(() => ({}))
+         if (!r.ok || !data.url) {
+           throw new Error(data.error || `Preview unavailable (${r.status})`)
+         }
+         setPreviewUrl(data.url)
+       })
+       .catch((err) => {
+         setPreviewUrl(null)
+         setPreviewError(err?.message || 'Could not load this file')
+       })
    } else {
      setPreviewUrl(null)
+     setPreviewError(null)
    }
  }, [projectId, viewingDoc?.id, viewingDoc?.extension, loadAnnotations])
 
@@ -222,9 +236,60 @@ export default function DocumentVault() {
    }
  }
 
- const loadDocuments = useCallback(async () => {
-   setLoading(true)
-   setLoadError(null)
+ const handleNewVersionUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+   const file = e.target.files?.[0]
+   e.target.value = ''
+   if (!file || !viewingDoc || uploadingVersion) return
+
+   setUploadingVersion(true)
+   try {
+     const form = new FormData()
+     form.append('file', file)
+     form.append('projectId', projectId)
+     const uploadRes = await fetch('/api/files/upload', { method: 'POST', body: form })
+     const uploadData = await uploadRes.json()
+     if (!uploadRes.ok) throw new Error(uploadData.error || 'Upload failed')
+
+     const res = await fetch(`/api/projects/${projectId}/document-versions`, {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({
+         document_id: viewingDoc.id,
+         r2_key: uploadData.r2_key,
+         original_filename: file.name,
+         extension: (file.name.split('.').pop() || viewingDoc.extension).toLowerCase(),
+         size_bytes: file.size,
+       }),
+     })
+     const data = await res.json()
+     if (!res.ok) throw new Error(data.error || 'Could not save the new version')
+
+     const nextVer = data.version || viewingDoc.version + 1
+     const updated = {
+       ...viewingDoc,
+       version: nextVer,
+       original_filename: file.name,
+       size_bytes: file.size,
+     }
+     setViewingDoc(updated)
+     setDocuments((prev) => prev.map((d) => (d.id === viewingDoc.id ? { ...d, ...updated } : d)))
+     const refresh = await fetch(
+       `/api/projects/${projectId}/document-versions?document_id=${viewingDoc.id}`
+     ).then((r) => r.json())
+     setDocVersions(Array.isArray(refresh.versions) ? refresh.versions : [])
+     toast(`Saved as version ${nextVer}`, 'success')
+   } catch (err: any) {
+     toast(err?.message || 'Could not upload the new version', 'error')
+   } finally {
+     setUploadingVersion(false)
+   }
+ }
+
+ const loadDocuments = useCallback(async (opts?: { quiet?: boolean }) => {
+   if (!opts?.quiet) {
+     setLoading(true)
+     setLoadError(null)
+   }
    try {
      const res = await fetch(`/api/projects/${projectId}/documents`)
      const d = await res.json()
@@ -248,15 +313,17 @@ export default function DocumentVault() {
        }))
      )
    } catch (e) {
-     setLoadError(e)
+     if (!opts?.quiet) setLoadError(e)
    } finally {
-     setLoading(false)
+     if (!opts?.quiet) setLoading(false)
    }
  }, [projectId])
 
  useEffect(() => {
    loadDocuments()
  }, [loadDocuments])
+
+ useLiveReload(loadDocuments, ['documents'])
 
  const handleUploadClick = () => {
  fileInputRef.current?.click()
@@ -742,6 +809,19 @@ export default function DocumentVault() {
               src={previewUrl}
               className="w-full flex-1 min-h-[300px] bg-white"
             />
+          ) : previewError ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-stone">
+              <span className="material-icons-outlined text-[48px] text-error mb-2">error_outline</span>
+              <span className="text-xs font-semibold text-white">This PDF could not be opened</span>
+              <span className="text-[10px] mt-1 max-w-xs leading-relaxed">{previewError}</span>
+              <button
+                type="button"
+                className="btn-secondary py-1 px-4 text-[11px] mt-3"
+                onClick={() => setViewingDoc(viewingDoc ? { ...viewingDoc } : null)}
+              >
+                Try again
+              </button>
+            </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-stone">
               <span className="material-icons-outlined text-[48px] text-amber mb-2">picture_as_pdf</span>
@@ -966,164 +1046,11 @@ export default function DocumentVault() {
           </div>
         </div>
       ) : (
-        /* AutoCAD + Fusion 360 Interactive Engine */
-        <div className="w-full h-full flex flex-col bg-navy border rounded-md overflow-hidden text-xs">
-          {/* CAD Control Header */}
-          <div className="bg-navy-mid border-b p-2 flex flex-wrap justify-between items-center gap-2">
-            <div className="flex bg-navy border rounded overflow-hidden">
-              <button 
-                onClick={() => setCadViewMode('2d')}
-                className={`px-3 py-1 font-mono text-[10px] ${cadViewMode === '2d' ? 'bg-amber text-navy font-bold' : 'text-stone hover:text-white'}`}
-              >
-                2D AutoCAD Sheet
-              </button>
-              <button 
-                onClick={() => setCadViewMode('3d')}
-                className={`px-3 py-1 font-mono text-[10px] ${cadViewMode === '3d' ? 'bg-amber text-navy font-bold' : 'text-stone hover:text-white'}`}
-              >
-                Autodesk Fusion 3D BIM
-              </button>
-            </div>
-
-            <div className="flex items-center gap-2.5">
-              <button 
-                onClick={() => {
-                  setClashStatus('running');
-                  setTimeout(() => setClashStatus('done'), 600);
-                }}
-                disabled={clashStatus === 'running'}
-                className="btn-secondary py-1.5 text-[10px] flex items-center gap-1.5 hover:text-amber"
-              >
-                <span className="material-icons-outlined text-[14px] text-amber">auto_awesome</span>
-                {clashStatus === 'running' ? 'Demo overlay…' : clashStatus === 'done' ? 'Demo clash shown' : 'Show demo clash overlay'}
-              </button>
-            </div>
-          </div>
-
-          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-            {/* Viewport Area */}
-            <div className="flex-1 bg-black blueprint-grid relative flex items-center justify-center p-6 h-64 lg:h-auto min-h-[300px]">
-              {cadViewMode === '2d' ? (
-                /* Interactive AutoCAD Blueprint SVG */
-                <div className="w-full h-full max-h-[40vh] relative">
-                  <svg viewBox="0 0 400 300" className="w-full h-full text-blue-lt">
-                    {/* Walls Layer */}
-                    {visibleLayers.walls && (
-                      <g stroke="currentColor" strokeWidth="2" fill="none">
-                        <rect x="40" y="40" width="320" height="220" />
-                        <line x1="40" y1="130" x2="360" y2="130" />
-                        <line x1="200" y1="40" x2="200" y2="260" />
-                        <line x1="40" y1="200" x2="200" y2="200" />
-                        <line x1="280" y1="130" x2="280" y2="260" />
-                      </g>
-                    )}
-                    {/* Columns Layer */}
-                    {visibleLayers.columns && (
-                      <g fill="currentColor">
-                        <rect x="37" y="37" width="6" height="6" />
-                        <rect x="197" y="37" width="6" height="6" />
-                        <rect x="357" y="37" width="6" height="6" />
-                        <rect x="37" y="127" width="6" height="6" fill="#F5A623" />
-                        <rect x="197" y="127" width="6" height="6" />
-                        <rect x="357" y="127" width="6" height="6" />
-                        <rect x="37" y="257" width="6" height="6" />
-                        <rect x="197" y="257" width="6" height="6" />
-                        <rect x="357" y="257" width="6" height="6" />
-                      </g>
-                    )}
-                    {/* Dimensions Layer */}
-                    {visibleLayers.dimensions && (
-                      <g fill="#9f8e7a" className="font-mono" fontSize="7" stroke="none">
-                        <text x="48" y="60">ROOM 01 · 24.3 m²</text>
-                        <text x="208" y="60">OFFICE · 12.1 m²</text>
-                        <text x="48" y="150">LOBBY · 18.7 m²</text>
-                        <text x="208" y="150">TOILET</text>
-                        <text x="208" y="220">ROOM 02 · 16.4 m²</text>
-                        {/* Dimensional Lines */}
-                        <path d="M 40 30 L 360 30" stroke="#9f8e7a" strokeWidth="0.5" />
-                        <text x="180" y="26">36.0m</text>
-                      </g>
-                    )}
-                    {/* AC Ducts Layer (Fusion 360 Clash) */}
-                    {visibleLayers.ducts && (
-                      <g stroke="#ffb4ab" strokeWidth="4" fill="none">
-                        <path d="M 20 120 L 380 120" strokeDasharray="4" />
-                        {/* Clash Marker */}
-                        {clashStatus === 'done' && (
-                          <g>
-                            <circle cx="200" cy="120" r="12" stroke="#ffb4ab" fill="rgba(255,180,171,0.2)" className="animate-pulse" />
-                            <text x="165" y="105" fill="#ffb4ab" fontSize="8" className="font-mono font-bold" stroke="none">CLASH: beam vs duct</text>
-                          </g>
-                        )}
-                      </g>
-                    )}
-                  </svg>
-                </div>
-              ) : (
-                /* Interactive 3D Model Spin Simulation */
-                <div className="flex flex-col items-center justify-center text-center">
-                  <div className="w-48 h-48 border border-dashed border-amber/30 rounded-full flex items-center justify-center relative animate-[spin_12s_linear_infinite]">
-                    {/* 3D Wireframe Box */}
-                    <div className="absolute w-24 h-24 border-2 border-amber/40 transform rotate-45 flex items-center justify-center">
-                      <div className="w-12 h-12 border-2 border-blue/40 transform -rotate-45" />
-                    </div>
-                    {/* BIM Nodes */}
-                    <span className="w-2.5 h-2.5 rounded-full bg-success absolute top-0" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber absolute bottom-0" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-blue absolute left-0" />
-                    <span className="w-2.5 h-2.5 rounded-full bg-error absolute right-0" />
-                  </div>
-                  <span className="text-[10px] font-mono text-stone mt-4">BIM preview placeholder</span>
-                  <span className="text-[9px] text-stone">Upload DWG/IFC for file download — live 3D viewer not connected yet</span>
-                </div>
-              )}
-            </div>
-
-            {/* Layer Control Panel */}
-            <div className="w-full lg:w-48 bg-navy border-t lg:border-t-0 lg:border-l p-4 space-y-4">
-              <span className="text-[10px] font-bold font-mono text-stone uppercase tracking-wider block">AutoCAD Layers</span>
-              <div className="space-y-3">
-                {[
-                  { key: 'walls', label: '0_Walls', color: '#7ab8ff' },
-                  { key: 'columns', label: 'S_Columns', color: '#ffc880' },
-                  { key: 'dimensions', label: 'A_Dimensions', color: '#9f8e7a' },
-                  { key: 'ducts', label: 'M_MEP_Ducts', color: '#ffb4ab' }
-                ].map(lay => (
-                  <label key={lay.key} className="flex items-center gap-2 cursor-pointer">
-                    <input 
-                      type="checkbox"
-                      checked={(visibleLayers as any)[lay.key]}
-                      onChange={() => setVisibleLayers(prev => ({ ...prev, [lay.key]: !(prev as any)[lay.key] }))}
-                      className="rounded bg-navy border text-amber focus:ring-amber focus:ring-0"
-                    />
-                    <span className="font-mono text-[10px] flex items-center gap-1" style={{ color: lay.color }}>
-                      <span className="material-icons-outlined text-[12px]">layers</span>
-                      {lay.label}
-                    </span>
-                  </label>
-                ))}
-              </div>
-
-              {clashStatus === 'done' && (
-                <div className="p-2 bg-error/10 border border-error/30 space-y-2 mt-4">
-                  <div className="flex items-center gap-1 text-error font-semibold text-[10px]">
-                    <span className="material-icons-outlined text-[13px]">warning</span>
-                    Demo clash overlay
-                  </div>
-                  <p className="text-[9px] text-stone leading-relaxed">
-                    Illustrative only — Autodesk clash detection is not connected. Create a real RFI from the RFIs module.
-                  </p>
-                  <a
-                    href={`/projects/${projectId}/rfis`}
-                    className="w-full btn-primary py-1 text-[9px] font-bold inline-flex items-center justify-center"
-                  >
-                    Open RFIs
-                  </a>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        <DocumentCadViewer
+          documentId={viewingDoc.id}
+          projectId={projectId}
+          filename={viewingDoc.original_filename || viewingDoc.name}
+        />
       )}
     </div>
 
@@ -1134,6 +1061,26 @@ export default function DocumentVault() {
         <div className="border-b pb-2 flex items-center justify-between">
           <span className="text-[10px] font-bold font-mono text-amber uppercase tracking-wider">Version History</span>
           <span className="material-icons-outlined text-stone text-[15px]">history</span>
+        </div>
+        <div>
+          <input
+            ref={newVersionInputRef}
+            type="file"
+            className="hidden"
+            onChange={handleNewVersionUpload}
+          />
+          <button
+            type="button"
+            disabled={uploadingVersion}
+            onClick={() => newVersionInputRef.current?.click()}
+            className="btn-secondary py-1.5 text-[11px] w-full justify-center disabled:opacity-50"
+          >
+            <span className="material-icons-outlined text-[14px]">upload_file</span>
+            {uploadingVersion ? 'Uploading…' : `Upload new version (v${(viewingDoc?.version || 1) + 1})`}
+          </button>
+          <p className="text-[10px] text-stone mt-1.5 leading-relaxed">
+            Replaces the active file. Older versions stay listed below and can be restored.
+          </p>
         </div>
         <div className="space-y-3">
           {versionsLoading ? (

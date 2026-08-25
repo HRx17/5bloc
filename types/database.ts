@@ -240,6 +240,7 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          document_id: string | null
           id: string
           name: string
           org_id: string
@@ -251,6 +252,7 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          document_id?: string | null
           id?: string
           name: string
           org_id: string
@@ -262,6 +264,7 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          document_id?: string | null
           id?: string
           name?: string
           org_id?: string
@@ -1562,6 +1565,16 @@ export type Database = {
           project_id: string
           title: string
           updated_at: string | null
+          starts_at: string | null
+          ends_at: string | null
+          location: string | null
+          meeting_url: string | null
+          reminder_minutes: number
+          reminder_sent_at: string | null
+          invite_sent_at: string | null
+          status: string
+          attendee_emails: string[]
+          notes: string | null
         }
         Insert: {
           action_items?: Json | null
@@ -1576,6 +1589,16 @@ export type Database = {
           project_id: string
           title: string
           updated_at?: string | null
+          starts_at?: string | null
+          ends_at?: string | null
+          location?: string | null
+          meeting_url?: string | null
+          reminder_minutes?: number
+          reminder_sent_at?: string | null
+          invite_sent_at?: string | null
+          status?: string
+          attendee_emails?: string[]
+          notes?: string | null
         }
         Update: {
           action_items?: Json | null
@@ -1590,6 +1613,16 @@ export type Database = {
           project_id?: string
           title?: string
           updated_at?: string | null
+          starts_at?: string | null
+          ends_at?: string | null
+          location?: string | null
+          meeting_url?: string | null
+          reminder_minutes?: number
+          reminder_sent_at?: string | null
+          invite_sent_at?: string | null
+          status?: string
+          attendee_emails?: string[]
+          notes?: string | null
         }
         Relationships: [
           {
@@ -2174,6 +2207,7 @@ export type Database = {
           notify_bids: boolean | null
           notify_email: boolean | null
           notify_rfi: boolean | null
+          notify_meetings: boolean | null
           onboarded_at: string | null
           org_id: string | null
           phone: string | null
@@ -2195,6 +2229,7 @@ export type Database = {
           notify_bids?: boolean | null
           notify_email?: boolean | null
           notify_rfi?: boolean | null
+          notify_meetings?: boolean | null
           onboarded_at?: string | null
           org_id?: string | null
           phone?: string | null
@@ -2216,6 +2251,7 @@ export type Database = {
           notify_bids?: boolean | null
           notify_email?: boolean | null
           notify_rfi?: boolean | null
+          notify_meetings?: boolean | null
           onboarded_at?: string | null
           org_id?: string | null
           phone?: string | null
@@ -3490,6 +3526,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           documents: string | null
+          attachment_url: string | null
           id: string
           org_id: string
           project_id: string
@@ -3505,6 +3542,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           documents?: string | null
+          attachment_url?: string | null
           id?: string
           org_id: string
           project_id: string
@@ -3520,6 +3558,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           documents?: string | null
+          attachment_url?: string | null
           id?: string
           org_id?: string
           project_id?: string
@@ -3857,6 +3896,8 @@ export type Database = {
       }
       waitlist: {
         Row: {
+          city: string | null
+          country: string | null
           created_at: string
           email: string
           firm: string | null
@@ -3865,6 +3906,8 @@ export type Database = {
           role: string | null
         }
         Insert: {
+          city?: string | null
+          country?: string | null
           created_at?: string
           email: string
           firm?: string | null
@@ -3873,6 +3916,8 @@ export type Database = {
           role?: string | null
         }
         Update: {
+          city?: string | null
+          country?: string | null
           created_at?: string
           email?: string
           firm?: string | null
@@ -3940,6 +3985,7 @@ export type Database = {
           notify_bids: boolean | null
           notify_email: boolean | null
           notify_rfi: boolean | null
+          notify_meetings: boolean | null
           onboarded_at: string | null
           org_id: string | null
           phone: string | null
@@ -3959,6 +4005,7 @@ export type Database = {
           notify_bids?: boolean | null
           notify_email?: boolean | null
           notify_rfi?: boolean | null
+          notify_meetings?: boolean | null
           onboarded_at?: string | null
           org_id?: string | null
           phone?: string | null
@@ -3978,6 +4025,7 @@ export type Database = {
           notify_bids?: boolean | null
           notify_email?: boolean | null
           notify_rfi?: boolean | null
+          notify_meetings?: boolean | null
           onboarded_at?: string | null
           org_id?: string | null
           phone?: string | null

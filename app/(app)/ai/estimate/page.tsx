@@ -3,6 +3,17 @@
 import React, { useState, useEffect } from 'react'
 import { UpgradePrompt } from '@/components/payments/UpgradePrompt'
 import { useToast } from '@/components/ui/Toast'
+import { isTestPeriod } from '@/lib/payments/gates'
+import { TYPOLOGY_OPTIONS, normalizeTypology } from '@/lib/compliance/typology'
+
+interface ProjectOption {
+  id: string
+  name: string
+  type?: string | null
+  city?: string | null
+  total_sqft?: number | null
+  floors?: number | null
+}
 
 interface LineItem {
  category: string
@@ -42,7 +53,7 @@ export default function AIEstimator() {
  projectId: '',
  })
 
- const [projects, setProjects] = useState<{ id: string; name: string }[]>([])
+ const [projects, setProjects] = useState<ProjectOption[]>([])
  const [loading, setLoading] = useState(false)
  const [saving, setSaving] = useState(false)
  const [loadingStep, setLoadingStep] = useState(0)
@@ -64,9 +75,37 @@ export default function AIEstimator() {
  useEffect(() => {
  fetch('/api/projects')
  .then((r) => r.json())
- .then((d) => setProjects((d.projects || []).map((p: any) => ({ id: p.id, name: p.name }))))
+ .then((d) =>
+   setProjects(
+     (d.projects || []).map((p: any) => ({
+       id: p.id,
+       name: p.name,
+       type: p.type,
+       city: p.city,
+       total_sqft: p.total_sqft,
+       floors: p.floors,
+     }))
+   )
+ )
  .catch(() => {})
  }, [])
+
+ /** Picking a project pulls its real typology, city and area in, so the estimate matches the brief. */
+ const applyProject = (projectId: string) => {
+   const project = projects.find((p) => p.id === projectId)
+   setForm((prev) => ({
+     ...prev,
+     projectId,
+     ...(project
+       ? {
+           projectType: normalizeTypology(project.type),
+           city: project.city || prev.city,
+           sqft: project.total_sqft ? String(project.total_sqft) : prev.sqft,
+           floors: project.floors ? String(project.floors) : prev.floors,
+         }
+       : {}),
+   }))
+ }
 
  useEffect(() => {
  fetch('/api/me')
@@ -75,7 +114,7 @@ export default function AIEstimator() {
      const profile = d.profile || {}
      const plan = normalizePlan(profile.plan || profile.organisations?.plan)
      const aiAddOn = !!profile.ai_add_on
-     setNeedsUpgrade(plan === 'free' && !aiAddOn)
+     setNeedsUpgrade(!isTestPeriod() && plan === 'free' && !aiAddOn)
    })
    .catch(() => setNeedsUpgrade(false))
    .finally(() => setPlanGateLoading(false))
@@ -276,10 +315,9 @@ export default function AIEstimator() {
  onChange={handleInputChange}
  className="input-5bloc py-1.5 text-xs font-medium"
  >
- <option value="residential">Residential Bungalow</option>
- <option value="commercial">Commercial Office Space</option>
- <option value="interior">Interior Fit-out</option>
- <option value="landscape">Landscape Design</option>
+ {TYPOLOGY_OPTIONS.map((t) => (
+ <option key={t.value} value={t.value}>{t.label}</option>
+ ))}
  </select>
  </div>
 
@@ -353,7 +391,7 @@ export default function AIEstimator() {
  <select
  name="projectId"
  value={form.projectId}
- onChange={handleInputChange}
+ onChange={(e) => applyProject(e.target.value)}
  className="input-5bloc py-1.5 text-xs font-medium"
  >
  <option value="">Select project…</option>

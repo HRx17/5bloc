@@ -8,6 +8,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useLiveReload } from '@/lib/live/useLiveReload'
 
 type Tender = {
   id: string
@@ -59,35 +60,39 @@ export default function TenderDetail() {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [busy, setBusy] = useState(false)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    setNotFound(false)
+  const load = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) {
+      setLoading(true)
+      setError(null)
+      setNotFound(false)
+    }
     try {
       const res = await fetch(`/api/tenders/${params.id}`)
       if (res.status === 404) {
-        setNotFound(true)
+        if (!opts?.quiet) setNotFound(true)
         return
       }
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Could not load this project')
       if (!data.tender) {
-        setNotFound(true)
+        if (!opts?.quiet) setNotFound(true)
         return
       }
       setTender(data.tender)
       setMyBid(data.my_bid)
       setBidCount(data.bid_count || 0)
     } catch (err) {
-      setError(err)
+      if (!opts?.quiet) setError(err)
     } finally {
-      setLoading(false)
+      if (!opts?.quiet) setLoading(false)
     }
   }, [params.id])
 
   useEffect(() => {
     load()
   }, [load])
+
+  useLiveReload(load, ['tenders', 'bids'])
 
   const submitBid = async () => {
     setBusy(true)
@@ -107,7 +112,7 @@ export default function TenderDetail() {
       toast(`Bid of ${money(Number(form.amount))} submitted`, 'success')
       setConfirmOpen(false)
       setForm({ amount: '', weeks: '', methodology: '' })
-      await load()
+      await load({ quiet: true })
     } catch (err: any) {
       toast(err?.message || 'Bid failed', 'error')
       setConfirmOpen(false)

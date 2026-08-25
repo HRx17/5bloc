@@ -8,6 +8,8 @@ import { ErrorState } from '@/components/ui/ErrorState'
 import { useToast } from '@/components/ui/Toast'
 import { useConfirm } from '@/components/ui/ConfirmProvider'
 import { startInvoiceCheckout } from '@/lib/payments/checkout'
+import { useLiveReload } from '@/lib/live/useLiveReload'
+import { pollUntil } from '@/lib/live/pollUntil'
 
 interface Invoice {
   id: string
@@ -31,24 +33,28 @@ export default function InvoicesList() {
   const [error, setError] = useState<unknown>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+  const load = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) {
+      setLoading(true)
+      setError(null)
+    }
     try {
       const res = await fetch('/api/invoices')
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to load invoices')
       setInvoices(data.invoices || [])
     } catch (e) {
-      setError(e)
+      if (!opts?.quiet) setError(e)
     } finally {
-      setLoading(false)
+      if (!opts?.quiet) setLoading(false)
     }
   }, [])
 
   useEffect(() => {
     load()
   }, [load])
+
+  useLiveReload(load, ['invoices'])
 
   const getStatusStyle = (status: Invoice['status']): React.CSSProperties => {
     switch (status) {
@@ -81,6 +87,10 @@ export default function InvoicesList() {
     if (!ok) return
 
     setBusyId(inv.id)
+    const paidAt = new Date().toISOString()
+    setInvoices((prev) =>
+      prev.map((i) => (i.id === inv.id ? { ...i, status: 'paid', paid_at: paidAt } : i))
+    )
     try {
       const res = await fetch(`/api/invoices/${inv.id}`, {
         method: 'PATCH',
@@ -92,12 +102,15 @@ export default function InvoicesList() {
       setInvoices((prev) =>
         prev.map((i) =>
           i.id === inv.id
-            ? { ...i, status: 'paid', paid_at: data.invoice?.paid_at || new Date().toISOString() }
+            ? { ...i, status: 'paid', paid_at: data.invoice?.paid_at || paidAt }
             : i
         )
       )
       toast(`${inv.invoice_number} marked paid`, 'success')
     } catch (e) {
+      setInvoices((prev) =>
+        prev.map((i) => (i.id === inv.id ? { ...i, status: inv.status, paid_at: inv.paid_at } : i))
+      )
       toast(e instanceof Error ? e.message : 'Could not mark this invoice paid', 'error')
     } finally {
       setBusyId(null)
@@ -120,6 +133,9 @@ export default function InvoicesList() {
     if (!ok) return
 
     setBusyId(inv.id)
+    if (inv.status === 'draft') {
+      setInvoices((prev) => prev.map((i) => (i.id === inv.id ? { ...i, status: 'sent' } : i)))
+    }
     try {
       const res = await fetch(`/api/invoices/${inv.id}/send`, { method: 'POST' })
       const data = await res.json()
@@ -138,6 +154,9 @@ export default function InvoicesList() {
         toast(`Invoice emailed to ${data.emailed_to} with a pay link.`, 'success')
       }
     } catch (e) {
+      if (inv.status === 'draft') {
+        setInvoices((prev) => prev.map((i) => (i.id === inv.id ? { ...i, status: inv.status } : i)))
+      }
       toast(
         e instanceof Error ? e.message : 'Could not send this invoice. Nothing was emailed — try again.',
         'error',
@@ -179,15 +198,24 @@ export default function InvoicesList() {
       setInvoices((prev) =>
         prev.map((i) => (i.id === inv.id ? { ...i, status: i.status === 'draft' ? 'sent' : i.status } : i))
       )
-      setTimeout(async () => {
-        const res = await fetch('/api/invoices')
-        if (!res.ok) return
-        const data = await res.json()
-        const fresh = (data.invoices || []).find((i: Invoice) => i.id === inv.id)
+      void pollUntil(
+        async () => {
+          const res = await fetch('/api/invoices')
+          if (!res.ok) return null
+          const data = await res.json()
+          return (data.invoices || []).find((i: Invoice) => i.id === inv.id) as Invoice | undefined
+        },
+        (fresh) => !!fresh && (fresh.status === 'paid' || fresh.status === 'cancelled'),
+        { attempts: 10, intervalMs: 1500 }
+      ).then((fresh) => {
         if (fresh?.status) {
-          setInvoices((prev) => prev.map((i) => (i.id === inv.id ? { ...i, status: fresh.status } : i)))
+          setInvoices((prev) =>
+            prev.map((i) =>
+              i.id === inv.id ? { ...i, status: fresh.status, paid_at: fresh.paid_at } : i
+            )
+          )
         }
-      }, 4000)
+      })
     } finally {
       setBusyId(null)
     }

@@ -11,6 +11,7 @@ import { DrivePanel } from '@/components/integrations/DrivePanel'
 import { StatCard } from '@/components/ui/StatCard'
 import { supabaseClient } from '@/lib/supabase/client'
 import { hasSupabaseEnv } from '@/lib/data/client-data'
+import { useLiveReload } from '@/lib/live/useLiveReload'
 
 const PHASE_LABELS: Record<string, string> = {
   pre_design: 'Pre-Design',
@@ -86,12 +87,15 @@ export default function DocumentVault() {
   const [status,     setStatus]     = useState<string>('all')
   const [view,       setView]       = useState<'grid' | 'list'>('list')
   const [uploading,  setUploading]  = useState(false)
+  const [projectList, setProjectList] = useState<{ id: string; name: string }[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setLoadError(null)
+  const load = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) {
+      setLoading(true)
+      setLoadError(null)
+    }
     try {
       if (!hasSupabaseEnv()) throw new Error('The document vault is not configured in this environment.')
       const { data, error } = await supabaseClient
@@ -110,7 +114,7 @@ export default function DocumentVault() {
             project: projName,
             project_id: d.project_id ?? '',
             phase: PHASE_LABELS[phaseKey] ?? 'General',
-            version: 'v1',
+            version: `v${d.version ?? 1}`,
             uploaded_by: 'Team',
             uploaded_at: (d.created_at ?? '').split('T')[0],
             size_kb: Math.round(Number(d.file_size ?? 0) / 1024),
@@ -119,9 +123,9 @@ export default function DocumentVault() {
         })
       )
     } catch (err) {
-      setLoadError(err)
+      if (!opts?.quiet) setLoadError(err)
     } finally {
-      setLoading(false)
+      if (!opts?.quiet) setLoading(false)
     }
   }, [])
 
@@ -129,21 +133,68 @@ export default function DocumentVault() {
     load()
   }, [load])
 
+  useEffect(() => {
+    if (!hasSupabaseEnv()) return
+    supabaseClient
+      .from('projects')
+      .select('id, name')
+      .order('name')
+      .then((res: { data: { id: string; name: string }[] | null }) =>
+        setProjectList(res.data || [])
+      )
+  }, [])
+
+  useLiveReload(load, ['documents'])
+
+  // Files live under a project, so the vault upload targets whichever project is filtered
+  const uploadTarget = useMemo(
+    () => (project === 'All Projects' ? null : projectList.find((p) => p.name === project) || null),
+    [project, projectList]
+  )
+
+  const startUpload = () => {
+    if (!uploadTarget) {
+      toast('Pick a project in the filter above first — files are filed under a project.', 'warning', 5000)
+      return
+    }
+    fileInputRef.current?.click()
+  }
+
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file) return
+    if (!file || !uploadTarget) return
     setUploading(true)
     try {
       const form = new FormData()
       form.append('file', file)
-      form.append('phase', phase !== 'All Phases' ? phase : 'General')
+      form.append('projectId', uploadTarget.id)
       const res = await fetch('/api/files/upload', { method: 'POST', body: form })
       const json = await res.json()
       if (!res.ok) {
         toast(json.error || 'Upload failed', 'error')
         return
       }
-      toast(`${file.name} uploaded successfully`, 'success')
+
+      const ext = (file.name.split('.').pop() || 'dat').toLowerCase()
+      const metaRes = await fetch(`/api/projects/${uploadTarget.id}/documents`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: file.name.substring(0, file.name.lastIndexOf('.')) || file.name,
+          original_filename: file.name,
+          extension: ext,
+          size_bytes: file.size,
+          folder: 'general',
+          r2_key: json.r2_key,
+        }),
+      })
+      const metaJson = await metaRes.json()
+      if (!metaRes.ok) {
+        toast(metaJson.error || 'File stored but could not be indexed', 'error')
+        return
+      }
+
+      toast(`${file.name} uploaded to ${uploadTarget.name}`, 'success')
       await load()
     } catch {
       toast('Upload failed. Check your connection.', 'error')
@@ -202,18 +253,29 @@ export default function DocumentVault() {
             Every drawing, report and file — across all projects. One searchable archive.
           </p>
         </div>
-        <button
-          className="btn-primary shrink-0 text-[13px]"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-        >
-          {uploading ? (
-            <span className="material-icons-outlined text-[15px] animate-spin">refresh</span>
-          ) : (
-            <span className="material-icons-outlined text-[15px]">upload_file</span>
+        <div className="shrink-0 flex flex-col items-start sm:items-end gap-1">
+          <button
+            className="btn-primary text-[13px]"
+            onClick={startUpload}
+            disabled={uploading}
+          >
+            {uploading ? (
+              <span className="material-icons-outlined text-[15px] animate-spin">refresh</span>
+            ) : (
+              <span className="material-icons-outlined text-[15px]">upload_file</span>
+            )}
+            {uploading
+              ? 'Uploading…'
+              : uploadTarget
+                ? `Upload to ${uploadTarget.name}`
+                : 'Upload document'}
+          </button>
+          {!uploadTarget && (
+            <span className="text-[11px]" style={{ color: 'var(--stone)' }}>
+              Choose a project below to enable upload
+            </span>
           )}
-          {uploading ? 'Uploading…' : 'Upload document'}
-        </button>
+        </div>
         <input
           ref={fileInputRef}
           type="file"

@@ -7,6 +7,14 @@ import { useConfirm } from '@/components/ui/ConfirmProvider'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useLiveReload } from '@/lib/live/useLiveReload'
+import {
+  CHAT_ACCEPT,
+  formatFileMarker,
+  parseFileMarker,
+  signedFileUrl,
+  uploadChatFile,
+} from '@/lib/messages/files'
 
 interface SubmittalItem {
   id: string
@@ -42,25 +50,46 @@ export default function SubmittalsLog() {
     contractor: '',
     due_date: '',
   })
+  const [attachment, setAttachment] = useState<{ key: string; name: string } | null>(null)
+  const [uploadingAttachment, setUploadingAttachment] = useState(false)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setLoadError(null)
+  const readFile = (value?: string | null) => {
+    if (!value) return null
+    return parseFileMarker(value) || { key: value, name: value.split('/').pop() || 'File' }
+  }
+
+  const openFile = async (value?: string | null) => {
+    const file = readFile(value)
+    if (!file) return
+    try {
+      window.open(await signedFileUrl(file.key, file.name, true), '_blank')
+    } catch (err: any) {
+      toast(err?.message || 'Could not open that file', 'error')
+    }
+  }
+
+  const load = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) {
+      setLoading(true)
+      setLoadError(null)
+    }
     try {
       const res = await fetch(`/api/projects/${projectId}/submittals`)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to load submittals')
       setSubmittals(data.submittals || [])
     } catch (e) {
-      setLoadError(e)
+      if (!opts?.quiet) setLoadError(e)
     } finally {
-      setLoading(false)
+      if (!opts?.quiet) setLoading(false)
     }
   }, [projectId])
 
   useEffect(() => {
     load()
   }, [load])
+
+  useLiveReload(load, ['submittals'])
 
   const handleCreateSubmittal = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -70,12 +99,16 @@ export default function SubmittalsLog() {
       const res = await fetch(`/api/projects/${projectId}/submittals`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newSubmittal),
+        body: JSON.stringify({
+          ...newSubmittal,
+          file_name: attachment ? formatFileMarker(attachment.key, attachment.name) : null,
+        }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to create the submittal')
       setSubmittals((prev) => [data.submittal, ...prev])
       setShowCreateModal(false)
+      setAttachment(null)
       setNewSubmittal({ title: '', spec_section: '', description: '', contractor: '', due_date: '' })
       toast('Submittal logged', 'success')
     } catch (err: any) {
@@ -98,6 +131,10 @@ export default function SubmittalsLog() {
       return
     }
     setSaving(true)
+    const previous = activeSubmittal
+    setSubmittals((prev) =>
+      prev.map((s) => (s.id === activeSubmittal.id ? { ...s, status, review_note: activeSubmittal.review_note } : s))
+    )
     try {
       const res = await fetch(`/api/projects/${projectId}/submittals`, {
         method: 'PATCH',
@@ -114,6 +151,7 @@ export default function SubmittalsLog() {
       setActiveSubmittal(null)
       toast(status === 'approved' ? 'Submittal approved' : 'Sent back for revision', 'success')
     } catch (err: any) {
+      setSubmittals((prev) => prev.map((s) => (s.id === previous.id ? previous : s)))
       toast(err?.message || 'Could not record the review decision', 'error')
     } finally {
       setSaving(false)
@@ -203,10 +241,17 @@ export default function SubmittalsLog() {
                         {sub.title}
                       </span>
                       {sub.file_name && (
-                        <span className="text-[10px] text-stone font-mono mt-0.5 block flex items-center gap-0.5">
-                          <span className="material-icons-outlined text-[13px] text-blue">attachment</span>{' '}
-                          {sub.file_name}
-                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            void openFile(sub.file_name)
+                          }}
+                          className="text-[10px] text-stone font-mono mt-0.5 flex items-center gap-0.5 hover:text-amber"
+                        >
+                          <span className="material-icons-outlined text-[13px] text-blue">attachment</span>
+                          {readFile(sub.file_name)?.name || 'Attached file'}
+                        </button>
                       )}
                     </td>
                     <td className="py-4 text-stone">{sub.spec_section || '—'}</td>
@@ -319,6 +364,48 @@ export default function SubmittalsLog() {
                 />
               </div>
 
+              <div>
+                <label className="block text-[10px] font-semibold text-stone mb-1 font-body">
+                  Sample / cut sheet
+                </label>
+                {attachment ? (
+                  <div className="flex items-center gap-2 border rounded-md px-3 py-2">
+                    <span className="material-icons-outlined text-[16px] text-amber">attach_file</span>
+                    <span className="text-xs text-white truncate flex-1">{attachment.name}</span>
+                    <button type="button" onClick={() => setAttachment(null)} className="text-[10px] text-stone uppercase font-bold">
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex items-center gap-2 border border-dashed rounded-md px-3 py-2 cursor-pointer">
+                    <span className="material-icons-outlined text-[16px] text-stone">upload_file</span>
+                    <span className="text-xs text-stone">
+                      {uploadingAttachment ? 'Uploading…' : 'Attach the sample, PDF or drawing (optional)'}
+                    </span>
+                    <input
+                      type="file"
+                      accept={CHAT_ACCEPT}
+                      className="hidden"
+                      disabled={uploadingAttachment}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0]
+                        e.target.value = ''
+                        if (!file) return
+                        setUploadingAttachment(true)
+                        try {
+                          const { key, filename } = await uploadChatFile(file, { projectId })
+                          setAttachment({ key, name: filename })
+                        } catch (err: any) {
+                          toast(err?.message || 'Could not attach that file', 'error')
+                        } finally {
+                          setUploadingAttachment(false)
+                        }
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
+
               <div className="pt-4 flex justify-end gap-3 border-t ">
                 <button
                   type="button"
@@ -372,6 +459,19 @@ export default function SubmittalsLog() {
                 <p className="text-xs text-stone leading-relaxed bg-navy/30 border p-4 rounded-md mt-3">
                   {activeSubmittal.description || 'No additional details provided.'}
                 </p>
+
+                {activeSubmittal.file_name && (
+                  <button
+                    type="button"
+                    onClick={() => void openFile(activeSubmittal.file_name)}
+                    className="mt-3 flex items-center gap-2 w-full border rounded-md px-3 py-2 text-left hover:border-amber"
+                  >
+                    <span className="material-icons-outlined text-[16px] text-amber">attach_file</span>
+                    <span className="text-xs text-white truncate">
+                      {readFile(activeSubmittal.file_name)?.name || 'Open attached file'}
+                    </span>
+                  </button>
+                )}
               </div>
 
               <div className="pt-6 border-t space-y-4">

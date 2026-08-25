@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { shouldServeMockData, liveDataUnavailableResponse, hasSupabaseEnv } from '@/lib/data/mock-guard'
 import { getAuthUserOrNull } from '@/lib/supabase/get-user'
 import { MOCK_PROJECTS, MOCK_MEMBERS } from '@/lib/data/mock-store'
-import { canUse, type Plan } from '@/lib/payments/gates'
+import { canUse, isPaywallEnforced, type Plan } from '@/lib/payments/gates'
 
 export async function GET() {
   const auth = await getAuthUserOrNull()
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
   if (shouldServeMockData(auth)) {
     const plan = (auth.profile.plan || 'free') as Plan
     const existing = MOCK_PROJECTS.length
-    if (plan === 'free' && existing >= 3 && !canUse(plan, 'projects:unlimited')) {
+    if (isPaywallEnforced() && plan === 'free' && existing >= 3 && !canUse(plan, 'projects:unlimited')) {
       return NextResponse.json({ error: 'Free plan limit: 3 projects' }, { status: 402 })
     }
     const project = {
@@ -102,7 +102,7 @@ export async function POST(req: Request) {
     .eq('org_id', auth.orgId)
 
   const plan = (auth.profile.plan || 'free') as Plan
-  if (plan === 'free' && (count || 0) >= 3) {
+  if (isPaywallEnforced() && plan === 'free' && (count || 0) >= 3) {
     return NextResponse.json({ error: 'Free plan limit: 3 projects. Upgrade to Solo.' }, { status: 402 })
   }
 

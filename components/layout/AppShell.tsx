@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Sidebar from './Sidebar'
 import TopNav from './TopNav'
 import NotificationsBell from './NotificationsBell'
@@ -8,11 +8,14 @@ import { ToastProvider } from '@/components/ui/Toast'
 import { ConfirmProvider } from '@/components/ui/ConfirmProvider'
 import { PromptProvider } from '@/components/ui/PromptProvider'
 import { MessagesProvider } from '@/components/messages/MessagesProvider'
+import { analytics } from '@heycatch/sdk'
 
 interface AppShellProps {
   children: React.ReactNode
   userProfile?: {
     id?: string
+    auth_id?: string | null
+    email?: string | null
     full_name?: string | null
     role?: string
     avatar_url?: string | null
@@ -33,6 +36,16 @@ export default function AppShell({ children, userProfile }: AppShellProps) {
     plan: 'free',
     organisations: { name: '5Bloc' },
   }
+
+  useEffect(() => {
+    const personId = userProfile?.auth_id || userProfile?.id
+    if (!personId) return
+    analytics.setIdentity(personId, {
+      email: userProfile?.email || undefined,
+      name: userProfile?.full_name || undefined,
+      plan: userProfile?.plan || undefined,
+    })
+  }, [userProfile?.auth_id, userProfile?.id, userProfile?.email, userProfile?.full_name, userProfile?.plan])
 
   return (
     <ToastProvider>

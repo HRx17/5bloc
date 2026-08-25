@@ -82,23 +82,33 @@ export async function POST(req: Request, ctx: Ctx) {
     .select('*', { count: 'exact', head: true })
     .eq('project_id', id)
 
-  const { data, error } = await auth.supabase
+  const base = {
+    project_id: id,
+    org_id: project?.org_id || auth.orgId,
+    transmittal_no: `TR-${String((count || 0) + 1).padStart(3, '0')}`,
+    sent_date: body.date || new Date().toISOString().slice(0, 10),
+    recipient_name: body.recipient_name,
+    recipient_company: body.recipient_company || null,
+    via: body.via || 'Email',
+    documents: body.documents || null,
+    purpose: body.purpose || 'For Information',
+    status: 'sent',
+    created_by: auth.profile.id,
+  }
+
+  let { data, error } = await auth.supabase
     .from('transmittals')
-    .insert({
-      project_id: id,
-      org_id: project?.org_id || auth.orgId,
-      transmittal_no: `TR-${String((count || 0) + 1).padStart(3, '0')}`,
-      sent_date: body.date || new Date().toISOString().slice(0, 10),
-      recipient_name: body.recipient_name,
-      recipient_company: body.recipient_company || null,
-      via: body.via || 'Email',
-      documents: body.documents || null,
-      purpose: body.purpose || 'For Information',
-      status: 'sent',
-      created_by: auth.profile.id,
-    })
+    .insert({ ...base, attachment_url: body.attachment_url || null })
     .select()
     .single()
+
+  // attachment_url arrives with 20260821120000_transmittal_attachments.sql
+  if (error && /attachment_url|column|schema cache/i.test(error.message)) {
+    const retry = await auth.supabase.from('transmittals').insert(base).select().single()
+    data = retry.data
+    error = retry.error
+  }
+
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ transmittal: normalize(data) }, { status: 201 })
 }

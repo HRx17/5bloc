@@ -7,6 +7,14 @@ import { useToast } from '@/components/ui/Toast'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useLiveReload } from '@/lib/live/useLiveReload'
+import {
+  CHAT_ACCEPT,
+  formatFileMarker,
+  parseFileMarker,
+  signedFileUrl,
+  uploadChatFile,
+} from '@/lib/messages/files'
 
 interface RFIItem {
  id: string
@@ -21,6 +29,15 @@ interface RFIItem {
  response?: string
  is_scope_change: boolean
  scope_change_amount?: number
+ attachment?: { key: string; name: string } | null
+}
+
+/** attachment_url holds a `[[5bloc-file|key|name]]` marker, or a bare storage key on older rows. */
+function readAttachment(value?: string | null): { key: string; name: string } | null {
+  if (!value) return null
+  const marked = parseFileMarker(value)
+  if (marked) return marked
+  return { key: value, name: value.split('/').pop()?.replace(/^\d+-/, '') || 'Attachment' }
 }
 
 export default function RFILog() {
@@ -46,6 +63,32 @@ export default function RFILog() {
  })
  const [savingRfi, setSavingRfi] = useState(false)
  const [creatingRfi, setCreatingRfi] = useState(false)
+ const [newAttachment, setNewAttachment] = useState<{ key: string; name: string } | null>(null)
+ const [uploadingAttachment, setUploadingAttachment] = useState(false)
+
+ const handleAttachmentPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+   const file = e.target.files?.[0]
+   e.target.value = ''
+   if (!file) return
+   setUploadingAttachment(true)
+   try {
+     const { key, filename } = await uploadChatFile(file, { projectId })
+     setNewAttachment({ key, name: filename })
+   } catch (err: any) {
+     toast(err?.message || 'Could not attach that file', 'error')
+   } finally {
+     setUploadingAttachment(false)
+   }
+ }
+
+ const openAttachment = async (attachment: { key: string; name: string }) => {
+   try {
+     const url = await signedFileUrl(attachment.key, attachment.name, true)
+     window.open(url, '_blank')
+   } catch (err: any) {
+     toast(err?.message || 'Could not open that attachment', 'error')
+   }
+ }
 
  // AI draft state
  const [aiDrafting, setAiDrafting] = useState(false)
@@ -68,9 +111,11 @@ export default function RFILog() {
    return match?.email || match?.invite_email || ''
  }
 
- const load = useCallback(async () => {
+ const load = useCallback(async (opts?: { quiet?: boolean }) => {
+ if (!opts?.quiet) {
  setLoading(true)
  setLoadError(null)
+ }
  try {
  const [rfiRes, memberRes] = await Promise.all([
    fetch(`/api/projects/${projectId}/rfis`),
@@ -92,6 +137,7 @@ export default function RFILog() {
  response: r.response,
  is_scope_change: !!r.is_scope_change,
  scope_change_amount: r.scope_change_amount,
+ attachment: readAttachment(r.attachment_url),
  }))
  )
  if (memberRes.ok) {
@@ -99,15 +145,17 @@ export default function RFILog() {
    setMembers(md.members || [])
  }
  } catch (e) {
- setLoadError(e)
+ if (!opts?.quiet) setLoadError(e)
  } finally {
- setLoading(false)
+ if (!opts?.quiet) setLoading(false)
  }
  }, [projectId])
 
  useEffect(() => {
  load()
  }, [load])
+
+ useLiveReload(load, ['rfis'])
 
  const handleCreateRfi = async (e: React.FormEvent) => {
  e.preventDefault()
@@ -117,7 +165,10 @@ export default function RFILog() {
  const res = await fetch(`/api/projects/${projectId}/rfis`, {
  method: 'POST',
  headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify(newRfi),
+ body: JSON.stringify({
+   ...newRfi,
+   attachment_url: newAttachment ? formatFileMarker(newAttachment.key, newAttachment.name) : null,
+ }),
  })
  const data = await res.json()
  if (!res.ok) {
@@ -137,11 +188,13 @@ export default function RFILog() {
  assigned_to: newRfi.assigned_to,
  due_date: r.due_date || '',
  is_scope_change: false,
+ attachment: newAttachment,
  },
  ...prev,
  ])
  setShowCreateModal(false)
  setNewRfi({ title: '', description: '', drawing_ref: '', assigned_to: '', due_date: '' })
+ setNewAttachment(null)
  toast(`RFI-${String(r.rfi_number).padStart(3, '0')} raised`, 'success')
  } catch (err: any) {
  toast(err?.message || 'Failed to create RFI', 'error')
@@ -153,6 +206,21 @@ export default function RFILog() {
  const handleSaveRfi = async () => {
  if (!activeRfi) return
  setSavingRfi(true)
+ const previous = rfis.find((r) => r.id === activeRfi.id)
+ setRfis((prev) =>
+ prev.map((r) =>
+ r.id === activeRfi.id
+ ? {
+ ...r,
+ status: activeRfi.status,
+ response: activeRfi.response || aiDraftText || r.response,
+ description: activeRfi.description,
+ is_scope_change: activeRfi.is_scope_change,
+ scope_change_amount: activeRfi.scope_change_amount,
+ }
+ : r
+ )
+ )
  try {
  const res = await fetch(`/api/projects/${projectId}/rfis`, {
  method: 'PATCH',
@@ -168,6 +236,7 @@ export default function RFILog() {
  })
  const data = await res.json()
  if (!res.ok) {
+ if (previous) setRfis((prev) => prev.map((r) => (r.id === activeRfi.id ? previous : r)))
  toast(data.error || 'Failed to save RFI', 'error')
  return
  }
@@ -190,6 +259,7 @@ export default function RFILog() {
  setAiDraftText('')
  toast('RFI updated', 'success')
  } catch (err: any) {
+ if (previous) setRfis((prev) => prev.map((r) => (r.id === activeRfi.id ? previous : r)))
  toast(err?.message || 'Failed to save RFI', 'error')
  } finally {
  setSavingRfi(false)
@@ -323,6 +393,12 @@ export default function RFILog() {
  {rfi.drawing_ref && (
  <span className="text-[11px] text-stone mt-0.5 block">Sheet: {rfi.drawing_ref}</span>
  )}
+ {rfi.attachment && (
+ <span className="text-[11px] text-stone mt-0.5 flex items-center gap-1">
+ <span className="material-icons-outlined text-[12px]">attach_file</span>
+ {rfi.attachment.name}
+ </span>
+ )}
  </td>
  <td className="py-4 text-stone">{rfi.raised_by}</td>
  <td className="py-4 text-stone">{rfi.assigned_to}</td>
@@ -414,6 +490,37 @@ export default function RFILog() {
  </div>
  </div>
 
+ <div>
+ <label className="block text-xs text-stone mb-1 font-medium">Attachment</label>
+ {newAttachment ? (
+ <div className="flex items-center gap-2 border rounded-md px-3 py-2 bg-navy/40">
+ <span className="material-icons-outlined text-[16px] text-amber">attach_file</span>
+ <span className="text-xs text-white truncate flex-1">{newAttachment.name}</span>
+ <button
+ type="button"
+ onClick={() => setNewAttachment(null)}
+ className="text-[10px] text-stone hover:text-error font-bold uppercase"
+ >
+ Remove
+ </button>
+ </div>
+ ) : (
+ <label className="flex items-center gap-2 border border-dashed rounded-md px-3 py-2 cursor-pointer hover:border-amber/50 transition">
+ <span className="material-icons-outlined text-[16px] text-stone">upload_file</span>
+ <span className="text-xs text-stone">
+ {uploadingAttachment ? 'Uploading…' : 'Attach a markup, photo or drawing (optional)'}
+ </span>
+ <input
+ type="file"
+ accept={CHAT_ACCEPT}
+ className="hidden"
+ disabled={uploadingAttachment}
+ onChange={handleAttachmentPick}
+ />
+ </label>
+ )}
+ </div>
+
  <div className="pt-4 flex justify-end gap-3" style={{ boxShadow: '0 -1px 0 rgba(159,142,122,0.10)' }}>
  <button 
  type="button" 
@@ -463,6 +570,17 @@ export default function RFILog() {
  <span className="chip" style={{ background: 'rgba(245,166,35,.10)', color: 'var(--amber)' }}>
  Sheet: {activeRfi.drawing_ref}
  </span>
+ )}
+ {activeRfi.attachment && (
+ <button
+ type="button"
+ onClick={() => openAttachment(activeRfi.attachment!)}
+ className="flex items-center gap-2 border rounded-md px-3 py-2 bg-navy/40 w-full text-left hover:border-amber/50 transition"
+ >
+ <span className="material-icons-outlined text-[16px] text-amber">attach_file</span>
+ <span className="text-xs text-white truncate flex-1">{activeRfi.attachment.name}</span>
+ <span className="material-icons-outlined text-[14px] text-stone">open_in_new</span>
+ </button>
  )}
  <div className="mt-2">
  <label className="block text-xs text-stone mb-1 font-medium">Status</label>

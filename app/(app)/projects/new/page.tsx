@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { MARKETPLACE_SERVICES } from '@/lib/marketplace/services'
 import { useToast } from '@/components/ui/Toast'
+import { isPaywallEnforced } from '@/lib/payments/gates'
 
 type FieldErrors = Partial<Record<'name' | 'city' | 'sqft' | 'reraNumber' | 'servicesNeeded', string>>
 
@@ -48,7 +49,7 @@ export default function NewProject() {
  if (list[0]) setFormData((prev) => ({ ...prev, client: list[0].id }))
  const count = (p.projects || []).length
  const plan = me.profile?.plan || 'free'
- setPlanGate({ blocked: plan === 'free' && count >= 3, count })
+ setPlanGate({ blocked: isPaywallEnforced() && plan === 'free' && count >= 3, count })
  })
  .catch(() =>
  toast('Could not load your CRM contacts. You can still create the project and link a contact later.', 'warning', 6000)
@@ -220,6 +221,10 @@ export default function NewProject() {
  <option value="interior">Interior fit-out</option>
  <option value="landscape">Landscape Design</option>
  </select>
+ <p className="text-[11px] text-stone mt-1.5 leading-relaxed">
+  Changes the default NOC checklist, bye-law panel and AI cost/fee bands.
+  Commercial, institutional and industrial are not treated as residential.
+ </p>
  </div>
  </div>
 
@@ -344,6 +349,11 @@ export default function NewProject() {
  className="input-5bloc font-mono"
  placeholder="e.g. 45000000"
  />
+ <p className="text-[11px] text-stone mt-1.5 leading-relaxed">
+  Client&apos;s target build cost — not your fee. Shown as Target Cost on the project,
+  used when you quote a fee as a percentage, and becomes the marketplace bid ceiling
+  if you post this project for open bidding. Leave blank if you do not know yet.
+ </p>
  </div>
 
  <div className="grid grid-cols-2 gap-4">

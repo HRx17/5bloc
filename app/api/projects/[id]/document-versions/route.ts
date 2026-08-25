@@ -87,8 +87,16 @@ export async function POST(req: Request, ctx: Ctx) {
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
-  if (!body.document_id || !body.version_id) {
-    return NextResponse.json({ error: 'document_id and version_id required' }, { status: 400 })
+  if (!body.document_id) {
+    return NextResponse.json({ error: 'document_id required' }, { status: 400 })
+  }
+  // Two modes: restore an old version (version_id), or publish an uploaded file as the next version (r2_key)
+  const isUpload = !body.version_id && !!body.r2_key
+  if (!body.version_id && !isUpload) {
+    return NextResponse.json(
+      { error: 'version_id (restore) or r2_key (new version) required' },
+      { status: 400 }
+    )
   }
 
   if (shouldServeMockData(auth)) {
@@ -98,6 +106,48 @@ export async function POST(req: Request, ctx: Ctx) {
     return NextResponse.json(liveDataUnavailableResponse(), { status: 503 })
   }
 
+  if (isUpload) {
+    const { data: current } = await auth.supabase
+      .from('documents')
+      .select('version, original_filename, extension')
+      .eq('id', body.document_id)
+      .eq('project_id', id)
+      .single()
+    if (!current) return NextResponse.json({ error: 'Document not found' }, { status: 404 })
+
+    const nextVersion = (current.version || 1) + 1
+    const updates: Record<string, unknown> = {
+      version: nextVersion,
+      r2_key: body.r2_key,
+      storage_path: body.r2_key,
+      updated_at: new Date().toISOString(),
+    }
+    if (body.original_filename) updates.original_filename = body.original_filename
+    if (body.extension) updates.extension = body.extension
+    if (body.size_bytes) updates.size_bytes = body.size_bytes
+
+    const { data: updated, error: upErr } = await auth.supabase
+      .from('documents')
+      .update(updates)
+      .eq('id', body.document_id)
+      .eq('project_id', id)
+      .select()
+      .single()
+    if (upErr) return NextResponse.json({ error: upErr.message }, { status: 500 })
+
+    await auth.supabase.from('document_versions').insert({
+      document_id: body.document_id,
+      project_id: id,
+      version: nextVersion,
+      storage_path: body.r2_key,
+      r2_key: body.r2_key,
+      original_filename: body.original_filename || current.original_filename,
+      uploaded_by: auth.profile.id,
+      note: body.note || `Uploaded v${nextVersion}`,
+    })
+
+    return NextResponse.json({ ok: true, document: documentRead(updated), version: nextVersion })
+  }
 
   const { data: target, error: tErr } = await auth.supabase
     .from('document_versions')

@@ -29,7 +29,7 @@ export default function NotificationsBell({ userId }: { userId?: string }) {
 
   useEffect(() => {
     let cancelled = false
-    ;(async () => {
+    const refresh = async () => {
       try {
         const res = await fetch('/api/notifications')
         if (!res.ok) return
@@ -38,9 +38,12 @@ export default function NotificationsBell({ userId }: { userId?: string }) {
       } catch {
         // ignore
       }
-    })()
+    }
+    refresh()
+    const timer = setInterval(refresh, 60_000)
     return () => {
       cancelled = true
+      clearInterval(timer)
     }
   }, [userId])
 

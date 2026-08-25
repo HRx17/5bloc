@@ -6,6 +6,8 @@ import OnboardingChecklist from '@/components/layout/OnboardingChecklist'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { isPaywallEnforced } from '@/lib/payments/gates'
+import { useLiveReload } from '@/lib/live/useLiveReload'
 
 type AttentionItem = {
   id: string
@@ -26,25 +28,28 @@ export default function DashboardPage() {
   const [unpaidInvoiceCount, setUnpaidInvoiceCount] = useState(0)
   const [pendingDocApprovals, setPendingDocApprovals] = useState(0)
   const [pendingDocProjectId, setPendingDocProjectId] = useState<string | null>(null)
+  const [upcomingMeetingCount, setUpcomingMeetingCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<unknown>(null)
   const [activityError, setActivityError] = useState<unknown>(null)
 
-  const loadActivity = useCallback(async () => {
-    setActivityError(null)
+  const loadActivity = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) setActivityError(null)
     try {
       const res = await fetch('/api/activity?limit=8')
       if (!res.ok) throw new Error('Could not load recent activity')
       const a = await res.json()
       setActivity(a.activity || [])
     } catch (err) {
-      setActivityError(err)
+      if (!opts?.quiet) setActivityError(err)
     }
   }, [])
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+  const load = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) {
+      setLoading(true)
+      setError(null)
+    }
     try {
       const res = await fetch('/api/projects')
       if (!res.ok) throw new Error('Could not load your projects')
@@ -52,12 +57,14 @@ export default function DashboardPage() {
       const nextProjects = p.projects || []
       setProjects(nextProjects)
 
-      const [c, me] = await Promise.all([
+      const [c, me, meetRes] = await Promise.all([
         fetch('/api/clients').then((r) => r.json()).catch(() => ({ clients: [] })),
         fetch('/api/me').then((r) => r.json()).catch(() => ({ profile: {} })),
+        fetch('/api/meetings?upcoming=1').then((r) => (r.ok ? r.json() : { meetings: [] })).catch(() => ({ meetings: [] })),
       ])
       setClients(c.clients || [])
       setPlan(me.profile?.plan || 'free')
+      setUpcomingMeetingCount((meetRes.meetings || []).length)
       const nextRole = me.profile?.role || null
       setRole(nextRole)
 
@@ -103,9 +110,9 @@ export default function DashboardPage() {
         setPendingDocProjectId(null)
       }
     } catch (err) {
-      setError(err)
+      if (!opts?.quiet) setError(err)
     } finally {
-      setLoading(false)
+      if (!opts?.quiet) setLoading(false)
     }
   }, [])
 
@@ -114,8 +121,11 @@ export default function DashboardPage() {
     loadActivity()
   }, [load, loadActivity])
 
+  useLiveReload(load, ['invoices', 'bids', 'projects', 'documents', 'clients', 'meetings'])
+  useLiveReload(loadActivity, ['invoices', 'bids', 'documents', 'rfis', 'issues'])
+
   const active = projects.filter((p) => p.status === 'active').length
-  const atLimit = plan === 'free' && projects.length >= 3
+  const atLimit = isPaywallEnforced() && plan === 'free' && projects.length >= 3
   const isArchitect = role === 'architect'
 
   const showFirstWeekGuide =
@@ -183,6 +193,16 @@ export default function DashboardPage() {
       })
     }
 
+    if (upcomingMeetingCount > 0) {
+      items.push({
+        id: 'meetings',
+        title: `${upcomingMeetingCount} upcoming meeting${upcomingMeetingCount === 1 ? '' : 's'}`,
+        why: 'Attendees get an invite now and a reminder before the start time.',
+        href: '/calendar',
+        actionLabel: 'Open calendar',
+      })
+    }
+
     return items
   }, [
     isArchitect,
@@ -195,6 +215,7 @@ export default function DashboardPage() {
     unpaidInvoiceCount,
     pendingDocApprovals,
     pendingDocProjectId,
+    upcomingMeetingCount,
   ])
 
   return (

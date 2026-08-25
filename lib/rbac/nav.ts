@@ -14,6 +14,7 @@ export type NavGroup = {
   items: NavItem[]
 }
 
+const CALENDAR: NavItem = { name: 'Calendar', path: '/calendar', icon: 'calendar_month' }
 const MESSAGES: NavItem = { name: 'Messages', path: '/messages', icon: 'chat', badge: 'unreadMessages' }
 const DOCUMENTS: NavItem = { name: 'Documents', path: '/documents', icon: 'folder_shared' }
 const COORDINATION: NavItem = { name: 'Coordination', path: '/coordination', icon: 'hub' }
@@ -36,7 +37,7 @@ const ARCHITECT_NAV: NavGroup[] = [
   },
   {
     label: 'Coordinate',
-    items: [MESSAGES, COORDINATION, DOCUMENTS],
+    items: [MESSAGES, CALENDAR, COORDINATION, DOCUMENTS],
   },
   {
     label: 'Tools',
@@ -45,6 +46,7 @@ const ARCHITECT_NAV: NavGroup[] = [
       CAD_VIEWER,
       { name: 'AI Cost Estimator', path: '/ai/estimate', icon: 'auto_awesome' },
       { name: 'AI Contract Scan', path: '/ai/contract-scan', icon: 'gavel' },
+      { name: 'AI Building Codes', path: '/ai/building-code', icon: 'account_balance' },
       { name: 'Integrations', path: '/integrations', icon: 'extension' },
     ],
   },
@@ -63,7 +65,7 @@ const CONTRACTOR_NAV: NavGroup[] = [
   },
   {
     label: 'Coordinate',
-    items: [MESSAGES, COORDINATION, DOCUMENTS],
+    items: [MESSAGES, CALENDAR, COORDINATION, DOCUMENTS],
   },
   {
     label: 'Tools',
@@ -83,7 +85,7 @@ const BUILDER_NAV: NavGroup[] = [
   },
   {
     label: 'Coordinate',
-    items: [MESSAGES, COORDINATION, DOCUMENTS],
+    items: [MESSAGES, CALENDAR, COORDINATION, DOCUMENTS],
   },
   {
     label: 'Tools',
@@ -102,7 +104,7 @@ const CONSULTANT_NAV: NavGroup[] = [
   },
   {
     label: 'Coordinate',
-    items: [MESSAGES, COORDINATION, DOCUMENTS],
+    items: [MESSAGES, CALENDAR, COORDINATION, DOCUMENTS],
   },
   {
     label: 'Tools',
@@ -121,7 +123,7 @@ const CLIENT_NAV: NavGroup[] = [
   },
   {
     label: 'Coordinate',
-    items: [MESSAGES],
+    items: [MESSAGES, CALENDAR],
   },
   SETTINGS_GROUP,
 ]

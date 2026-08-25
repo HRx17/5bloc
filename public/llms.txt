@@ -1,0 +1,29 @@
+# 5Bloc
+> AEC project coordination for architect-led teams. Drawings, RFIs, client approvals — one workspace, no app to install.
+
+5Bloc is the project coordination platform for Indian and US architecture practices. Architects run the job. Contractors bid and deliver. Vendors get discovered. Clients see progress in the browser.
+
+## Product
+- Architect-led project workspace (documents, RFIs, submittals, permits, invoices)
+- Client portal with no app to install
+- Contractor and vendor marketplace / discovery
+- AI cost estimator and building-code checker
+
+## Key URLs
+- Homepage: https://5bloc.com/
+- About: https://5bloc.com/about
+- Changelog: https://5bloc.com/changelog
+- Pricing: https://5bloc.com/#pricing
+- 5Bloc vs Procore: https://5bloc.com/vs/5bloc-vs-procore
+- 5Bloc vs Fieldwire: https://5bloc.com/vs/5bloc-vs-fieldwire
+- Contractors: https://5bloc.com/list-your-business
+- Vendors: https://5bloc.com/join-as-vendor
+- Privacy: https://5bloc.com/privacy
+- Terms: https://5bloc.com/terms
+
+## Who it is for
+Architect-led construction teams — principals, project architects, contractors, vendors, and clients — who currently run jobs on WhatsApp, email, and Excel.
+
+## Optional
+- Contact: contact@5bloc.com
+- Founders: Haet Ranpariya — https://www.linkedin.com/in/haet-ranpariya-382324188 ; Parth Mehta — https://www.linkedin.com/in/parth-mehta-4473a517b

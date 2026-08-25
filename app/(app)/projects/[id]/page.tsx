@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useToast } from '@/components/ui/Toast'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useLiveReload } from '@/lib/live/useLiveReload'
 
 const PHASE_LABELS: Record<string, string> = {
   pre_design: 'Pre-Design',
@@ -69,11 +70,15 @@ export default function ProjectOverview() {
   const [savingPhase, setSavingPhase] = useState<string | null>(null)
   const [savingSpecs, setSavingSpecs] = useState(false)
   const [editingSpecs, setEditingSpecs] = useState(false)
+  // A fee is quoted either as a percentage of construction cost or as a lump sum — never both
+  const [feeMode, setFeeMode] = useState<'percent' | 'amount'>('amount')
   const [loadError, setLoadError] = useState<unknown>(null)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setLoadError(null)
+  const load = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) {
+      setLoading(true)
+      setLoadError(null)
+    }
     try {
       const [projRes, actRes, membersRes, meRes] = await Promise.all([
         fetch(`/api/projects/${projectId}`),
@@ -103,6 +108,7 @@ export default function ProjectOverview() {
         state: p.state || '',
         portalEnabled: !!p.portal_enabled,
       })
+      setFeeMode(Number(p.architect_fee_pct || 0) > 0 ? 'percent' : 'amount')
 
       if (membersRes.ok) {
         const membersData = await membersRes.json()
@@ -148,15 +154,17 @@ export default function ProjectOverview() {
       setExpandedPhase(p.phase || merged.find((m) => m.completion < 100)?.phase || merged[0]?.phase)
       setActivity(actRes.ok ? actData.activity || [] : [])
     } catch (e) {
-      setLoadError(e)
+      if (!opts?.quiet) setLoadError(e)
     } finally {
-      setLoading(false)
+      if (!opts?.quiet) setLoading(false)
     }
   }, [projectId])
 
   useEffect(() => {
     load()
   }, [load])
+
+  useLiveReload(load, ['projects', 'documents', 'rfis'])
 
   useEffect(() => {
     try {
@@ -258,6 +266,11 @@ export default function ProjectOverview() {
     }
   }
 
+  const derivedFeeAmount =
+    feeMode === 'percent'
+      ? Math.round((projectStats.cost * projectStats.feePercent) / 100)
+      : projectStats.feeAmount
+
   const saveSpecs = async () => {
     if (savingSpecs) return
     setSavingSpecs(true)
@@ -269,8 +282,9 @@ export default function ProjectOverview() {
           total_sqft: projectStats.sqft || null,
           floors: projectStats.floors || null,
           construction_cost: projectStats.cost || null,
-          architect_fee: projectStats.feeAmount || null,
-          architect_fee_pct: projectStats.feePercent || null,
+          // Whichever basis is not selected is cleared so the two can never disagree
+          architect_fee: derivedFeeAmount || null,
+          architect_fee_pct: feeMode === 'percent' ? projectStats.feePercent || null : null,
           start_date: projectStats.startDate || null,
           estimated_end: projectStats.endDate || null,
           brief: projectStats.brief || null,
@@ -281,6 +295,11 @@ export default function ProjectOverview() {
         toast(data.error || 'Failed to save the project specs', 'error')
         return
       }
+      setProjectStats((prev) => ({
+        ...prev,
+        feeAmount: derivedFeeAmount,
+        feePercent: feeMode === 'percent' ? prev.feePercent : 0,
+      }))
       setEditingSpecs(false)
       toast('Project specs saved', 'success')
     } catch (err: any) {
@@ -415,13 +434,77 @@ export default function ProjectOverview() {
           </div>
           {editingSpecs ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-1.5">
+              <div className="col-span-2 sm:col-span-3 border rounded-md p-3 space-y-2.5">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                  <span className="text-[11px] font-medium text-stone">Architect fee basis</span>
+                  {(
+                    [
+                      ['amount', 'Lump sum (₹)'],
+                      ['percent', '% of construction cost'],
+                    ] as const
+                  ).map(([mode, label]) => (
+                    <label key={mode} className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="feeMode"
+                        checked={feeMode === mode}
+                        onChange={() => setFeeMode(mode)}
+                      />
+                      <span className="text-[11px]">{label}</span>
+                    </label>
+                  ))}
+                </div>
+                {feeMode === 'percent' ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-medium text-stone">Fee %</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        className="input-5bloc mt-1 py-1.5 text-xs"
+                        value={projectStats.feePercent || ''}
+                        onChange={(e) =>
+                          setProjectStats((prev) => ({
+                            ...prev,
+                            feePercent: Number(e.target.value) || 0,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-medium text-stone">Works out to</label>
+                      <p className="mt-1 py-1.5 text-xs font-semibold">
+                        ₹{derivedFeeAmount.toLocaleString()}
+                      </p>
+                      <p className="text-[10px]" style={{ color: 'var(--stone)' }}>
+                        {projectStats.cost
+                          ? `${projectStats.feePercent}% of ₹${projectStats.cost.toLocaleString()}`
+                          : 'Set a target cost to calculate the amount'}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="text-[11px] font-medium text-stone">Architect fee (₹)</label>
+                    <input
+                      type="number"
+                      className="input-5bloc mt-1 py-1.5 text-xs"
+                      value={projectStats.feeAmount || ''}
+                      onChange={(e) =>
+                        setProjectStats((prev) => ({
+                          ...prev,
+                          feeAmount: Number(e.target.value) || 0,
+                        }))
+                      }
+                    />
+                  </div>
+                )}
+              </div>
               {(
                 [
                   ['sqft', 'Built area (sqft)', 'number'],
                   ['floors', 'Floors', 'number'],
                   ['cost', 'Target cost (₹)', 'number'],
-                  ['feeAmount', 'Architect fee (₹)', 'number'],
-                  ['feePercent', 'Fee %', 'number'],
                   ['startDate', 'Start date', 'date'],
                   ['endDate', 'Target end', 'date'],
                 ] as const
@@ -475,8 +558,12 @@ export default function ProjectOverview() {
                   <p className="text-[11px] font-medium text-stone">Architect Fee</p>
                   <h4 className="text-base font-semibold mt-1">
                     ₹{projectStats.feeAmount.toLocaleString()}
-                    {projectStats.feePercent ? ` (${projectStats.feePercent}%)` : ''}
                   </h4>
+                  <p className="text-[10px]" style={{ color: 'var(--stone)' }}>
+                    {projectStats.feePercent
+                      ? `${projectStats.feePercent}% of construction cost`
+                      : 'Lump sum'}
+                  </p>
                 </div>
               </div>
               <div className="pt-2 grid sm:grid-cols-2 gap-3 text-[12px]" style={{ color: 'var(--stone)' }}>

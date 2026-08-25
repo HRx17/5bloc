@@ -22,19 +22,28 @@ export const r2 = hasR2
 
 export const R2_BUCKET = process.env.R2_BUCKET_NAME || process.env.R2_BUCKET || '5bloc-documents'
 
-export async function getDownloadUrl(r2Key: string, filename: string): Promise<string> {
+export function hasR2Storage(): boolean {
+  return !!r2
+}
+
+export async function getDownloadUrl(
+  r2Key: string,
+  filename: string,
+  opts?: { inline?: boolean }
+): Promise<string> {
   if (!r2) {
     throw new Error(
       'Object storage is not configured. Set R2 credentials or use a supabase: storage key.'
     )
   }
 
+  const disposition = opts?.inline ? 'inline' : 'attachment'
   return getSignedUrl(
     r2,
     new GetObjectCommand({
       Bucket: R2_BUCKET,
       Key: r2Key,
-      ResponseContentDisposition: `attachment; filename="${filename}"`,
+      ResponseContentDisposition: `${disposition}; filename="${filename}"`,
     }),
     { expiresIn: 900 }
   )

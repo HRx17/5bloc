@@ -8,6 +8,7 @@ import { useConfirm } from '@/components/ui/ConfirmProvider'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { AutodeskViewer } from '@/components/integrations/AutodeskViewer'
+import { fetchVaultFile, translateCadFile } from '@/lib/cad/client-upload'
 
 interface CadModel {
   urn:    string
@@ -21,7 +22,9 @@ const STORAGE_KEY = '5bloc_cad_models'
 export default function CadViewerPage() {
   const { toast } = useToast()
   const confirm = useConfirm()
+  const importedRef = useRef<string | null>(null)
   const [connected, setConnected]   = useState<boolean | null>(null)
+  const [configured, setConfigured] = useState(false)
   const [statusError, setStatusError] = useState<unknown>(null)
   const [models, setModels]         = useState<CadModel[]>([])
   const [selected, setSelected]     = useState<string | null>(null)
@@ -38,7 +41,12 @@ export default function CadViewerPage() {
         if (!r.ok) throw new Error('Could not check your Autodesk connection')
         return r.json()
       })
-      .then(({ connected }) => setConnected((connected ?? []).includes('autodesk')))
+      .then((data) => {
+        // Viewer + OSS upload use a 2-legged app token. User OAuth is optional.
+        const ready = !!data.providers?.autodesk?.configured
+        setConfigured(ready)
+        setConnected(ready || (data.connected ?? []).includes('autodesk'))
+      })
       .catch(err => setStatusError(err))
   }, [])
 
@@ -91,44 +99,29 @@ export default function CadViewerPage() {
     }, 5000)
   }, [toast, updateModel])
 
-  const handleFiles = async (files: FileList | null) => {
-    if (!files || !files.length) return
-    const file = files[0]
+  const uploadCadFile = async (file: File, documentId?: string) => {
     setUploading(true)
     try {
-      // Step 1 — get a pre-signed S3 URL from Autodesk (tiny request, no file data)
-      const prep = await fetch('/api/integrations/autodesk/upload-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileName: file.name }),
-      })
-      const prepData = await prep.json()
-      if (!prep.ok) throw new Error(prepData.error ?? 'Failed to prepare upload')
-
-      // Step 2 — PUT file directly to the Autodesk/AWS signed URL (bypasses Vercel)
-      const s3 = await fetch(prepData.uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/octet-stream' },
-        body: file,
-      })
-      if (!s3.ok) throw new Error(`Upload to Autodesk failed (${s3.status})`)
-
-      // Step 3 — notify our API to finalise & kick off translation
-      const done = await fetch('/api/integrations/autodesk/complete-upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          uploadKey: prepData.uploadKey,
-          objectKey: prepData.objectKey,
-          bucketKey: prepData.bucketKey,
-          fileName:  file.name,
-        }),
-      })
-      const doneData = await done.json()
-      if (!done.ok) throw new Error(doneData.error ?? 'Failed to complete upload')
+      const doneData = await translateCadFile(file)
+      if (documentId) {
+        await fetch('/api/cad-models', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            document_id: documentId,
+            urn: doneData.urn,
+            name: doneData.name,
+            status: 'translating',
+          }),
+        }).catch(() => {})
+      }
 
       const model: CadModel = { urn: doneData.urn, name: doneData.name, status: 'translating', addedAt: Date.now() }
-      persist([model, ...models])
+      setModels((prev) => {
+        const next = [model, ...prev]
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+        return next
+      })
       setSelected(doneData.urn)
       startPolling(doneData.urn)
       toast('Uploaded — translating model for the viewer…', 'info', 6000)
@@ -138,6 +131,46 @@ export default function CadViewerPage() {
       setUploading(false)
     }
   }
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files?.length) return
+    await uploadCadFile(files[0])
+  }
+
+  // Project Documents → Open CAD viewer lands here with ?doc=<id>
+  useEffect(() => {
+    if (!connected) return
+    const docId = new URLSearchParams(window.location.search).get('doc')
+    if (!docId || importedRef.current === docId) return
+    importedRef.current = docId
+    ;(async () => {
+      try {
+        toast('Opening drawing from the vault…', 'info', 4000)
+        const existing = await fetch(`/api/cad-models?document_id=${encodeURIComponent(docId)}`)
+        const saved = await existing.json().catch(() => ({}))
+        if (saved.model?.urn && saved.model.status === 'ready') {
+          const model: CadModel = {
+            urn: saved.model.urn,
+            name: saved.model.name,
+            status: 'ready',
+            addedAt: Date.now(),
+          }
+          setModels((prev) => {
+            const next = [model, ...prev.filter((m) => m.urn !== model.urn)]
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+            return next
+          })
+          setSelected(model.urn)
+          toast('Opened the translated drawing', 'success')
+          return
+        }
+        const file = await fetchVaultFile(docId)
+        await uploadCadFile(file, docId)
+      } catch (e: any) {
+        toast(e?.message || 'Could not open that drawing in the CAD viewer', 'error', 8000)
+      }
+    })()
+  }, [connected, toast])
 
   const removeModel = async (model: CadModel) => {
     const ok = await confirm({
@@ -202,11 +235,19 @@ export default function CadViewerPage() {
             style={{ background: 'rgba(245,166,35,0.12)', color: 'var(--amber)' }}>
             <span className="material-icons-outlined text-[28px]">architecture</span>
           </div>
-          <h3 className="text-lg font-bold" style={{ color: 'var(--on-surface)' }}>Connect Autodesk to view CAD files</h3>
+          <h3 className="text-lg font-bold" style={{ color: 'var(--on-surface)' }}>
+            {configured ? 'Connect Autodesk to view CAD files' : 'Autodesk is not configured on this server'}
+          </h3>
           <p className="text-sm mt-1 mb-5 max-w-md" style={{ color: 'var(--stone)' }}>
-            View DWG, RVT, IFC and Fusion 360 models directly in 5BLOC with full 2D/3D navigation, powered by Autodesk Platform Services.
+            {configured
+              ? 'View DWG, RVT, IFC and Fusion 360 models in 5Bloc — powered by Autodesk Platform Services.'
+              : 'Set AUTODESK_CLIENT_ID and AUTODESK_CLIENT_SECRET, then restart the app. Until then the CAD viewer cannot translate or display drawings.'}
           </p>
-          <Link href="/integrations" className="btn-primary text-sm">Connect Autodesk</Link>
+          {configured ? (
+            <Link href="/integrations" className="btn-primary text-sm">Connect Autodesk</Link>
+          ) : (
+            <Link href="/integrations" className="btn-secondary text-sm">Open Integrations</Link>
+          )}
         </motion.div>
       </div>
     )

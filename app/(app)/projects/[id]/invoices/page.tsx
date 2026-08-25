@@ -3,12 +3,20 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { startInvoiceCheckout } from '@/lib/payments/checkout'
+import { useLiveReload } from '@/lib/live/useLiveReload'
+import { pollUntil } from '@/lib/live/pollUntil'
 import { useToast } from '@/components/ui/Toast'
 import { useConfirm } from '@/components/ui/ConfirmProvider'
 import { usePrompt } from '@/components/ui/PromptProvider'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import {
+  TYPOLOGY_OPTIONS,
+  normalizeTypology,
+  typologyFeeRange,
+  typologyLabel,
+} from '@/lib/compliance/typology'
 
 interface Invoice {
   id: string
@@ -17,7 +25,7 @@ interface Invoice {
   project_name: string
   subtotal: number
   total: number
-  status: 'draft' | 'sent' | 'paid' | 'overdue'
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled'
   due_date: string
   milestone_label: string
 }
@@ -47,7 +55,7 @@ export default function ProjectInvoices() {
   const { toast } = useToast()
   const confirm = useConfirm()
   const prompt = usePrompt()
-  const [payingInvoice, setPayingInvoice] = useState<string | null>(null)
+  const [busyInvoice, setBusyInvoice] = useState<string | null>(null)
 
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [consultantPayments, setConsultantPayments] = useState<ConsultantPayment[]>([])
@@ -113,6 +121,8 @@ export default function ProjectInvoices() {
   const [calcType, setCalcType] = useState('commercial')
   const [calcSize, setCalcSize] = useState(12000)
   const [calcRate, setCalcRate] = useState(180)
+  const [calcCost, setCalcCost] = useState(0)
+  const [calcMode, setCalcMode] = useState<'rate' | 'percent'>('rate')
 
   const phases = [
     { name: 'Concept Design', pct: 10 },
@@ -123,21 +133,40 @@ export default function ProjectInvoices() {
     { name: 'Construction Administration', pct: 15 },
     { name: 'Project Closeout', pct: 5 }
   ]
-  const totalCalc = calcSize * calcRate
+  const feeBand = typologyFeeRange(calcType)
+  const totalCalc =
+    calcMode === 'percent'
+      ? Math.round((calcCost * feeBand.typical) / 100)
+      : calcSize * calcRate
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setLoadError(null)
+  const load = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) {
+      setLoading(true)
+      setLoadError(null)
+    }
     try {
-      const [invRes, expRes, payRes] = await Promise.all([
+      const [invRes, expRes, payRes, projRes] = await Promise.all([
         fetch(`/api/invoices?project_id=${projectId}`),
         fetch(`/api/projects/${projectId}/expenses`),
         fetch(`/api/projects/${projectId}/consultant-payments`),
+        fetch(`/api/projects/${projectId}`),
       ])
       const invData = await invRes.json()
       const expData = await expRes.json()
       const payData = await payRes.json()
       if (!invRes.ok) throw new Error(invData.error || 'Failed to load invoices')
+
+      // Seed the fee calculator from the project instead of generic defaults
+      const projData = await projRes.json().catch(() => ({}))
+      if (projRes.ok && projData.project) {
+        const p = projData.project
+        setCalcType(normalizeTypology(p.type))
+        if (p.total_sqft) setCalcSize(Number(p.total_sqft))
+        if (p.construction_cost) {
+          setCalcCost(Number(p.construction_cost))
+          setCalcMode('percent')
+        }
+      }
       setInvoices(
         (invData.invoices || []).map((inv: any) => ({
           id: inv.id,
@@ -177,16 +206,20 @@ export default function ProjectInvoices() {
         )
       }
     } catch (e) {
-      setInvoices([])
-      setLoadError(e)
+      if (!opts?.quiet) {
+        setInvoices([])
+        setLoadError(e)
+      }
     } finally {
-      setLoading(false)
+      if (!opts?.quiet) setLoading(false)
     }
   }, [projectId])
 
   useEffect(() => {
     load()
   }, [load])
+
+  useLiveReload(load, ['invoices', 'project_expenses', 'consultant_payments'])
 
   const handleCreateInvoice = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -311,28 +344,108 @@ export default function ProjectInvoices() {
   }
 
   const handleCollectPayment = async (inv: Invoice) => {
-    if (payingInvoice) return
-    setPayingInvoice(inv.id)
+    if (busyInvoice) return
+    setBusyInvoice(inv.id)
     try {
       const result = await startInvoiceCheckout(inv.id)
       if (result.message) toast(result.message, result.ok ? 'success' : 'warning', 6000)
       if (!result.ok) return
 
-      // Razorpay confirms capture over the webhook, so poll once for the settled status
       setInvoices((prev) =>
         prev.map((i) => (i.id === inv.id ? { ...i, status: i.status === 'draft' ? 'sent' : i.status } : i))
       )
-      setTimeout(async () => {
-        const res = await fetch(`/api/invoices?project_id=${projectId}`)
-        if (!res.ok) return
-        const data = await res.json()
-        const fresh = (data.invoices || []).find((i: any) => i.id === inv.id)
+      void pollUntil(
+        async () => {
+          const res = await fetch(`/api/invoices?project_id=${projectId}`)
+          if (!res.ok) return null
+          const data = await res.json()
+          return (data.invoices || []).find((i: Invoice) => i.id === inv.id) as Invoice | undefined
+        },
+        (fresh) => !!fresh && (fresh.status === 'paid' || fresh.status === 'cancelled'),
+        { attempts: 10, intervalMs: 1500 }
+      ).then((fresh) => {
         if (fresh?.status) {
           setInvoices((prev) => prev.map((i) => (i.id === inv.id ? { ...i, status: fresh.status } : i)))
         }
-      }, 4000)
+      })
     } finally {
-      setPayingInvoice(null)
+      setBusyInvoice(null)
+    }
+  }
+
+  const handlePdf = (invId: string) => {
+    window.open(`/api/invoices/${invId}/pdf`, '_blank', 'noopener,noreferrer')
+  }
+
+  const handleSend = async (inv: Invoice) => {
+    if (busyInvoice) return
+    const ok = await confirm({
+      title: `Email ${inv.invoice_number} to the client?`,
+      message: `${
+        inv.client_name || 'The client'
+      } will receive this invoice for ₹${inv.total.toLocaleString()} by email with a pay link, and it will be marked as sent.`,
+      confirmLabel: 'Email invoice',
+    })
+    if (!ok) return
+
+    setBusyInvoice(inv.id)
+    if (inv.status === 'draft') {
+      setInvoices((prev) => prev.map((i) => (i.id === inv.id ? { ...i, status: 'sent' } : i)))
+    }
+    try {
+      const res = await fetch(`/api/invoices/${inv.id}/send`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Could not send this invoice')
+      if (data.email_warning || data.mock) {
+        toast(
+          data.email_warning ||
+            `Email not actually delivered — no mail provider is configured. It would have gone to ${data.emailed_to}.`,
+          'warning',
+          8000
+        )
+      } else {
+        toast(`Invoice emailed to ${data.emailed_to} with a pay link.`, 'success')
+      }
+    } catch (e) {
+      if (inv.status === 'draft') {
+        setInvoices((prev) => prev.map((i) => (i.id === inv.id ? { ...i, status: inv.status } : i)))
+      }
+      toast(e instanceof Error ? e.message : 'Could not send this invoice', 'error')
+    } finally {
+      setBusyInvoice(null)
+    }
+  }
+
+  const handleMarkPaid = async (inv: Invoice) => {
+    if (busyInvoice) return
+    const ok = await confirm({
+      title: `Mark ${inv.invoice_number} as paid?`,
+      message: `This records ₹${inv.total.toLocaleString()} from ${
+        inv.client_name || 'this client'
+      } as collected and stops any overdue chasing. It does not take a payment.`,
+      confirmLabel: 'Mark paid',
+    })
+    if (!ok) return
+
+    setBusyInvoice(inv.id)
+    setInvoices((prev) => prev.map((i) => (i.id === inv.id ? { ...i, status: 'paid' } : i)))
+    try {
+      const res = await fetch(`/api/invoices/${inv.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'paid' }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Could not mark this invoice paid')
+      setInvoices((prev) =>
+        prev.map((i) => (i.id === inv.id ? { ...i, status: data.invoice?.status || 'paid' } : i))
+      )
+      toast(`${inv.invoice_number} marked paid`, 'success')
+    } catch (e) {
+      setInvoices((prev) => prev.map((i) => (i.id === inv.id ? { ...i, status: inv.status } : i)))
+      toast(e instanceof Error ? e.message : 'Could not mark this invoice paid', 'error')
+    } finally {
+      setBusyInvoice(null)
     }
   }
 
@@ -409,6 +522,7 @@ export default function ProjectInvoices() {
       case 'sent': return 'bg-blue/10 text-blue '
       case 'paid': return 'bg-success/15 text-success '
       case 'overdue': return 'bg-error/15 text-error '
+      case 'cancelled': return 'bg-stone/15 text-stone '
     }
   }
 
@@ -568,34 +682,38 @@ export default function ProjectInvoices() {
                         </td>
                         <td className="py-4 pr-2 text-right">
                           <div className="flex gap-2 justify-end">
+                            {inv.status !== 'paid' && inv.status !== 'cancelled' && (
+                              <>
+                                <button
+                                  onClick={() => handleSend(inv)}
+                                  disabled={busyInvoice !== null}
+                                  className="p-1 text-stone hover:text-blue hover:bg-navy-lt transition disabled:opacity-40"
+                                  title={inv.status === 'draft' ? 'Email invoice' : 'Re-email invoice'}
+                                >
+                                  <span className="material-icons-outlined text-[16px]">send</span>
+                                </button>
+                                <button
+                                  onClick={() => handleCollectPayment(inv)}
+                                  disabled={busyInvoice !== null}
+                                  className="p-1 text-stone hover:text-white hover:bg-navy-lt transition disabled:opacity-40"
+                                  title={busyInvoice === inv.id ? 'Working…' : 'Collect payment online'}
+                                >
+                                  <span className="material-icons-outlined text-[16px] text-blue">payments</span>
+                                </button>
+                                <button
+                                  onClick={() => handleMarkPaid(inv)}
+                                  disabled={busyInvoice !== null}
+                                  className="p-1 text-stone hover:text-success hover:bg-navy-lt transition disabled:opacity-40"
+                                  title="Mark paid"
+                                >
+                                  <span className="material-icons-outlined text-[16px]">check_circle</span>
+                                </button>
+                              </>
+                            )}
                             <button
-                              onClick={() => handleCollectPayment(inv)}
-                              disabled={inv.status === 'paid' || payingInvoice === inv.id}
-                              className="p-1 text-stone hover:text-white hover:bg-navy-lt transition disabled:opacity-40"
-                              title={inv.status === 'paid' ? 'Already paid' : 'Collect payment online'}
-                            >
-                              <span className="material-icons-outlined text-[16px] text-blue">payments</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                const lines = [
-                                  `Invoice ${inv.invoice_number}`,
-                                  `Milestone: ${inv.milestone_label}`,
-                                  `Due: ${inv.due_date}`,
-                                  `Subtotal: ${inv.subtotal}`,
-                                  `Total: ${inv.total}`,
-                                  `Status: ${inv.status}`,
-                                ]
-                                const blob = new Blob([lines.join('\n')], { type: 'text/plain' })
-                                const url = URL.createObjectURL(blob)
-                                const a = document.createElement('a')
-                                a.href = url
-                                a.download = `${inv.invoice_number || 'invoice'}.txt`
-                                a.click()
-                                URL.revokeObjectURL(url)
-                              }}
+                              onClick={() => handlePdf(inv.id)}
                               className="p-1 text-stone hover:text-white hover:bg-navy-lt transition"
-                              title="Download invoice summary"
+                              title="View / PDF"
                             >
                               <span className="material-icons-outlined text-[16px]">picture_as_pdf</span>
                             </button>
@@ -738,12 +856,48 @@ export default function ProjectInvoices() {
                   onChange={e => setCalcType(e.target.value)}
                   className="input-5bloc py-1 text-xs"
                 >
-                  <option value="residential">Residential Villa/Apts</option>
-                  <option value="commercial">Commercial Office/Retail</option>
-                  <option value="industrial">Industrial Warehouse/Factory</option>
+                  {TYPOLOGY_OPTIONS.map((t) => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
                 </select>
               </div>
 
+              <div className="flex gap-3 text-[10px]">
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={calcMode === 'percent'}
+                    onChange={() => setCalcMode('percent')}
+                  />
+                  % of construction cost
+                </label>
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={calcMode === 'rate'}
+                    onChange={() => setCalcMode('rate')}
+                  />
+                  ₹ / sqft
+                </label>
+              </div>
+
+              {calcMode === 'percent' ? (
+                <div>
+                  <label className="block text-stone text-[9px] font-bold uppercase tracking-wider mb-1 font-mono">
+                    Construction cost (₹)
+                  </label>
+                  <input
+                    type="number"
+                    value={calcCost || ''}
+                    onChange={(e) => setCalcCost(parseInt(e.target.value) || 0)}
+                    className="input-5bloc py-1 text-xs font-mono"
+                  />
+                  <p className="text-[10px] text-stone mt-1">
+                    Uses the typical {feeBand.typical}% band for {typologyLabel(calcType).toLowerCase()} work
+                    ({feeBand.min}–{feeBand.max}%).
+                  </p>
+                </div>
+              ) : (
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-stone text-[9px] font-bold uppercase tracking-wider mb-1 font-mono">Size (Sq.Ft.)</label>
@@ -764,10 +918,16 @@ export default function ProjectInvoices() {
                   />
                 </div>
               </div>
+              )}
 
               <div className="p-3 bg-navy/40 border text-xs">
                 <span className="text-[9px] text-stone font-mono uppercase block">Estimated Base Architectural Fee</span>
                 <span className="text-lg font-bold text-white font-mono">₹{totalCalc.toLocaleString()}</span>
+                <span className="text-[9px] text-stone font-mono block mt-1">
+                  {calcMode === 'percent'
+                    ? `${feeBand.typical}% of ₹${calcCost.toLocaleString() || 0} · ${typologyLabel(calcType)}`
+                    : `${typologyLabel(calcType)} work typically bills ${feeBand.min}–${feeBand.max}% of construction cost`}
+                </span>
               </div>
 
               {/* Phases break downs */}

@@ -16,6 +16,8 @@ export default async function AppLayout({
         profile
           ? {
               id: profile.id,
+              auth_id: auth.user.id || profile.auth_id,
+              email: profile.email || auth.user.email,
               full_name: profile.full_name,
               role: profile.role,
               avatar_url: profile.avatar_url,

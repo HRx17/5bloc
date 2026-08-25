@@ -1,0 +1,47 @@
+User-agent: *
+Allow: /
+Allow: /about
+Allow: /changelog
+Allow: /privacy
+Allow: /terms
+Allow: /list-your-business
+Allow: /join-as-vendor
+Allow: /vs/
+Allow: /llms.txt
+Allow: /sitemap.xml
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Disallow: /dashboard
+Disallow: /api/
+Disallow: /login
+Disallow: /admin
+Disallow: /signup
+Disallow: /onboarding
+Disallow: /portal
+Disallow: /projects
+Disallow: /settings
+Disallow: /messages
+Disallow: /clients
+Disallow: /invoices
+Disallow: /ai
+Disallow: /cad
+Disallow: /marketplace
+Disallow: /coordination
+Disallow: /documents
+Disallow: /integrations
+
+Sitemap: https://5bloc.com/sitemap.xml

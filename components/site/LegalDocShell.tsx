@@ -1,20 +1,24 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { Logo } from '@/components/brand/LogoMark'
+import { UnlockLandingScroll } from '@/components/site/UnlockLandingScroll'
 import '@/app/landing.css'
 
 /** Light cream legal/doc chrome — matches https://5bloc.com marketing surface */
 export function LegalDocShell({
   title,
   updated,
+  description,
   children,
 }: {
   title: string
-  updated: string
+  updated?: string
+  description?: string
   children: ReactNode
 }) {
   return (
     <div className="landing-apple min-h-screen">
+      <UnlockLandingScroll />
       <header
         className="sticky top-0 z-50"
         style={{
@@ -36,9 +40,16 @@ export function LegalDocShell({
 
       <main className="mx-auto max-w-4xl px-5 sm:px-6 py-14 sm:py-16">
         <h1 className="lp-section-title text-[clamp(1.75rem,4vw,2.5rem)]">{title}</h1>
-        <p className="mt-2 mb-10 text-[13px]" style={{ color: 'var(--lp-text-tertiary)' }}>
-          Last updated: {updated}
-        </p>
+        {description ? (
+          <p className="lp-subhead mt-4 max-w-2xl text-[18px]">{description}</p>
+        ) : null}
+        {updated ? (
+          <p className="mt-2 mb-10 text-[13px]" style={{ color: 'var(--lp-text-tertiary)' }}>
+            Last updated: {updated}
+          </p>
+        ) : (
+          <div className="mb-10" />
+        )}
         <div
           className="space-y-10 text-[15px] leading-relaxed legal-prose"
           style={{ color: 'var(--lp-text-secondary)' }}

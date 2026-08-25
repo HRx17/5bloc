@@ -264,3 +264,80 @@ export function WeeklyDigestEmail(projectsCount: number, openRfisCount: number, 
  </div>
  `)
 }
+
+function esc(value: string | null | undefined) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+export function MeetingInviteEmail(opts: {
+  title: string
+  projectName: string
+  when: string
+  location?: string | null
+  meetingUrl?: string | null
+  agenda?: string | null
+  viewUrl: string
+}) {
+  const locationRow = opts.location
+    ? `<tr><td style="${styles.td}">Location</td><td style="${styles.td}">${esc(opts.location)}</td></tr>`
+    : ''
+  const linkRow = opts.meetingUrl
+    ? `<tr><td style="${styles.td}">Join link</td><td style="${styles.td}"><a href="${esc(opts.meetingUrl)}" style="color:#F5A623;">${esc(opts.meetingUrl)}</a></td></tr>`
+    : ''
+  const agendaBlock = opts.agenda
+    ? `<p style="${styles.text}"><strong style="color:#F5A623;">Agenda</strong><br/>${esc(opts.agenda)}</p>`
+    : ''
+  return buildEmailHtml(`
+ <h2 style="${styles.headline}">You're invited: ${esc(opts.title)}</h2>
+ <p style="${styles.text}">A meeting has been scheduled on <strong style="color:#F7F5F0;">${esc(opts.projectName)}</strong>.</p>
+ <table style="${styles.table}">
+ <tr><th style="${styles.th}">Detail</th><th style="${styles.th}">Value</th></tr>
+ <tr><td style="${styles.td}">When</td><td style="${styles.td}">${esc(opts.when)}</td></tr>
+ ${locationRow}
+ ${linkRow}
+ </table>
+ ${agendaBlock}
+ <div style="text-align: center;">
+ <a href="${esc(opts.viewUrl)}" style="${styles.button}">OPEN IN 5BLOC →</a>
+ </div>
+ `)
+}
+
+export function ConfirmAccountEmail(email: string, confirmUrl: string) {
+  return buildEmailHtml(`
+ <h2 style="${styles.headline}">Confirm your 5Bloc account</h2>
+ <p style="${styles.text}">We received a signup for <strong style="color:#F7F5F0;">${esc(email)}</strong>. Click the button below to verify this address and finish creating your workspace.</p>
+ <div style="text-align: center;">
+ <a href="${esc(confirmUrl)}" style="${styles.button}">CONFIRM EMAIL →</a>
+ </div>
+ <p style="${styles.text}">If you did not create this account, you can ignore this email.</p>
+ `)
+}
+
+export function MeetingReminderEmail(opts: {
+  title: string
+  projectName: string
+  when: string
+  location?: string | null
+  meetingUrl?: string | null
+  viewUrl: string
+}) {
+  const extras = [
+    opts.location ? `<p style="${styles.text}">Location: <strong style="color:#F7F5F0;">${esc(opts.location)}</strong></p>` : '',
+    opts.meetingUrl
+      ? `<div style="text-align:center;"><a href="${esc(opts.meetingUrl)}" style="${styles.button}">JOIN MEETING →</a></div>`
+      : '',
+  ].join('')
+  return buildEmailHtml(`
+ <h2 style="${styles.headline}">Reminder: ${esc(opts.title)}</h2>
+ <p style="${styles.text}">This meeting on <strong style="color:#F7F5F0;">${esc(opts.projectName)}</strong> starts ${esc(opts.when)}.</p>
+ ${extras}
+ <div style="text-align: center;">
+ <a href="${esc(opts.viewUrl)}" style="${styles.button}">OPEN IN 5BLOC →</a>
+ </div>
+ `)
+}

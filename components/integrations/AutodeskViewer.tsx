@@ -40,9 +40,17 @@ export function AutodeskViewer({ urn, className = '' }: ViewerProps) {
 
   async function getToken() {
     const res = await fetch('/api/integrations/autodesk/viewer-token')
-    if (!res.ok) throw new Error('Could not get viewer token')
-    const { access_token } = await res.json()
-    return access_token
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      throw new Error(
+        data.error ||
+          (res.status === 503
+            ? 'Autodesk is not configured (missing AUTODESK_CLIENT_ID / SECRET)'
+            : 'Could not get a viewer token')
+      )
+    }
+    if (!data.access_token) throw new Error('Viewer token response was empty')
+    return data.access_token
   }
 
   async function initViewer() {
@@ -100,8 +108,10 @@ export function AutodeskViewer({ urn, className = '' }: ViewerProps) {
           style={{ background: 'var(--surface-1)' }}>
           <span className="material-icons-outlined text-[32px] mb-3" style={{ color: 'var(--error)' }}>error_outline</span>
           <p className="text-sm font-semibold mb-1" style={{ color: 'var(--on-surface)' }}>Could not load model</p>
-          <p className="text-xs mb-4" style={{ color: 'var(--stone)' }}>{errorMsg || 'Connect Autodesk to view DWG/RVT files'}</p>
-          <Link href="/integrations" className="btn-primary py-2 px-4 text-xs rounded-lg">Connect Autodesk</Link>
+          <p className="text-xs mb-4 max-w-sm" style={{ color: 'var(--stone)' }}>
+            {errorMsg || 'The Autodesk viewer could not start. Check AUTODESK_CLIENT_ID / SECRET and try again.'}
+          </p>
+          <Link href="/integrations" className="btn-secondary py-2 px-4 text-xs rounded-lg">Open Integrations</Link>
         </div>
       )}
 

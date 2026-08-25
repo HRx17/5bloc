@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { ArrowRight, Check, Loader2 } from 'lucide-react'
 import { createSupabaseClient } from '@/lib/supabase/client'
+import { analytics } from '@heycatch/sdk'
 
 const DARK = {
   base: '#0b0c10',
@@ -31,6 +32,13 @@ const APPLE = {
 }
 
 type Palette = typeof DARK
+
+const US_CITY_HINT =
+  /\b(united states|usa|u\.s\.a?|us|austin|new york|nyc|boston|chicago|seattle|denver|miami|dallas|houston|atlanta|los angeles|san francisco|sf|portland|philadelphia|phoenix|san diego|nashville)\b/i
+
+function inferWaitlistCountry(city: string) {
+  return US_CITY_HINT.test(city) ? 'US' : null
+}
 
 function Field({
   label,
@@ -71,6 +79,7 @@ export function WaitlistForm({
   const [name, setName] = useState('')
   const [role, setRole] = useState('architect')
   const [firm, setFirm] = useState('')
+  const [city, setCity] = useState('')
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
@@ -106,21 +115,30 @@ export function WaitlistForm({
     setBusy(true)
     setError('')
     try {
-      const supabase = createSupabaseClient()
-      const { error: dbError } = await supabase.from('waitlist').insert({
+      const payload: Record<string, string | null> = {
         email: email.trim().toLowerCase(),
         name: name.trim() || null,
         role,
         firm: firm.trim() || null,
-      })
-      if (dbError) {
-        if (dbError.code === '23505') {
-          setDone(true)
-        } else {
-          setError('Something went wrong. Please try again.')
-        }
+        city: city.trim() || null,
+        country: inferWaitlistCountry(city),
+      }
+      const supabase = createSupabaseClient()
+      let { error: dbError } = await supabase.from('waitlist').insert(payload)
+      if (dbError && /city|country|column|schema cache/i.test(dbError.message || '')) {
+        const retry = await supabase.from('waitlist').insert({
+          email: payload.email,
+          name: payload.name,
+          role: payload.role,
+          firm: [firm.trim(), city.trim()].filter(Boolean).join(' · ') || null,
+        })
+        dbError = retry.error
+      }
+      if (dbError && dbError.code !== '23505') {
+        setError('Something went wrong. Please try again.')
       } else {
         setDone(true)
+        analytics.trackEvent('waitlist_joined', { role, source })
       }
     } catch {
       setError('Something went wrong. Please try again.')
@@ -243,17 +261,30 @@ export function WaitlistForm({
         </Field>
       </div>
 
-      <Field label="Firm / organisation" palette={P}>
-        <input
-          value={firm}
-          onChange={(e) => setFirm(e.target.value)}
-          placeholder="Mehta + Rao Architects"
-          className={inputCls}
-          style={inputStyle}
-          onFocus={onFocus}
-          onBlur={onBlur}
-        />
-      </Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Firm / organisation" palette={P}>
+          <input
+            value={firm}
+            onChange={(e) => setFirm(e.target.value)}
+            placeholder="Mehta + Rao Architects"
+            className={inputCls}
+            style={inputStyle}
+            onFocus={onFocus}
+            onBlur={onBlur}
+          />
+        </Field>
+        <Field label="City" palette={P}>
+          <input
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            placeholder="Mumbai, Delhi, Austin, New York…"
+            className={inputCls}
+            style={inputStyle}
+            onFocus={onFocus}
+            onBlur={onBlur}
+          />
+        </Field>
+      </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-1">
         <button

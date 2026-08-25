@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useLiveReload } from '@/lib/live/useLiveReload'
 
 type Project = {
   id: string
@@ -39,9 +40,11 @@ export default function ClientHome() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<unknown>(null)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+  const load = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) {
+      setLoading(true)
+      setError(null)
+    }
     try {
       const projectRes = await fetch('/api/projects')
       if (!projectRes.ok) throw new Error('Could not load your projects')
@@ -67,15 +70,17 @@ export default function ClientHome() {
       )
       setPending(docLists.flat())
     } catch (err) {
-      setError(err)
+      if (!opts?.quiet) setError(err)
     } finally {
-      setLoading(false)
+      if (!opts?.quiet) setLoading(false)
     }
   }, [])
 
   useEffect(() => {
     load()
   }, [load])
+
+  useLiveReload(load, ['projects', 'documents'])
 
   if (loading) {
     return (

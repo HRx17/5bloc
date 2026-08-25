@@ -1,5 +1,6 @@
 import { Redis } from '@upstash/redis'
 import { isProduction } from '@/lib/env'
+import { isPaywallEnforced } from '@/lib/payments/gates'
 
 const hasRedis = !!(
   process.env.UPSTASH_REDIS_REST_URL &&
@@ -19,6 +20,7 @@ const LIMITS: Record<string, { free: number; paid: number }> = {
   rera:          { free: 0,  paid: Infinity },  // paid/add-on only
   rfi_draft:     { free: 5,  paid: Infinity },
   spec:          { free: 10, paid: Infinity },
+  building_code: { free: 2,  paid: Infinity },
 }
 
 type MemEntry = { count: number; resetAt: number }
@@ -80,6 +82,7 @@ export async function checkAIRateLimit(
   plan: string,
   hasAIAddon: boolean
 ): Promise<{ allowed: boolean; remaining: number }> {
+  if (!isPaywallEnforced()) return { allowed: true, remaining: 9999 }
   const cfg   = LIMITS[feature]
   const limit = (plan !== 'free' || hasAIAddon) ? cfg.paid : cfg.free
 

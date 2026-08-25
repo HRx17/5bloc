@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { supabaseClient } from '@/lib/supabase/client'
 import { hasSupabaseEnv } from '@/lib/data/client-data'
 import { conversationTitle, getMyProfile, initialsOf, listConversations, relativeTime } from '@/lib/data/messages'
+import { useLiveReload } from '@/lib/live/useLiveReload'
 
 type TabId = 'rfis' | 'messages' | 'meetings' | 'issues' | 'gmail'
 
@@ -27,7 +28,7 @@ interface ConversationSummary {
 
 interface Meeting {
   id: string; title: string; project: string; project_id: string
-  date: string; attendees: string[]; status: 'upcoming' | 'done'
+  date: string; time?: string; attendees: string[]; status: 'upcoming' | 'done'
 }
 
 interface Issue {
@@ -195,17 +196,26 @@ export default function CoordinationHub() {
     if (meetingRes.error) {
       setMeetingsError(new Error(meetingRes.error.message || 'Could not load meetings'))
     } else {
-      const today = new Date().toISOString().slice(0, 10)
       setMeetings((meetingRes.data || []).map((m: any) => {
-        const date = m.meeting_date ?? m.date ?? ''
+        const start = m.starts_at ? new Date(m.starts_at) : null
+        const date = start && !Number.isNaN(start.getTime())
+          ? start.toISOString()
+          : String(m.meeting_date ?? m.date ?? '')
+        const startMs = start && !Number.isNaN(start.getTime())
+          ? start.getTime()
+          : Date.parse(`${String(m.meeting_date ?? '').slice(0, 10)}T00:00:00`)
+        const cancelled = m.status === 'cancelled' || m.status === 'completed'
         return {
           id: m.id,
           title: m.title ?? 'Untitled meeting',
           project: (m as { projects?: { name?: string } | null }).projects?.name ?? '—',
           project_id: m.project_id ?? '',
           date: String(date),
+          time: start && !Number.isNaN(start.getTime())
+            ? start.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })
+            : '',
           attendees: toAttendees(m.attendees),
-          status: (String(date).slice(0, 10) >= today ? 'upcoming' : 'done') as Meeting['status'],
+          status: (!cancelled && Number.isFinite(startMs) && startMs >= Date.now() ? 'upcoming' : 'done') as Meeting['status'],
         }
       }))
     }
@@ -249,6 +259,8 @@ export default function CoordinationHub() {
     loadConversations()
   }, [load, loadConversations])
 
+  useLiveReload(load, ['rfis', 'issues', 'meetings'])
+
   const respondToRfi = async () => {
     if (!selectedRfi || respondingRfi) return
     if (!selectedRfi.project_id) {
@@ -273,6 +285,9 @@ export default function CoordinationHub() {
         return
       }
       toast(`Response sent on ${selectedRfi.number} — whoever raised it has been notified`, 'success')
+      setRfis((prev) =>
+        prev.map((r) => (r.id === selectedRfi.id ? { ...r, status: 'answered' as const } : r))
+      )
       setSelectedRfi(null)
       setRfiResponse('')
       await load({ quiet: true })
@@ -309,6 +324,9 @@ export default function CoordinationHub() {
         return
       }
       toast(`${selectedIssue.title} marked resolved`, 'success')
+      setIssues((prev) =>
+        prev.map((i) => (i.id === selectedIssue.id ? { ...i, status: 'resolved' as const } : i))
+      )
       setSelectedIssue(null)
       await load({ quiet: true })
     } catch (err: any) {
@@ -589,7 +607,7 @@ export default function CoordinationHub() {
                 sub={
                   filterText
                     ? 'Search covers the meeting title and project. Clear it to see upcoming and past meetings.'
-                    : 'Site meetings and design reviews scheduled in a project show up here with attendees and dates.'
+                    : 'Site meetings and design reviews scheduled from Calendar or a project show up here with attendees and times.'
                 }
               />
             ) : (
@@ -618,6 +636,7 @@ export default function CoordinationHub() {
                           <p className="text-[13px] font-semibold line-clamp-1" style={{ color: 'var(--on-surface)' }}>{meeting.title}</p>
                           <p className="text-[11.5px] mt-0.5" style={{ color: 'var(--stone)' }}>
                             {meeting.project}
+                            {meeting.time ? ` · ${meeting.time}` : ''}
                             {meeting.attendees.length > 0
                               ? ` · ${meeting.attendees.slice(0, 3).join(', ')}${meeting.attendees.length > 3 ? ` +${meeting.attendees.length - 3}` : ''}`
                               : ''}

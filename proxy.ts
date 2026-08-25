@@ -23,11 +23,18 @@ function isMarketingPath(pathname: string) {
     pathname === '/' ||
     pathname.startsWith('/pricing') ||
     pathname.startsWith('/about') ||
+    pathname.startsWith('/changelog') ||
+    pathname.startsWith('/vs') ||
     pathname.startsWith('/for') ||
     pathname.startsWith('/list-your-business') ||
     pathname.startsWith('/join-as-vendor') ||
     pathname.startsWith('/privacy') ||
-    pathname.startsWith('/terms')
+    pathname.startsWith('/terms') ||
+    pathname === '/robots.txt' ||
+    pathname === '/sitemap.xml' ||
+    pathname === '/llms.txt' ||
+    pathname.startsWith('/opengraph-image') ||
+    pathname.startsWith('/twitter-image')
   )
 }
 
@@ -168,5 +175,7 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon|icons|manifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon|icons|manifest|robots\\.txt|sitemap\\.xml|llms\\.txt|opengraph-image|twitter-image|.*\\.(?:svg|png|jpg|jpeg|gif|webp|txt|xml)$).*)',
+  ],
 }

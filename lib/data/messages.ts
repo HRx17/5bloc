@@ -1,4 +1,5 @@
 import { supabaseClient } from '@/lib/supabase/client'
+import { messagePreview } from '@/lib/messages/files'
 
 export interface ChatProfile {
   id: string
@@ -24,6 +25,7 @@ export interface ChatConversation {
   type: string
   title: string | null
   project_id: string | null
+  project_name: string | null
   last_message_at: string
   members: ChatProfile[]
   lastMessage: { body: string; sender_id: string | null; created_at: string } | null
@@ -63,7 +65,7 @@ export async function listConversations(myProfileId: string): Promise<ChatConver
   const [{ data: convs }, { data: members }, { data: recent }] = await Promise.all([
     supabaseClient
       .from('conversations')
-      .select('id, type, title, project_id, last_message_at')
+      .select('id, type, title, project_id, last_message_at, projects(name)')
       .in('id', convIds)
       .order('last_message_at', { ascending: false }),
     supabaseClient
@@ -72,7 +74,7 @@ export async function listConversations(myProfileId: string): Promise<ChatConver
       .in('conversation_id', convIds),
     supabaseClient
       .from('messages')
-      .select('id, conversation_id, sender_id, body, created_at')
+      .select('id, conversation_id, sender_id, body, attachment_url, attachment_name, created_at')
       .in('conversation_id', convIds)
       .order('created_at', { ascending: false })
       .limit(400),
@@ -91,7 +93,11 @@ export async function listConversations(myProfileId: string): Promise<ChatConver
   const unreadByConv = new Map<string, number>()
   for (const m of recent || []) {
     if (!lastByConv.has(m.conversation_id)) {
-      lastByConv.set(m.conversation_id, { body: m.body, sender_id: m.sender_id, created_at: m.created_at })
+      lastByConv.set(m.conversation_id, {
+        body: messagePreview(m),
+        sender_id: m.sender_id,
+        created_at: m.created_at,
+      })
     }
     const lastRead = lastReadMap.get(m.conversation_id)
     if (m.sender_id !== myProfileId && (!lastRead || m.created_at > lastRead)) {
@@ -104,6 +110,7 @@ export async function listConversations(myProfileId: string): Promise<ChatConver
     type: c.type,
     title: c.title,
     project_id: c.project_id,
+    project_name: c.projects?.name ?? null,
     last_message_at: c.last_message_at,
     members: membersByConv.get(c.id) || [],
     lastMessage: lastByConv.get(c.id) || null,
@@ -122,10 +129,23 @@ export async function listMessages(conversationId: string): Promise<ChatMessage[
   return data as unknown as ChatMessage[]
 }
 
-export async function sendMessage(conversationId: string, senderId: string, body: string): Promise<ChatMessage | null> {
+export async function sendMessage(
+  conversationId: string,
+  senderId: string,
+  body: string,
+  attachment?: { url: string; name: string } | null,
+): Promise<ChatMessage | null> {
+  const text = body.trim()
+  if (!text && !attachment) return null
   const { data, error } = await supabaseClient
     .from('messages')
-    .insert({ conversation_id: conversationId, sender_id: senderId, body })
+    .insert({
+      conversation_id: conversationId,
+      sender_id: senderId,
+      body: text || (attachment ? ' ' : ''),
+      attachment_url: attachment?.url || null,
+      attachment_name: attachment?.name || null,
+    })
     .select('id, conversation_id, sender_id, body, attachment_url, attachment_name, created_at, sender:profiles(id, full_name, email, role, avatar_url)')
     .single()
   if (error || !data) return null

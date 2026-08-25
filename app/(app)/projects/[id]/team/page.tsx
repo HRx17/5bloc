@@ -7,6 +7,7 @@ import { useToast } from '@/components/ui/Toast'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useLiveReload } from '@/lib/live/useLiveReload'
 
 type Member = {
   id: string
@@ -32,24 +33,28 @@ export default function ProjectTeam() {
   const [sendingInvite, setSendingInvite] = useState(false)
   const [lastInviteUrl, setLastInviteUrl] = useState('')
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setLoadError(null)
+  const load = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) {
+      setLoading(true)
+      setLoadError(null)
+    }
     try {
       const res = await fetch(`/api/projects/${projectId}/members`)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to load the project team')
       setMembers(data.members || [])
     } catch (e) {
-      setLoadError(e)
+      if (!opts?.quiet) setLoadError(e)
     } finally {
-      setLoading(false)
+      if (!opts?.quiet) setLoading(false)
     }
   }, [projectId])
 
   useEffect(() => {
     load()
   }, [load])
+
+  useLiveReload(load, ['project_members', 'profiles'])
 
   const handleInviteSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -88,7 +93,7 @@ export default function ProjectTeam() {
         toast(`Invite emailed to ${inviteEmail}`, 'success')
       }
       setInviteEmail('')
-      await load()
+      await load({ quiet: true })
     } catch (err: any) {
       toast(err?.message || 'Could not send the invite', 'error')
     } finally {
@@ -123,7 +128,9 @@ export default function ProjectTeam() {
       <div>
         <h2 className="text-xl font-semibold">Team</h2>
         <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
-          Invite contractors, builders, consultants and clients with role-scoped access.
+          Invite contractors, builders, consultants and clients onto <em>this</em> project only.
+          To add another architect who should see every job, invite them as a firm co-worker in
+          Settings → Team, then start a group chat from Messages.
         </p>
       </div>
 
@@ -147,7 +154,7 @@ export default function ProjectTeam() {
         >
           {PROJECT_MEMBER_ROLES.map((r) => (
             <option key={r} value={r}>
-              {ROLES[r]?.label || r}
+              {r === 'architect' ? 'Architect (this project only)' : ROLES[r]?.label || r}
             </option>
           ))}
         </select>

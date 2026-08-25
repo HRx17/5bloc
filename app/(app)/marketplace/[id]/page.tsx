@@ -9,6 +9,8 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { Skeleton } from '@/components/ui/Skeleton'
 import type { MarketplaceListing } from '@/lib/marketplace/listings'
+import { listingCover } from '@/lib/marketplace/covers'
+import { CoverImage } from '@/components/marketplace/PhotoCard'
 
 type Review = { rating: number; review_text: string | null; created_at: string }
 
@@ -182,31 +184,47 @@ export default function ListingProfile() {
         <span className="material-icons-outlined text-[14px]">arrow_back</span> Back to marketplace
       </Link>
 
-      <div className="card-5bloc flex flex-col md:flex-row justify-between gap-6">
-        <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="chip text-[10px] uppercase" style={{ color: 'var(--amber)', background: 'rgba(245,166,35,0.12)' }}>
-              {isVendor ? 'Vendor · Supplies' : 'Contractor · Services'}
-            </span>
-            {listing.verified && (
-              <span className="chip text-[10px] uppercase" style={{ color: 'var(--success)' }}>
-                Verified partner
+      <div className="overflow-hidden rounded-2xl" style={{ background: 'var(--surface-container)', boxShadow: 'var(--shadow-2)' }}>
+        <div className="relative h-52 md:h-72">
+          <CoverImage
+            src={listingCover(listing)}
+            alt={listing.company_name}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'linear-gradient(to top, rgba(8,9,9,0.78) 0%, rgba(8,9,9,0.25) 45%, rgba(8,9,9,0.08) 100%)',
+            }}
+          />
+          <div className="absolute inset-x-0 bottom-0 p-6 md:p-8 space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="chip text-[10px] uppercase" style={{ color: '#1d1d1f', background: 'var(--amber)', border: 'none' }}>
+                {isVendor ? 'Vendor · Supplies' : 'Contractor · Services'}
               </span>
-            )}
-            {listing.badge_active && (
-              <span className="chip text-[10px] uppercase" style={{ color: 'var(--amber)' }}>
-                Badge
-              </span>
-            )}
+              {listing.verified && (
+                <span className="chip text-[10px] uppercase" style={{ color: '#1d1d1f', background: 'var(--success)', border: 'none' }}>
+                  Verified partner
+                </span>
+              )}
+              {listing.badge_active && (
+                <span className="chip text-[10px] uppercase" style={{ color: '#fff', background: 'rgba(8,9,9,0.55)', border: 'none' }}>
+                  Badge
+                </span>
+              )}
+            </div>
+            <h1 className="font-display text-[32px] leading-tight text-white">{listing.company_name}</h1>
+            <p className="text-sm text-white/75">
+              {location || 'Service area not shared yet'}
+            </p>
           </div>
+        </div>
 
-          <h1 className="font-display text-[32px] leading-tight">{listing.company_name}</h1>
-          <p className="text-sm" style={{ color: 'var(--stone)' }}>
-            {location || 'Service area not shared yet'}
-          </p>
-
+        <div className="flex flex-col md:flex-row justify-between gap-6 p-6">
+        <div className="space-y-3">
           {listing.tags.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+            <div className="flex flex-wrap items-center gap-1.5">
               {listing.tags.map((t) => (
                 <span key={t} className="chip text-[10px]" style={{ color: 'var(--stone)' }}>
                   {t}
@@ -233,6 +251,7 @@ export default function ListingProfile() {
             </p>
           </div>
         )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">

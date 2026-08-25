@@ -6,6 +6,7 @@ import { useToast } from '@/components/ui/Toast'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useLiveReload } from '@/lib/live/useLiveReload'
 
 interface Issue {
   id: string
@@ -47,24 +48,28 @@ export default function IssueTracker() {
     photo_attached: '' as string,
   })
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setLoadError(null)
+  const load = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) {
+      setLoading(true)
+      setLoadError(null)
+    }
     try {
       const res = await fetch(`/api/projects/${projectId}/issues`)
       const d = await res.json()
       if (!res.ok) throw new Error(d.error || 'Failed to load the issue register')
       setIssues(d.issues || [])
     } catch (e) {
-      setLoadError(e)
+      if (!opts?.quiet) setLoadError(e)
     } finally {
-      setLoading(false)
+      if (!opts?.quiet) setLoading(false)
     }
   }, [projectId])
 
   useEffect(() => {
     load()
   }, [load])
+
+  useLiveReload(load, ['issues'])
 
   const handlePhotoUpload = async (file: File) => {
     setUploadingPhoto(true)
@@ -120,6 +125,8 @@ export default function IssueTracker() {
   const handleSaveIssue = async () => {
     if (!activeIssue) return
     setSaving(true)
+    const previous = issues.find((i) => i.id === activeIssue.id)
+    setIssues((prev) => prev.map((i) => (i.id === activeIssue.id ? { ...i, ...activeIssue } : i)))
     try {
       const res = await fetch(`/api/projects/${projectId}/issues`, {
         method: 'PATCH',
@@ -132,15 +139,14 @@ export default function IssueTracker() {
         }),
       })
       if (!res.ok) {
+        if (previous) setIssues((prev) => prev.map((i) => (i.id === activeIssue.id ? previous : i)))
         const data = await res.json().catch(() => ({}))
         toast(data.error || 'Failed to save the issue', 'error')
         return
       }
-      setIssues((prev) =>
-        prev.map((i) => (i.id === activeIssue.id ? { ...i, ...activeIssue } : i))
-      )
       toast('Issue updated', 'success')
     } catch (err: any) {
+      if (previous) setIssues((prev) => prev.map((i) => (i.id === activeIssue.id ? previous : i)))
       toast(err?.message || 'Failed to save the issue', 'error')
     } finally {
       setSaving(false)

@@ -24,6 +24,40 @@ const PHASE_LABELS: Record<string, string> = {
   complete: 'Complete',
 }
 
+const PHASE_ORDER = Object.keys(PHASE_LABELS)
+
+/**
+ * The portal RPC returns raw milestone rows, which use the older column names
+ * (`phase_key`, `completion`, `fee`) that the authenticated routes normalise away.
+ */
+function normalizeMilestone(m: any) {
+  return {
+    ...m,
+    phase: m.phase ?? m.phase_key ?? '',
+    completion_pct: Number(m.completion_pct ?? m.completion ?? 0),
+    fee_amount: Number(m.fee_amount ?? m.fee ?? 0) || null,
+    fee_paid: m.fee_paid ?? m.paid ?? false,
+  }
+}
+
+function sortMilestones(rows: any[]) {
+  return [...rows].map(normalizeMilestone).sort((a, b) => {
+    const ai = PHASE_ORDER.indexOf(a.phase)
+    const bi = PHASE_ORDER.indexOf(b.phase)
+    // Unknown phases sort last but stay stable among themselves
+    return (ai === -1 ? PHASE_ORDER.length : ai) - (bi === -1 ? PHASE_ORDER.length : bi)
+  })
+}
+
+function sortDocuments(rows: any[]) {
+  return [...rows].sort((a, b) => {
+    const at = new Date(a.created_at || 0).getTime()
+    const bt = new Date(b.created_at || 0).getTime()
+    if (bt !== at) return bt - at
+    return String(a.name || '').localeCompare(String(b.name || ''))
+  })
+}
+
 export default function ClientPortal() {
   const params = useParams()
   const token = params.token as string
@@ -50,7 +84,11 @@ export default function ClientPortal() {
       const res = await fetch(`/api/portal/${token}`)
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'This portal link is no longer active.')
-      setData(json)
+      setData({
+        ...json,
+        milestones: sortMilestones(json.milestones || []),
+        documents: sortDocuments(json.documents || []),
+      })
     } catch (e: any) {
       setError(
         /failed to fetch|networkerror/i.test(e?.message || '')
@@ -384,17 +422,22 @@ export default function ClientPortal() {
                 <input
                   className="w-full px-3 py-2 rounded-lg text-sm"
                   style={{ background: '#F7F5F0', border: '1px solid #EDE9E2' }}
-                  placeholder="Your name"
+                  placeholder="Your name (optional)"
                   value={askerName}
                   onChange={(e) => setAskerName(e.target.value)}
                 />
-                <input
-                  className="w-full px-3 py-2 rounded-lg text-sm"
-                  style={{ background: '#F7F5F0', border: '1px solid #EDE9E2' }}
-                  placeholder="Email"
-                  value={askerEmail}
-                  onChange={(e) => setAskerEmail(e.target.value)}
-                />
+                <div>
+                  <input
+                    className="w-full px-3 py-2 rounded-lg text-sm"
+                    style={{ background: '#F7F5F0', border: '1px solid #EDE9E2' }}
+                    placeholder="Email (optional)"
+                    value={askerEmail}
+                    onChange={(e) => setAskerEmail(e.target.value)}
+                  />
+                  <p className="text-[11px] mt-1" style={{ color: '#9E9687' }}>
+                    Only needed if you want a reply by email — your architect already sees this in the project.
+                  </p>
+                </div>
                 <textarea
                   className="w-full px-3 py-2 rounded-lg text-sm min-h-[100px]"
                   style={{ background: '#F7F5F0', border: '1px solid #EDE9E2' }}

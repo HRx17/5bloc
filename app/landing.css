@@ -345,6 +345,48 @@
   }
 }
 
+.landing-apple .legal-prose h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--lp-text);
+  letter-spacing: -0.02em;
+}
+
+.landing-apple .legal-prose h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--lp-text);
+}
+
+.landing-apple .legal-prose ul,
+.landing-apple .legal-prose ol {
+  padding-left: 1.25rem;
+}
+
+.landing-apple .legal-prose li + li {
+  margin-top: 0.35rem;
+}
+
+.landing-apple .legal-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.landing-apple .legal-prose th,
+.landing-apple .legal-prose td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid var(--lp-border);
+}
+
+.landing-apple .legal-prose th {
+  color: var(--lp-text);
+  font-weight: 600;
+  background: var(--lp-bg-alt);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .landing-apple .lp-flow-mockup-compact > div {
     transform: none;

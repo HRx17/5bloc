@@ -7,6 +7,7 @@ import { useConfirm } from '@/components/ui/ConfirmProvider'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useLiveReload } from '@/lib/live/useLiveReload'
 
 export default function BuilderApprovals() {
   const { toast } = useToast()
@@ -16,9 +17,11 @@ export default function BuilderApprovals() {
   const [error, setError] = useState<unknown>(null)
   const [pendingId, setPendingId] = useState<string | null>(null)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+  const load = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) {
+      setLoading(true)
+      setError(null)
+    }
     try {
       const res = await fetch('/api/projects')
       if (!res.ok) throw new Error('Could not load your projects')
@@ -37,15 +40,17 @@ export default function BuilderApprovals() {
       }
       setItems(docs)
     } catch (err) {
-      setError(err)
+      if (!opts?.quiet) setError(err)
     } finally {
-      setLoading(false)
+      if (!opts?.quiet) setLoading(false)
     }
   }, [])
 
   useEffect(() => {
     load()
   }, [load])
+
+  useLiveReload(load, ['documents', 'projects'])
 
   const act = async (item: any, action: 'approve' | 'reject') => {
     const approving = action === 'approve'
@@ -60,6 +65,7 @@ export default function BuilderApprovals() {
     if (!ok) return
 
     setPendingId(item.id)
+    setItems((prev) => prev.filter((d) => d.id !== item.id))
     try {
       const res = await fetch(`/api/projects/${item.project_id}/documents`, {
         method: 'PATCH',
@@ -70,20 +76,17 @@ export default function BuilderApprovals() {
         }),
       })
       if (!res.ok) {
+        setItems((prev) => [item, ...prev])
         const data = await res.json().catch(() => ({}))
         toast(data.error || 'Could not record your decision. Try again.', 'error')
         return
       }
-      setItems((prev) =>
-        prev.map((d) =>
-          d.id === item.id ? { ...d, approval_status: approving ? 'approved' : 'rejected' } : d
-        )
-      )
       toast(
         approving ? `Approved ${item.name} — the architect has been notified` : `Changes requested on ${item.name}`,
         approving ? 'success' : 'info'
       )
     } catch (err: any) {
+      setItems((prev) => [item, ...prev])
       toast(err?.message || 'Could not reach the server. Try again.', 'error')
     } finally {
       setPendingId(null)

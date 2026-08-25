@@ -43,12 +43,19 @@ export async function POST(req: Request, ctx: Ctx) {
   const body = await req.json()
   const channel = String(body.channel || 'general').toLowerCase()
   const text = String(body.text || body.body || '').trim()
-  if (!text) return NextResponse.json({ error: 'text required' }, { status: 400 })
+  const attachmentKey = body.attachmentKey ? String(body.attachmentKey) : ''
+  const attachmentName = body.attachmentName ? String(body.attachmentName) : ''
+  if (!text && !attachmentKey) return NextResponse.json({ error: 'text or file required' }, { status: 400 })
+
+  const storedBody = attachmentKey
+    ? `${text}${text ? '\n\n' : ''}${`[[5bloc-file|${encodeURIComponent(attachmentKey)}|${encodeURIComponent(attachmentName || 'file')}]]`}`
+    : text
 
   if (shouldServeMockData(auth)) {
     const msg = {
       id: `msg-${Date.now()}`,
-      text,
+      text: storedBody,
+      body: storedBody,
       sender: auth.profile.full_name || 'You',
       role: auth.profile.role || 'member',
       created_at: new Date().toISOString(),
@@ -67,7 +74,7 @@ export async function POST(req: Request, ctx: Ctx) {
   const { data, error } = await auth.supabase.rpc('post_project_channel_message', {
     p_project_id: id,
     p_channel: channel,
-    p_body: text,
+    p_body: storedBody,
   })
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ message: data }, { status: 201 })

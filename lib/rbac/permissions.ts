@@ -186,8 +186,8 @@ const TABS_BY_ROLE: Record<RoleKey, ProjectTabKey[]> = {
     'portal',
   ],
   contractor: ['overview', 'documents', 'rfis', 'submittals', 'messages', 'meetings', 'issues', 'site'],
-  builder: ['overview', 'documents', 'rfis', 'issues', 'site', 'invoices'],
-  consultant: ['overview', 'documents', 'rfis', 'submittals', 'messages', 'issues'],
+  builder: ['overview', 'documents', 'rfis', 'issues', 'site', 'invoices', 'meetings'],
+  consultant: ['overview', 'documents', 'rfis', 'submittals', 'messages', 'issues', 'meetings'],
   client: ['overview', 'documents'],
 }
 

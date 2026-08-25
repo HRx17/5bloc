@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useLiveReload } from '@/lib/live/useLiveReload'
 
 type Tender = {
   id: string
@@ -43,56 +44,71 @@ export default function ContractorDashboard() {
   const [bidsError, setBidsError] = useState<unknown>(null)
   const [projectsError, setProjectsError] = useState<unknown>(null)
 
-  const loadTenders = useCallback(async () => {
-    setLoadingTenders(true)
-    setTendersError(null)
+  const loadTenders = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) {
+      setLoadingTenders(true)
+      setTendersError(null)
+    }
     try {
       const res = await fetch('/api/tenders?marketplace=1')
       if (!res.ok) throw new Error('Could not load open projects')
       const t = await res.json()
       setTenders(t.tenders || [])
     } catch (err) {
-      setTendersError(err)
+      if (!opts?.quiet) setTendersError(err)
     } finally {
-      setLoadingTenders(false)
+      if (!opts?.quiet) setLoadingTenders(false)
     }
   }, [])
 
-  const loadBids = useCallback(async () => {
-    setLoadingBids(true)
-    setBidsError(null)
+  const loadBids = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) {
+      setLoadingBids(true)
+      setBidsError(null)
+    }
     try {
       const res = await fetch('/api/bids')
       if (!res.ok) throw new Error('Could not load your bids')
       const b = await res.json()
       setBids(b.bids || [])
     } catch (err) {
-      setBidsError(err)
+      if (!opts?.quiet) setBidsError(err)
     } finally {
-      setLoadingBids(false)
+      if (!opts?.quiet) setLoadingBids(false)
     }
   }, [])
 
-  const loadProjects = useCallback(async () => {
-    setLoadingProjects(true)
-    setProjectsError(null)
+  const loadProjects = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) {
+      setLoadingProjects(true)
+      setProjectsError(null)
+    }
     try {
       const res = await fetch('/api/projects')
       if (!res.ok) throw new Error('Could not load your projects')
       const p = await res.json()
       setProjects(p.projects || [])
     } catch (err) {
-      setProjectsError(err)
+      if (!opts?.quiet) setProjectsError(err)
     } finally {
-      setLoadingProjects(false)
+      if (!opts?.quiet) setLoadingProjects(false)
     }
   }, [])
+
+  const reloadLive = useCallback(
+    async (opts?: { quiet?: boolean }) => {
+      await Promise.all([loadTenders(opts), loadBids(opts), loadProjects(opts)])
+    },
+    [loadTenders, loadBids, loadProjects]
+  )
 
   useEffect(() => {
     loadTenders()
     loadBids()
     loadProjects()
   }, [loadTenders, loadBids, loadProjects])
+
+  useLiveReload(reloadLive, ['tenders', 'bids', 'projects'])
 
   const openToBid = tenders.filter((t) => !t.my_bid)
 

@@ -3,6 +3,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { startRazorpayCheckout } from '@/lib/payments/checkout'
 import { billingForRole, BILLING_ROLES } from '@/lib/payments/plans'
+import { isTestPeriod } from '@/lib/payments/gates'
+import { PlanPrice } from '@/components/payments/PlanPrice'
 import { isRoleKey, type RoleKey } from '@/lib/rbac/roles'
 import { useToast } from '@/components/ui/Toast'
 import { useConfirm } from '@/components/ui/ConfirmProvider'
@@ -144,6 +146,7 @@ export default function Settings() {
     comments: true,
     approvals: true,
     rfis: true,
+    meetings: true,
     weekly_digest: false,
   })
   // Kept verbatim so toggling one preference never drops keys we do not render
@@ -235,6 +238,7 @@ export default function Settings() {
           comments: p.notify_bids !== false,
           approvals: p.notify_approvals !== false,
           rfis: p.notify_rfi !== false,
+          meetings: p.notify_meetings !== false,
           weekly_digest: prefs.weekly_digest === true,
         })
 
@@ -542,6 +546,7 @@ export default function Settings() {
         notify_rfi: next.rfis,
         notify_approvals: next.approvals,
         notify_bids: next.comments,
+        notify_meetings: next.meetings,
         notification_preferences: prefs,
       }),
     })
@@ -770,6 +775,13 @@ export default function Settings() {
             <div className="space-y-6">
               <div className="card-5bloc space-y-4">
                 <h3 className="text-sm font-semibold text-amber pb-2.5">Invite Firm Co-Worker</h3>
+                <p className="text-[12px] leading-relaxed" style={{ color: 'var(--stone)' }}>
+                  An <span className="text-white font-semibold">architect</span> is the account type.
+                  You are the firm <span className="text-white font-semibold">owner</span>.
+                  Inviting someone here makes them an <span className="text-white font-semibold">org member</span> —
+                  another architect on the same firm, sharing every project, the document vault and Messages.
+                  To bring a contractor or consultant onto one job only, use that project&apos;s Team tab instead.
+                </p>
                 <form onSubmit={handleInviteTeam} className="flex gap-4 items-end">
                   <div className="flex-grow">
                     <label className="block text-stone text-xs font-medium mb-1.5">Co-worker Email *</label>
@@ -888,6 +900,11 @@ export default function Settings() {
               <div className="card-5bloc space-y-3">
                 <h3 className="text-sm font-semibold text-amber">{billing.heading}</h3>
                 <p className="text-[11px] text-stone leading-relaxed">{billing.blurb}</p>
+                {isTestPeriod() && (
+                  <p className="text-[11px] font-semibold" style={{ color: 'var(--amber)' }}>
+                    Test period: every paid plan and add-on is included at no charge.
+                  </p>
+                )}
 
                 {subscription && (
                   <div
@@ -929,7 +946,7 @@ export default function Settings() {
                       >
                         <div>
                           <h4 className="text-xs font-semibold text-stone">{plan.name}</h4>
-                          <h2 className="text-2xl font-bold text-white mt-2">{plan.price}</h2>
+                          <PlanPrice price={plan.price} />
                           <p className="text-[11px] text-stone mt-2 leading-relaxed">{plan.term}</p>
                         </div>
                         <div className="pt-4">
@@ -939,6 +956,10 @@ export default function Settings() {
                               style={{ background: 'rgba(245,166,35,.10)', color: 'var(--amber)' }}
                             >
                               Current plan
+                            </span>
+                          ) : isTestPeriod() ? (
+                            <span className="w-full text-center block text-[11px] py-1.5 font-medium" style={{ color: 'var(--amber)' }}>
+                              Included during test period
                             </span>
                           ) : plan.checkout ? (
                             <button
@@ -967,13 +988,17 @@ export default function Settings() {
                     <div>
                       <h4 className="text-xs font-bold text-white">{addOn.name}</h4>
                       <p className="text-[11px] text-stone mt-0.5">
-                        {addOn.price} {addOn.term}
+                        <PlanPrice price={addOn.price} size="sm" /> {addOn.term}
                       </p>
                     </div>
                   </div>
                   {aiAddOn && addOn.key === 'ai' ? (
                     <span className="chip text-[11px]" style={{ color: 'var(--success)' }}>
                       Active
+                    </span>
+                  ) : isTestPeriod() ? (
+                    <span className="chip text-[11px]" style={{ color: 'var(--amber)' }}>
+                      Included during test period
                     </span>
                   ) : (
                     <button
@@ -1187,6 +1212,11 @@ export default function Settings() {
                   { key: 'comments', label: 'Document comments', desc: 'Notify me when someone comments on a drawing or sheet.' },
                   { key: 'approvals', label: 'Document approvals', desc: 'Notify me when a drawing is approved or revisions are requested.' },
                   { key: 'rfis', label: 'RFI activity', desc: 'Notify me when RFIs are raised or resolved.' },
+                  {
+                    key: 'meetings',
+                    label: 'Meeting invites and reminders',
+                    desc: 'Email me when a meeting is scheduled and again before it starts.',
+                  },
                   {
                     key: 'weekly_digest',
                     label: 'Weekly summary digest',

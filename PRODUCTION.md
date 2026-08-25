@@ -22,7 +22,7 @@ Copy from [`.env.example`](.env.example) and set in Vercel (or your host).
 | `RAZORPAY_WEBHOOK_SECRET` | Verify billing webhooks (do not leave unset in prod) |
 | `RESEND_API_KEY` / `RESEND_FROM_EMAIL` | Transactional email |
 | `ANTHROPIC_API_KEY` | AI estimate / contract scan / RFI draft |
-| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Distributed AI rate limits |
+| `CRON_SECRET` | Protects `/api/cron/meeting-reminders` (Vercel Cron sends `Authorization: Bearer $CRON_SECRET`) |
 
 ### Optional integrations
 
@@ -50,6 +50,7 @@ Analytics and error reporting are **env-gated stubs**:
 |---|---|
 | `NEXT_PUBLIC_ENABLE_DEMO_LOGIN` | Omit or set `false`. Passwordless demo role login is off in production unless this is explicitly `true`. |
 | `ENABLE_SMOKE_ADMIN` | Leave unset so `/admin` smoke role logins stay available. Set `0` only when you are ready to hide that test window. |
+| `PAYWALL_ENFORCED` / `NEXT_PUBLIC_PAYWALL_ENFORCED` | Leave unset during the test release so paid features stay free (prices shown struck). Set both to `1` for production billing. |
 | `MOCK_AUTH` / `NEXT_PUBLIC_MOCK_AUTH` | Must be `0` / unset. Mock APIs are also hard-disabled when `NODE_ENV=production`. |
 
 Never commit secrets. Never expose `SUPABASE_SERVICE_ROLE_KEY`, Razorpay secrets, or webhook secrets to the client.
@@ -66,7 +67,17 @@ Never commit secrets. Never expose `SUPABASE_SERVICE_ROLE_KEY`, Razorpay secrets
    ```
 3. Confirm `get_portal_payload` exists (`20250726_get_portal_payload.sql`).
 4. Confirm storage RLS on `documents` (`20250726_prod_storage_rls.sql`) — objects under `{auth.uid()}/…`.
-5. In Auth → URL configuration, allow your production redirect URLs (`NEXT_PUBLIC_APP_URL` + `/auth/callback`).
+5. In Auth → URL configuration, set Site URL to `NEXT_PUBLIC_APP_URL` and add these redirect URLs.
+   The app sends users to `/api/auth/callback`, so that exact path must be allowed or confirmation
+   links fail after the user clicks them:
+   - `{NEXT_PUBLIC_APP_URL}/api/auth/callback`
+   - `{NEXT_PUBLIC_APP_URL}/api/auth/callback?**`
+6. **Confirmation emails.** After signup the app generates a confirmation link (service role) and
+   sends it through Resend (`RESEND_API_KEY` + `RESEND_FROM_EMAIL`). The same path is used by
+   **Resend confirmation email** on signup and login.
+   If Resend is not configured, the button falls back to `supabase.auth.resend()`.
+   Also point Supabase Auth SMTP at Resend (`smtp.resend.com`, port 465, user `resend`, password =
+   your `RESEND_API_KEY`) so built-in Auth mail is not rate-limited.
 
 ### 2. Vercel
 
@@ -74,6 +85,7 @@ Never commit secrets. Never expose `SUPABASE_SERVICE_ROLE_KEY`, Razorpay secrets
 2. Set all required env vars (Production + Preview as needed).
 3. Deploy. Build command: `npm run build` (repo default).
 4. Point the custom domain at the deployment; set `NEXT_PUBLIC_APP_URL` to that origin.
+5. Set `CRON_SECRET` so Vercel can call `/api/cron/meeting-reminders` every 15 minutes (`vercel.json`). Hobby plans only allow daily crons — upgrade or trigger the route manually if reminders must be sub-daily.
 
 ### 3. Post-deploy smoke
 
@@ -102,6 +114,42 @@ Detailed Supabase probe (kept for ops): `/api/health/supabase`.
 - **Service role:** Server-only. Used for signed downloads after DB RLS authorizes access (teammates + portal).
 - **Portal:** Tokenized URLs + `get_portal_payload` (SECURITY DEFINER). `/portal` is disallowed in `robots.ts`.
 - **Headers:** CSP, HSTS (prod), `X-Frame-Options: DENY`, nosniff — via `next.config.ts`.
+
+## How to test locally
+
+```bash
+cd 5bloc-web
+npm install
+npm run dev
+```
+
+Open `http://localhost:3000`. Sign in (or use `/admin` smoke login if `ENABLE_SMOKE_ADMIN` is not `0`).
+
+| What | Where | What “good” looks like |
+|---|---|---|
+| PDF preview | Project → Documents → open a PDF | The file renders in the lightbox, not “Loading…” forever |
+| New file version | Same lightbox → **Upload new version** | Version number bumps; older versions stay restorable |
+| DWG after upload | Open a `.dwg` | Autodesk viewer loads the **real** file (needs `AUTODESK_*`). Translates once, then reopens from `cad_models` |
+| CAD “failed to fetch” | `/cad` or a vault DWG | Same-origin blob import + APS viewer. Restart `next dev` after CSP changes |
+| RFI attachment | Project → RFIs → raise one | File uploads; click it in the slide-over to open |
+| Transmittal file | Project → Transmittals | Optional attachment is stored and reopenable (run `20260821120000_transmittal_attachments.sql`) |
+| Manual clearance | Project → Permits → **Add clearance** | Custom NOC appears in the list |
+| Typology | New project as Commercial / Institutional, then Permits | Seed list and bye-laws match that type, not residential |
+| Fee basis | Project overview → Edit specs | Percent **or** lump sum, not both |
+| Client portal | Project → Portal → open the public link | Phases in design order; progress/fees show; email labelled optional |
+| Confirmation email | Sign up with a new address | Resend mail arrives from 5Bloc / Resend. Click the link → `/api/auth/callback` |
+| 5Bloc Studio | Projects → **Create our office project** | Internal Gantt + orientation / standup meetings appear on Calendar → Timeline |
+| Team vs project invite | Settings → Team vs Project → Team | Firm invite = another architect on every job; project invite = one job, other roles |
+| Messages + project | Messages → New message → pick a project | Chat shows the project name; desktop notification names it when the tab is in the background |
+| Calendar timeline | Calendar → **Timeline** | Gantt of phase dates with a TODAY line |
+| AI code checker | Tools → AI Building Codes, or Permits → **Run AI code check** | Findings + clearance list; works without Anthropic (local fallback). Link a project, then **Add to project Permits** |
+| Invoice fee calc | Project → Invoices → Fee Calculator | Typology from the project; if a construction budget exists it quotes a typical % of that cost |
+
+New SQL to apply on existing databases:
+
+- `20260814120000_meeting_scheduling.sql` — meeting times, reminders, `notify_meetings` (applied live)
+- `20260821120000_transmittal_attachments.sql` — `transmittals.attachment_url` (applied live)
+- `20260822120000_cad_models_document_id.sql` — `cad_models.document_id` (applied live)
 
 ## Release checklist
 

@@ -15,6 +15,7 @@ export async function PATCH(req: Request) {
     'notify_bids',
     'notify_approvals',
     'notification_preferences',
+    'notify_meetings',
   ]
 
   if (shouldServeMockData(auth)) {
@@ -60,6 +61,21 @@ export async function PATCH(req: Request) {
     .eq('id', auth.profile.id)
     .select('*, organisations!profiles_org_id_fkey(*)')
     .single()
+  if (error && /notify_meetings/i.test(error.message)) {
+    const { notify_meetings, ...rest } = updates
+    const prefs =
+      rest.notification_preferences && typeof rest.notification_preferences === 'object'
+        ? { ...(rest.notification_preferences as Record<string, unknown>), meetings: notify_meetings }
+        : { meetings: notify_meetings }
+    const fallback = await auth.supabase
+      .from('profiles')
+      .update({ ...rest, notification_preferences: prefs })
+      .eq('id', auth.profile.id)
+      .select('*, organisations!profiles_org_id_fkey(*)')
+      .single()
+    if (fallback.error) return NextResponse.json({ error: fallback.error.message }, { status: 500 })
+    return NextResponse.json({ profile: fallback.data })
+  }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ profile: data })
 }

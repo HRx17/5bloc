@@ -7,6 +7,14 @@ import { useConfirm } from '@/components/ui/ConfirmProvider'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useLiveReload } from '@/lib/live/useLiveReload'
+import {
+  CHAT_ACCEPT,
+  formatFileMarker,
+  parseFileMarker,
+  signedFileUrl,
+  uploadChatFile,
+} from '@/lib/messages/files'
 
 interface Transmittal {
   id: string
@@ -18,6 +26,14 @@ interface Transmittal {
   documents: string
   purpose: 'For Construction' | 'For Approval' | 'For Information' | 'For Review'
   status: 'sent' | 'received' | 'acknowledged'
+  attachment_url?: string | null
+}
+
+function readAttachment(value?: string | null): { key: string; name: string } | null {
+  if (!value) return null
+  const marked = parseFileMarker(value)
+  if (marked) return marked
+  return { key: value, name: value.split('/').pop()?.replace(/^\d+-/, '') || 'Attachment' }
 }
 
 export default function TransmittalsLog() {
@@ -42,25 +58,54 @@ export default function TransmittalsLog() {
     purpose: 'For Construction' as Transmittal['purpose'],
     date: new Date().toISOString().split('T')[0]
   })
+  const [attachment, setAttachment] = useState<{ key: string; name: string } | null>(null)
+  const [uploadingAttachment, setUploadingAttachment] = useState(false)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setLoadError(null)
+  const handleAttachmentPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setUploadingAttachment(true)
+    try {
+      const { key, filename } = await uploadChatFile(file, { projectId })
+      setAttachment({ key, name: filename })
+    } catch (err: any) {
+      toast(err?.message || 'Could not attach that file', 'error')
+    } finally {
+      setUploadingAttachment(false)
+    }
+  }
+
+  const openAttachment = async (file: { key: string; name: string }) => {
+    try {
+      window.open(await signedFileUrl(file.key, file.name, true), '_blank')
+    } catch (err: any) {
+      toast(err?.message || 'Could not open that attachment', 'error')
+    }
+  }
+
+  const load = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) {
+      setLoading(true)
+      setLoadError(null)
+    }
     try {
       const res = await fetch(`/api/projects/${projectId}/transmittals`)
       const d = await res.json()
       if (!res.ok) throw new Error(d.error || 'Failed to load the dispatch registry')
       setTransmittals(d.transmittals || [])
     } catch (e) {
-      setLoadError(e)
+      if (!opts?.quiet) setLoadError(e)
     } finally {
-      setLoading(false)
+      if (!opts?.quiet) setLoading(false)
     }
   }, [projectId])
 
   useEffect(() => {
     load()
   }, [load])
+
+  useLiveReload(load, ['transmittals'])
 
   const handleCreateTransmittal = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -70,7 +115,10 @@ export default function TransmittalsLog() {
       const res = await fetch(`/api/projects/${projectId}/transmittals`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newTransmittal),
+        body: JSON.stringify({
+          ...newTransmittal,
+          attachment_url: attachment ? formatFileMarker(attachment.key, attachment.name) : null,
+        }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -79,6 +127,7 @@ export default function TransmittalsLog() {
       }
       setTransmittals(prev => [data.transmittal, ...prev])
       setShowFormModal(false)
+      setAttachment(null)
       setNewTransmittal({
         recipient_name: '',
         recipient_company: '',
@@ -107,12 +156,14 @@ export default function TransmittalsLog() {
       return
     }
     try {
+      setTransmittals((prev) => prev.map((x) => (x.id === t.id ? { ...x, status: nextStatus } : x)))
       const res = await fetch(`/api/projects/${projectId}/transmittals`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ transmittal_id: t.id, status: nextStatus }),
       })
       if (!res.ok) {
+        setTransmittals((prev) => prev.map((x) => (x.id === t.id ? t : x)))
         const data = await res.json().catch(() => ({}))
         toast(data.error || 'Could not update the transmittal status', 'error')
         return
@@ -120,6 +171,7 @@ export default function TransmittalsLog() {
       setTransmittals(prev => prev.map(x => x.id === t.id ? { ...x, status: nextStatus } : x))
       toast(nextStatus === 'received' ? 'Marked as received' : 'Receipt acknowledged', 'success')
     } catch (err: any) {
+      setTransmittals((prev) => prev.map((x) => (x.id === t.id ? t : x)))
       toast(err?.message || 'Could not update the transmittal status', 'error')
     }
   }
@@ -219,6 +271,20 @@ export default function TransmittalsLog() {
                   <div>
                     <span className="text-[9px] text-stone font-mono uppercase block">Transmitted Documents</span>
                     <p className="text-xs font-semibold text-white mt-0.5 leading-relaxed">{t.documents}</p>
+                    {(() => {
+                      const file = readAttachment(t.attachment_url)
+                      if (!file) return null
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => openAttachment(file)}
+                          className="mt-1.5 flex items-center gap-1.5 text-[10px] text-amber hover:underline"
+                        >
+                          <span className="material-icons-outlined text-[13px]">attach_file</span>
+                          {file.name}
+                        </button>
+                      )
+                    })()}
                   </div>
 
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-navy/20 p-2.5 border">
@@ -401,6 +467,41 @@ export default function TransmittalsLog() {
                   className="w-full bg-navy border text-xs text-white p-3 focus:outline-none resize-none"
                   style={{ borderRadius: '12px' }}
                 />
+              </div>
+
+              <div>
+                <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1 font-mono">
+                  Attach the file sent (optional)
+                </label>
+                {attachment ? (
+                  <div className="flex items-center gap-2 border rounded-md px-3 py-2 bg-navy/40">
+                    <span className="material-icons-outlined text-[16px] text-amber">attach_file</span>
+                    <span className="text-xs text-white truncate flex-1">{attachment.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => setAttachment(null)}
+                      className="text-[10px] text-stone hover:text-error font-bold uppercase"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex items-center gap-2 border border-dashed rounded-md px-3 py-2 cursor-pointer hover:border-amber/50 transition">
+                    <span className="material-icons-outlined text-[16px] text-stone">upload_file</span>
+                    <span className="text-xs text-stone">
+                      {uploadingAttachment
+                        ? 'Uploading…'
+                        : 'Keep a copy of exactly what was shared'}
+                    </span>
+                    <input
+                      type="file"
+                      accept={CHAT_ACCEPT}
+                      className="hidden"
+                      disabled={uploadingAttachment}
+                      onChange={handleAttachmentPick}
+                    />
+                  </label>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">

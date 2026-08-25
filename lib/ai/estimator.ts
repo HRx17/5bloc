@@ -1,5 +1,6 @@
 import { anthropic, AI_MODEL, MAX_TOKENS } from './client'
 import ratesData from './rates.json'
+import { typologyCostFactor, typologyFeeRange, typologyLabel } from '@/lib/compliance/typology'
 
 export interface EstimatorInput {
   projectType: string
@@ -12,7 +13,10 @@ export interface EstimatorInput {
 
 export async function generateEstimate(input: EstimatorInput) {
   const cityRates = (ratesData as any)[input.city] || (ratesData as any)['Mumbai']
-  const multiplier = { standard: 1.0, premium: 1.5, luxury: 2.2 }[input.specLevel] || 1.5
+  const specMultiplier = { standard: 1.0, premium: 1.5, luxury: 2.2 }[input.specLevel] || 1.5
+  const typologyFactor = typologyCostFactor(input.projectType)
+  const multiplier = specMultiplier * typologyFactor
+  const feeBand = typologyFeeRange(input.projectType)
 
   // Local programmatic fallback calculation if Anthropic API key is not configured
   if (!anthropic) {
@@ -45,13 +49,18 @@ export async function generateEstimate(input: EstimatorInput) {
 
     const constructionCost = processedItems.reduce((sum, item) => sum + item.amount, 0)
     
-    // Add Architect fee (8% - 10%)
-    const feePct = input.specLevel === 'luxury' ? 10 : input.specLevel === 'premium' ? 9 : 8
+    // Fee band is typology-driven; spec level nudges within that band
+    const feePct =
+      input.specLevel === 'luxury'
+        ? feeBand.max
+        : input.specLevel === 'premium'
+          ? feeBand.typical
+          : feeBand.min
     const architectFee = Math.round(constructionCost * (feePct / 100))
 
     processedItems.push({
       category: 'Professional Fees',
-      description: `Architectural consultation & milestone drawing sets (${feePct}%)`,
+      description: `Architectural consultation & milestone drawing sets (${feePct}% — ${typologyLabel(input.projectType).toLowerCase()})`,
       quantity: 1,
       unit: 'lumpsum',
       rate: architectFee,
@@ -75,16 +84,20 @@ export async function generateEstimate(input: EstimatorInput) {
 
   const prompt = `You are an expert quantity surveyor in India with 20 years experience.
 
-PROJECT: ${input.projectType} in ${input.city}
+PROJECT: ${typologyLabel(input.projectType)} in ${input.city}
 AREA: ${input.sqft} sqft (${Math.round(input.sqft * 0.0929)} sqm) across ${input.floors} floors
-SPECIFICATION: ${input.specLevel} (${multiplier}x standard rates)
+SPECIFICATION: ${input.specLevel} (${specMultiplier}x standard rates)
+TYPOLOGY FACTOR: ${typologyFactor}x versus an equivalent residential build
 ${input.notes ? `SPECIAL REQUIREMENTS: ${input.notes}` : ''}
 
 STANDARD MARKET RATES — ${input.city.toUpperCase()}:
 ${JSON.stringify(cityRates.standard, null, 2)}
 
 Generate a BOQ with 12–16 line items covering all construction trades.
-Include architect fee as the final line item (8–12% of construction cost).
+Reflect the typology: an interior fit-out has no substructure or superstructure, an
+industrial shed is structure-heavy and finish-light, and commercial or institutional
+work carries heavier HVAC, fire and vertical-transport scopes than residential.
+Include architect fee as the final line item (${feeBand.min}–${feeBand.max}% of construction cost for this typology).
 
 Return ONLY valid JSON, no markdown, no explanation:
 {

@@ -1,16 +1,33 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "@/lib/site/marketing";
 
 export const metadata: Metadata = {
- title: "5Bloc — Where Projects Get Built",
- description:
-   "5Bloc is the project coordination platform for the AEC industry. Architects coordinate, contractors bid and deliver, vendors get discovered. One workspace for everyone on the build.",
- manifest: "/manifest.json",
- appleWebApp: {
- capable: true,
- statusBarStyle: "default",
- title: "5Bloc",
- },
+  metadataBase: new URL(SITE_URL),
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "5Bloc",
+  },
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    siteName: "5Bloc",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [{ url: "/images/og.png", width: 1200, height: 630, alt: SITE_TITLE }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: ["/images/og.png"],
+  },
+  robots: { index: true, follow: true },
+  alternates: { canonical: SITE_URL },
 };
 
 export const viewport: Viewport = {

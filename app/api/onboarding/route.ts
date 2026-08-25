@@ -5,6 +5,7 @@ import { homeForRole, isRoleKey, type RoleKey } from '@/lib/rbac/roles'
 import { MOCK_CONTRACTORS } from '@/lib/data/mock-store'
 import { send } from '@/lib/email/resend'
 import { WelcomeEmail } from '@/lib/email/templates'
+import { analytics } from '@/lib/analytics/heycatch'
 
 export async function POST(req: Request) {
   const auth = await getAuthUserOrNull()
@@ -128,6 +129,21 @@ export async function POST(req: Request) {
   } catch (e) {
     console.warn('Welcome email failed (non-blocking):', e)
   }
+
+  const userId = auth.user.id
+  await analytics.setIdentity(
+    userId,
+    {
+      email: auth.profile.email,
+      name: (body.full_name as string) || auth.profile.full_name || undefined,
+      plan: auth.profile.plan,
+    },
+  )
+  await analytics.trackEvent(
+    'onboarding_completed',
+    { role },
+    { userId, request: req },
+  )
 
   return NextResponse.json({ ok: true, redirect: homeForRole(role) })
 }

@@ -167,8 +167,24 @@ export default function ClientProfile() {
         toast(data.error || 'Could not add that log entry', 'error')
         return
       }
+      const data = await res.json().catch(() => ({}))
+      const notes_log: CommLog[] = data.notes_log || data.client?.notes_log
+      if (notes_log) {
+        setClient((prev) => (prev ? { ...prev, notes_log, commLogs: notes_log } : prev))
+      } else {
+        const entry: CommLog = {
+          id: `local-${Date.now()}`,
+          type: newLog.type,
+          summary: newLog.summary.trim(),
+          date: new Date().toISOString().slice(0, 10),
+        }
+        setClient((prev) =>
+          prev
+            ? { ...prev, commLogs: [entry, ...prev.commLogs], notes_log: [entry, ...prev.notes_log] }
+            : prev
+        )
+      }
       setNewLog({ type: 'call', summary: '' })
-      await load()
     } finally {
       setAddingLog(false)
     }

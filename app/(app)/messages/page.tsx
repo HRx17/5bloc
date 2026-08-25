@@ -20,6 +20,8 @@ import {
   initialsOf,
   relativeTime,
 } from '@/lib/data/messages'
+import { ChatAttachment } from '@/components/messages/ChatAttachment'
+import { CHAT_ACCEPT, messagePreview, uploadChatFile } from '@/lib/messages/files'
 
 interface SearchUser {
   id: string
@@ -51,6 +53,8 @@ function Messenger() {
   const [convSearch, setConvSearch] = useState('')
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
+  const [file, setFile] = useState<File | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
   const [showNew, setShowNew] = useState(false)
   const [showAdd, setShowAdd] = useState(false)
 
@@ -137,21 +141,43 @@ function Messenger() {
 
   async function handleSend() {
     const text = draft.trim()
-    if (!text || !activeId || !me || sending) return
+    if ((!text && !file) || !activeId || !me || sending) return
     setSending(true)
-    setDraft('')
-    const sent = await sendMessage(activeId, me.id, text)
-    setSending(false)
-    if (sent) {
-      setMessages((prev) => (prev.some((m) => m.id === sent.id) ? prev : [...prev, sent]))
-      setConversations((prev) =>
-        prev
-          .map((c) => (c.id === activeId ? { ...c, lastMessage: { body: text, sender_id: me.id, created_at: sent.created_at }, last_message_at: sent.created_at } : c))
-          .sort((a, b) => b.last_message_at.localeCompare(a.last_message_at)),
-      )
-    } else {
-      setDraft(text)
-      toast('Message not sent. Your text is still in the box — try again.', 'error')
+    try {
+      let attachment: { url: string; name: string } | null = null
+      if (file) {
+        const uploaded = await uploadChatFile(file, { conversationId: activeId })
+        attachment = { url: uploaded.key, name: uploaded.filename }
+      }
+      const sent = await sendMessage(activeId, me.id, text, attachment)
+      if (sent) {
+        setDraft('')
+        setFile(null)
+        setMessages((prev) => (prev.some((m) => m.id === sent.id) ? prev : [...prev, sent]))
+        setConversations((prev) =>
+          prev
+            .map((c) =>
+              c.id === activeId
+                ? {
+                    ...c,
+                    lastMessage: {
+                      body: messagePreview(sent),
+                      sender_id: me.id,
+                      created_at: sent.created_at,
+                    },
+                    last_message_at: sent.created_at,
+                  }
+                : c,
+            )
+            .sort((a, b) => b.last_message_at.localeCompare(a.last_message_at)),
+        )
+      } else {
+        toast('Message not sent. Your text is still in the box — try again.', 'error')
+      }
+    } catch (err: unknown) {
+      toast(err instanceof Error ? err.message : 'Could not send that file.', 'error')
+    } finally {
+      setSending(false)
     }
   }
 
@@ -234,7 +260,7 @@ function Messenger() {
               const title = me ? conversationTitle(c, me.id) : 'Conversation'
               const isActive = c.id === activeId
               const preview = c.lastMessage
-                ? (c.lastMessage.sender_id === me?.id ? 'You: ' : '') + c.lastMessage.body
+                ? (c.lastMessage.sender_id === me?.id ? 'You: ' : '') + (c.lastMessage.body || 'Attachment')
                 : 'No messages yet'
               return (
                 <button
@@ -253,6 +279,15 @@ function Messenger() {
                         {c.lastMessage ? relativeTime(c.lastMessage.created_at) : ''}
                       </span>
                     </div>
+                    {c.project_name && (
+                      <span
+                        className="text-[10px] truncate flex items-center gap-1"
+                        style={{ color: 'var(--amber)' }}
+                      >
+                        <span className="material-icons-outlined text-[11px]">folder</span>
+                        {c.project_name}
+                      </span>
+                    )}
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-[12px] truncate" style={{ color: c.unread > 0 ? 'var(--on-surface-variant)' : 'var(--stone)', fontWeight: c.unread > 0 ? 600 : 400 }}>
                         {preview}
@@ -296,7 +331,22 @@ function Messenger() {
                   </p>
                   <p className="text-[11px] truncate" style={{ color: 'var(--stone)' }}>
                     {active.members.length} {active.members.length === 1 ? 'member' : 'members'}
-                    {active.type === 'project' ? ' · Project chat' : ''}
+                    {active.project_name ? (
+                      <>
+                        {' · '}
+                        <a
+                          href={`/projects/${active.project_id}`}
+                          className="hover:underline"
+                          style={{ color: 'var(--amber)' }}
+                        >
+                          {active.project_name}
+                        </a>
+                      </>
+                    ) : active.type === 'project' ? (
+                      ' · Project chat'
+                    ) : (
+                      ''
+                    )}
                   </p>
                 </div>
               </div>
@@ -346,7 +396,37 @@ function Messenger() {
 
             {/* Composer */}
             <div className="px-3 py-3 shrink-0" style={{ boxShadow: '0 -1px 0 var(--hairline)' }}>
+              {file && (
+                <div className="flex items-center gap-2 mb-2 px-1">
+                  <span className="material-icons-outlined text-[16px]" style={{ color: 'var(--amber)' }}>attach_file</span>
+                  <span className="text-[12px] truncate flex-1" style={{ color: 'var(--on-surface-variant)' }}>{file.name}</span>
+                  <button type="button" onClick={() => setFile(null)} className="text-[11px]" style={{ color: 'var(--stone)' }}>
+                    Remove
+                  </button>
+                </div>
+              )}
               <div className="flex items-end gap-2">
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept={CHAT_ACCEPT}
+                  className="hidden"
+                  onChange={(e) => {
+                    const next = e.target.files?.[0] || null
+                    setFile(next)
+                    e.target.value = ''
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="h-10 w-10 shrink-0 flex items-center justify-center rounded-xl"
+                  style={{ background: 'var(--overlay-hover)', color: 'var(--on-surface-variant)' }}
+                  aria-label="Attach image or document"
+                  title="Attach image or document"
+                >
+                  <span className="material-icons-outlined text-[18px]">attach_file</span>
+                </button>
                 <textarea
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
@@ -360,7 +440,7 @@ function Messenger() {
                 />
                 <button
                   onClick={handleSend}
-                  disabled={!draft.trim() || sending}
+                  disabled={(!draft.trim() && !file) || sending}
                   className="btn-primary h-10 w-10 shrink-0"
                   style={{ padding: 0 }}
                   aria-label="Send"
@@ -466,7 +546,10 @@ function Bubble({ m, isMe, showMeta }: { m: ChatMessage; isMe: boolean; showMeta
             wordBreak: 'break-word',
           }}
         >
-          {m.body}
+          {m.body?.trim() && m.body.trim() !== m.attachment_name ? m.body : null}
+          {m.attachment_url && m.attachment_name && (
+            <ChatAttachment fileKey={m.attachment_url} filename={m.attachment_name} />
+          )}
         </div>
         <span className="text-[9.5px] mt-0.5 px-1" style={{ color: 'var(--stone)' }}>{time}</span>
       </div>
@@ -555,15 +638,26 @@ function PeopleModal({
             />
           )}
 
-          {allowProject && projects.length > 0 && (
-            <div className="select-5bloc">
-              <select value={projectId} onChange={(e) => setProjectId(e.target.value)}>
-                <option value="">Not linked to a project</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-              <span className="material-icons-outlined chevron">expand_more</span>
+          {allowProject && (
+            <div>
+              <label className="block text-[11px] font-medium mb-1.5" style={{ color: 'var(--stone)' }}>
+                Which project is this about?
+              </label>
+              {projects.length > 0 ? (
+                <div className="select-5bloc">
+                  <select value={projectId} onChange={(e) => setProjectId(e.target.value)}>
+                    <option value="">Not linked to a project</option>
+                    {projects.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                  <span className="material-icons-outlined chevron">expand_more</span>
+                </div>
+              ) : (
+                <p className="text-[12px]" style={{ color: 'var(--stone)' }}>
+                  No projects yet — create one first if this chat should live on a job.
+                </p>
+              )}
             </div>
           )}
 

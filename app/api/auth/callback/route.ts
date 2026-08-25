@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { needsOnboarding } from '@/lib/auth/onboarding'
 import { safeRedirectPath } from '@/lib/auth/safe-redirect'
+import { analytics } from '@/lib/analytics/heycatch'
 
 async function resolvePostAuthPath(
   supabase: ReturnType<typeof createServerClient>,
@@ -70,7 +71,22 @@ export async function GET(req: NextRequest) {
       return NextResponse.redirect(new URL('/login?error=auth_callback_failed', req.url))
     }
 
+    await analytics.setIdentity(
+      data.user.id,
+      {
+        email: data.user.email,
+        name: (data.user.user_metadata?.full_name as string | undefined) || undefined,
+      },
+      { signup_date: data.user.created_at },
+    )
+
     redirectPath = await resolvePostAuthPath(supabase, data.user.id, next)
+
+    const createdAt = data.user.created_at ? new Date(data.user.created_at).getTime() : 0
+    const isNewAccount = createdAt > 0 && Date.now() - createdAt < 30 * 60 * 1000
+    if (isNewAccount && (next.includes('onboarding') || redirectPath === '/onboarding')) {
+      await analytics.trackEvent('signup_completed', {}, { userId: data.user.id, request: req })
+    }
 
     if (redirectPath !== next) {
       const final = NextResponse.redirect(new URL(redirectPath, req.url))

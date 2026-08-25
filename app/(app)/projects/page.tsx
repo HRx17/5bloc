@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorState } from '@/components/ui/ErrorState'
+import { useLiveReload } from '@/lib/live/useLiveReload'
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<any[]>([])
@@ -12,19 +13,24 @@ export default function ProjectsPage() {
   const [error, setError] = useState<unknown>(null)
   const [q, setQ] = useState('')
   const [canCreate, setCanCreate] = useState(false)
+  const [studio, setStudio] = useState<{ id: string; name: string } | null>(null)
+  const [creatingStudio, setCreatingStudio] = useState(false)
+  const [studioNote, setStudioNote] = useState('')
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+  const load = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) {
+      setLoading(true)
+      setError(null)
+    }
     try {
       const res = await fetch('/api/projects')
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to load projects')
       setProjects(data.projects || [])
     } catch (err) {
-      setError(err)
+      if (!opts?.quiet) setError(err)
     } finally {
-      setLoading(false)
+      if (!opts?.quiet) setLoading(false)
     }
   }, [])
 
@@ -34,7 +40,13 @@ export default function ProjectsPage() {
       .then((r) => r.json())
       .then((d) => setCanCreate(d.profile?.role === 'architect'))
       .catch(() => {})
+    fetch('/api/org/studio-project')
+      .then((r) => r.json())
+      .then((d) => setStudio(d.project || null))
+      .catch(() => {})
   }, [load])
+
+  useLiveReload(load, ['projects'])
 
   const filtered = projects.filter((p) =>
     !q || p.name?.toLowerCase().includes(q.toLowerCase()) || p.city?.toLowerCase().includes(q.toLowerCase())
@@ -50,11 +62,45 @@ export default function ProjectsPage() {
           </p>
         </div>
         {canCreate && (
-          <Link href="/projects/new" className="btn-primary text-[12px]">
-            New project
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            {studio ? (
+              <Link href={`/projects/${studio.id}`} className="btn-secondary text-[12px]">
+                Open 5Bloc Studio
+              </Link>
+            ) : (
+              <button
+                type="button"
+                disabled={creatingStudio}
+                className="btn-secondary text-[12px]"
+                onClick={async () => {
+                  setCreatingStudio(true)
+                  setStudioNote('')
+                  try {
+                    const res = await fetch('/api/org/studio-project', { method: 'POST' })
+                    const data = await res.json()
+                    if (!res.ok) throw new Error(data.error || 'Could not create the office project')
+                    setStudio(data.project)
+                    window.location.href = `/projects/${data.project.id}`
+                  } catch (err: any) {
+                    setStudioNote(err?.message || 'Could not create the office project')
+                  } finally {
+                    setCreatingStudio(false)
+                  }
+                }}
+              >
+                {creatingStudio ? 'Creating…' : 'Create our office project'}
+              </button>
+            )}
+            <Link href="/projects/new" className="btn-primary text-[12px]">
+              New project
+            </Link>
+          </div>
         )}
       </div>
+
+      {studioNote && (
+        <p className="text-xs text-error">{studioNote}</p>
+      )}
 
       <input
         className="input-5bloc max-w-md"

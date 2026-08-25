@@ -6,6 +6,13 @@ import { useToast } from '@/components/ui/Toast'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { ChatAttachment } from '@/components/messages/ChatAttachment'
+import {
+  CHAT_ACCEPT,
+  parseFileMarker,
+  stripFileMarker,
+  uploadChatFile,
+} from '@/lib/messages/files'
 
 interface Message {
   id: string
@@ -15,6 +22,8 @@ interface Message {
   timestamp: string
   channel: string
   created_at?: string
+  attachment_url?: string | null
+  attachment_name?: string | null
 }
 
 function formatTime(iso?: string) {
@@ -26,17 +35,35 @@ function formatTime(iso?: string) {
   }
 }
 
+function fromApi(m: Record<string, unknown>, channel: string): Message {
+  const raw = String(m.text || m.body || '')
+  const marked = parseFileMarker(raw)
+  return {
+    id: String(m.id),
+    sender: String(m.sender || 'Member'),
+    role: String(m.role || 'member'),
+    text: stripFileMarker(raw),
+    created_at: m.created_at ? String(m.created_at) : undefined,
+    timestamp: formatTime(m.created_at ? String(m.created_at) : undefined),
+    channel,
+    attachment_url: marked?.key || (m.attachment_url as string | null) || null,
+    attachment_name: marked?.name || (m.attachment_name as string | null) || null,
+  }
+}
+
 /** Project chat — persisted via Supabase channel conversations. */
 export default function ProjectMessages() {
   const params = useParams()
   const projectId = params.id as string
   const chatEndRef = useRef<HTMLDivElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
 
   const [channels] = useState<string[]>(['general', 'structural', 'mep', 'interior-finishes'])
   const [activeChannel, setActiveChannel] = useState('general')
   const [messages, setMessages] = useState<Message[]>([])
   const [textInput, setTextInput] = useState('')
+  const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const [loadError, setLoadError] = useState<unknown>(null)
@@ -48,17 +75,7 @@ export default function ProjectMessages() {
       const res = await fetch(`/api/projects/${projectId}/messages?channel=${encodeURIComponent(activeChannel)}`)
       const d = await res.json()
       if (!res.ok) throw new Error(d.error || 'Failed to load messages')
-      setMessages(
-        (d.messages || []).map((m: any) => ({
-          id: m.id,
-          sender: m.sender || 'Member',
-          role: m.role || 'member',
-          text: m.text || m.body || '',
-          created_at: m.created_at,
-          timestamp: formatTime(m.created_at),
-          channel: activeChannel,
-        }))
-      )
+      setMessages((d.messages || []).map((m: Record<string, unknown>) => fromApi(m, activeChannel)))
     } catch (e) {
       setMessages([])
       setLoadError(e)
@@ -77,32 +94,46 @@ export default function ProjectMessages() {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!textInput.trim() || sending) return
+    if ((!textInput.trim() && !file) || sending) return
     setSending(true)
     try {
+      let attachmentKey = ''
+      let attachmentName = ''
+      if (file) {
+        const uploaded = await uploadChatFile(file, { projectId })
+        attachmentKey = uploaded.key
+        attachmentName = uploaded.filename
+      }
       const res = await fetch(`/api/projects/${projectId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ channel: activeChannel, text: textInput.trim() }),
+        body: JSON.stringify({
+          channel: activeChannel,
+          text: textInput.trim(),
+          attachmentKey: attachmentKey || undefined,
+          attachmentName: attachmentName || undefined,
+        }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Send failed')
-      const m = data.message
-      setMessages((prev) => [
-        ...prev,
+      const mapped = fromApi(
         {
-          id: m.id,
-          sender: m.sender || 'You',
-          role: m.role || 'member',
-          text: m.text || textInput.trim(),
-          created_at: m.created_at,
-          timestamp: formatTime(m.created_at) || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          channel: activeChannel,
+          ...(data.message || {}),
+          text: data.message?.text || data.message?.body || textInput.trim(),
+          sender: data.message?.sender || 'You',
+          created_at: data.message?.created_at || new Date().toISOString(),
         },
-      ])
+        activeChannel,
+      )
+      if (attachmentKey && !mapped.attachment_url) {
+        mapped.attachment_url = attachmentKey
+        mapped.attachment_name = attachmentName
+      }
+      setMessages((prev) => [...prev, mapped])
       setTextInput('')
-    } catch (err: any) {
-      toast(err?.message || 'Message could not be sent', 'error')
+      setFile(null)
+    } catch (err: unknown) {
+      toast(err instanceof Error ? err.message : 'Message could not be sent', 'error')
     } finally {
       setSending(false)
     }
@@ -113,7 +144,7 @@ export default function ProjectMessages() {
       <div className="card-5bloc p-4">
         <h3 className="text-sm font-semibold text-white">Project messages</h3>
         <p className="text-[11px] text-stone mt-1">
-          Channels sync for all project members.
+          Channels sync for all project members. Attach images or documents to a message.
         </p>
       </div>
 
@@ -163,23 +194,53 @@ export default function ProjectMessages() {
                   <span className="text-stone ml-2">
                     {m.role} · {m.timestamp}
                   </span>
-                  <p className="mt-1 text-stone">{m.text}</p>
+                  {m.text ? <p className="mt-1 text-stone">{m.text}</p> : null}
+                  {m.attachment_url && m.attachment_name && (
+                    <ChatAttachment fileKey={m.attachment_url} filename={m.attachment_name} compact />
+                  )}
                 </div>
               ))
             )}
             <div ref={chatEndRef} />
           </div>
-          <form onSubmit={handleSend} className="p-3 border-t flex gap-2">
-            <input
-              className="input-5bloc flex-1 text-xs"
-              placeholder={`Message #${activeChannel}`}
-              value={textInput}
-              onChange={(e) => setTextInput(e.target.value)}
-              disabled={sending}
-            />
-            <button type="submit" className="btn-primary text-xs" disabled={sending || !textInput.trim()}>
-              {sending ? '…' : 'Send'}
-            </button>
+          <form onSubmit={handleSend} className="p-3 border-t space-y-2">
+            {file && (
+              <div className="flex items-center gap-2 text-[11px]" style={{ color: 'var(--stone)' }}>
+                <span className="material-icons-outlined text-[14px]">attach_file</span>
+                <span className="truncate flex-1">{file.name}</span>
+                <button type="button" onClick={() => setFile(null)}>Remove</button>
+              </div>
+            )}
+            <div className="flex gap-2">
+              <input
+                ref={fileRef}
+                type="file"
+                accept={CHAT_ACCEPT}
+                className="hidden"
+                onChange={(e) => {
+                  setFile(e.target.files?.[0] || null)
+                  e.target.value = ''
+                }}
+              />
+              <button
+                type="button"
+                className="btn-secondary text-xs px-2"
+                onClick={() => fileRef.current?.click()}
+                aria-label="Attach image or document"
+              >
+                <span className="material-icons-outlined text-[16px]">attach_file</span>
+              </button>
+              <input
+                className="input-5bloc flex-1 text-xs"
+                placeholder={`Message #${activeChannel}`}
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                disabled={sending}
+              />
+              <button type="submit" className="btn-primary text-xs" disabled={sending || (!textInput.trim() && !file)}>
+                {sending ? '…' : 'Send'}
+              </button>
+            </div>
           </form>
         </div>
       </div>

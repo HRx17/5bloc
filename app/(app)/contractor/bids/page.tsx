@@ -4,30 +4,35 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { useLiveReload } from '@/lib/live/useLiveReload'
 
 export default function ContractorBidsPage() {
   const [bids, setBids] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<unknown>(null)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+  const load = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) {
+      setLoading(true)
+      setError(null)
+    }
     try {
       const res = await fetch('/api/bids')
       if (!res.ok) throw new Error('Could not load your bids')
       const d = await res.json()
       setBids(d.bids || [])
     } catch (err) {
-      setError(err)
+      if (!opts?.quiet) setError(err)
     } finally {
-      setLoading(false)
+      if (!opts?.quiet) setLoading(false)
     }
   }, [])
 
   useEffect(() => {
     load()
   }, [load])
+
+  useLiveReload(load, ['bids', 'tenders'])
 
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto">

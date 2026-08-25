@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorState } from '@/components/ui/ErrorState'
 import { useToast } from '@/components/ui/Toast'
+import { useLiveReload } from '@/lib/live/useLiveReload'
 
 const STAGES = ['prospect', 'briefing', 'proposal', 'won', 'lost'] as const
 
@@ -22,24 +23,28 @@ export default function ClientsPage() {
   const [saving, setSaving] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<{ full_name?: string; email?: string }>({})
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+  const load = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) {
+      setLoading(true)
+      setError(null)
+    }
     try {
       const res = await fetch('/api/clients')
       const data = await res.json()
       if (!res.ok || data.error) throw new Error(data.error || 'Failed to load contacts')
       setClients(data.clients || [])
     } catch (err) {
-      setError(err)
+      if (!opts?.quiet) setError(err)
     } finally {
-      setLoading(false)
+      if (!opts?.quiet) setLoading(false)
     }
   }, [])
 
   useEffect(() => {
     load()
   }, [load])
+
+  useLiveReload(load, ['clients'])
 
   const openForm = () => {
     setForm(EMPTY_FORM)
@@ -70,6 +75,11 @@ export default function ClientsPage() {
       if (!res.ok) throw new Error(data.error || 'Could not save this contact')
       setShowForm(false)
       setForm(EMPTY_FORM)
+      if (data.client) {
+        setClients((prev) => [data.client, ...prev.filter((c: { id: string }) => c.id !== data.client.id)])
+      } else {
+        await load({ quiet: true })
+      }
       if (!form.email.trim()) {
         toast(
           `${data.client?.full_name || form.full_name.trim()} added — add an email later before sending invoices.`,
@@ -79,7 +89,6 @@ export default function ClientsPage() {
       } else {
         toast(`${data.client?.full_name || form.full_name.trim()} added to your pipeline`, 'success')
       }
-      await load()
     } catch (err) {
       toast(err instanceof Error ? err.message : 'Could not save this contact', 'error')
     } finally {

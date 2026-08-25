@@ -13,6 +13,8 @@ import {
   resolveRoleAliasLogin,
   SMOKE_PASSWORD,
 } from '@/lib/auth/local-dev-logins'
+import { sendConfirmEmail } from '@/lib/auth/send-confirm-email'
+import { analytics } from '@heycatch/sdk'
 
 type LoginMode = 'standard' | 'admin'
 
@@ -42,6 +44,35 @@ export default function LoginClient({ mode = 'standard' }: { mode?: LoginMode })
   const [oauthLoading, setOauthLoading] = useState(false)
   const [error, setError] = useState('')
   const [ready, setReady] = useState(!roleAliases)
+  const [resending, setResending] = useState(false)
+  const [resendNote, setResendNote] = useState('')
+
+  // Supabase blocks sign-in until the address is confirmed, so offer a way out
+  const needsConfirmation = /not confirmed|confirm your email|email_not_confirmed/i.test(error)
+
+  const resendConfirmation = async () => {
+    if (resending || !email.trim()) return
+    setResending(true)
+    setResendNote('')
+    try {
+      const redirectTo = `${window.location.origin}/api/auth/callback`
+      const sent = await sendConfirmEmail(email.trim(), redirectTo)
+      if (!sent.ok) {
+        const supabase = createClient()
+        const { error: resendError } = await supabase.auth.resend({
+          type: 'signup',
+          email: email.trim(),
+          options: { emailRedirectTo: redirectTo },
+        })
+        if (resendError) throw resendError
+      }
+      setResendNote(`Confirmation email sent to ${email.trim()}. Check spam and promotions.`)
+    } catch (err: any) {
+      setResendNote(err?.message || 'Could not resend right now. Try again in a minute.')
+    } finally {
+      setResending(false)
+    }
+  }
 
   // Admin window: clear any existing session so we never bounce to onboarding
   useEffect(() => {
@@ -54,6 +85,7 @@ export default function LoginClient({ mode = 'standard' }: { mode?: LoginMode })
       try {
         const supabase = createClient()
         await supabase.auth.signOut()
+        analytics.resetIdentity()
       } catch {
         // ignore — still show the form
       } finally {
@@ -104,6 +136,16 @@ export default function LoginClient({ mode = 'standard' }: { mode?: LoginMode })
     if (signError) throw signError
 
     if (inviteToken && !opts?.skipOnboarding) {
+      const {
+        data: { user: inviteUser },
+      } = await supabase.auth.getUser()
+      if (inviteUser) {
+        analytics.setIdentity(
+          inviteUser.id,
+          { email: inviteUser.email, name: inviteUser.user_metadata?.full_name as string | undefined },
+          { signup_date: inviteUser.created_at },
+        )
+      }
       router.push(`/accept-invite?token=${encodeURIComponent(inviteToken)}`)
       return
     }
@@ -112,32 +154,46 @@ export default function LoginClient({ mode = 'standard' }: { mode?: LoginMode })
       data: { user },
     } = await supabase.auth.getUser()
     let dest = next || '/dashboard'
-    if (user && !next) {
+    if (user) {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('role, onboarded_at')
+        .select('role, onboarded_at, full_name, plan')
         .eq('auth_id', user.id)
         .maybeSingle()
 
-      // Admin smoke aliases always land on the role home — never onboarding
-      if (opts?.skipOnboarding) {
-        const fromAlias = opts.aliasKey ? ALIAS_HOME[opts.aliasKey] : null
-        if (fromAlias) dest = homeForRole(fromAlias)
-        else if (profile && isRoleKey(profile.role)) dest = homeForRole(profile.role)
-        if (profile && !profile.onboarded_at) {
-          await supabase
-            .from('profiles')
-            .update({ onboarded_at: new Date().toISOString() })
-            .eq('auth_id', user.id)
-        }
-        router.push(dest)
-        return
-      }
+      analytics.setIdentity(
+        user.id,
+        {
+          email: user.email,
+          name: profile?.full_name || (user.user_metadata?.full_name as string | undefined),
+          plan: profile?.plan || undefined,
+        },
+        { signup_date: user.created_at },
+      )
 
-      if (!profile?.onboarded_at || orgInviteToken) {
-        dest = withInviteQs('/onboarding')
-      } else if (isRoleKey(profile.role)) {
-        dest = homeForRole(profile.role)
+      if (!next) {
+        // Admin smoke aliases always land on the role home — never onboarding
+        if (opts?.skipOnboarding) {
+          const fromAlias = opts.aliasKey ? ALIAS_HOME[opts.aliasKey] : null
+          if (fromAlias) dest = homeForRole(fromAlias)
+          else if (profile && isRoleKey(profile.role)) dest = homeForRole(profile.role)
+          if (profile && !profile.onboarded_at) {
+            await supabase
+              .from('profiles')
+              .update({ onboarded_at: new Date().toISOString() })
+              .eq('auth_id', user.id)
+          }
+          router.push(dest)
+          return
+        }
+
+        if (!profile?.onboarded_at || orgInviteToken) {
+          dest = withInviteQs('/onboarding')
+        } else if (isRoleKey(profile.role)) {
+          dest = homeForRole(profile.role)
+        }
+      } else if (orgInviteToken && dest.startsWith('/')) {
+        dest = withInviteQs(dest.includes('onboarding') ? dest : '/onboarding')
       }
     } else if (orgInviteToken && dest.startsWith('/')) {
       dest = withInviteQs(dest.includes('onboarding') ? dest : '/onboarding')
@@ -221,9 +277,30 @@ export default function LoginClient({ mode = 'standard' }: { mode?: LoginMode })
   return (
     <AuthShell title={roleAliases ? 'Admin entry' : 'Welcome back'}>
       {error && (
-        <div className="mb-4 p-3 bg-error/10 text-error text-xs font-semibold flex items-center gap-2 rounded-xl">
-          <span className="material-icons-outlined text-[16px]">error</span>
-          <span>{error}</span>
+        <div className="mb-4 p-3 bg-error/10 text-error text-xs font-semibold rounded-xl space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="material-icons-outlined text-[16px]">error</span>
+            <span>{error}</span>
+          </div>
+          {needsConfirmation && (
+            <button
+              type="button"
+              onClick={resendConfirmation}
+              disabled={resending}
+              className="underline font-semibold disabled:opacity-50"
+            >
+              {resending ? 'Sending…' : 'Resend confirmation email'}
+            </button>
+          )}
+        </div>
+      )}
+
+      {resendNote && (
+        <div
+          className="mb-4 p-3 text-xs rounded-xl"
+          style={{ color: 'var(--stone)', background: 'var(--surface-container-low)' }}
+        >
+          {resendNote}
         </div>
       )}
 
