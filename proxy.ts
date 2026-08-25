@@ -63,9 +63,6 @@ export async function proxy(req: NextRequest) {
   }
 
   if (isMockAuthEnabled()) {
-    if (pathname === '/') {
-      return NextResponse.redirect(new URL('/dashboard', req.url))
-    }
     return res
   }
 
@@ -150,10 +147,6 @@ export async function proxy(req: NextRequest) {
       }
 
       if (!needsOnboarding && pathname === '/onboarding') {
-        return NextResponse.redirect(new URL(home, req.url))
-      }
-
-      if (pathname === '/') {
         return NextResponse.redirect(new URL(home, req.url))
       }
 

@@ -55,6 +55,8 @@ function AppleNav() {
     { href: '#marketplace', label: 'Marketplace' },
     { href: '#features', label: 'Features' },
     { href: '#pricing', label: 'Pricing' },
+    { href: '#founder', label: 'Founders' },
+    { href: '/about', label: 'About' },
     { href: '/vs/5bloc-vs-procore', label: 'Compare' },
     { href: '#faq', label: 'FAQ' },
   ]
@@ -238,6 +240,27 @@ function AppleHero() {
         </motion.p>
 
         <WaitlistSocialProof />
+
+        <motion.p
+          className="mt-3 text-[13px]"
+          style={{ color: 'var(--lp-text-secondary)' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.25 }}
+        >
+          Built by{' '}
+          <a href="#founder" className="lp-link text-[13px]">
+            Haet Ranpariya
+          </a>
+          {' and '}
+          <a href="#founder" className="lp-link text-[13px]">
+            Parth Mehta
+          </a>
+          {' · '}
+          <Link href="/about" className="lp-link text-[13px]">
+            About
+          </Link>
+        </motion.p>
 
         <motion.div
           className="mt-8 flex justify-center"
