@@ -10,14 +10,23 @@ export type PartnerCountry = 'india' | 'us'
 
 export function usePartnerPageScroll() {
   useEffect(() => {
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'auto'
-    document.documentElement.style.overflow = 'auto'
-    document.documentElement.classList.add('landing-page-active')
+    const html = document.documentElement
+    const body = document.body
+    const prevHtmlOverflow = html.style.overflow
+    const prevHtmlHeight = html.style.height
+    const prevBodyOverflow = body.style.overflow
+    const prevBodyHeight = body.style.height
+    html.classList.add('landing-page-active')
+    html.style.overflow = ''
+    html.style.height = ''
+    body.style.overflow = ''
+    body.style.height = ''
     return () => {
-      document.body.style.overflow = prev
-      document.documentElement.style.overflow = ''
-      document.documentElement.classList.remove('landing-page-active')
+      html.classList.remove('landing-page-active')
+      html.style.overflow = prevHtmlOverflow
+      html.style.height = prevHtmlHeight
+      body.style.overflow = prevBodyOverflow
+      body.style.height = prevBodyHeight
     }
   }, [])
 }

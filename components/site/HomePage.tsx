@@ -10,6 +10,7 @@ import { HowItWorksFlow } from '@/components/site/HowItWorksFlow'
 import { Logo } from '@/components/brand/LogoMark'
 import { createSupabaseClient } from '@/lib/supabase/client'
 import { FAQS, FOUNDERS, FOUNDER_STORY, TESTIMONIALS, WAITLIST_AVATARS } from '@/lib/site/marketing'
+import { UnlockLandingScroll } from '@/components/site/UnlockLandingScroll'
 import '../../app/landing.css'
 
 const WAITLIST_COUNT = '400+'
@@ -809,7 +810,7 @@ function AppleFooter() {
 
   return (
     <footer style={{ background: 'var(--lp-bg-alt)', borderTop: '1px solid var(--lp-border)' }}>
-      <div className="mx-auto max-w-[980px] px-5 sm:px-6 py-12 sm:py-16">
+        <div className="mx-auto max-w-[980px] px-5 sm:px-6 pt-12 sm:pt-16 pb-8">
         <div className="grid sm:grid-cols-3 gap-10">
           <div>
             <Logo size={18} showTagline={false} color="var(--lp-text)" />
@@ -848,20 +849,9 @@ function AppleFooter() {
 }
 
 export default function HomePage() {
-  useEffect(() => {
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'auto'
-    document.documentElement.style.overflow = 'auto'
-    document.documentElement.classList.add('landing-page-active')
-    return () => {
-      document.body.style.overflow = prev
-      document.documentElement.style.overflow = ''
-      document.documentElement.classList.remove('landing-page-active')
-    }
-  }, [])
-
   return (
     <div className="landing-apple min-h-screen">
+      <UnlockLandingScroll />
       <AppleNav />
       <AppleHero />
       <HowItWorksFlow />

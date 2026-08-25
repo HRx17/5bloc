@@ -23,6 +23,24 @@
   color: var(--lp-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+}
+
+/* Root layout uses h-full + overflow-hidden for the app shell.
+   Marketing pages must grow with content and use a single window scroller,
+   or a second empty viewport appears under the footer. */
+html.landing-page-active {
+  height: auto !important;
+  min-height: 100%;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+html.landing-page-active body {
+  height: auto !important;
+  min-height: 0 !important;
+  max-width: 100%;
+  overflow: visible !important;
 }
 
 .landing-apple .lp-headline {
