@@ -27,7 +27,8 @@ const handleGET = async ({ request }: any) => {
   // Marketplace browse is public to authenticated users
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
 
-  let rows: any[] {
+  let rows: any[] = []
+  {
     let query = auth.supabase.from('contractors').select('*')
     if (mine) query = query.eq('user_id', auth.profile.id)
     if (verified === '1') query = query.eq('verified', true)

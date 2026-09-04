@@ -5,12 +5,13 @@ import { loadSignupIndex } from '@/lib/marketplace/server'
 
 type Ctx = { params: Promise<{ id: string }> }
 
-const handleGET = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handleGET = async ({ request, params }: any) => {
+  const { id } = params as { id: string }
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
 
-  let row: any = null {
+  let row: any = null
+  {
     const { data, error } = await auth.supabase.from('contractors').select('*').eq('id', id).maybeSingle()
     if (error) return json({ error: error.message }, { status: 500 })
     if (!data) return json({ error: 'Not found' }, { status: 404 })
