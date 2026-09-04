@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import Link from '@/compat/next-link'
 import OnboardingChecklist from '@/components/layout/OnboardingChecklist'
-import { ErrorState } from '@/components/ui/ErrorState'
-import { EmptyState } from '@/components/ui/EmptyState'
-import { Skeleton } from '@/components/ui/Skeleton'
+import { ErrorState } from '@/components/ui5/ErrorState'
+import { EmptyState } from '@/components/ui5/EmptyState'
+import { Skeleton } from '@/components/ui5/Skeleton'
 import { isPaywallEnforced } from '@/lib/payments/gates'
 import { useLiveReload } from '@/lib/live/useLiveReload'
 
