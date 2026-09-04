@@ -105,8 +105,8 @@ export default function OnboardingChecklist() {
  onClick={() => setMinimized(!minimized)} 
  className="transition p-0.5 rounded-lg"
  style={{ color: 'var(--stone)' }}
- onMouseEnter={(e) => { const t = e.currentTarget as HTMLElement; t.style.color = 'var(--on-surface)'; t.style.background = 'var(--overlay-hover)' }}
- onMouseLeave={(e) => { const t = e.currentTarget as HTMLElement; t.style.color = 'var(--stone)'; t.style.background = 'transparent' }}
+ onMouseEnter={(e: React.MouseEvent<HTMLElement>) => { const t = e.currentTarget as HTMLElement; t.style.color = 'var(--on-surface)'; t.style.background = 'var(--overlay-hover)' }}
+ onMouseLeave={(e: React.MouseEvent<HTMLElement>) => { const t = e.currentTarget as HTMLElement; t.style.color = 'var(--stone)'; t.style.background = 'transparent' }}
  >
  <span className="material-icons-outlined text-[18px]">
  {minimized ? 'expand_less' : 'expand_more'}
@@ -116,8 +116,8 @@ export default function OnboardingChecklist() {
  onClick={handleDismiss} 
  className="transition p-0.5 rounded-lg"
  style={{ color: 'var(--stone)' }}
- onMouseEnter={(e) => { const t = e.currentTarget as HTMLElement; t.style.color = 'var(--on-surface)'; t.style.background = 'var(--overlay-hover)' }}
- onMouseLeave={(e) => { const t = e.currentTarget as HTMLElement; t.style.color = 'var(--stone)'; t.style.background = 'transparent' }}
+ onMouseEnter={(e: React.MouseEvent<HTMLElement>) => { const t = e.currentTarget as HTMLElement; t.style.color = 'var(--on-surface)'; t.style.background = 'var(--overlay-hover)' }}
+ onMouseLeave={(e: React.MouseEvent<HTMLElement>) => { const t = e.currentTarget as HTMLElement; t.style.color = 'var(--stone)'; t.style.background = 'transparent' }}
  >
  <span className="material-icons-outlined text-[18px]">close</span>
  </button>
@@ -166,8 +166,8 @@ export default function OnboardingChecklist() {
  : ''
  }`}
  style={{ color: task.completed ? 'var(--stone)' : 'var(--on-surface)' }}
- onMouseEnter={(e) => { if (!task.completed) (e.currentTarget as HTMLElement).style.color = 'var(--amber)' }}
- onMouseLeave={(e) => { if (!task.completed) (e.currentTarget as HTMLElement).style.color = 'var(--on-surface)' }}
+ onMouseEnter={(e: React.MouseEvent<HTMLElement>) => { if (!task.completed) (e.currentTarget as HTMLElement).style.color = 'var(--amber)' }}
+ onMouseLeave={(e: React.MouseEvent<HTMLElement>) => { if (!task.completed) (e.currentTarget as HTMLElement).style.color = 'var(--on-surface)' }}
  >
  {task.label}
  </Link>
