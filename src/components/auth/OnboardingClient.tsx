@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from '@/compat/next-navigation'
+import { useServerFn } from '@tanstack/react-start'
+import { completeOnboarding } from '@/lib/auth/onboarding.functions'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Logo } from '@/components/brand/LogoMark'
 import { ROLES, type RoleKey, isRoleKey } from '@/lib/rbac/roles'
@@ -10,6 +12,7 @@ const DISCIPLINES = ['structural', 'mep', 'electrical', 'plumbing', 'hvac', 'fac
 export default function Onboarding() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const finishOnboarding = useServerFn(completeOnboarding)
   const inviteToken = searchParams.get('invite_token')
   const orgInviteToken = searchParams.get('org_invite')
   const roleParam = searchParams.get('role')
@@ -119,10 +122,8 @@ export default function Onboarding() {
         redirectOverride = acceptData.redirect || null
       }
 
-      const res = await fetch('/api/onboarding', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const data = await finishOnboarding({
+        data: {
           role: finalRole,
           invite_flow: !!inviteToken || !!orgInviteToken,
           full_name: form.full_name,
@@ -142,10 +143,8 @@ export default function Onboarding() {
           years_experience: form.years_experience ? Number(form.years_experience) : null,
           team_size: form.team_size ? Number(form.team_size) : null,
           discipline: form.discipline,
-        }),
+        },
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Onboarding failed')
 
       if (finalRole === 'architect' && !inviteToken && !orgInviteToken) {
         localStorage.setItem(

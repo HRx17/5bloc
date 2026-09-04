@@ -53,7 +53,7 @@ export default function LoginClient({ mode = 'standard' }: { mode?: LoginMode })
     setResending(true)
     setResendNote('')
     try {
-      const redirectTo = `${window.location.origin}/api/auth/callback`
+      const redirectTo = `${window.location.origin}/auth/callback`
       const sent = await sendConfirmEmail(email.trim(), redirectTo)
       if (!sent.ok) {
         const supabase = createClient()
@@ -112,7 +112,7 @@ export default function LoginClient({ mode = 'standard' }: { mode?: LoginMode })
       const origin = window.location.origin
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${origin}/api/auth/callback` },
+        options: { redirectTo: `${origin}/auth/callback` },
       })
       if (oauthError) throw oauthError
     } catch (err: any) {

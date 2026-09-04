@@ -59,7 +59,7 @@ export default function Signup() {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${origin}/api/auth/callback?next=${encodeURIComponent(`/onboarding?${onboardingQuery()}`)}`,
+          redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(`/onboarding?${onboardingQuery()}`)}`,
         },
       })
       if (oauthError) throw oauthError
@@ -104,7 +104,7 @@ export default function Signup() {
         email: formData.email,
         password: formData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(`/onboarding?${onboardingQuery()}`)}`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(`/onboarding?${onboardingQuery()}`)}`,
           data: {
             full_name: formData.name,
             role: formData.role,
@@ -118,7 +118,7 @@ export default function Signup() {
       // When email confirmation is required, Supabase returns a user but no session.
       // Only a session proves this is a completed signup — do not identify on data.user alone.
       if (!signData.session) {
-        const redirectTo = `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(`/onboarding?${onboardingQuery()}`)}`
+        const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(`/onboarding?${onboardingQuery()}`)}`
         await sendConfirmEmail(formData.email, redirectTo).catch(() => null)
         setAwaitingEmail(true)
         return
@@ -146,7 +146,7 @@ export default function Signup() {
     setResending(true)
     setResendNote('')
     try {
-      const redirectTo = `${window.location.origin}/api/auth/callback?next=${encodeURIComponent(`/onboarding?${onboardingQuery()}`)}`
+      const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(`/onboarding?${onboardingQuery()}`)}`
       const sent = await sendConfirmEmail(formData.email, redirectTo)
       if (!sent.ok) {
         const supabase = createClient()
