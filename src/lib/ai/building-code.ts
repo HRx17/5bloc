@@ -1,4 +1,4 @@
-import { anthropic, AI_MODEL } from './client'
+import { completeText, hasAI } from './client'
 import {
   byeLawsFor,
   complianceNotesFor,
@@ -96,7 +96,7 @@ function localFallback(input: BuildingCodeInput): BuildingCodeResult {
 
 export async function checkBuildingCode(input: BuildingCodeInput): Promise<BuildingCodeResult> {
   const fallback = localFallback(input)
-  if (!anthropic) return fallback
+  if (!hasAI()) return fallback
 
   const typology = normalizeTypology(input.projectType)
   const prompt = `You are a senior Indian municipal consultant (architect + town planner).
@@ -137,12 +137,7 @@ Cover FSI/FAR, setbacks, height/fire, parking, accessibility, rainwater, and typ
 Prefer 8–14 findings. Mark anything that would stop an IOD as "blocker".`
 
   try {
-    const res = await anthropic.messages.create({
-      model: AI_MODEL,
-      max_tokens: 3500,
-      messages: [{ role: 'user', content: prompt }],
-    })
-    const text = res.content[0].type === 'text' ? res.content[0].text : '{}'
+    const text = (await completeText(prompt, { maxTokens: 3500 })) || '{}'
     const parsed = JSON.parse(text.replace(/```json?\n?/g, '').replace(/```/g, '').trim())
     return {
       summary: parsed.summary || fallback.summary,

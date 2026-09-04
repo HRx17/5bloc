@@ -1,4 +1,4 @@
-import { anthropic, AI_MODEL, MAX_TOKENS } from './client'
+import { completeText, hasAI } from './client'
 import ratesData from './rates.json'
 import { typologyCostFactor, typologyFeeRange, typologyLabel } from '@/lib/compliance/typology'
 
@@ -19,7 +19,7 @@ export async function generateEstimate(input: EstimatorInput) {
   const feeBand = typologyFeeRange(input.projectType)
 
   // Local programmatic fallback calculation if Anthropic API key is not configured
-  if (!anthropic) {
+  if (!hasAI()) {
     console.log('Anthropic API key is missing. Using local programmatic quantity surveyor fallback.')
     
     const baseRates = cityRates.standard
@@ -121,12 +121,6 @@ Return ONLY valid JSON, no markdown, no explanation:
   ]
 }`
 
-  const res = await anthropic.messages.create({
-    model: AI_MODEL, 
-    max_tokens: MAX_TOKENS,
-    messages: [{ role: 'user', content: prompt }],
-  })
-  
-  const text = res.content[0].type === 'text' ? res.content[0].text : '{}'
+  const text = (await completeText(prompt)) || '{}'
   return JSON.parse(text.replace(/```json?\n?/g, '').replace(/```/g, '').trim())
 }
