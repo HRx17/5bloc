@@ -34,13 +34,11 @@ import { Route as ApiTendersRouteImport } from './routes/api/tenders'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as Vs5blocVsFieldwireRouteImport } from './routes/vs/5bloc-vs-fieldwire'
 import { Route as Vs5blocVsProcoreRouteImport } from './routes/vs/5bloc-vs-procore'
-import { Route as AuthenticatedAppBuilderRouteImport } from './routes/_authenticated/_app/builder'
 import { Route as AuthenticatedAppCadRouteImport } from './routes/_authenticated/_app/cad'
 import { Route as AuthenticatedAppCalendarRouteImport } from './routes/_authenticated/_app/calendar'
 import { Route as AuthenticatedAppCatalogRouteImport } from './routes/_authenticated/_app/catalog'
 import { Route as AuthenticatedAppClientRouteImport } from './routes/_authenticated/_app/client'
 import { Route as AuthenticatedAppConsultantRouteImport } from './routes/_authenticated/_app/consultant'
-import { Route as AuthenticatedAppContractorRouteImport } from './routes/_authenticated/_app/contractor'
 import { Route as AuthenticatedAppCoordinationRouteImport } from './routes/_authenticated/_app/coordination'
 import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authenticated/_app/dashboard'
 import { Route as AuthenticatedAppDocumentsRouteImport } from './routes/_authenticated/_app/documents'
@@ -64,9 +62,11 @@ import { Route as ApiTendersIdRouteImport } from './routes/api/tenders/$id'
 import { Route as AuthenticatedAppAiBuildingCodeRouteImport } from './routes/_authenticated/_app/ai/building-code'
 import { Route as AuthenticatedAppAiContractScanRouteImport } from './routes/_authenticated/_app/ai/contract-scan'
 import { Route as AuthenticatedAppAiEstimateRouteImport } from './routes/_authenticated/_app/ai/estimate'
+import { Route as AuthenticatedAppBuilderIndexRouteImport } from './routes/_authenticated/_app/builder/index'
 import { Route as AuthenticatedAppBuilderApprovalsRouteImport } from './routes/_authenticated/_app/builder/approvals'
 import { Route as AuthenticatedAppClientsIndexRouteImport } from './routes/_authenticated/_app/clients/index'
 import { Route as AuthenticatedAppClientsIdRouteImport } from './routes/_authenticated/_app/clients/$id'
+import { Route as AuthenticatedAppContractorIndexRouteImport } from './routes/_authenticated/_app/contractor/index'
 import { Route as AuthenticatedAppContractorBidsRouteImport } from './routes/_authenticated/_app/contractor/bids'
 import { Route as AuthenticatedAppContractorProfileRouteImport } from './routes/_authenticated/_app/contractor/profile'
 import { Route as AuthenticatedAppInvoicesIndexRouteImport } from './routes/_authenticated/_app/invoices/index'
@@ -234,11 +234,6 @@ const Vs5blocVsProcoreRoute = Vs5blocVsProcoreRouteImport.update({
   path: '/vs/5bloc-vs-procore',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedAppBuilderRoute = AuthenticatedAppBuilderRouteImport.update({
-  id: '/builder',
-  path: '/builder',
-  getParentRoute: () => AuthenticatedAppRouteRoute,
-} as any)
 const AuthenticatedAppCadRoute = AuthenticatedAppCadRouteImport.update({
   id: '/cad',
   path: '/cad',
@@ -264,12 +259,6 @@ const AuthenticatedAppConsultantRoute =
   AuthenticatedAppConsultantRouteImport.update({
     id: '/consultant',
     path: '/consultant',
-    getParentRoute: () => AuthenticatedAppRouteRoute,
-  } as any)
-const AuthenticatedAppContractorRoute =
-  AuthenticatedAppContractorRouteImport.update({
-    id: '/contractor',
-    path: '/contractor',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const AuthenticatedAppCoordinationRoute =
@@ -398,11 +387,17 @@ const AuthenticatedAppAiEstimateRoute =
     path: '/ai/estimate',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppBuilderIndexRoute =
+  AuthenticatedAppBuilderIndexRouteImport.update({
+    id: '/builder/',
+    path: '/builder/',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppBuilderApprovalsRoute =
   AuthenticatedAppBuilderApprovalsRouteImport.update({
-    id: '/approvals',
-    path: '/approvals',
-    getParentRoute: () => AuthenticatedAppBuilderRoute,
+    id: '/builder/approvals',
+    path: '/builder/approvals',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const AuthenticatedAppClientsIndexRoute =
   AuthenticatedAppClientsIndexRouteImport.update({
@@ -416,17 +411,23 @@ const AuthenticatedAppClientsIdRoute =
     path: '/clients/$id',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppContractorIndexRoute =
+  AuthenticatedAppContractorIndexRouteImport.update({
+    id: '/contractor/',
+    path: '/contractor/',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppContractorBidsRoute =
   AuthenticatedAppContractorBidsRouteImport.update({
-    id: '/bids',
-    path: '/bids',
-    getParentRoute: () => AuthenticatedAppContractorRoute,
+    id: '/contractor/bids',
+    path: '/contractor/bids',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const AuthenticatedAppContractorProfileRoute =
   AuthenticatedAppContractorProfileRouteImport.update({
-    id: '/profile',
-    path: '/profile',
-    getParentRoute: () => AuthenticatedAppContractorRoute,
+    id: '/contractor/profile',
+    path: '/contractor/profile',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const AuthenticatedAppInvoicesIndexRoute =
   AuthenticatedAppInvoicesIndexRouteImport.update({
@@ -686,13 +687,11 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/vs/5bloc-vs-fieldwire': typeof Vs5blocVsFieldwireRoute
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
-  '/builder': typeof AuthenticatedAppBuilderRouteWithChildren
   '/cad': typeof AuthenticatedAppCadRoute
   '/calendar': typeof AuthenticatedAppCalendarRoute
   '/catalog': typeof AuthenticatedAppCatalogRoute
   '/client': typeof AuthenticatedAppClientRoute
   '/consultant': typeof AuthenticatedAppConsultantRoute
-  '/contractor': typeof AuthenticatedAppContractorRouteWithChildren
   '/coordination': typeof AuthenticatedAppCoordinationRoute
   '/dashboard': typeof AuthenticatedAppDashboardRoute
   '/documents': typeof AuthenticatedAppDocumentsRoute
@@ -741,7 +740,9 @@ export interface FileRoutesByFullPath {
   '/api/projects/$id/submittals': typeof ApiProjectsIdSubmittalsRoute
   '/api/projects/$id/tenders': typeof ApiProjectsIdTendersRoute
   '/api/projects/$id/transmittals': typeof ApiProjectsIdTransmittalsRoute
+  '/builder/': typeof AuthenticatedAppBuilderIndexRoute
   '/clients/': typeof AuthenticatedAppClientsIndexRoute
+  '/contractor/': typeof AuthenticatedAppContractorIndexRoute
   '/invoices/': typeof AuthenticatedAppInvoicesIndexRoute
   '/marketplace/': typeof AuthenticatedAppMarketplaceIndexRoute
   '/projects/': typeof AuthenticatedAppProjectsIndexRoute
@@ -787,13 +788,11 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/vs/5bloc-vs-fieldwire': typeof Vs5blocVsFieldwireRoute
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
-  '/builder': typeof AuthenticatedAppBuilderRouteWithChildren
   '/cad': typeof AuthenticatedAppCadRoute
   '/calendar': typeof AuthenticatedAppCalendarRoute
   '/catalog': typeof AuthenticatedAppCatalogRoute
   '/client': typeof AuthenticatedAppClientRoute
   '/consultant': typeof AuthenticatedAppConsultantRoute
-  '/contractor': typeof AuthenticatedAppContractorRouteWithChildren
   '/coordination': typeof AuthenticatedAppCoordinationRoute
   '/dashboard': typeof AuthenticatedAppDashboardRoute
   '/documents': typeof AuthenticatedAppDocumentsRoute
@@ -842,7 +841,9 @@ export interface FileRoutesByTo {
   '/api/projects/$id/submittals': typeof ApiProjectsIdSubmittalsRoute
   '/api/projects/$id/tenders': typeof ApiProjectsIdTendersRoute
   '/api/projects/$id/transmittals': typeof ApiProjectsIdTransmittalsRoute
+  '/builder': typeof AuthenticatedAppBuilderIndexRoute
   '/clients': typeof AuthenticatedAppClientsIndexRoute
+  '/contractor': typeof AuthenticatedAppContractorIndexRoute
   '/invoices': typeof AuthenticatedAppInvoicesIndexRoute
   '/marketplace': typeof AuthenticatedAppMarketplaceIndexRoute
   '/projects': typeof AuthenticatedAppProjectsIndexRoute
@@ -891,13 +892,11 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/vs/5bloc-vs-fieldwire': typeof Vs5blocVsFieldwireRoute
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
-  '/_authenticated/_app/builder': typeof AuthenticatedAppBuilderRouteWithChildren
   '/_authenticated/_app/cad': typeof AuthenticatedAppCadRoute
   '/_authenticated/_app/calendar': typeof AuthenticatedAppCalendarRoute
   '/_authenticated/_app/catalog': typeof AuthenticatedAppCatalogRoute
   '/_authenticated/_app/client': typeof AuthenticatedAppClientRoute
   '/_authenticated/_app/consultant': typeof AuthenticatedAppConsultantRoute
-  '/_authenticated/_app/contractor': typeof AuthenticatedAppContractorRouteWithChildren
   '/_authenticated/_app/coordination': typeof AuthenticatedAppCoordinationRoute
   '/_authenticated/_app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/_authenticated/_app/documents': typeof AuthenticatedAppDocumentsRoute
@@ -946,7 +945,9 @@ export interface FileRoutesById {
   '/api/projects/$id/submittals': typeof ApiProjectsIdSubmittalsRoute
   '/api/projects/$id/tenders': typeof ApiProjectsIdTendersRoute
   '/api/projects/$id/transmittals': typeof ApiProjectsIdTransmittalsRoute
+  '/_authenticated/_app/builder/': typeof AuthenticatedAppBuilderIndexRoute
   '/_authenticated/_app/clients/': typeof AuthenticatedAppClientsIndexRoute
+  '/_authenticated/_app/contractor/': typeof AuthenticatedAppContractorIndexRoute
   '/_authenticated/_app/invoices/': typeof AuthenticatedAppInvoicesIndexRoute
   '/_authenticated/_app/marketplace/': typeof AuthenticatedAppMarketplaceIndexRoute
   '/_authenticated/_app/projects/': typeof AuthenticatedAppProjectsIndexRoute
@@ -994,13 +995,11 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/vs/5bloc-vs-fieldwire'
     | '/vs/5bloc-vs-procore'
-    | '/builder'
     | '/cad'
     | '/calendar'
     | '/catalog'
     | '/client'
     | '/consultant'
-    | '/contractor'
     | '/coordination'
     | '/dashboard'
     | '/documents'
@@ -1049,7 +1048,9 @@ export interface FileRouteTypes {
     | '/api/projects/$id/submittals'
     | '/api/projects/$id/tenders'
     | '/api/projects/$id/transmittals'
+    | '/builder/'
     | '/clients/'
+    | '/contractor/'
     | '/invoices/'
     | '/marketplace/'
     | '/projects/'
@@ -1095,13 +1096,11 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/vs/5bloc-vs-fieldwire'
     | '/vs/5bloc-vs-procore'
-    | '/builder'
     | '/cad'
     | '/calendar'
     | '/catalog'
     | '/client'
     | '/consultant'
-    | '/contractor'
     | '/coordination'
     | '/dashboard'
     | '/documents'
@@ -1150,7 +1149,9 @@ export interface FileRouteTypes {
     | '/api/projects/$id/submittals'
     | '/api/projects/$id/tenders'
     | '/api/projects/$id/transmittals'
+    | '/builder'
     | '/clients'
+    | '/contractor'
     | '/invoices'
     | '/marketplace'
     | '/projects'
@@ -1198,13 +1199,11 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/vs/5bloc-vs-fieldwire'
     | '/vs/5bloc-vs-procore'
-    | '/_authenticated/_app/builder'
     | '/_authenticated/_app/cad'
     | '/_authenticated/_app/calendar'
     | '/_authenticated/_app/catalog'
     | '/_authenticated/_app/client'
     | '/_authenticated/_app/consultant'
-    | '/_authenticated/_app/contractor'
     | '/_authenticated/_app/coordination'
     | '/_authenticated/_app/dashboard'
     | '/_authenticated/_app/documents'
@@ -1253,7 +1252,9 @@ export interface FileRouteTypes {
     | '/api/projects/$id/submittals'
     | '/api/projects/$id/tenders'
     | '/api/projects/$id/transmittals'
+    | '/_authenticated/_app/builder/'
     | '/_authenticated/_app/clients/'
+    | '/_authenticated/_app/contractor/'
     | '/_authenticated/_app/invoices/'
     | '/_authenticated/_app/marketplace/'
     | '/_authenticated/_app/projects/'
@@ -1489,13 +1490,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Vs5blocVsProcoreRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/_app/builder': {
-      id: '/_authenticated/_app/builder'
-      path: '/builder'
-      fullPath: '/builder'
-      preLoaderRoute: typeof AuthenticatedAppBuilderRouteImport
-      parentRoute: typeof AuthenticatedAppRouteRoute
-    }
     '/_authenticated/_app/cad': {
       id: '/_authenticated/_app/cad'
       path: '/cad'
@@ -1529,13 +1523,6 @@ declare module '@tanstack/react-router' {
       path: '/consultant'
       fullPath: '/consultant'
       preLoaderRoute: typeof AuthenticatedAppConsultantRouteImport
-      parentRoute: typeof AuthenticatedAppRouteRoute
-    }
-    '/_authenticated/_app/contractor': {
-      id: '/_authenticated/_app/contractor'
-      path: '/contractor'
-      fullPath: '/contractor'
-      preLoaderRoute: typeof AuthenticatedAppContractorRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/_app/coordination': {
@@ -1699,12 +1686,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppAiEstimateRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/_app/builder/': {
+      id: '/_authenticated/_app/builder/'
+      path: '/builder'
+      fullPath: '/builder/'
+      preLoaderRoute: typeof AuthenticatedAppBuilderIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/_app/builder/approvals': {
       id: '/_authenticated/_app/builder/approvals'
-      path: '/approvals'
+      path: '/builder/approvals'
       fullPath: '/builder/approvals'
       preLoaderRoute: typeof AuthenticatedAppBuilderApprovalsRouteImport
-      parentRoute: typeof AuthenticatedAppBuilderRoute
+      parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/_app/clients/': {
       id: '/_authenticated/_app/clients/'
@@ -1720,19 +1714,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppClientsIdRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/_app/contractor/': {
+      id: '/_authenticated/_app/contractor/'
+      path: '/contractor'
+      fullPath: '/contractor/'
+      preLoaderRoute: typeof AuthenticatedAppContractorIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/_app/contractor/bids': {
       id: '/_authenticated/_app/contractor/bids'
-      path: '/bids'
+      path: '/contractor/bids'
       fullPath: '/contractor/bids'
       preLoaderRoute: typeof AuthenticatedAppContractorBidsRouteImport
-      parentRoute: typeof AuthenticatedAppContractorRoute
+      parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/_app/contractor/profile': {
       id: '/_authenticated/_app/contractor/profile'
-      path: '/profile'
+      path: '/contractor/profile'
       fullPath: '/contractor/profile'
       preLoaderRoute: typeof AuthenticatedAppContractorProfileRouteImport
-      parentRoute: typeof AuthenticatedAppContractorRoute
+      parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/_app/invoices/': {
       id: '/_authenticated/_app/invoices/'
@@ -2024,46 +2025,12 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthenticatedAppBuilderRouteChildren {
-  AuthenticatedAppBuilderApprovalsRoute: typeof AuthenticatedAppBuilderApprovalsRoute
-}
-
-const AuthenticatedAppBuilderRouteChildren: AuthenticatedAppBuilderRouteChildren =
-  {
-    AuthenticatedAppBuilderApprovalsRoute:
-      AuthenticatedAppBuilderApprovalsRoute,
-  }
-
-const AuthenticatedAppBuilderRouteWithChildren =
-  AuthenticatedAppBuilderRoute._addFileChildren(
-    AuthenticatedAppBuilderRouteChildren,
-  )
-
-interface AuthenticatedAppContractorRouteChildren {
-  AuthenticatedAppContractorBidsRoute: typeof AuthenticatedAppContractorBidsRoute
-  AuthenticatedAppContractorProfileRoute: typeof AuthenticatedAppContractorProfileRoute
-}
-
-const AuthenticatedAppContractorRouteChildren: AuthenticatedAppContractorRouteChildren =
-  {
-    AuthenticatedAppContractorBidsRoute: AuthenticatedAppContractorBidsRoute,
-    AuthenticatedAppContractorProfileRoute:
-      AuthenticatedAppContractorProfileRoute,
-  }
-
-const AuthenticatedAppContractorRouteWithChildren =
-  AuthenticatedAppContractorRoute._addFileChildren(
-    AuthenticatedAppContractorRouteChildren,
-  )
-
 interface AuthenticatedAppRouteRouteChildren {
-  AuthenticatedAppBuilderRoute: typeof AuthenticatedAppBuilderRouteWithChildren
   AuthenticatedAppCadRoute: typeof AuthenticatedAppCadRoute
   AuthenticatedAppCalendarRoute: typeof AuthenticatedAppCalendarRoute
   AuthenticatedAppCatalogRoute: typeof AuthenticatedAppCatalogRoute
   AuthenticatedAppClientRoute: typeof AuthenticatedAppClientRoute
   AuthenticatedAppConsultantRoute: typeof AuthenticatedAppConsultantRoute
-  AuthenticatedAppContractorRoute: typeof AuthenticatedAppContractorRouteWithChildren
   AuthenticatedAppCoordinationRoute: typeof AuthenticatedAppCoordinationRoute
   AuthenticatedAppDashboardRoute: typeof AuthenticatedAppDashboardRoute
   AuthenticatedAppDocumentsRoute: typeof AuthenticatedAppDocumentsRoute
@@ -2073,11 +2040,16 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppAiBuildingCodeRoute: typeof AuthenticatedAppAiBuildingCodeRoute
   AuthenticatedAppAiContractScanRoute: typeof AuthenticatedAppAiContractScanRoute
   AuthenticatedAppAiEstimateRoute: typeof AuthenticatedAppAiEstimateRoute
+  AuthenticatedAppBuilderApprovalsRoute: typeof AuthenticatedAppBuilderApprovalsRoute
   AuthenticatedAppClientsIdRoute: typeof AuthenticatedAppClientsIdRoute
+  AuthenticatedAppContractorBidsRoute: typeof AuthenticatedAppContractorBidsRoute
+  AuthenticatedAppContractorProfileRoute: typeof AuthenticatedAppContractorProfileRoute
   AuthenticatedAppInvoicesNewRoute: typeof AuthenticatedAppInvoicesNewRoute
   AuthenticatedAppMarketplaceIdRoute: typeof AuthenticatedAppMarketplaceIdRoute
   AuthenticatedAppProjectsNewRoute: typeof AuthenticatedAppProjectsNewRoute
+  AuthenticatedAppBuilderIndexRoute: typeof AuthenticatedAppBuilderIndexRoute
   AuthenticatedAppClientsIndexRoute: typeof AuthenticatedAppClientsIndexRoute
+  AuthenticatedAppContractorIndexRoute: typeof AuthenticatedAppContractorIndexRoute
   AuthenticatedAppInvoicesIndexRoute: typeof AuthenticatedAppInvoicesIndexRoute
   AuthenticatedAppMarketplaceIndexRoute: typeof AuthenticatedAppMarketplaceIndexRoute
   AuthenticatedAppProjectsIndexRoute: typeof AuthenticatedAppProjectsIndexRoute
@@ -2100,13 +2072,11 @@ interface AuthenticatedAppRouteRouteChildren {
 }
 
 const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
-  AuthenticatedAppBuilderRoute: AuthenticatedAppBuilderRouteWithChildren,
   AuthenticatedAppCadRoute: AuthenticatedAppCadRoute,
   AuthenticatedAppCalendarRoute: AuthenticatedAppCalendarRoute,
   AuthenticatedAppCatalogRoute: AuthenticatedAppCatalogRoute,
   AuthenticatedAppClientRoute: AuthenticatedAppClientRoute,
   AuthenticatedAppConsultantRoute: AuthenticatedAppConsultantRoute,
-  AuthenticatedAppContractorRoute: AuthenticatedAppContractorRouteWithChildren,
   AuthenticatedAppCoordinationRoute: AuthenticatedAppCoordinationRoute,
   AuthenticatedAppDashboardRoute: AuthenticatedAppDashboardRoute,
   AuthenticatedAppDocumentsRoute: AuthenticatedAppDocumentsRoute,
@@ -2116,11 +2086,17 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppAiBuildingCodeRoute: AuthenticatedAppAiBuildingCodeRoute,
   AuthenticatedAppAiContractScanRoute: AuthenticatedAppAiContractScanRoute,
   AuthenticatedAppAiEstimateRoute: AuthenticatedAppAiEstimateRoute,
+  AuthenticatedAppBuilderApprovalsRoute: AuthenticatedAppBuilderApprovalsRoute,
   AuthenticatedAppClientsIdRoute: AuthenticatedAppClientsIdRoute,
+  AuthenticatedAppContractorBidsRoute: AuthenticatedAppContractorBidsRoute,
+  AuthenticatedAppContractorProfileRoute:
+    AuthenticatedAppContractorProfileRoute,
   AuthenticatedAppInvoicesNewRoute: AuthenticatedAppInvoicesNewRoute,
   AuthenticatedAppMarketplaceIdRoute: AuthenticatedAppMarketplaceIdRoute,
   AuthenticatedAppProjectsNewRoute: AuthenticatedAppProjectsNewRoute,
+  AuthenticatedAppBuilderIndexRoute: AuthenticatedAppBuilderIndexRoute,
   AuthenticatedAppClientsIndexRoute: AuthenticatedAppClientsIndexRoute,
+  AuthenticatedAppContractorIndexRoute: AuthenticatedAppContractorIndexRoute,
   AuthenticatedAppInvoicesIndexRoute: AuthenticatedAppInvoicesIndexRoute,
   AuthenticatedAppMarketplaceIndexRoute: AuthenticatedAppMarketplaceIndexRoute,
   AuthenticatedAppProjectsIndexRoute: AuthenticatedAppProjectsIndexRoute,
