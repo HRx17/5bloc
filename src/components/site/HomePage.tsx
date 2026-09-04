@@ -72,7 +72,7 @@ function AppleNav() {
         borderBottom: scrolled ? '1px solid var(--lp-border)' : '1px solid transparent',
       }}
     >
-      <div className="mx-auto flex h-11 max-w-[980px] items-center justify-between px-5 sm:px-6">
+      <div className="mx-auto flex h-11 max-w-[1180px] items-center justify-between px-5 sm:px-6">
         <Link href="/" className="opacity-90 hover:opacity-100 transition-opacity select-none">
           <Logo size={22} showTagline={false} color="var(--lp-text)" />
         </Link>
@@ -85,7 +85,7 @@ function AppleNav() {
           ))}
         </nav>
 
-        <div className="hidden lg:flex items-center gap-2.5">
+        <div className="hidden lg:flex items-center gap-2.5 ml-6 shrink-0">
           <a href="#architect-waitlist" className="lp-nav-link hidden lg:inline">Architects</a>
           <Link href="/list-your-business" className="lp-btn lp-btn-nav">
             Contractors (free)
