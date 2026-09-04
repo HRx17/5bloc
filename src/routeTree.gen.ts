@@ -59,6 +59,7 @@ import { Route as ApiAiBuildingCodeRouteImport } from './routes/api/ai/building-
 import { Route as ApiAiContractScanRouteImport } from './routes/api/ai/contract-scan'
 import { Route as ApiAiEstimateRouteImport } from './routes/api/ai/estimate'
 import { Route as ApiAiRfiDraftRouteImport } from './routes/api/ai/rfi-draft'
+import { Route as ApiAuthConfirmEmailRouteImport } from './routes/api/auth/confirm-email'
 import { Route as ApiClientsIdRouteImport } from './routes/api/clients/$id'
 import { Route as ApiContractorsIdRouteImport } from './routes/api/contractors/$id'
 import { Route as ApiContractorsArchitectsRouteImport } from './routes/api/contractors/architects'
@@ -412,6 +413,11 @@ const ApiAiEstimateRoute = ApiAiEstimateRouteImport.update({
 const ApiAiRfiDraftRoute = ApiAiRfiDraftRouteImport.update({
   id: '/api/ai/rfi-draft',
   path: '/api/ai/rfi-draft',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthConfirmEmailRoute = ApiAuthConfirmEmailRouteImport.update({
+  id: '/api/auth/confirm-email',
+  path: '/api/auth/confirm-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiClientsIdRoute = ApiClientsIdRouteImport.update({
@@ -1009,6 +1015,7 @@ export interface FileRoutesByFullPath {
   '/api/ai/contract-scan': typeof ApiAiContractScanRoute
   '/api/ai/estimate': typeof ApiAiEstimateRoute
   '/api/ai/rfi-draft': typeof ApiAiRfiDraftRoute
+  '/api/auth/confirm-email': typeof ApiAuthConfirmEmailRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/contractors/$id': typeof ApiContractorsIdRoute
   '/api/contractors/architects': typeof ApiContractorsArchitectsRouteWithChildren
@@ -1156,6 +1163,7 @@ export interface FileRoutesByTo {
   '/api/ai/contract-scan': typeof ApiAiContractScanRoute
   '/api/ai/estimate': typeof ApiAiEstimateRoute
   '/api/ai/rfi-draft': typeof ApiAiRfiDraftRoute
+  '/api/auth/confirm-email': typeof ApiAuthConfirmEmailRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/contractors/$id': typeof ApiContractorsIdRoute
   '/api/contractors/architects': typeof ApiContractorsArchitectsRouteWithChildren
@@ -1306,6 +1314,7 @@ export interface FileRoutesById {
   '/api/ai/contract-scan': typeof ApiAiContractScanRoute
   '/api/ai/estimate': typeof ApiAiEstimateRoute
   '/api/ai/rfi-draft': typeof ApiAiRfiDraftRoute
+  '/api/auth/confirm-email': typeof ApiAuthConfirmEmailRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/contractors/$id': typeof ApiContractorsIdRoute
   '/api/contractors/architects': typeof ApiContractorsArchitectsRouteWithChildren
@@ -1455,6 +1464,7 @@ export interface FileRouteTypes {
     | '/api/ai/contract-scan'
     | '/api/ai/estimate'
     | '/api/ai/rfi-draft'
+    | '/api/auth/confirm-email'
     | '/api/clients/$id'
     | '/api/contractors/$id'
     | '/api/contractors/architects'
@@ -1602,6 +1612,7 @@ export interface FileRouteTypes {
     | '/api/ai/contract-scan'
     | '/api/ai/estimate'
     | '/api/ai/rfi-draft'
+    | '/api/auth/confirm-email'
     | '/api/clients/$id'
     | '/api/contractors/$id'
     | '/api/contractors/architects'
@@ -1751,6 +1762,7 @@ export interface FileRouteTypes {
     | '/api/ai/contract-scan'
     | '/api/ai/estimate'
     | '/api/ai/rfi-draft'
+    | '/api/auth/confirm-email'
     | '/api/clients/$id'
     | '/api/contractors/$id'
     | '/api/contractors/architects'
@@ -1889,6 +1901,7 @@ export interface RootRouteChildren {
   ApiAiContractScanRoute: typeof ApiAiContractScanRoute
   ApiAiEstimateRoute: typeof ApiAiEstimateRoute
   ApiAiRfiDraftRoute: typeof ApiAiRfiDraftRoute
+  ApiAuthConfirmEmailRoute: typeof ApiAuthConfirmEmailRoute
   ApiFilesBlobRoute: typeof ApiFilesBlobRoute
   ApiFilesDownloadRoute: typeof ApiFilesDownloadRoute
   ApiFilesUploadRoute: typeof ApiFilesUploadRoute
@@ -2276,6 +2289,13 @@ declare module '@tanstack/react-router' {
       path: '/api/ai/rfi-draft'
       fullPath: '/api/ai/rfi-draft'
       preLoaderRoute: typeof ApiAiRfiDraftRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/confirm-email': {
+      id: '/api/auth/confirm-email'
+      path: '/api/auth/confirm-email'
+      fullPath: '/api/auth/confirm-email'
+      preLoaderRoute: typeof ApiAuthConfirmEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/clients/$id': {
@@ -3292,6 +3312,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiContractScanRoute: ApiAiContractScanRoute,
   ApiAiEstimateRoute: ApiAiEstimateRoute,
   ApiAiRfiDraftRoute: ApiAiRfiDraftRoute,
+  ApiAuthConfirmEmailRoute: ApiAuthConfirmEmailRoute,
   ApiFilesBlobRoute: ApiFilesBlobRoute,
   ApiFilesDownloadRoute: ApiFilesDownloadRoute,
   ApiFilesUploadRoute: ApiFilesUploadRoute,
