@@ -9,10 +9,10 @@ const handleGET = async ({ request }: any) => {
   const auth = await getAuthUserOrNull(request)
   const user = auth?.user ?? null
   const supabase = auth?.supabase as any
-  if (!user) return Response.redirect((new URL('/login', request.url))
+  if (!user) return Response.redirect(new URL('/login', request.url)))
 
   if (!process.env.AUTODESK_CLIENT_ID) {
-    return Response.redirect((new URL('/integrations?error=autodesk_not_configured', request.url))
+    return Response.redirect(new URL('/integrations?error=autodesk_not_configured', request.url)))
   }
 
   try {
@@ -23,7 +23,7 @@ const handleGET = async ({ request }: any) => {
     return Response.redirect(authUrl)
   } catch (e) {
     console.error('Autodesk connect error:', e)
-    return Response.redirect((new URL('/integrations?error=autodesk_not_configured', request.url))
+    return Response.redirect(new URL('/integrations?error=autodesk_not_configured', request.url)))
   }
 }
 
