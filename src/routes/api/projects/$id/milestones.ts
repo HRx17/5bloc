@@ -2,10 +2,9 @@ import { createFileRoute } from '@tanstack/react-router'
 import { getAuthUserOrNull, json } from '@/lib/api/get-user.server'
 import { milestoneRead, milestoneWrite } from '@/lib/supabase/schema-map'
 
-type Ctx = { params: Promise<{ id: string }> }
 
-const handleGET = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handleGET = async ({ request, params }: any) => {
+  const { id } = params as { id: string }
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -19,8 +18,8 @@ const handleGET = async ({ request }: any) => {
   return json({ milestones: (data || []).map(milestoneRead) })
 }
 
-const handlePATCH = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handlePATCH = async ({ request, params }: any) => {
+  const { id } = params as { id: string }
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
   if (auth.profile.role !== 'architect' && auth.profile.role !== 'builder') {

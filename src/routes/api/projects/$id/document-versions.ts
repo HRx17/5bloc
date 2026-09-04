@@ -2,10 +2,9 @@ import { createFileRoute } from '@tanstack/react-router'
 import { getAuthUserOrNull, json } from '@/lib/api/get-user.server'
 import { documentRead } from '@/lib/supabase/schema-map'
 
-type Ctx = { params: Promise<{ id: string }> }
 
-const handleGET = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handleGET = async ({ request, params }: any) => {
+  const { id } = params as { id: string }
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -64,8 +63,8 @@ const handleGET = async ({ request }: any) => {
   })
 }
 
-const handlePOST = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handlePOST = async ({ request, params }: any) => {
+  const { id } = params as { id: string }
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
 

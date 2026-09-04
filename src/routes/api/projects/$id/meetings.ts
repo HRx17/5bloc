@@ -10,7 +10,6 @@ import {
   reminderAlreadyDue,
 } from '@/lib/meetings/normalize'
 
-type Ctx = { params: Promise<{ id: string }> }
 
 function parseReminderMinutes(value: unknown): number {
   const n = Number(value)
@@ -59,8 +58,8 @@ function buildInsertPayload(id: string, orgId: string | null | undefined, create
   return { base, scheduled, attendees, decisions, actionItems, notes, startsAt, meetingDate, reminderMinutes, status, attendeeEmails }
 }
 
-const handleGET = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handleGET = async ({ request, params }: any) => {
+  const { id } = params as { id: string }
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -80,8 +79,8 @@ const handleGET = async ({ request }: any) => {
   return json({ meetings: (data || []).map(normalizeMeeting) })
 }
 
-const handlePOST = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handlePOST = async ({ request, params }: any) => {
+  const { id } = params as { id: string }
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -131,8 +130,8 @@ const handlePOST = async ({ request }: any) => {
   return json({ meeting: normalizeMeeting(data) }, { status: 201 })
 }
 
-const handlePATCH = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handlePATCH = async ({ request, params }: any) => {
+  const { id } = params as { id: string }
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
 

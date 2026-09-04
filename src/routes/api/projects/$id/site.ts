@@ -1,7 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { getAuthUserOrNull, json } from '@/lib/api/get-user.server'
 
-type Ctx = { params: Promise<{ id: string }> }
 
 function normalizeVisit(row: any) {
   if (!row) return row
@@ -13,8 +12,8 @@ function normalizeVisit(row: any) {
   }
 }
 
-const handleGET = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handleGET = async ({ request, params }: any) => {
+  const { id } = params as { id: string }
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -49,8 +48,8 @@ const handleGET = async ({ request }: any) => {
   })
 }
 
-const handlePOST = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handlePOST = async ({ request, params }: any) => {
+  const { id } = params as { id: string }
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -133,8 +132,8 @@ const handlePOST = async ({ request }: any) => {
   return json({ punch: data }, { status: 201 })
 }
 
-const handlePATCH = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handlePATCH = async ({ request, params }: any) => {
+  const { id } = params as { id: string }
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
   const body = await request.json()

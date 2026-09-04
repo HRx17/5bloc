@@ -4,10 +4,9 @@ import { notifyUser } from '@/lib/notifications/notify'
 import { send } from '@/lib/email/resend'
 import { RFICreatedEmail } from '@/lib/email/templates'
 
-type Ctx = { params: Promise<{ id: string }> }
 
-const handleGET = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handleGET = async ({ request, params }: any) => {
+  const { id } = params as { id: string }
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -22,8 +21,8 @@ const handleGET = async ({ request }: any) => {
   return json({ rfis: data || [] })
 }
 
-const handlePOST = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handlePOST = async ({ request, params }: any) => {
+  const { id } = params as { id: string }
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -129,8 +128,8 @@ const handlePOST = async ({ request }: any) => {
   return json({ rfi: data }, { status: 201 })
 }
 
-const handlePATCH = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handlePATCH = async ({ request, params }: any) => {
+  const { id } = params as { id: string }
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
 
