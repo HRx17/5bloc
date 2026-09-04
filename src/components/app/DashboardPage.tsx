@@ -400,7 +400,6 @@ export default function DashboardPage() {
                       <tr
                         key={p.id}
                         className="cursor-pointer"
-                        onClick={() => navigate({ to: `/projects/${p.id}` })}
                       >
                         <td>
                           <Link href={`/projects/${p.id}`} className="font-semibold">
