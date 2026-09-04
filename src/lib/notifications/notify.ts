@@ -23,19 +23,6 @@ export async function notifyUser(
   opts?: { mock?: boolean }
 ) {
   try {
-    if (opts?.mock) {
-      MOCK_NOTIFICATIONS.unshift({
-        id: `n-${Date.now()}`,
-        user_id: input.userId,
-        title: input.title,
-        body: input.body || '',
-        type: input.type || 'info',
-        href: input.href || null,
-        read_at: null,
-        created_at: new Date().toISOString(),
-      } as any)
-      return
-    }
     if (!supabase) {
       const svc = serviceClient()
       if (!svc) return

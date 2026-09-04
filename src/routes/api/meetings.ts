@@ -18,9 +18,9 @@ const handleGET = async ({ request }: any) => {
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
 
-  const upcoming = req.nextUrl.searchParams.get('upcoming') === '1'
-  const from = req.nextUrl.searchParams.get('from')
-  const to = req.nextUrl.searchParams.get('to')
+  const upcoming = request.nextUrl.searchParams.get('upcoming') === '1'
+  const from = request.nextUrl.searchParams.get('from')
+  const to = request.nextUrl.searchParams.get('to')
 
 
   const ids = await visibleProjectIds(auth)
