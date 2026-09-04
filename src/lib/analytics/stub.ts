@@ -6,6 +6,8 @@ type Props = Record<string, unknown>;
 
 export const analytics = {
   track(_event: string, _props?: Props) {},
+  trackEvent(_event: string, _props?: Props) {},
+  trackPageView(_name?: string, _props?: Props) {},
   setIdentity(_id: string, _props?: Props) {},
   identify(_id: string, _props?: Props) {},
   page(_name?: string, _props?: Props) {},
