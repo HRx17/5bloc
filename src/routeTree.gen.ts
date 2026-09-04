@@ -34,9 +34,15 @@ import { Route as ApiTendersRouteImport } from './routes/api/tenders'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as Vs5blocVsFieldwireRouteImport } from './routes/vs/5bloc-vs-fieldwire'
 import { Route as Vs5blocVsProcoreRouteImport } from './routes/vs/5bloc-vs-procore'
+import { Route as AuthenticatedAppCadRouteImport } from './routes/_authenticated/_app/cad'
+import { Route as AuthenticatedAppCalendarRouteImport } from './routes/_authenticated/_app/calendar'
+import { Route as AuthenticatedAppCatalogRouteImport } from './routes/_authenticated/_app/catalog'
+import { Route as AuthenticatedAppCoordinationRouteImport } from './routes/_authenticated/_app/coordination'
 import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authenticated/_app/dashboard'
 import { Route as AuthenticatedAppDocumentsRouteImport } from './routes/_authenticated/_app/documents'
+import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_authenticated/_app/integrations'
 import { Route as AuthenticatedAppMessagesRouteImport } from './routes/_authenticated/_app/messages'
+import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/_app/settings'
 import { Route as ApiClientsIdRouteImport } from './routes/api/clients/$id'
 import { Route as ApiContractorsIdRouteImport } from './routes/api/contractors/$id'
 import { Route as ApiContractorsArchitectsRouteImport } from './routes/api/contractors/architects'
@@ -215,6 +221,28 @@ const Vs5blocVsProcoreRoute = Vs5blocVsProcoreRouteImport.update({
   path: '/vs/5bloc-vs-procore',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAppCadRoute = AuthenticatedAppCadRouteImport.update({
+  id: '/cad',
+  path: '/cad',
+  getParentRoute: () => AuthenticatedAppRouteRoute,
+} as any)
+const AuthenticatedAppCalendarRoute =
+  AuthenticatedAppCalendarRouteImport.update({
+    id: '/calendar',
+    path: '/calendar',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppCatalogRoute = AuthenticatedAppCatalogRouteImport.update({
+  id: '/catalog',
+  path: '/catalog',
+  getParentRoute: () => AuthenticatedAppRouteRoute,
+} as any)
+const AuthenticatedAppCoordinationRoute =
+  AuthenticatedAppCoordinationRouteImport.update({
+    id: '/coordination',
+    path: '/coordination',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppDashboardRoute =
   AuthenticatedAppDashboardRouteImport.update({
     id: '/dashboard',
@@ -227,10 +255,22 @@ const AuthenticatedAppDocumentsRoute =
     path: '/documents',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppIntegrationsRoute =
+  AuthenticatedAppIntegrationsRouteImport.update({
+    id: '/integrations',
+    path: '/integrations',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppMessagesRoute =
   AuthenticatedAppMessagesRouteImport.update({
     id: '/messages',
     path: '/messages',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppSettingsRoute =
+  AuthenticatedAppSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const ApiClientsIdRoute = ApiClientsIdRouteImport.update({
@@ -560,9 +600,15 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/vs/5bloc-vs-fieldwire': typeof Vs5blocVsFieldwireRoute
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
+  '/cad': typeof AuthenticatedAppCadRoute
+  '/calendar': typeof AuthenticatedAppCalendarRoute
+  '/catalog': typeof AuthenticatedAppCatalogRoute
+  '/coordination': typeof AuthenticatedAppCoordinationRoute
   '/dashboard': typeof AuthenticatedAppDashboardRoute
   '/documents': typeof AuthenticatedAppDocumentsRoute
+  '/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/messages': typeof AuthenticatedAppMessagesRoute
+  '/settings': typeof AuthenticatedAppSettingsRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/contractors/$id': typeof ApiContractorsIdRoute
   '/api/contractors/architects': typeof ApiContractorsArchitectsRouteWithChildren
@@ -642,9 +688,15 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/vs/5bloc-vs-fieldwire': typeof Vs5blocVsFieldwireRoute
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
+  '/cad': typeof AuthenticatedAppCadRoute
+  '/calendar': typeof AuthenticatedAppCalendarRoute
+  '/catalog': typeof AuthenticatedAppCatalogRoute
+  '/coordination': typeof AuthenticatedAppCoordinationRoute
   '/dashboard': typeof AuthenticatedAppDashboardRoute
   '/documents': typeof AuthenticatedAppDocumentsRoute
+  '/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/messages': typeof AuthenticatedAppMessagesRoute
+  '/settings': typeof AuthenticatedAppSettingsRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/contractors/$id': typeof ApiContractorsIdRoute
   '/api/contractors/architects': typeof ApiContractorsArchitectsRouteWithChildren
@@ -727,9 +779,15 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/vs/5bloc-vs-fieldwire': typeof Vs5blocVsFieldwireRoute
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
+  '/_authenticated/_app/cad': typeof AuthenticatedAppCadRoute
+  '/_authenticated/_app/calendar': typeof AuthenticatedAppCalendarRoute
+  '/_authenticated/_app/catalog': typeof AuthenticatedAppCatalogRoute
+  '/_authenticated/_app/coordination': typeof AuthenticatedAppCoordinationRoute
   '/_authenticated/_app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/_authenticated/_app/documents': typeof AuthenticatedAppDocumentsRoute
+  '/_authenticated/_app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/_authenticated/_app/messages': typeof AuthenticatedAppMessagesRoute
+  '/_authenticated/_app/settings': typeof AuthenticatedAppSettingsRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/contractors/$id': typeof ApiContractorsIdRoute
   '/api/contractors/architects': typeof ApiContractorsArchitectsRouteWithChildren
@@ -811,9 +869,15 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/vs/5bloc-vs-fieldwire'
     | '/vs/5bloc-vs-procore'
+    | '/cad'
+    | '/calendar'
+    | '/catalog'
+    | '/coordination'
     | '/dashboard'
     | '/documents'
+    | '/integrations'
     | '/messages'
+    | '/settings'
     | '/api/clients/$id'
     | '/api/contractors/$id'
     | '/api/contractors/architects'
@@ -893,9 +957,15 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/vs/5bloc-vs-fieldwire'
     | '/vs/5bloc-vs-procore'
+    | '/cad'
+    | '/calendar'
+    | '/catalog'
+    | '/coordination'
     | '/dashboard'
     | '/documents'
+    | '/integrations'
     | '/messages'
+    | '/settings'
     | '/api/clients/$id'
     | '/api/contractors/$id'
     | '/api/contractors/architects'
@@ -977,9 +1047,15 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/vs/5bloc-vs-fieldwire'
     | '/vs/5bloc-vs-procore'
+    | '/_authenticated/_app/cad'
+    | '/_authenticated/_app/calendar'
+    | '/_authenticated/_app/catalog'
+    | '/_authenticated/_app/coordination'
     | '/_authenticated/_app/dashboard'
     | '/_authenticated/_app/documents'
+    | '/_authenticated/_app/integrations'
     | '/_authenticated/_app/messages'
+    | '/_authenticated/_app/settings'
     | '/api/clients/$id'
     | '/api/contractors/$id'
     | '/api/contractors/architects'
@@ -1246,6 +1322,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Vs5blocVsProcoreRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/_app/cad': {
+      id: '/_authenticated/_app/cad'
+      path: '/cad'
+      fullPath: '/cad'
+      preLoaderRoute: typeof AuthenticatedAppCadRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/calendar': {
+      id: '/_authenticated/_app/calendar'
+      path: '/calendar'
+      fullPath: '/calendar'
+      preLoaderRoute: typeof AuthenticatedAppCalendarRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/catalog': {
+      id: '/_authenticated/_app/catalog'
+      path: '/catalog'
+      fullPath: '/catalog'
+      preLoaderRoute: typeof AuthenticatedAppCatalogRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/coordination': {
+      id: '/_authenticated/_app/coordination'
+      path: '/coordination'
+      fullPath: '/coordination'
+      preLoaderRoute: typeof AuthenticatedAppCoordinationRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/_app/dashboard': {
       id: '/_authenticated/_app/dashboard'
       path: '/dashboard'
@@ -1260,11 +1364,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppDocumentsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/_app/integrations': {
+      id: '/_authenticated/_app/integrations'
+      path: '/integrations'
+      fullPath: '/integrations'
+      preLoaderRoute: typeof AuthenticatedAppIntegrationsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/_app/messages': {
       id: '/_authenticated/_app/messages'
       path: '/messages'
       fullPath: '/messages'
       preLoaderRoute: typeof AuthenticatedAppMessagesRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/settings': {
+      id: '/_authenticated/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/api/clients/$id': {
@@ -1649,9 +1767,15 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAppRouteRouteChildren {
+  AuthenticatedAppCadRoute: typeof AuthenticatedAppCadRoute
+  AuthenticatedAppCalendarRoute: typeof AuthenticatedAppCalendarRoute
+  AuthenticatedAppCatalogRoute: typeof AuthenticatedAppCatalogRoute
+  AuthenticatedAppCoordinationRoute: typeof AuthenticatedAppCoordinationRoute
   AuthenticatedAppDashboardRoute: typeof AuthenticatedAppDashboardRoute
   AuthenticatedAppDocumentsRoute: typeof AuthenticatedAppDocumentsRoute
+  AuthenticatedAppIntegrationsRoute: typeof AuthenticatedAppIntegrationsRoute
   AuthenticatedAppMessagesRoute: typeof AuthenticatedAppMessagesRoute
+  AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppClientsIdRoute: typeof AuthenticatedAppClientsIdRoute
   AuthenticatedAppInvoicesNewRoute: typeof AuthenticatedAppInvoicesNewRoute
   AuthenticatedAppMarketplaceIdRoute: typeof AuthenticatedAppMarketplaceIdRoute
@@ -1679,9 +1803,15 @@ interface AuthenticatedAppRouteRouteChildren {
 }
 
 const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
+  AuthenticatedAppCadRoute: AuthenticatedAppCadRoute,
+  AuthenticatedAppCalendarRoute: AuthenticatedAppCalendarRoute,
+  AuthenticatedAppCatalogRoute: AuthenticatedAppCatalogRoute,
+  AuthenticatedAppCoordinationRoute: AuthenticatedAppCoordinationRoute,
   AuthenticatedAppDashboardRoute: AuthenticatedAppDashboardRoute,
   AuthenticatedAppDocumentsRoute: AuthenticatedAppDocumentsRoute,
+  AuthenticatedAppIntegrationsRoute: AuthenticatedAppIntegrationsRoute,
   AuthenticatedAppMessagesRoute: AuthenticatedAppMessagesRoute,
+  AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppClientsIdRoute: AuthenticatedAppClientsIdRoute,
   AuthenticatedAppInvoicesNewRoute: AuthenticatedAppInvoicesNewRoute,
   AuthenticatedAppMarketplaceIdRoute: AuthenticatedAppMarketplaceIdRoute,
