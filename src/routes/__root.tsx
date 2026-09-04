@@ -103,11 +103,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   errorComponent: ErrorComponent,
 });
 
-function RootShell({ children }: { children: ReactNode }) {
-  useEffect(() => {
-    installAuthedFetch();
-  }, []);
+// Patch before any component effect runs, so the first /api call carries the token.
+installAuthedFetch();
 
+function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className="h-full">
       <head>
