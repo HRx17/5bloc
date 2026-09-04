@@ -101,6 +101,34 @@ export async function getAuthUserOrNull(request: Request): Promise<AuthContext |
   }
 }
 
+/**
+ * Same as `getAuthUserOrNull`, but also accepts the access token as a `t` query
+ * parameter. Needed for top-level browser navigations (OAuth connect flows),
+ * which cannot carry an Authorization header.
+ */
+export async function getAuthUserFromQueryToken(request: Request): Promise<AuthContext | null> {
+  const fromHeader = await getAuthUserOrNull(request)
+  if (fromHeader) return fromHeader
+
+  const token = new URL(request.url).searchParams.get('t')
+  if (!token) return null
+
+  const supabase = userClient(token)
+  const { data, error } = await supabase.auth.getUser(token)
+  if (error || !data?.user) return null
+
+  const profile = await loadProfile(supabase, data.user.id)
+  if (!profile) return null
+
+  return {
+    user: { id: data.user.id, email: data.user.email },
+    profile,
+    supabase,
+    orgId: profile.org_id ?? null,
+    isMock: false,
+  }
+}
+
 export function json(body: unknown, init?: ResponseInit) {
   return new Response(JSON.stringify(body), {
     ...init,
