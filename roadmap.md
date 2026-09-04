@@ -67,9 +67,14 @@ framework, keeping the same design, content and behaviour.
   is_conversation_member, get_or_create_project_channel,
   list_project_channel_messages, post_project_channel_message
   (authenticated-only execute).
-- App pages (remaining): project portal tab,
-  calendar, catalog, CAD, AI tools, integrations, settings,
-  role dashboards (builder, contractor, consultant, client), admin.
+- Done: project portal tab, calendar, catalog, CAD, integrations, coordination,
+  settings, role dashboards (builder + approvals, client, consultant,
+  contractor + bids + profile), AI tools (estimate, contract-scan,
+  building-code) with endpoints under api/ai/*.
+- AI now runs on the platform AI gateway (`src/lib/ai/client.ts`, completeText);
+  rate limiting is in-process (no external cache service).
+- App pages (remaining): admin pages, public portal/pay token pages.
+
 
 
 - Client portal + payment link pages (`/portal/:token`, `/pay/:token`).
