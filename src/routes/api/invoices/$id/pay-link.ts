@@ -2,18 +2,15 @@ import { createFileRoute } from '@tanstack/react-router'
 import { getAuthUserOrNull, json } from '@/lib/api/get-user.server'
 import { signInvoicePayToken } from '@/lib/payments/invoice-pay-token'
 
-type Ctx = { params: Promise<{ id: string }> }
 
-const handleGET = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handleGET = async ({ request, params }: any) => {
+  const { id } = params as { id: string }
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
   if (auth.profile.role !== 'architect') {
     return json({ error: 'Forbidden' }, { status: 403 })
   }
- else if (!hasSupabaseEnv() || !auth.supabase) {
-    return json(liveDataUnavailableResponse(), { status: 503 })
-  } else {
+  {
     const { data, error } = await auth.supabase
       .from('invoices')
       .select('id')
@@ -24,7 +21,7 @@ const handleGET = async ({ request }: any) => {
     if (!data) return json({ error: 'Not found' }, { status: 404 })
   }
 
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || '').replace(/\/$/, '')
+  const appUrl = new URL(request.url).origin
   if (!appUrl) {
     return json(
       { error: 'NEXT_PUBLIC_APP_URL is not set — cannot build a payment link.' },

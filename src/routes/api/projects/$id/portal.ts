@@ -1,10 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { getAuthUserOrNull, json } from '@/lib/api/get-user.server'
 
-type Ctx = { params: Promise<{ id: string }> }
 
-const handleGET = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handleGET = async ({ request, params }: any) => {
+  const { id } = params as { id: string }
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
   if (auth.profile.role !== 'architect') {
@@ -22,8 +21,8 @@ const handleGET = async ({ request }: any) => {
   return json({ settings, project })
 }
 
-const handlePUT = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handlePUT = async ({ request, params }: any) => {
+  const { id } = params as { id: string }
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
   if (auth.profile.role !== 'architect') {

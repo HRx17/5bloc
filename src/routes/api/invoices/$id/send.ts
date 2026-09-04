@@ -4,10 +4,9 @@ import { send } from '@/lib/email/resend'
 import { InvoiceEmail } from '@/lib/email/templates'
 import { signInvoicePayToken } from '@/lib/payments/invoice-pay-token'
 
-type Ctx = { params: Promise<{ id: string }> }
 
-const handlePOST = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handlePOST = async ({ request, params }: any) => {
+  const { id } = params as { id: string }
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
   if (auth.profile.role !== 'architect') {
@@ -16,9 +15,7 @@ const handlePOST = async ({ request }: any) => {
 
   let invoice: any = null
   let clientEmail: string | null = null
- else if (!hasSupabaseEnv() || !auth.supabase) {
-    return json(liveDataUnavailableResponse(), { status: 503 })
-  } else {
+  {
     const { data, error } = await auth.supabase
       .from('invoices')
       .select('*')
@@ -46,7 +43,7 @@ const handlePOST = async ({ request }: any) => {
     )
   }
 
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || '').replace(/\/$/, '')
+  const appUrl = new URL(request.url).origin
   if (!appUrl) {
     return json(
       { error: 'NEXT_PUBLIC_APP_URL is not set — cannot build a payment link for the email.' },

@@ -128,7 +128,7 @@ const handlePOST = async ({ request }: any) => {
   }
   if (error) return json({ error: error.message }, { status: 500 })
 
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || '').replace(/\/$/, '')
+  const appUrl = new URL(request.url).origin
   if (!appUrl) {
     return json(
       { error: 'NEXT_PUBLIC_APP_URL is not set — cannot build an invite link.' },

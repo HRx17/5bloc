@@ -51,7 +51,7 @@ const handlePOST = async ({ request }: any) => {
     .eq('id', project_id)
     .single()
 
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || '').replace(/\/$/, '')
+  const appUrl = new URL(request.url).origin
   if (!appUrl) {
     return json(
       { error: 'NEXT_PUBLIC_APP_URL is not set — cannot build an invite link.' },

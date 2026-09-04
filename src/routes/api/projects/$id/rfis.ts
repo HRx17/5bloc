@@ -74,7 +74,7 @@ const handlePOST = async ({ request, params }: any) => {
     entity_name: data.title,
   })
 
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://app.5bloc.com').replace(/\/$/, '')
+  const appUrl = new URL(request.url).origin
   const viewUrl = `${appUrl}/projects/${id}/rfis`
   const dueLabel = data.due_date || 'Not set'
   const rfiHtml = RFICreatedEmail(
