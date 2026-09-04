@@ -52,7 +52,14 @@ export const completeOnboarding = createServerFn({ method: 'POST' })
       profileId = created.id
     }
 
-    const updates: Record<string, unknown> = {
+    const updates: {
+      role: string
+      full_name: string
+      phone: string | null
+      onboarded_at: string
+      org_id?: string
+      discipline?: string
+    } = {
       role: data.role,
       full_name: data.full_name,
       phone: data.phone ?? null,
@@ -77,7 +84,7 @@ export const completeOnboarding = createServerFn({ method: 'POST' })
         .select('id')
         .single()
       if (orgError) throw new Error(orgError.message)
-      updates['org_id'] = org.id
+      updates.org_id = org.id
       await supabase.from('organisation_members').upsert(
         { org_id: org.id, profile_id: profileId, member_role: 'owner', status: 'active' },
         { onConflict: 'org_id,profile_id' },
@@ -85,7 +92,7 @@ export const completeOnboarding = createServerFn({ method: 'POST' })
     }
 
     if (data.role === 'consultant' && data.discipline) {
-      updates['discipline'] = data.discipline
+      updates.discipline = data.discipline
     }
 
     const { error: updateError } = await supabase
