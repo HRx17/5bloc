@@ -3,7 +3,7 @@ import { getAuthUserOrNull, json } from '@/lib/api/get-user.server'
 
 /** Detail view of a single posted project so contractors can evaluate before bidding. */
 const handleGET = async ({ request, params }: any) => {
-  const { id } = await ctx.params
+  const { id } = (params as any)
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
 

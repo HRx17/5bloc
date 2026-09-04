@@ -6,8 +6,8 @@ import { isTestAccount, type ArchitectListing } from '@/lib/marketplace/listings
 type Ctx = { params: Promise<{ id: string }> }
 
 /** One architect plus their firm and the projects they currently have open for bidding. */
-const handleGET = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handleGET = async ({ request, params }: any) => {
+  const { id } = (params as any)
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
 

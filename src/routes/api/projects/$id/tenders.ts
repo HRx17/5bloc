@@ -3,7 +3,7 @@ import { getAuthUserOrNull, json } from '@/lib/api/get-user.server'
 
 /** Create a tender scoped to a project (architect). */
 const handlePOST = async ({ request, params }: any) => {
-  const { id: projectId } = await ctx.params
+  const { id: projectId } = (params as any)
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
   if (auth.profile.role !== 'architect') {
@@ -64,7 +64,7 @@ const handlePOST = async ({ request, params }: any) => {
 }
 
 const handleGET = async ({ request, params }: any) => {
-  const { id: projectId } = await ctx.params
+  const { id: projectId } = (params as any)
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
 
