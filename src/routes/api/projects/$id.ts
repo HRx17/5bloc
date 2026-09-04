@@ -1,12 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { getAuthUserOrNull, json } from '@/lib/api/get-user.server'
-import {
-  MOCK_PROJECTS,
-  MOCK_MILESTONES,
-  MOCK_MEMBERS,
-  MOCK_DOCUMENTS,
-  MOCK_RFIS,
-} from '@/lib/data/mock-store'
 import { milestoneRead } from '@/lib/supabase/schema-map'
 
 type Ctx = { params: Promise<{ id: string }> }
@@ -44,8 +37,8 @@ function normalizeProject(project: any) {
   }
 }
 
-const handleGET = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handleGET = async ({ request, params }: any) => {
+  const { id } = params
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -80,8 +73,8 @@ const handleGET = async ({ request }: any) => {
   })
 }
 
-const handlePATCH = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handlePATCH = async ({ request, params }: any) => {
+  const { id } = params
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
   if (auth.profile.role !== 'architect' && auth.profile.role !== 'builder') {
