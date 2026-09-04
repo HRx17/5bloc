@@ -27,8 +27,7 @@ const handleGET = async ({ request }: any) => {
   // Marketplace browse is public to authenticated users
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
 
-  let rows: any[]
- else {
+  let rows: any[] {
     let query = auth.supabase.from('contractors').select('*')
     if (mine) query = query.eq('user_id', auth.profile.id)
     if (verified === '1') query = query.eq('verified', true)
@@ -37,7 +36,7 @@ const handleGET = async ({ request }: any) => {
     rows = data || []
   }
 
-  const index = shouldServeMockData(auth) ? undefined : await loadSignupIndex(auth.supabase)
+  const index = await loadSignupIndex(auth.supabase)
   // Architects are the ones who invite a business into a project, so only they get the contact channel.
   const canSeeContact = auth.profile.role === 'architect' || mine
 

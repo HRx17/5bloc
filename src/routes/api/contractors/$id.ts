@@ -10,15 +10,14 @@ const handleGET = async ({ request }: any) => {
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
 
-  let row: any = null
- else {
+  let row: any = null {
     const { data, error } = await auth.supabase.from('contractors').select('*').eq('id', id).maybeSingle()
     if (error) return json({ error: error.message }, { status: 500 })
     if (!data) return json({ error: 'Not found' }, { status: 404 })
     row = data
   }
 
-  const index = shouldServeMockData(auth) ? undefined : await loadSignupIndex(auth.supabase)
+  const index = await loadSignupIndex(auth.supabase)
   let listing = toListing(row, index)
 
   // Architects need a contact address to send a project invitation; the owner sees their own.
