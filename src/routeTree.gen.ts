@@ -36,12 +36,14 @@ import { Route as Vs5blocVsFieldwireRouteImport } from './routes/vs/5bloc-vs-fie
 import { Route as Vs5blocVsProcoreRouteImport } from './routes/vs/5bloc-vs-procore'
 import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authenticated/_app/dashboard'
 import { Route as AuthenticatedAppDocumentsRouteImport } from './routes/_authenticated/_app/documents'
+import { Route as AuthenticatedAppMessagesRouteImport } from './routes/_authenticated/_app/messages'
 import { Route as ApiClientsIdRouteImport } from './routes/api/clients/$id'
 import { Route as ApiContractorsIdRouteImport } from './routes/api/contractors/$id'
 import { Route as ApiContractorsArchitectsRouteImport } from './routes/api/contractors/architects'
 import { Route as ApiFilesDownloadRouteImport } from './routes/api/files/download'
 import { Route as ApiFilesUploadRouteImport } from './routes/api/files/upload'
 import { Route as ApiInvoicesIdRouteImport } from './routes/api/invoices/$id'
+import { Route as ApiMessagesConversationsRouteImport } from './routes/api/messages/conversations'
 import { Route as ApiOrgStudioProjectRouteImport } from './routes/api/org/studio-project'
 import { Route as ApiOrgTeamRouteImport } from './routes/api/org/team'
 import { Route as ApiProjectsIdRouteImport } from './routes/api/projects/$id'
@@ -55,6 +57,7 @@ import { Route as AuthenticatedAppMarketplaceIdRouteImport } from './routes/_aut
 import { Route as AuthenticatedAppProjectsIndexRouteImport } from './routes/_authenticated/_app/projects/index'
 import { Route as AuthenticatedAppProjectsNewRouteImport } from './routes/_authenticated/_app/projects/new'
 import { Route as ApiContractorsArchitectsIdRouteImport } from './routes/api/contractors/architects/$id'
+import { Route as ApiMessagesUsersSearchRouteImport } from './routes/api/messages/users/search'
 import { Route as ApiProjectsIdConsultantPaymentsRouteImport } from './routes/api/projects/$id/consultant-payments'
 import { Route as ApiProjectsIdDocumentAnnotationsRouteImport } from './routes/api/projects/$id/document-annotations'
 import { Route as ApiProjectsIdDocumentVersionsRouteImport } from './routes/api/projects/$id/document-versions'
@@ -63,6 +66,7 @@ import { Route as ApiProjectsIdExpensesRouteImport } from './routes/api/projects
 import { Route as ApiProjectsIdIssuesRouteImport } from './routes/api/projects/$id/issues'
 import { Route as ApiProjectsIdMeetingsRouteImport } from './routes/api/projects/$id/meetings'
 import { Route as ApiProjectsIdMembersRouteImport } from './routes/api/projects/$id/members'
+import { Route as ApiProjectsIdMessagesRouteImport } from './routes/api/projects/$id/messages'
 import { Route as ApiProjectsIdMilestonesRouteImport } from './routes/api/projects/$id/milestones'
 import { Route as ApiProjectsIdPermitsRouteImport } from './routes/api/projects/$id/permits'
 import { Route as ApiProjectsIdRfisRouteImport } from './routes/api/projects/$id/rfis'
@@ -77,6 +81,7 @@ import { Route as AuthenticatedAppProjectsIdDocumentsRouteImport } from './route
 import { Route as AuthenticatedAppProjectsIdInvoicesRouteImport } from './routes/_authenticated/_app/projects/$id/invoices'
 import { Route as AuthenticatedAppProjectsIdIssuesRouteImport } from './routes/_authenticated/_app/projects/$id/issues'
 import { Route as AuthenticatedAppProjectsIdMeetingsRouteImport } from './routes/_authenticated/_app/projects/$id/meetings'
+import { Route as AuthenticatedAppProjectsIdMessagesRouteImport } from './routes/_authenticated/_app/projects/$id/messages'
 import { Route as AuthenticatedAppProjectsIdPermitsRouteImport } from './routes/_authenticated/_app/projects/$id/permits'
 import { Route as AuthenticatedAppProjectsIdRfisRouteImport } from './routes/_authenticated/_app/projects/$id/rfis'
 import { Route as AuthenticatedAppProjectsIdSettingsRouteImport } from './routes/_authenticated/_app/projects/$id/settings'
@@ -84,6 +89,7 @@ import { Route as AuthenticatedAppProjectsIdSiteRouteImport } from './routes/_au
 import { Route as AuthenticatedAppProjectsIdSubmittalsRouteImport } from './routes/_authenticated/_app/projects/$id/submittals'
 import { Route as AuthenticatedAppProjectsIdTeamRouteImport } from './routes/_authenticated/_app/projects/$id/team'
 import { Route as AuthenticatedAppProjectsIdTransmittalsRouteImport } from './routes/_authenticated/_app/projects/$id/transmittals'
+import { Route as ApiMessagesConversationsIdMembersRouteImport } from './routes/api/messages/conversations/$id/members'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -220,6 +226,12 @@ const AuthenticatedAppDocumentsRoute =
     path: '/documents',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppMessagesRoute =
+  AuthenticatedAppMessagesRouteImport.update({
+    id: '/messages',
+    path: '/messages',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const ApiClientsIdRoute = ApiClientsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -251,6 +263,12 @@ const ApiInvoicesIdRoute = ApiInvoicesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiInvoicesRoute,
 } as any)
+const ApiMessagesConversationsRoute =
+  ApiMessagesConversationsRouteImport.update({
+    id: '/api/messages/conversations',
+    path: '/api/messages/conversations',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiOrgStudioProjectRoute = ApiOrgStudioProjectRouteImport.update({
   id: '/api/org/studio-project',
   path: '/api/org/studio-project',
@@ -325,6 +343,11 @@ const ApiContractorsArchitectsIdRoute =
     path: '/$id',
     getParentRoute: () => ApiContractorsArchitectsRoute,
   } as any)
+const ApiMessagesUsersSearchRoute = ApiMessagesUsersSearchRouteImport.update({
+  id: '/api/messages/users/search',
+  path: '/api/messages/users/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiProjectsIdConsultantPaymentsRoute =
   ApiProjectsIdConsultantPaymentsRouteImport.update({
     id: '/consultant-payments',
@@ -366,6 +389,11 @@ const ApiProjectsIdMeetingsRoute = ApiProjectsIdMeetingsRouteImport.update({
 const ApiProjectsIdMembersRoute = ApiProjectsIdMembersRouteImport.update({
   id: '/members',
   path: '/members',
+  getParentRoute: () => ApiProjectsIdRoute,
+} as any)
+const ApiProjectsIdMessagesRoute = ApiProjectsIdMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
   getParentRoute: () => ApiProjectsIdRoute,
 } as any)
 const ApiProjectsIdMilestonesRoute = ApiProjectsIdMilestonesRouteImport.update({
@@ -446,6 +474,12 @@ const AuthenticatedAppProjectsIdMeetingsRoute =
     path: '/projects/$id/meetings',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppProjectsIdMessagesRoute =
+  AuthenticatedAppProjectsIdMessagesRouteImport.update({
+    id: '/projects/$id/messages',
+    path: '/projects/$id/messages',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppProjectsIdPermitsRoute =
   AuthenticatedAppProjectsIdPermitsRouteImport.update({
     id: '/projects/$id/permits',
@@ -488,6 +522,12 @@ const AuthenticatedAppProjectsIdTransmittalsRoute =
     path: '/projects/$id/transmittals',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const ApiMessagesConversationsIdMembersRoute =
+  ApiMessagesConversationsIdMembersRouteImport.update({
+    id: '/$id/members',
+    path: '/$id/members',
+    getParentRoute: () => ApiMessagesConversationsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -515,12 +555,14 @@ export interface FileRoutesByFullPath {
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
   '/dashboard': typeof AuthenticatedAppDashboardRoute
   '/documents': typeof AuthenticatedAppDocumentsRoute
+  '/messages': typeof AuthenticatedAppMessagesRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/contractors/$id': typeof ApiContractorsIdRoute
   '/api/contractors/architects': typeof ApiContractorsArchitectsRouteWithChildren
   '/api/files/download': typeof ApiFilesDownloadRoute
   '/api/files/upload': typeof ApiFilesUploadRoute
   '/api/invoices/$id': typeof ApiInvoicesIdRoute
+  '/api/messages/conversations': typeof ApiMessagesConversationsRouteWithChildren
   '/api/org/studio-project': typeof ApiOrgStudioProjectRoute
   '/api/org/team': typeof ApiOrgTeamRoute
   '/api/projects/$id': typeof ApiProjectsIdRouteWithChildren
@@ -530,6 +572,7 @@ export interface FileRoutesByFullPath {
   '/marketplace/$id': typeof AuthenticatedAppMarketplaceIdRoute
   '/projects/new': typeof AuthenticatedAppProjectsNewRoute
   '/api/contractors/architects/$id': typeof ApiContractorsArchitectsIdRoute
+  '/api/messages/users/search': typeof ApiMessagesUsersSearchRoute
   '/api/projects/$id/consultant-payments': typeof ApiProjectsIdConsultantPaymentsRoute
   '/api/projects/$id/document-annotations': typeof ApiProjectsIdDocumentAnnotationsRoute
   '/api/projects/$id/document-versions': typeof ApiProjectsIdDocumentVersionsRoute
@@ -538,6 +581,7 @@ export interface FileRoutesByFullPath {
   '/api/projects/$id/issues': typeof ApiProjectsIdIssuesRoute
   '/api/projects/$id/meetings': typeof ApiProjectsIdMeetingsRoute
   '/api/projects/$id/members': typeof ApiProjectsIdMembersRoute
+  '/api/projects/$id/messages': typeof ApiProjectsIdMessagesRoute
   '/api/projects/$id/milestones': typeof ApiProjectsIdMilestonesRoute
   '/api/projects/$id/permits': typeof ApiProjectsIdPermitsRoute
   '/api/projects/$id/rfis': typeof ApiProjectsIdRfisRoute
@@ -555,6 +599,7 @@ export interface FileRoutesByFullPath {
   '/projects/$id/invoices': typeof AuthenticatedAppProjectsIdInvoicesRoute
   '/projects/$id/issues': typeof AuthenticatedAppProjectsIdIssuesRoute
   '/projects/$id/meetings': typeof AuthenticatedAppProjectsIdMeetingsRoute
+  '/projects/$id/messages': typeof AuthenticatedAppProjectsIdMessagesRoute
   '/projects/$id/permits': typeof AuthenticatedAppProjectsIdPermitsRoute
   '/projects/$id/rfis': typeof AuthenticatedAppProjectsIdRfisRoute
   '/projects/$id/settings': typeof AuthenticatedAppProjectsIdSettingsRoute
@@ -562,6 +607,7 @@ export interface FileRoutesByFullPath {
   '/projects/$id/submittals': typeof AuthenticatedAppProjectsIdSubmittalsRoute
   '/projects/$id/team': typeof AuthenticatedAppProjectsIdTeamRoute
   '/projects/$id/transmittals': typeof AuthenticatedAppProjectsIdTransmittalsRoute
+  '/api/messages/conversations/$id/members': typeof ApiMessagesConversationsIdMembersRoute
   '/projects/$id/': typeof AuthenticatedAppProjectsIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -590,12 +636,14 @@ export interface FileRoutesByTo {
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
   '/dashboard': typeof AuthenticatedAppDashboardRoute
   '/documents': typeof AuthenticatedAppDocumentsRoute
+  '/messages': typeof AuthenticatedAppMessagesRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/contractors/$id': typeof ApiContractorsIdRoute
   '/api/contractors/architects': typeof ApiContractorsArchitectsRouteWithChildren
   '/api/files/download': typeof ApiFilesDownloadRoute
   '/api/files/upload': typeof ApiFilesUploadRoute
   '/api/invoices/$id': typeof ApiInvoicesIdRoute
+  '/api/messages/conversations': typeof ApiMessagesConversationsRouteWithChildren
   '/api/org/studio-project': typeof ApiOrgStudioProjectRoute
   '/api/org/team': typeof ApiOrgTeamRoute
   '/api/projects/$id': typeof ApiProjectsIdRouteWithChildren
@@ -605,6 +653,7 @@ export interface FileRoutesByTo {
   '/marketplace/$id': typeof AuthenticatedAppMarketplaceIdRoute
   '/projects/new': typeof AuthenticatedAppProjectsNewRoute
   '/api/contractors/architects/$id': typeof ApiContractorsArchitectsIdRoute
+  '/api/messages/users/search': typeof ApiMessagesUsersSearchRoute
   '/api/projects/$id/consultant-payments': typeof ApiProjectsIdConsultantPaymentsRoute
   '/api/projects/$id/document-annotations': typeof ApiProjectsIdDocumentAnnotationsRoute
   '/api/projects/$id/document-versions': typeof ApiProjectsIdDocumentVersionsRoute
@@ -613,6 +662,7 @@ export interface FileRoutesByTo {
   '/api/projects/$id/issues': typeof ApiProjectsIdIssuesRoute
   '/api/projects/$id/meetings': typeof ApiProjectsIdMeetingsRoute
   '/api/projects/$id/members': typeof ApiProjectsIdMembersRoute
+  '/api/projects/$id/messages': typeof ApiProjectsIdMessagesRoute
   '/api/projects/$id/milestones': typeof ApiProjectsIdMilestonesRoute
   '/api/projects/$id/permits': typeof ApiProjectsIdPermitsRoute
   '/api/projects/$id/rfis': typeof ApiProjectsIdRfisRoute
@@ -630,6 +680,7 @@ export interface FileRoutesByTo {
   '/projects/$id/invoices': typeof AuthenticatedAppProjectsIdInvoicesRoute
   '/projects/$id/issues': typeof AuthenticatedAppProjectsIdIssuesRoute
   '/projects/$id/meetings': typeof AuthenticatedAppProjectsIdMeetingsRoute
+  '/projects/$id/messages': typeof AuthenticatedAppProjectsIdMessagesRoute
   '/projects/$id/permits': typeof AuthenticatedAppProjectsIdPermitsRoute
   '/projects/$id/rfis': typeof AuthenticatedAppProjectsIdRfisRoute
   '/projects/$id/settings': typeof AuthenticatedAppProjectsIdSettingsRoute
@@ -637,6 +688,7 @@ export interface FileRoutesByTo {
   '/projects/$id/submittals': typeof AuthenticatedAppProjectsIdSubmittalsRoute
   '/projects/$id/team': typeof AuthenticatedAppProjectsIdTeamRoute
   '/projects/$id/transmittals': typeof AuthenticatedAppProjectsIdTransmittalsRoute
+  '/api/messages/conversations/$id/members': typeof ApiMessagesConversationsIdMembersRoute
   '/projects/$id': typeof AuthenticatedAppProjectsIdIndexRoute
 }
 export interface FileRoutesById {
@@ -668,12 +720,14 @@ export interface FileRoutesById {
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
   '/_authenticated/_app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/_authenticated/_app/documents': typeof AuthenticatedAppDocumentsRoute
+  '/_authenticated/_app/messages': typeof AuthenticatedAppMessagesRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/contractors/$id': typeof ApiContractorsIdRoute
   '/api/contractors/architects': typeof ApiContractorsArchitectsRouteWithChildren
   '/api/files/download': typeof ApiFilesDownloadRoute
   '/api/files/upload': typeof ApiFilesUploadRoute
   '/api/invoices/$id': typeof ApiInvoicesIdRoute
+  '/api/messages/conversations': typeof ApiMessagesConversationsRouteWithChildren
   '/api/org/studio-project': typeof ApiOrgStudioProjectRoute
   '/api/org/team': typeof ApiOrgTeamRoute
   '/api/projects/$id': typeof ApiProjectsIdRouteWithChildren
@@ -683,6 +737,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/marketplace/$id': typeof AuthenticatedAppMarketplaceIdRoute
   '/_authenticated/_app/projects/new': typeof AuthenticatedAppProjectsNewRoute
   '/api/contractors/architects/$id': typeof ApiContractorsArchitectsIdRoute
+  '/api/messages/users/search': typeof ApiMessagesUsersSearchRoute
   '/api/projects/$id/consultant-payments': typeof ApiProjectsIdConsultantPaymentsRoute
   '/api/projects/$id/document-annotations': typeof ApiProjectsIdDocumentAnnotationsRoute
   '/api/projects/$id/document-versions': typeof ApiProjectsIdDocumentVersionsRoute
@@ -691,6 +746,7 @@ export interface FileRoutesById {
   '/api/projects/$id/issues': typeof ApiProjectsIdIssuesRoute
   '/api/projects/$id/meetings': typeof ApiProjectsIdMeetingsRoute
   '/api/projects/$id/members': typeof ApiProjectsIdMembersRoute
+  '/api/projects/$id/messages': typeof ApiProjectsIdMessagesRoute
   '/api/projects/$id/milestones': typeof ApiProjectsIdMilestonesRoute
   '/api/projects/$id/permits': typeof ApiProjectsIdPermitsRoute
   '/api/projects/$id/rfis': typeof ApiProjectsIdRfisRoute
@@ -708,6 +764,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/projects/$id/invoices': typeof AuthenticatedAppProjectsIdInvoicesRoute
   '/_authenticated/_app/projects/$id/issues': typeof AuthenticatedAppProjectsIdIssuesRoute
   '/_authenticated/_app/projects/$id/meetings': typeof AuthenticatedAppProjectsIdMeetingsRoute
+  '/_authenticated/_app/projects/$id/messages': typeof AuthenticatedAppProjectsIdMessagesRoute
   '/_authenticated/_app/projects/$id/permits': typeof AuthenticatedAppProjectsIdPermitsRoute
   '/_authenticated/_app/projects/$id/rfis': typeof AuthenticatedAppProjectsIdRfisRoute
   '/_authenticated/_app/projects/$id/settings': typeof AuthenticatedAppProjectsIdSettingsRoute
@@ -715,6 +772,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/projects/$id/submittals': typeof AuthenticatedAppProjectsIdSubmittalsRoute
   '/_authenticated/_app/projects/$id/team': typeof AuthenticatedAppProjectsIdTeamRoute
   '/_authenticated/_app/projects/$id/transmittals': typeof AuthenticatedAppProjectsIdTransmittalsRoute
+  '/api/messages/conversations/$id/members': typeof ApiMessagesConversationsIdMembersRoute
   '/_authenticated/_app/projects/$id/': typeof AuthenticatedAppProjectsIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -745,12 +803,14 @@ export interface FileRouteTypes {
     | '/vs/5bloc-vs-procore'
     | '/dashboard'
     | '/documents'
+    | '/messages'
     | '/api/clients/$id'
     | '/api/contractors/$id'
     | '/api/contractors/architects'
     | '/api/files/download'
     | '/api/files/upload'
     | '/api/invoices/$id'
+    | '/api/messages/conversations'
     | '/api/org/studio-project'
     | '/api/org/team'
     | '/api/projects/$id'
@@ -760,6 +820,7 @@ export interface FileRouteTypes {
     | '/marketplace/$id'
     | '/projects/new'
     | '/api/contractors/architects/$id'
+    | '/api/messages/users/search'
     | '/api/projects/$id/consultant-payments'
     | '/api/projects/$id/document-annotations'
     | '/api/projects/$id/document-versions'
@@ -768,6 +829,7 @@ export interface FileRouteTypes {
     | '/api/projects/$id/issues'
     | '/api/projects/$id/meetings'
     | '/api/projects/$id/members'
+    | '/api/projects/$id/messages'
     | '/api/projects/$id/milestones'
     | '/api/projects/$id/permits'
     | '/api/projects/$id/rfis'
@@ -785,6 +847,7 @@ export interface FileRouteTypes {
     | '/projects/$id/invoices'
     | '/projects/$id/issues'
     | '/projects/$id/meetings'
+    | '/projects/$id/messages'
     | '/projects/$id/permits'
     | '/projects/$id/rfis'
     | '/projects/$id/settings'
@@ -792,6 +855,7 @@ export interface FileRouteTypes {
     | '/projects/$id/submittals'
     | '/projects/$id/team'
     | '/projects/$id/transmittals'
+    | '/api/messages/conversations/$id/members'
     | '/projects/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -820,12 +884,14 @@ export interface FileRouteTypes {
     | '/vs/5bloc-vs-procore'
     | '/dashboard'
     | '/documents'
+    | '/messages'
     | '/api/clients/$id'
     | '/api/contractors/$id'
     | '/api/contractors/architects'
     | '/api/files/download'
     | '/api/files/upload'
     | '/api/invoices/$id'
+    | '/api/messages/conversations'
     | '/api/org/studio-project'
     | '/api/org/team'
     | '/api/projects/$id'
@@ -835,6 +901,7 @@ export interface FileRouteTypes {
     | '/marketplace/$id'
     | '/projects/new'
     | '/api/contractors/architects/$id'
+    | '/api/messages/users/search'
     | '/api/projects/$id/consultant-payments'
     | '/api/projects/$id/document-annotations'
     | '/api/projects/$id/document-versions'
@@ -843,6 +910,7 @@ export interface FileRouteTypes {
     | '/api/projects/$id/issues'
     | '/api/projects/$id/meetings'
     | '/api/projects/$id/members'
+    | '/api/projects/$id/messages'
     | '/api/projects/$id/milestones'
     | '/api/projects/$id/permits'
     | '/api/projects/$id/rfis'
@@ -860,6 +928,7 @@ export interface FileRouteTypes {
     | '/projects/$id/invoices'
     | '/projects/$id/issues'
     | '/projects/$id/meetings'
+    | '/projects/$id/messages'
     | '/projects/$id/permits'
     | '/projects/$id/rfis'
     | '/projects/$id/settings'
@@ -867,6 +936,7 @@ export interface FileRouteTypes {
     | '/projects/$id/submittals'
     | '/projects/$id/team'
     | '/projects/$id/transmittals'
+    | '/api/messages/conversations/$id/members'
     | '/projects/$id'
   id:
     | '__root__'
@@ -897,12 +967,14 @@ export interface FileRouteTypes {
     | '/vs/5bloc-vs-procore'
     | '/_authenticated/_app/dashboard'
     | '/_authenticated/_app/documents'
+    | '/_authenticated/_app/messages'
     | '/api/clients/$id'
     | '/api/contractors/$id'
     | '/api/contractors/architects'
     | '/api/files/download'
     | '/api/files/upload'
     | '/api/invoices/$id'
+    | '/api/messages/conversations'
     | '/api/org/studio-project'
     | '/api/org/team'
     | '/api/projects/$id'
@@ -912,6 +984,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/marketplace/$id'
     | '/_authenticated/_app/projects/new'
     | '/api/contractors/architects/$id'
+    | '/api/messages/users/search'
     | '/api/projects/$id/consultant-payments'
     | '/api/projects/$id/document-annotations'
     | '/api/projects/$id/document-versions'
@@ -920,6 +993,7 @@ export interface FileRouteTypes {
     | '/api/projects/$id/issues'
     | '/api/projects/$id/meetings'
     | '/api/projects/$id/members'
+    | '/api/projects/$id/messages'
     | '/api/projects/$id/milestones'
     | '/api/projects/$id/permits'
     | '/api/projects/$id/rfis'
@@ -937,6 +1011,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/projects/$id/invoices'
     | '/_authenticated/_app/projects/$id/issues'
     | '/_authenticated/_app/projects/$id/meetings'
+    | '/_authenticated/_app/projects/$id/messages'
     | '/_authenticated/_app/projects/$id/permits'
     | '/_authenticated/_app/projects/$id/rfis'
     | '/_authenticated/_app/projects/$id/settings'
@@ -944,6 +1019,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/projects/$id/submittals'
     | '/_authenticated/_app/projects/$id/team'
     | '/_authenticated/_app/projects/$id/transmittals'
+    | '/api/messages/conversations/$id/members'
     | '/_authenticated/_app/projects/$id/'
   fileRoutesById: FileRoutesById
 }
@@ -974,8 +1050,10 @@ export interface RootRouteChildren {
   Vs5blocVsProcoreRoute: typeof Vs5blocVsProcoreRoute
   ApiFilesDownloadRoute: typeof ApiFilesDownloadRoute
   ApiFilesUploadRoute: typeof ApiFilesUploadRoute
+  ApiMessagesConversationsRoute: typeof ApiMessagesConversationsRouteWithChildren
   ApiOrgStudioProjectRoute: typeof ApiOrgStudioProjectRoute
   ApiOrgTeamRoute: typeof ApiOrgTeamRoute
+  ApiMessagesUsersSearchRoute: typeof ApiMessagesUsersSearchRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1169,6 +1247,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppDocumentsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/_app/messages': {
+      id: '/_authenticated/_app/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof AuthenticatedAppMessagesRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/api/clients/$id': {
       id: '/api/clients/$id'
       path: '/$id'
@@ -1210,6 +1295,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/invoices/$id'
       preLoaderRoute: typeof ApiInvoicesIdRouteImport
       parentRoute: typeof ApiInvoicesRoute
+    }
+    '/api/messages/conversations': {
+      id: '/api/messages/conversations'
+      path: '/api/messages/conversations'
+      fullPath: '/api/messages/conversations'
+      preLoaderRoute: typeof ApiMessagesConversationsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/org/studio-project': {
       id: '/api/org/studio-project'
@@ -1302,6 +1394,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiContractorsArchitectsIdRouteImport
       parentRoute: typeof ApiContractorsArchitectsRoute
     }
+    '/api/messages/users/search': {
+      id: '/api/messages/users/search'
+      path: '/api/messages/users/search'
+      fullPath: '/api/messages/users/search'
+      preLoaderRoute: typeof ApiMessagesUsersSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/projects/$id/consultant-payments': {
       id: '/api/projects/$id/consultant-payments'
       path: '/consultant-payments'
@@ -1356,6 +1455,13 @@ declare module '@tanstack/react-router' {
       path: '/members'
       fullPath: '/api/projects/$id/members'
       preLoaderRoute: typeof ApiProjectsIdMembersRouteImport
+      parentRoute: typeof ApiProjectsIdRoute
+    }
+    '/api/projects/$id/messages': {
+      id: '/api/projects/$id/messages'
+      path: '/messages'
+      fullPath: '/api/projects/$id/messages'
+      preLoaderRoute: typeof ApiProjectsIdMessagesRouteImport
       parentRoute: typeof ApiProjectsIdRoute
     }
     '/api/projects/$id/milestones': {
@@ -1456,6 +1562,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppProjectsIdMeetingsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/_app/projects/$id/messages': {
+      id: '/_authenticated/_app/projects/$id/messages'
+      path: '/projects/$id/messages'
+      fullPath: '/projects/$id/messages'
+      preLoaderRoute: typeof AuthenticatedAppProjectsIdMessagesRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/_app/projects/$id/permits': {
       id: '/_authenticated/_app/projects/$id/permits'
       path: '/projects/$id/permits'
@@ -1505,12 +1618,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppProjectsIdTransmittalsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/api/messages/conversations/$id/members': {
+      id: '/api/messages/conversations/$id/members'
+      path: '/$id/members'
+      fullPath: '/api/messages/conversations/$id/members'
+      preLoaderRoute: typeof ApiMessagesConversationsIdMembersRouteImport
+      parentRoute: typeof ApiMessagesConversationsRoute
+    }
   }
 }
 
 interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppDashboardRoute: typeof AuthenticatedAppDashboardRoute
   AuthenticatedAppDocumentsRoute: typeof AuthenticatedAppDocumentsRoute
+  AuthenticatedAppMessagesRoute: typeof AuthenticatedAppMessagesRoute
   AuthenticatedAppClientsIdRoute: typeof AuthenticatedAppClientsIdRoute
   AuthenticatedAppInvoicesNewRoute: typeof AuthenticatedAppInvoicesNewRoute
   AuthenticatedAppMarketplaceIdRoute: typeof AuthenticatedAppMarketplaceIdRoute
@@ -1525,6 +1646,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppProjectsIdInvoicesRoute: typeof AuthenticatedAppProjectsIdInvoicesRoute
   AuthenticatedAppProjectsIdIssuesRoute: typeof AuthenticatedAppProjectsIdIssuesRoute
   AuthenticatedAppProjectsIdMeetingsRoute: typeof AuthenticatedAppProjectsIdMeetingsRoute
+  AuthenticatedAppProjectsIdMessagesRoute: typeof AuthenticatedAppProjectsIdMessagesRoute
   AuthenticatedAppProjectsIdPermitsRoute: typeof AuthenticatedAppProjectsIdPermitsRoute
   AuthenticatedAppProjectsIdRfisRoute: typeof AuthenticatedAppProjectsIdRfisRoute
   AuthenticatedAppProjectsIdSettingsRoute: typeof AuthenticatedAppProjectsIdSettingsRoute
@@ -1538,6 +1660,7 @@ interface AuthenticatedAppRouteRouteChildren {
 const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppDashboardRoute: AuthenticatedAppDashboardRoute,
   AuthenticatedAppDocumentsRoute: AuthenticatedAppDocumentsRoute,
+  AuthenticatedAppMessagesRoute: AuthenticatedAppMessagesRoute,
   AuthenticatedAppClientsIdRoute: AuthenticatedAppClientsIdRoute,
   AuthenticatedAppInvoicesNewRoute: AuthenticatedAppInvoicesNewRoute,
   AuthenticatedAppMarketplaceIdRoute: AuthenticatedAppMarketplaceIdRoute,
@@ -1557,6 +1680,8 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppProjectsIdIssuesRoute: AuthenticatedAppProjectsIdIssuesRoute,
   AuthenticatedAppProjectsIdMeetingsRoute:
     AuthenticatedAppProjectsIdMeetingsRoute,
+  AuthenticatedAppProjectsIdMessagesRoute:
+    AuthenticatedAppProjectsIdMessagesRoute,
   AuthenticatedAppProjectsIdPermitsRoute:
     AuthenticatedAppProjectsIdPermitsRoute,
   AuthenticatedAppProjectsIdRfisRoute: AuthenticatedAppProjectsIdRfisRoute,
@@ -1648,6 +1773,7 @@ interface ApiProjectsIdRouteChildren {
   ApiProjectsIdIssuesRoute: typeof ApiProjectsIdIssuesRoute
   ApiProjectsIdMeetingsRoute: typeof ApiProjectsIdMeetingsRoute
   ApiProjectsIdMembersRoute: typeof ApiProjectsIdMembersRoute
+  ApiProjectsIdMessagesRoute: typeof ApiProjectsIdMessagesRoute
   ApiProjectsIdMilestonesRoute: typeof ApiProjectsIdMilestonesRoute
   ApiProjectsIdPermitsRoute: typeof ApiProjectsIdPermitsRoute
   ApiProjectsIdRfisRoute: typeof ApiProjectsIdRfisRoute
@@ -1666,6 +1792,7 @@ const ApiProjectsIdRouteChildren: ApiProjectsIdRouteChildren = {
   ApiProjectsIdIssuesRoute: ApiProjectsIdIssuesRoute,
   ApiProjectsIdMeetingsRoute: ApiProjectsIdMeetingsRoute,
   ApiProjectsIdMembersRoute: ApiProjectsIdMembersRoute,
+  ApiProjectsIdMessagesRoute: ApiProjectsIdMessagesRoute,
   ApiProjectsIdMilestonesRoute: ApiProjectsIdMilestonesRoute,
   ApiProjectsIdPermitsRoute: ApiProjectsIdPermitsRoute,
   ApiProjectsIdRfisRoute: ApiProjectsIdRfisRoute,
@@ -1703,6 +1830,21 @@ const ApiTendersRouteWithChildren = ApiTendersRoute._addFileChildren(
   ApiTendersRouteChildren,
 )
 
+interface ApiMessagesConversationsRouteChildren {
+  ApiMessagesConversationsIdMembersRoute: typeof ApiMessagesConversationsIdMembersRoute
+}
+
+const ApiMessagesConversationsRouteChildren: ApiMessagesConversationsRouteChildren =
+  {
+    ApiMessagesConversationsIdMembersRoute:
+      ApiMessagesConversationsIdMembersRoute,
+  }
+
+const ApiMessagesConversationsRouteWithChildren =
+  ApiMessagesConversationsRoute._addFileChildren(
+    ApiMessagesConversationsRouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -1730,8 +1872,10 @@ const rootRouteChildren: RootRouteChildren = {
   Vs5blocVsProcoreRoute: Vs5blocVsProcoreRoute,
   ApiFilesDownloadRoute: ApiFilesDownloadRoute,
   ApiFilesUploadRoute: ApiFilesUploadRoute,
+  ApiMessagesConversationsRoute: ApiMessagesConversationsRouteWithChildren,
   ApiOrgStudioProjectRoute: ApiOrgStudioProjectRoute,
   ApiOrgTeamRoute: ApiOrgTeamRoute,
+  ApiMessagesUsersSearchRoute: ApiMessagesUsersSearchRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -68,6 +68,7 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
       const t = setTimeout(() => firstFieldRef.current?.focus(), 60)
       return () => clearTimeout(t)
     }
+    return undefined
   }, [options])
 
   const submit = () => {

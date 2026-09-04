@@ -4047,10 +4047,26 @@ export type Database = {
       can_access_project: { Args: { proj: string }; Returns: boolean }
       current_user_id: { Args: never; Returns: string }
       current_user_org_id: { Args: never; Returns: string }
+      get_or_create_project_channel: {
+        Args: { p_channel: string; p_project_id: string }
+        Returns: string
+      }
+      is_conversation_member: {
+        Args: { _conversation_id: string }
+        Returns: boolean
+      }
       is_org_admin: { Args: { org: string }; Returns: boolean }
       is_org_member: { Args: { org: string }; Returns: boolean }
+      list_project_channel_messages: {
+        Args: { p_channel?: string; p_limit?: number; p_project_id: string }
+        Returns: Json
+      }
       my_org_id: { Args: never; Returns: string }
       my_profile_id: { Args: never; Returns: string }
+      post_project_channel_message: {
+        Args: { p_body: string; p_channel: string; p_project_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
