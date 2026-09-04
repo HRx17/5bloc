@@ -202,7 +202,7 @@ export default function IntegrationsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const handleConnect = (item: IntegrationItem) => {
+  const handleConnect = async (item: IntegrationItem) => {
     const state = providers[item.provider]
     if (!state.configured) {
       toast(
@@ -214,8 +214,14 @@ export default function IntegrationsPage() {
       )
       return
     }
-    window.location.href = `/api/integrations/${item.provider}/connect`
+    // A full-page redirect cannot send an auth header, so pass the session token along.
+    const { data } = await supabase.auth.getSession()
+    const token = data.session?.access_token
+    window.location.href = `/api/integrations/${item.provider}/connect${
+      token ? `?t=${encodeURIComponent(token)}` : ''
+    }`
   }
+
 
   const confirmDisconnect = async () => {
     if (!pendingDisconnect) return
