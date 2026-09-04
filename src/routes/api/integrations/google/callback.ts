@@ -6,13 +6,13 @@ import { verifyOAuthState } from '@/lib/auth/oauth-state'
 export const dynamic = 'force-dynamic'
 
 const handleGET = async ({ request }: any) => {
-  const { searchParams } = req.nextUrl
+  const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
   const state = searchParams.get('state')
   const error = searchParams.get('error')
 
   if (error || !code || !state) {
-    return NextResponse.redirect(new URL(`/integrations?error=google_denied`, request.url))
+    return Response.redirect(String(new URL(`/integrations?error=google_denied`, request.url))
   }
 
   try {
@@ -33,13 +33,12 @@ const handleGET = async ({ request }: any) => {
       provider_name: userInfo.name,
     })
 
-    return NextResponse.redirect(new URL('/integrations?connected=google', origin))
+    return Response.redirect(String(new URL('/integrations?connected=google', origin))
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'unknown'
     console.error('Google callback error:', message)
     const errMsg = encodeURIComponent(message)
-    return NextResponse.redirect(
-      new URL(`/integrations?error=google_callback_failed&msg=${errMsg}`, request.url),
+    return Response.redirect(String(new URL(`/integrations?error=google_callback_failed&msg=${errMsg}`, request.url),
     )
   }
 }

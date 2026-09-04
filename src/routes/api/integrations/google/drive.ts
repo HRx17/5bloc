@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { createSupabaseServer } from '@/lib/supabase/server'
+import { getAuthUserOrNull, json } from '@/lib/api/get-user.server'
 import { getFreshGoogleToken } from '@/lib/integrations/token-refresh'
 import {
   getDriveFile,
@@ -69,8 +69,9 @@ async function listVaultContents(
 }
 
 const handleGET = async ({ request }: any) => {
-  const supabase = await createSupabaseServer()
-  const { data: { user } } = await supabase.auth.getUser()
+  const auth = await getAuthUserOrNull(request)
+  const user = auth?.user ?? null
+  const supabase = auth?.supabase as any
   if (!user) return json({ error: 'Unauthorized' }, { status: 401 })
 
   const token = await getFreshGoogleToken(user.id)
@@ -78,8 +79,8 @@ const handleGET = async ({ request }: any) => {
     return json({ notConnected: true, files: [], roots: [], linked: { files: 0, folders: 0 } })
   }
 
-  const query    = req.nextUrl.searchParams.get('q') ?? ''
-  const folderId = req.nextUrl.searchParams.get('folderId')
+  const query    = new URL(request.url).searchParams.get('q') ?? ''
+  const folderId = new URL(request.url).searchParams.get('folderId')
 
   try {
     if (folderId) {
@@ -100,8 +101,9 @@ const handleGET = async ({ request }: any) => {
 }
 
 const handlePOST = async ({ request }: any) => {
-  const supabase = await createSupabaseServer()
-  const { data: { user } } = await supabase.auth.getUser()
+  const auth = await getAuthUserOrNull(request)
+  const user = auth?.user ?? null
+  const supabase = auth?.supabase as any
   if (!user) return json({ error: 'Unauthorized' }, { status: 401 })
 
   const token = await getFreshGoogleToken(user.id)
@@ -134,11 +136,12 @@ const handlePOST = async ({ request }: any) => {
 }
 
 const handleDELETE = async ({ request }: any) => {
-  const supabase = await createSupabaseServer()
-  const { data: { user } } = await supabase.auth.getUser()
+  const auth = await getAuthUserOrNull(request)
+  const user = auth?.user ?? null
+  const supabase = auth?.supabase as any
   if (!user) return json({ error: 'Unauthorized' }, { status: 401 })
 
-  const id = req.nextUrl.searchParams.get('id')
+  const id = new URL(request.url).searchParams.get('id')
   if (!id) return json({ error: 'Missing id' }, { status: 400 })
 
   try {

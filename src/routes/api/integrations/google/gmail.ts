@@ -1,20 +1,21 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { createSupabaseServer } from '@/lib/supabase/server'
+import { getAuthUserOrNull, json } from '@/lib/api/get-user.server'
 import { getFreshGoogleToken } from '@/lib/integrations/token-refresh'
 
 export const dynamic = 'force-dynamic'
 
 const handleGET = async ({ request }: any) => {
-  const supabase = await createSupabaseServer()
-  const { data: { user } } = await supabase.auth.getUser()
+  const auth = await getAuthUserOrNull(request)
+  const user = auth?.user ?? null
+  const supabase = auth?.supabase as any
   if (!user) return json({ error: 'Unauthorized' }, { status: 401 })
 
   const token = await getFreshGoogleToken(user.id)
   if (!token) return json({ notConnected: true, threads: [] })
 
-  const query      = req.nextUrl.searchParams.get('q') ?? ''
-  const maxResults = req.nextUrl.searchParams.get('max') ?? '20'
-  const threadId   = req.nextUrl.searchParams.get('threadId')
+  const query      = new URL(request.url).searchParams.get('q') ?? ''
+  const maxResults = new URL(request.url).searchParams.get('max') ?? '20'
+  const threadId   = new URL(request.url).searchParams.get('threadId')
 
   try {
     // Fetch a single thread's full messages

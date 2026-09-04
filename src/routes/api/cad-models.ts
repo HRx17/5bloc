@@ -8,7 +8,7 @@ const handleGET = async ({ request }: any) => {
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
   if (!auth.orgId) return json({ model: null })
 
-  const documentId = req.nextUrl.searchParams.get('document_id')
+  const documentId = new URL(request.url).searchParams.get('document_id')
   if (!documentId) return json({ error: 'document_id required' }, { status: 400 })
 
   const { data, error } = await auth.supabase

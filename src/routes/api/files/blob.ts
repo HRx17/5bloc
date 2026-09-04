@@ -9,7 +9,7 @@ import { resolveStorageDownloadUrl } from '@/lib/files/resolve-download'
 const handleGET = async ({ request }: any) => {
   try {
     const auth = await getAuthUserOrNull(request)
-    const docId = req.nextUrl.searchParams.get('id')
+    const docId = new URL(request.url).searchParams.get('id')
     if (!docId) return json({ error: 'Missing document id' }, { status: 400 })
     if (!auth.supabase) {
       return json({ error: 'Auth/storage not configured' }, { status: 503 })
@@ -40,7 +40,7 @@ const handleGET = async ({ request }: any) => {
 
     const buf = Buffer.from(await fileRes.arrayBuffer())
     const type = fileRes.headers.get('content-type') || 'application/octet-stream'
-    return new NextResponse(buf, {
+    return new Response(buf, {
       headers: {
         'Content-Type': type,
         'Content-Length': String(buf.length),

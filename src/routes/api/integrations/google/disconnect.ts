@@ -1,10 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { createSupabaseServer } from '@/lib/supabase/server'
+import { getAuthUserOrNull, json } from '@/lib/api/get-user.server'
 import { deleteToken } from '@/lib/integrations/token-store'
 
 const handlePOST = async ({ request }: any) => {
-  const supabase = await createSupabaseServer()
-  const { data: { user } } = await supabase.auth.getUser()
+  const auth = await getAuthUserOrNull(request)
+  const user = auth?.user ?? null
+  const supabase = auth?.supabase as any
   if (!user) return json({ error: 'Unauthorized' }, { status: 401 })
 
   await deleteToken(user.id, 'google')

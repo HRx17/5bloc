@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { createSupabaseServer } from '@/lib/supabase/server'
+import { getAuthUserOrNull, json } from '@/lib/api/get-user.server'
 import { listConnections } from '@/lib/integrations/token-store'
 import { getAllProviderStatus } from '@/lib/integrations/config'
 
@@ -35,8 +35,9 @@ const handleGET = async ({ request }: any) => {
   }
 
   try {
-    const supabase = await createSupabaseServer()
-    const { data: { user } } = await supabase.auth.getUser()
+    const auth = await getAuthUserOrNull(request)
+    const user = auth?.user ?? null
+    const supabase = auth?.supabase as any
     if (!user) return json(base)
 
     const connections = await listConnections(user.id)

@@ -1,15 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { createSupabaseServer } from '@/lib/supabase/server'
+import { getAuthUserOrNull, json } from '@/lib/api/get-user.server'
 import { getAppToken, getTranslationStatus } from '@/lib/integrations/autodesk'
 
 export const dynamic = 'force-dynamic'
 
 const handleGET = async ({ request }: any) => {
-  const supabase = await createSupabaseServer()
-  const { data: { user } } = await supabase.auth.getUser()
+  const auth = await getAuthUserOrNull(request)
+  const user = auth?.user ?? null
+  const supabase = auth?.supabase as any
   if (!user) return json({ error: 'Unauthorized' }, { status: 401 })
 
-  const urn = req.nextUrl.searchParams.get('urn')
+  const urn = new URL(request.url).searchParams.get('urn')
   if (!urn) return json({ error: 'urn required' }, { status: 400 })
 
   try {
