@@ -61,9 +61,16 @@ framework, keeping the same design, content and behaviour.
   plus endpoints projects/$id/{rfis,submittals,issues,site,meetings,transmittals,permits,
   members,milestones,expenses,consultant-payments,document-annotations,document-versions},
   invites, files/download.
-- App pages (remaining): project messages + portal tabs,
-  messages, calendar, catalog, CAD, AI tools, integrations, settings,
+- Done: messaging — `/messages` and `/projects/:id/messages`, endpoints
+  messages/conversations, messages/conversations/$id/members,
+  messages/users/search, projects/$id/messages; DB helpers
+  is_conversation_member, get_or_create_project_channel,
+  list_project_channel_messages, post_project_channel_message
+  (authenticated-only execute).
+- App pages (remaining): project portal tab,
+  calendar, catalog, CAD, AI tools, integrations, settings,
   role dashboards (builder, contractor, consultant, client), admin.
+
 
 - Client portal + payment link pages (`/portal/:token`, `/pay/:token`).
 
