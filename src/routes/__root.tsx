@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { installAuthedFetch } from "../lib/api/authed-fetch";
+import Observability from "../components/Observability";
 
 function NotFoundComponent() {
   return (
