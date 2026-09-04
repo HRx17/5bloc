@@ -80,6 +80,7 @@ import { Route as AuthenticatedAppProjectsIdDocumentsRouteImport } from './route
 import { Route as AuthenticatedAppProjectsIdInvoicesRouteImport } from './routes/_authenticated/_app/projects/$id/invoices'
 import { Route as AuthenticatedAppProjectsIdIssuesRouteImport } from './routes/_authenticated/_app/projects/$id/issues'
 import { Route as AuthenticatedAppProjectsIdMeetingsRouteImport } from './routes/_authenticated/_app/projects/$id/meetings'
+import { Route as AuthenticatedAppProjectsIdMessagesRouteImport } from './routes/_authenticated/_app/projects/$id/messages'
 import { Route as AuthenticatedAppProjectsIdPermitsRouteImport } from './routes/_authenticated/_app/projects/$id/permits'
 import { Route as AuthenticatedAppProjectsIdRfisRouteImport } from './routes/_authenticated/_app/projects/$id/rfis'
 import { Route as AuthenticatedAppProjectsIdSettingsRouteImport } from './routes/_authenticated/_app/projects/$id/settings'
@@ -466,6 +467,12 @@ const AuthenticatedAppProjectsIdMeetingsRoute =
     path: '/projects/$id/meetings',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppProjectsIdMessagesRoute =
+  AuthenticatedAppProjectsIdMessagesRouteImport.update({
+    id: '/projects/$id/messages',
+    path: '/projects/$id/messages',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const AuthenticatedAppProjectsIdPermitsRoute =
   AuthenticatedAppProjectsIdPermitsRouteImport.update({
     id: '/projects/$id/permits',
@@ -584,6 +591,7 @@ export interface FileRoutesByFullPath {
   '/projects/$id/invoices': typeof AuthenticatedAppProjectsIdInvoicesRoute
   '/projects/$id/issues': typeof AuthenticatedAppProjectsIdIssuesRoute
   '/projects/$id/meetings': typeof AuthenticatedAppProjectsIdMeetingsRoute
+  '/projects/$id/messages': typeof AuthenticatedAppProjectsIdMessagesRoute
   '/projects/$id/permits': typeof AuthenticatedAppProjectsIdPermitsRoute
   '/projects/$id/rfis': typeof AuthenticatedAppProjectsIdRfisRoute
   '/projects/$id/settings': typeof AuthenticatedAppProjectsIdSettingsRoute
@@ -663,6 +671,7 @@ export interface FileRoutesByTo {
   '/projects/$id/invoices': typeof AuthenticatedAppProjectsIdInvoicesRoute
   '/projects/$id/issues': typeof AuthenticatedAppProjectsIdIssuesRoute
   '/projects/$id/meetings': typeof AuthenticatedAppProjectsIdMeetingsRoute
+  '/projects/$id/messages': typeof AuthenticatedAppProjectsIdMessagesRoute
   '/projects/$id/permits': typeof AuthenticatedAppProjectsIdPermitsRoute
   '/projects/$id/rfis': typeof AuthenticatedAppProjectsIdRfisRoute
   '/projects/$id/settings': typeof AuthenticatedAppProjectsIdSettingsRoute
@@ -745,6 +754,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/projects/$id/invoices': typeof AuthenticatedAppProjectsIdInvoicesRoute
   '/_authenticated/_app/projects/$id/issues': typeof AuthenticatedAppProjectsIdIssuesRoute
   '/_authenticated/_app/projects/$id/meetings': typeof AuthenticatedAppProjectsIdMeetingsRoute
+  '/_authenticated/_app/projects/$id/messages': typeof AuthenticatedAppProjectsIdMessagesRoute
   '/_authenticated/_app/projects/$id/permits': typeof AuthenticatedAppProjectsIdPermitsRoute
   '/_authenticated/_app/projects/$id/rfis': typeof AuthenticatedAppProjectsIdRfisRoute
   '/_authenticated/_app/projects/$id/settings': typeof AuthenticatedAppProjectsIdSettingsRoute
@@ -826,6 +836,7 @@ export interface FileRouteTypes {
     | '/projects/$id/invoices'
     | '/projects/$id/issues'
     | '/projects/$id/meetings'
+    | '/projects/$id/messages'
     | '/projects/$id/permits'
     | '/projects/$id/rfis'
     | '/projects/$id/settings'
@@ -905,6 +916,7 @@ export interface FileRouteTypes {
     | '/projects/$id/invoices'
     | '/projects/$id/issues'
     | '/projects/$id/meetings'
+    | '/projects/$id/messages'
     | '/projects/$id/permits'
     | '/projects/$id/rfis'
     | '/projects/$id/settings'
@@ -986,6 +998,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/projects/$id/invoices'
     | '/_authenticated/_app/projects/$id/issues'
     | '/_authenticated/_app/projects/$id/meetings'
+    | '/_authenticated/_app/projects/$id/messages'
     | '/_authenticated/_app/projects/$id/permits'
     | '/_authenticated/_app/projects/$id/rfis'
     | '/_authenticated/_app/projects/$id/settings'
@@ -1529,6 +1542,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppProjectsIdMeetingsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/_app/projects/$id/messages': {
+      id: '/_authenticated/_app/projects/$id/messages'
+      path: '/projects/$id/messages'
+      fullPath: '/projects/$id/messages'
+      preLoaderRoute: typeof AuthenticatedAppProjectsIdMessagesRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/_app/projects/$id/permits': {
       id: '/_authenticated/_app/projects/$id/permits'
       path: '/projects/$id/permits'
@@ -1605,6 +1625,7 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppProjectsIdInvoicesRoute: typeof AuthenticatedAppProjectsIdInvoicesRoute
   AuthenticatedAppProjectsIdIssuesRoute: typeof AuthenticatedAppProjectsIdIssuesRoute
   AuthenticatedAppProjectsIdMeetingsRoute: typeof AuthenticatedAppProjectsIdMeetingsRoute
+  AuthenticatedAppProjectsIdMessagesRoute: typeof AuthenticatedAppProjectsIdMessagesRoute
   AuthenticatedAppProjectsIdPermitsRoute: typeof AuthenticatedAppProjectsIdPermitsRoute
   AuthenticatedAppProjectsIdRfisRoute: typeof AuthenticatedAppProjectsIdRfisRoute
   AuthenticatedAppProjectsIdSettingsRoute: typeof AuthenticatedAppProjectsIdSettingsRoute
@@ -1637,6 +1658,8 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppProjectsIdIssuesRoute: AuthenticatedAppProjectsIdIssuesRoute,
   AuthenticatedAppProjectsIdMeetingsRoute:
     AuthenticatedAppProjectsIdMeetingsRoute,
+  AuthenticatedAppProjectsIdMessagesRoute:
+    AuthenticatedAppProjectsIdMessagesRoute,
   AuthenticatedAppProjectsIdPermitsRoute:
     AuthenticatedAppProjectsIdPermitsRoute,
   AuthenticatedAppProjectsIdRfisRoute: AuthenticatedAppProjectsIdRfisRoute,
