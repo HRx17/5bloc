@@ -82,16 +82,20 @@ framework, keeping the same design, content and behaviour.
   OAuth flows (`src/lib/integrations/*`, `src/lib/auth/oauth-state.ts`).
 - OAuth connect links carry the session token (`?t=`) because a full-page redirect
   cannot send an auth header; callbacks store tokens in `user_integrations`.
-- Vendor catalogue uploads and document storage both use the project's own storage
-  bucket instead of the old external object store.
+- File storage stays on Cloudflare R2 (own credentials, signed with aws4fetch for the
+  edge runtime); Supabase Storage is only the fallback when R2 env vars are absent,
+  exactly as in the original repo.
+- AI stays on Anthropic Claude via ANTHROPIC_API_KEY; usage limits stay on Upstash Redis
+  via its REST API. No platform-provided AI or storage is used.
 - Invite/payment/portal links are built from the request origin, so no app-URL env var
   is needed.
 - Typecheck and production build both pass; every ported page and endpoint responds.
 
 ## Port complete
 All portable parts of the repo now run on this framework. Secrets still to be supplied by the
-user if those features are wanted: Razorpay (payments), Resend (outbound email), Google and
-Autodesk OAuth credentials. AI features already work through the platform gateway.
+user if those features are wanted: Razorpay (payments), Resend (outbound email), Anthropic
+(AI features), Cloudflare R2 (file storage), Upstash Redis (usage limits), Google and
+Autodesk OAuth credentials. All third-party services are the repo's own, not platform ones.
 
 ## Out of scope / cannot port
 - Electron desktop wrapper (`electron/`) — desktop builds stay in the GitHub repo.
