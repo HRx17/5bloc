@@ -139,6 +139,7 @@ import { Route as ApiPublicPartnerContractorSignupRouteImport } from './routes/a
 import { Route as ApiPublicPartnerVendorSignupRouteImport } from './routes/api/public/partner/vendor-signup'
 import { Route as ApiPublicPaymentsInvoiceRouteImport } from './routes/api/public/payments/invoice'
 import { Route as ApiPublicPortalTokenRouteImport } from './routes/api/public/portal/$token'
+import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks/stripe'
 import { Route as AuthenticatedAppMarketplaceArchitectsIdRouteImport } from './routes/_authenticated/_app/marketplace/architects/$id'
 import { Route as AuthenticatedAppMarketplaceTendersIdRouteImport } from './routes/_authenticated/_app/marketplace/tenders/$id'
 import { Route as AuthenticatedAppProjectsIdIndexRouteImport } from './routes/_authenticated/_app/projects/$id/index'
@@ -857,6 +858,11 @@ const ApiPublicPortalTokenRoute = ApiPublicPortalTokenRouteImport.update({
   path: '/api/public/portal/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicWebhooksStripeRoute = ApiPublicWebhooksStripeRouteImport.update({
+  id: '/api/public/webhooks/stripe',
+  path: '/api/public/webhooks/stripe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAppMarketplaceArchitectsIdRoute =
   AuthenticatedAppMarketplaceArchitectsIdRouteImport.update({
     id: '/marketplace/architects/$id',
@@ -1089,6 +1095,7 @@ export interface FileRoutesByFullPath {
   '/api/public/partner/vendor-signup': typeof ApiPublicPartnerVendorSignupRoute
   '/api/public/payments/invoice': typeof ApiPublicPaymentsInvoiceRoute
   '/api/public/portal/$token': typeof ApiPublicPortalTokenRouteWithChildren
+  '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/builder/': typeof AuthenticatedAppBuilderIndexRoute
   '/clients/': typeof AuthenticatedAppClientsIndexRoute
   '/contractor/': typeof AuthenticatedAppContractorIndexRoute
@@ -1237,6 +1244,7 @@ export interface FileRoutesByTo {
   '/api/public/partner/vendor-signup': typeof ApiPublicPartnerVendorSignupRoute
   '/api/public/payments/invoice': typeof ApiPublicPaymentsInvoiceRoute
   '/api/public/portal/$token': typeof ApiPublicPortalTokenRouteWithChildren
+  '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/builder': typeof AuthenticatedAppBuilderIndexRoute
   '/clients': typeof AuthenticatedAppClientsIndexRoute
   '/contractor': typeof AuthenticatedAppContractorIndexRoute
@@ -1388,6 +1396,7 @@ export interface FileRoutesById {
   '/api/public/partner/vendor-signup': typeof ApiPublicPartnerVendorSignupRoute
   '/api/public/payments/invoice': typeof ApiPublicPaymentsInvoiceRoute
   '/api/public/portal/$token': typeof ApiPublicPortalTokenRouteWithChildren
+  '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/_authenticated/_app/builder/': typeof AuthenticatedAppBuilderIndexRoute
   '/_authenticated/_app/clients/': typeof AuthenticatedAppClientsIndexRoute
   '/_authenticated/_app/contractor/': typeof AuthenticatedAppContractorIndexRoute
@@ -1538,6 +1547,7 @@ export interface FileRouteTypes {
     | '/api/public/partner/vendor-signup'
     | '/api/public/payments/invoice'
     | '/api/public/portal/$token'
+    | '/api/public/webhooks/stripe'
     | '/builder/'
     | '/clients/'
     | '/contractor/'
@@ -1686,6 +1696,7 @@ export interface FileRouteTypes {
     | '/api/public/partner/vendor-signup'
     | '/api/public/payments/invoice'
     | '/api/public/portal/$token'
+    | '/api/public/webhooks/stripe'
     | '/builder'
     | '/clients'
     | '/contractor'
@@ -1836,6 +1847,7 @@ export interface FileRouteTypes {
     | '/api/public/partner/vendor-signup'
     | '/api/public/payments/invoice'
     | '/api/public/portal/$token'
+    | '/api/public/webhooks/stripe'
     | '/_authenticated/_app/builder/'
     | '/_authenticated/_app/clients/'
     | '/_authenticated/_app/contractor/'
@@ -1937,6 +1949,7 @@ export interface RootRouteChildren {
   ApiPublicPartnerVendorSignupRoute: typeof ApiPublicPartnerVendorSignupRoute
   ApiPublicPaymentsInvoiceRoute: typeof ApiPublicPaymentsInvoiceRoute
   ApiPublicPortalTokenRoute: typeof ApiPublicPortalTokenRouteWithChildren
+  ApiPublicWebhooksStripeRoute: typeof ApiPublicWebhooksStripeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -2851,6 +2864,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPortalTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/webhooks/stripe': {
+      id: '/api/public/webhooks/stripe'
+      path: '/api/public/webhooks/stripe'
+      fullPath: '/api/public/webhooks/stripe'
+      preLoaderRoute: typeof ApiPublicWebhooksStripeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/_app/marketplace/architects/$id': {
       id: '/_authenticated/_app/marketplace/architects/$id'
       path: '/marketplace/architects/$id'
@@ -3352,6 +3372,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPartnerVendorSignupRoute: ApiPublicPartnerVendorSignupRoute,
   ApiPublicPaymentsInvoiceRoute: ApiPublicPaymentsInvoiceRoute,
   ApiPublicPortalTokenRoute: ApiPublicPortalTokenRouteWithChildren,
+  ApiPublicWebhooksStripeRoute: ApiPublicWebhooksStripeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
