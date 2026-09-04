@@ -109,7 +109,7 @@ function AppleNav() {
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          className="md:hidden border-t"
+          className="lg:hidden border-t"
           style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-nav-bg-scrolled)' }}
         >
           <div className="px-5 py-4 space-y-1">
