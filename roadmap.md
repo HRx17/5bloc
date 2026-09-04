@@ -73,11 +73,25 @@ framework, keeping the same design, content and behaviour.
   building-code) with endpoints under api/ai/*.
 - AI now runs on the platform AI gateway (`src/lib/ai/client.ts`, completeText);
   rate limiting is in-process (no external cache service).
-- App pages (remaining): admin pages, public portal/pay token pages.
+- Done: admin page, public portal + payment link pages (`/portal/:token`, `/pay/:token`),
+  accept-invite, join-as-vendor, list-your-business.
+- Done: remaining endpoints — ai/rfi-draft, cad-models, files/blob, timeline,
+  vendor-recommendations, send-email, waitlist/stats, invoices/:id/{pay-link,send},
+  payments/{methods,subscribe,subscription}, projects/:id/{estimates,portal},
+  public/vendor-catalog, integrations/{status,sync} and the full Google + Autodesk
+  OAuth flows (`src/lib/integrations/*`, `src/lib/auth/oauth-state.ts`).
+- OAuth connect links carry the session token (`?t=`) because a full-page redirect
+  cannot send an auth header; callbacks store tokens in `user_integrations`.
+- Vendor catalogue uploads and document storage both use the project's own storage
+  bucket instead of the old external object store.
+- Invite/payment/portal links are built from the request origin, so no app-URL env var
+  is needed.
+- Typecheck and production build both pass; every ported page and endpoint responds.
 
-
-
-- Client portal + payment link pages (`/portal/:token`, `/pay/:token`).
+## Port complete
+All portable parts of the repo now run on this framework. Secrets still to be supplied by the
+user if those features are wanted: Razorpay (payments), Resend (outbound email), Google and
+Autodesk OAuth credentials. AI features already work through the platform gateway.
 
 ## Out of scope / cannot port
 - Electron desktop wrapper (`electron/`) — desktop builds stay in the GitHub repo.
