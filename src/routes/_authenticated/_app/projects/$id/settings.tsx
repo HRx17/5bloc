@@ -1,13 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import ProjectSettingsPage from "@/components/app/ProjectSettingsPage";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/_app/projects/$id/settings")({
-  head: () => ({
-    meta: [
-      { title: "Project settings — 5Bloc" },
-      { name: "description", content: "Rename, configure and archive this project." },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
-  }),
-  component: ProjectSettingsPage,
+  beforeLoad: ({ params }) => {
+    throw redirect({ to: "/projects/$id", params: { id: params.id } });
+  },
+  component: () => null,
 });
