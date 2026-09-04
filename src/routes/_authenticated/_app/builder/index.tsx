@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import BuilderDashboardPage from "@/components/app/BuilderDashboardPage";
 
-export const Route = createFileRoute("/_authenticated/_app/builder")({
+export const Route = createFileRoute("/_authenticated/_app/builder/")({
   head: () => ({
     meta: [
       { title: "Builder dashboard — 5Bloc" },
