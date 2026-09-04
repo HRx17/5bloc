@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { json } from '@/lib/api/get-user.server'
+import { uploadToR2 } from '@/lib/files/r2-client'
 import { createServiceRoleClient, isSupabaseConfigured } from '@/lib/supabase/server'
 import type { CatalogRow } from '@/lib/catalog/csv'
 
@@ -56,18 +57,16 @@ async function handleFileUpload(request: Request) {
   const bytes = Buffer.from(await file.arrayBuffer())
 
   let fileUrl: string | null = null
-  if (isSupabaseConfigured()) {
-    try {
-      const storage = createServiceRoleClient()
-      const { error: uploadError } = await storage.storage
-        .from('documents')
-        .upload(key, bytes, { contentType: file.type || 'text/csv', upsert: true })
-      if (uploadError) throw uploadError
-      fileUrl = key
-    } catch (e) {
-      console.error('vendor catalogue upload failed:', e)
-      // Still accept signup metadata even when the file could not be stored
+  try {
+    const uploaded = await uploadToR2(key, bytes, file.type || 'text/csv')
+    fileUrl = uploaded.publicUrl ?? uploaded.key
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'upload failed'
+    if (message === 'R2 not configured') {
+      // Still accept signup metadata without durable file storage
       fileUrl = null
+    } else {
+      throw e
     }
   }
 
