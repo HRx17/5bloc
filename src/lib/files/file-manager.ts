@@ -3,13 +3,13 @@ import { opfs } from './opfs'
 export async function readLocalFile(
   projectId: string, cacheKey: string
 ): Promise<ArrayBuffer | null> {
-  if (typeof window !== 'undefined' && window.electronAPI?.isElectron) {
+  if (typeof window !== 'undefined' && (window as any).electronAPI?.isElectron) {
     try {
-      const home  = await window.electronAPI.getHomeDir()
+      const home  = await (window as any).electronAPI.getHomeDir()
       const fpath = `${home}/5Bloc/projects/${projectId}/${cacheKey}`
-      const exists = await window.electronAPI.fileExists(fpath)
+      const exists = await (window as any).electronAPI.fileExists(fpath)
       if (!exists) return null
-      const buf = await window.electronAPI.readFile(fpath)
+      const buf = await (window as any).electronAPI.readFile(fpath)
       return buf.buffer as ArrayBuffer
     } catch (e) {
       console.error('Electron file manager read error:', e)
@@ -22,11 +22,11 @@ export async function readLocalFile(
 export async function writeLocalFile(
   projectId: string, cacheKey: string, buffer: ArrayBuffer
 ): Promise<void> {
-  if (typeof window !== 'undefined' && window.electronAPI?.isElectron) {
+  if (typeof window !== 'undefined' && (window as any).electronAPI?.isElectron) {
     try {
-      const home  = await window.electronAPI.getHomeDir()
+      const home  = await (window as any).electronAPI.getHomeDir()
       const fpath = `${home}/5Bloc/projects/${projectId}/${cacheKey}`
-      await window.electronAPI.writeFile(fpath, Buffer.from(buffer))
+      await (window as any).electronAPI.writeFile(fpath, Buffer.from(buffer))
       return
     } catch (e) {
       console.error('Electron file manager write error:', e)
