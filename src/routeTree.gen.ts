@@ -55,6 +55,7 @@ import { Route as AuthenticatedAppMarketplaceIdRouteImport } from './routes/_aut
 import { Route as AuthenticatedAppProjectsIndexRouteImport } from './routes/_authenticated/_app/projects/index'
 import { Route as AuthenticatedAppProjectsNewRouteImport } from './routes/_authenticated/_app/projects/new'
 import { Route as ApiContractorsArchitectsIdRouteImport } from './routes/api/contractors/architects/$id'
+import { Route as ApiMessagesUsersSearchRouteImport } from './routes/api/messages/users/search'
 import { Route as ApiProjectsIdConsultantPaymentsRouteImport } from './routes/api/projects/$id/consultant-payments'
 import { Route as ApiProjectsIdDocumentAnnotationsRouteImport } from './routes/api/projects/$id/document-annotations'
 import { Route as ApiProjectsIdDocumentVersionsRouteImport } from './routes/api/projects/$id/document-versions'
@@ -326,6 +327,11 @@ const ApiContractorsArchitectsIdRoute =
     path: '/$id',
     getParentRoute: () => ApiContractorsArchitectsRoute,
   } as any)
+const ApiMessagesUsersSearchRoute = ApiMessagesUsersSearchRouteImport.update({
+  id: '/api/messages/users/search',
+  path: '/api/messages/users/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiProjectsIdConsultantPaymentsRoute =
   ApiProjectsIdConsultantPaymentsRouteImport.update({
     id: '/consultant-payments',
@@ -536,6 +542,7 @@ export interface FileRoutesByFullPath {
   '/marketplace/$id': typeof AuthenticatedAppMarketplaceIdRoute
   '/projects/new': typeof AuthenticatedAppProjectsNewRoute
   '/api/contractors/architects/$id': typeof ApiContractorsArchitectsIdRoute
+  '/api/messages/users/search': typeof ApiMessagesUsersSearchRoute
   '/api/projects/$id/consultant-payments': typeof ApiProjectsIdConsultantPaymentsRoute
   '/api/projects/$id/document-annotations': typeof ApiProjectsIdDocumentAnnotationsRoute
   '/api/projects/$id/document-versions': typeof ApiProjectsIdDocumentVersionsRoute
@@ -612,6 +619,7 @@ export interface FileRoutesByTo {
   '/marketplace/$id': typeof AuthenticatedAppMarketplaceIdRoute
   '/projects/new': typeof AuthenticatedAppProjectsNewRoute
   '/api/contractors/architects/$id': typeof ApiContractorsArchitectsIdRoute
+  '/api/messages/users/search': typeof ApiMessagesUsersSearchRoute
   '/api/projects/$id/consultant-payments': typeof ApiProjectsIdConsultantPaymentsRoute
   '/api/projects/$id/document-annotations': typeof ApiProjectsIdDocumentAnnotationsRoute
   '/api/projects/$id/document-versions': typeof ApiProjectsIdDocumentVersionsRoute
@@ -691,6 +699,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/marketplace/$id': typeof AuthenticatedAppMarketplaceIdRoute
   '/_authenticated/_app/projects/new': typeof AuthenticatedAppProjectsNewRoute
   '/api/contractors/architects/$id': typeof ApiContractorsArchitectsIdRoute
+  '/api/messages/users/search': typeof ApiMessagesUsersSearchRoute
   '/api/projects/$id/consultant-payments': typeof ApiProjectsIdConsultantPaymentsRoute
   '/api/projects/$id/document-annotations': typeof ApiProjectsIdDocumentAnnotationsRoute
   '/api/projects/$id/document-versions': typeof ApiProjectsIdDocumentVersionsRoute
@@ -769,6 +778,7 @@ export interface FileRouteTypes {
     | '/marketplace/$id'
     | '/projects/new'
     | '/api/contractors/architects/$id'
+    | '/api/messages/users/search'
     | '/api/projects/$id/consultant-payments'
     | '/api/projects/$id/document-annotations'
     | '/api/projects/$id/document-versions'
@@ -845,6 +855,7 @@ export interface FileRouteTypes {
     | '/marketplace/$id'
     | '/projects/new'
     | '/api/contractors/architects/$id'
+    | '/api/messages/users/search'
     | '/api/projects/$id/consultant-payments'
     | '/api/projects/$id/document-annotations'
     | '/api/projects/$id/document-versions'
@@ -923,6 +934,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/marketplace/$id'
     | '/_authenticated/_app/projects/new'
     | '/api/contractors/architects/$id'
+    | '/api/messages/users/search'
     | '/api/projects/$id/consultant-payments'
     | '/api/projects/$id/document-annotations'
     | '/api/projects/$id/document-versions'
@@ -988,6 +1000,7 @@ export interface RootRouteChildren {
   ApiFilesUploadRoute: typeof ApiFilesUploadRoute
   ApiOrgStudioProjectRoute: typeof ApiOrgStudioProjectRoute
   ApiOrgTeamRoute: typeof ApiOrgTeamRoute
+  ApiMessagesUsersSearchRoute: typeof ApiMessagesUsersSearchRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1313,6 +1326,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/contractors/architects/$id'
       preLoaderRoute: typeof ApiContractorsArchitectsIdRouteImport
       parentRoute: typeof ApiContractorsArchitectsRoute
+    }
+    '/api/messages/users/search': {
+      id: '/api/messages/users/search'
+      path: '/api/messages/users/search'
+      fullPath: '/api/messages/users/search'
+      preLoaderRoute: typeof ApiMessagesUsersSearchRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/projects/$id/consultant-payments': {
       id: '/api/projects/$id/consultant-payments'
@@ -1753,6 +1773,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiFilesUploadRoute: ApiFilesUploadRoute,
   ApiOrgStudioProjectRoute: ApiOrgStudioProjectRoute,
   ApiOrgTeamRoute: ApiOrgTeamRoute,
+  ApiMessagesUsersSearchRoute: ApiMessagesUsersSearchRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
