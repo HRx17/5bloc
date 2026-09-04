@@ -1,15 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { getAuthUserOrNull, json } from '@/lib/api/get-user.server'
-type Ctx = { params: Promise<{ id: string }> }
 
-const MOCK_MESSAGES: Record<string, any[]> = {}
-
-function mockKey(projectId: string, channel: string) {
-  return `${projectId}:${channel}`
-}
-
-const handleGET = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handleGET = async ({ request, params }: any) => {
+  const { id } = params as { id: string }
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -18,7 +11,7 @@ const handleGET = async ({ request }: any) => {
 
 
 
-  const { data, error } = await auth.supabase.rpc('list_project_channel_messages', {
+  const { data, error } = await auth.supabase!.rpc('list_project_channel_messages', {
     p_project_id: id,
     p_channel: channel,
     p_limit: 200,
@@ -27,8 +20,8 @@ const handleGET = async ({ request }: any) => {
   return json(data || { channel, messages: [] })
 }
 
-const handlePOST = async ({ request }: any) => {
-  const { id } = await ctx.params
+const handlePOST = async ({ request, params }: any) => {
+  const { id } = params as { id: string }
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -45,7 +38,7 @@ const handlePOST = async ({ request }: any) => {
 
 
 
-  const { data, error } = await auth.supabase.rpc('post_project_channel_message', {
+  const { data, error } = await auth.supabase!.rpc('post_project_channel_message', {
     p_project_id: id,
     p_channel: channel,
     p_body: storedBody,
