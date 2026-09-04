@@ -43,13 +43,17 @@ framework, keeping the same design, content and behaviour.
 - Done: `/api/*` porting harness — `/tmp/port_api.py` converts Next route handlers to TanStack
   server routes; `src/lib/api/get-user.server.ts` resolves the caller from the bearer token and
   `src/lib/api/authed-fetch.ts` patches window.fetch so ported `fetch('/api/...')` calls stay unchanged.
-- Done: endpoints ported: me, projects, clients, activity, bids, invoices, meetings,
-  projects/$id/documents. Dashboard screen live at `/dashboard`.
+- Done: endpoints ported: me, projects, projects/$id, clients, clients/$id, activity, bids,
+  invoices, meetings, projects/$id/documents, files/upload (Supabase Storage), org/studio-project.
+- Done: `documents` storage bucket (private, 25 MB cap) with per-user folder access rules.
+- Done: screens live — `/dashboard`, `/projects`, `/projects/new`, `/clients`, `/clients/:id`,
+  `/documents`.
 - Todo: accept-invite screen (needs `/api/invites/accept`, `/api/org/invites/accept`),
   admin role-alias page, `next_invoice_number` RPC.
 - Todo: ported UI kit lives in `src/components/ui5/` (renamed to avoid casing clashes with shadcn).
-- App pages (remaining): projects (+ per-project tabs), clients, marketplace, invoices,
-  documents, messages, calendar, catalog, CAD, AI tools, integrations, settings,
+- App pages (remaining): per-project tabs (overview, documents, rfis, submittals, issues,
+  site, meetings, transmittals, permits, invoices, team, messages, portal),
+  marketplace, invoices, messages, calendar, catalog, CAD, AI tools, integrations, settings,
   role dashboards (builder, contractor, consultant, client), admin.
 - Client portal + payment link pages (`/portal/:token`, `/pay/:token`).
 
