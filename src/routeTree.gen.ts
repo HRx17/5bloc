@@ -87,6 +87,7 @@ import { Route as AuthenticatedAppProjectsIdSiteRouteImport } from './routes/_au
 import { Route as AuthenticatedAppProjectsIdSubmittalsRouteImport } from './routes/_authenticated/_app/projects/$id/submittals'
 import { Route as AuthenticatedAppProjectsIdTeamRouteImport } from './routes/_authenticated/_app/projects/$id/team'
 import { Route as AuthenticatedAppProjectsIdTransmittalsRouteImport } from './routes/_authenticated/_app/projects/$id/transmittals'
+import { Route as ApiMessagesConversationsIdMembersRouteImport } from './routes/api/messages/conversations/$id/members'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -507,6 +508,12 @@ const AuthenticatedAppProjectsIdTransmittalsRoute =
     path: '/projects/$id/transmittals',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const ApiMessagesConversationsIdMembersRoute =
+  ApiMessagesConversationsIdMembersRouteImport.update({
+    id: '/$id/members',
+    path: '/$id/members',
+    getParentRoute: () => ApiMessagesConversationsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -540,7 +547,7 @@ export interface FileRoutesByFullPath {
   '/api/files/download': typeof ApiFilesDownloadRoute
   '/api/files/upload': typeof ApiFilesUploadRoute
   '/api/invoices/$id': typeof ApiInvoicesIdRoute
-  '/api/messages/conversations': typeof ApiMessagesConversationsRoute
+  '/api/messages/conversations': typeof ApiMessagesConversationsRouteWithChildren
   '/api/org/studio-project': typeof ApiOrgStudioProjectRoute
   '/api/org/team': typeof ApiOrgTeamRoute
   '/api/projects/$id': typeof ApiProjectsIdRouteWithChildren
@@ -584,6 +591,7 @@ export interface FileRoutesByFullPath {
   '/projects/$id/submittals': typeof AuthenticatedAppProjectsIdSubmittalsRoute
   '/projects/$id/team': typeof AuthenticatedAppProjectsIdTeamRoute
   '/projects/$id/transmittals': typeof AuthenticatedAppProjectsIdTransmittalsRoute
+  '/api/messages/conversations/$id/members': typeof ApiMessagesConversationsIdMembersRoute
   '/projects/$id/': typeof AuthenticatedAppProjectsIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -618,7 +626,7 @@ export interface FileRoutesByTo {
   '/api/files/download': typeof ApiFilesDownloadRoute
   '/api/files/upload': typeof ApiFilesUploadRoute
   '/api/invoices/$id': typeof ApiInvoicesIdRoute
-  '/api/messages/conversations': typeof ApiMessagesConversationsRoute
+  '/api/messages/conversations': typeof ApiMessagesConversationsRouteWithChildren
   '/api/org/studio-project': typeof ApiOrgStudioProjectRoute
   '/api/org/team': typeof ApiOrgTeamRoute
   '/api/projects/$id': typeof ApiProjectsIdRouteWithChildren
@@ -662,6 +670,7 @@ export interface FileRoutesByTo {
   '/projects/$id/submittals': typeof AuthenticatedAppProjectsIdSubmittalsRoute
   '/projects/$id/team': typeof AuthenticatedAppProjectsIdTeamRoute
   '/projects/$id/transmittals': typeof AuthenticatedAppProjectsIdTransmittalsRoute
+  '/api/messages/conversations/$id/members': typeof ApiMessagesConversationsIdMembersRoute
   '/projects/$id': typeof AuthenticatedAppProjectsIdIndexRoute
 }
 export interface FileRoutesById {
@@ -699,7 +708,7 @@ export interface FileRoutesById {
   '/api/files/download': typeof ApiFilesDownloadRoute
   '/api/files/upload': typeof ApiFilesUploadRoute
   '/api/invoices/$id': typeof ApiInvoicesIdRoute
-  '/api/messages/conversations': typeof ApiMessagesConversationsRoute
+  '/api/messages/conversations': typeof ApiMessagesConversationsRouteWithChildren
   '/api/org/studio-project': typeof ApiOrgStudioProjectRoute
   '/api/org/team': typeof ApiOrgTeamRoute
   '/api/projects/$id': typeof ApiProjectsIdRouteWithChildren
@@ -743,6 +752,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/projects/$id/submittals': typeof AuthenticatedAppProjectsIdSubmittalsRoute
   '/_authenticated/_app/projects/$id/team': typeof AuthenticatedAppProjectsIdTeamRoute
   '/_authenticated/_app/projects/$id/transmittals': typeof AuthenticatedAppProjectsIdTransmittalsRoute
+  '/api/messages/conversations/$id/members': typeof ApiMessagesConversationsIdMembersRoute
   '/_authenticated/_app/projects/$id/': typeof AuthenticatedAppProjectsIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -823,6 +833,7 @@ export interface FileRouteTypes {
     | '/projects/$id/submittals'
     | '/projects/$id/team'
     | '/projects/$id/transmittals'
+    | '/api/messages/conversations/$id/members'
     | '/projects/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -901,6 +912,7 @@ export interface FileRouteTypes {
     | '/projects/$id/submittals'
     | '/projects/$id/team'
     | '/projects/$id/transmittals'
+    | '/api/messages/conversations/$id/members'
     | '/projects/$id'
   id:
     | '__root__'
@@ -981,6 +993,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/projects/$id/submittals'
     | '/_authenticated/_app/projects/$id/team'
     | '/_authenticated/_app/projects/$id/transmittals'
+    | '/api/messages/conversations/$id/members'
     | '/_authenticated/_app/projects/$id/'
   fileRoutesById: FileRoutesById
 }
@@ -1011,7 +1024,7 @@ export interface RootRouteChildren {
   Vs5blocVsProcoreRoute: typeof Vs5blocVsProcoreRoute
   ApiFilesDownloadRoute: typeof ApiFilesDownloadRoute
   ApiFilesUploadRoute: typeof ApiFilesUploadRoute
-  ApiMessagesConversationsRoute: typeof ApiMessagesConversationsRoute
+  ApiMessagesConversationsRoute: typeof ApiMessagesConversationsRouteWithChildren
   ApiOrgStudioProjectRoute: typeof ApiOrgStudioProjectRoute
   ApiOrgTeamRoute: typeof ApiOrgTeamRoute
   ApiMessagesUsersSearchRoute: typeof ApiMessagesUsersSearchRoute
@@ -1565,6 +1578,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppProjectsIdTransmittalsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/api/messages/conversations/$id/members': {
+      id: '/api/messages/conversations/$id/members'
+      path: '/$id/members'
+      fullPath: '/api/messages/conversations/$id/members'
+      preLoaderRoute: typeof ApiMessagesConversationsIdMembersRouteImport
+      parentRoute: typeof ApiMessagesConversationsRoute
+    }
   }
 }
 
@@ -1765,6 +1785,21 @@ const ApiTendersRouteWithChildren = ApiTendersRoute._addFileChildren(
   ApiTendersRouteChildren,
 )
 
+interface ApiMessagesConversationsRouteChildren {
+  ApiMessagesConversationsIdMembersRoute: typeof ApiMessagesConversationsIdMembersRoute
+}
+
+const ApiMessagesConversationsRouteChildren: ApiMessagesConversationsRouteChildren =
+  {
+    ApiMessagesConversationsIdMembersRoute:
+      ApiMessagesConversationsIdMembersRoute,
+  }
+
+const ApiMessagesConversationsRouteWithChildren =
+  ApiMessagesConversationsRoute._addFileChildren(
+    ApiMessagesConversationsRouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -1792,7 +1827,7 @@ const rootRouteChildren: RootRouteChildren = {
   Vs5blocVsProcoreRoute: Vs5blocVsProcoreRoute,
   ApiFilesDownloadRoute: ApiFilesDownloadRoute,
   ApiFilesUploadRoute: ApiFilesUploadRoute,
-  ApiMessagesConversationsRoute: ApiMessagesConversationsRoute,
+  ApiMessagesConversationsRoute: ApiMessagesConversationsRouteWithChildren,
   ApiOrgStudioProjectRoute: ApiOrgStudioProjectRoute,
   ApiOrgTeamRoute: ApiOrgTeamRoute,
   ApiMessagesUsersSearchRoute: ApiMessagesUsersSearchRoute,
