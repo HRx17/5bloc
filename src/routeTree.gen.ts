@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -18,6 +19,7 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as AuthenticatedAppRouteRouteImport } from './routes/_authenticated/_app/route'
 import { Route as ApiActivityRouteImport } from './routes/api/activity'
 import { Route as ApiBidsRouteImport } from './routes/api/bids'
 import { Route as ApiClientsRouteImport } from './routes/api/clients'
@@ -28,11 +30,16 @@ import { Route as ApiProjectsRouteImport } from './routes/api/projects'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as Vs5blocVsFieldwireRouteImport } from './routes/vs/5bloc-vs-fieldwire'
 import { Route as Vs5blocVsProcoreRouteImport } from './routes/vs/5bloc-vs-procore'
+import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authenticated/_app/dashboard'
 import { Route as ApiProjectsIdDocumentsRouteImport } from './routes/api/projects/$id/documents'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -74,6 +81,10 @@ const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAppRouteRoute = AuthenticatedAppRouteRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const ApiActivityRoute = ApiActivityRouteImport.update({
   id: '/api/activity',
@@ -125,6 +136,12 @@ const Vs5blocVsProcoreRoute = Vs5blocVsProcoreRouteImport.update({
   path: '/vs/5bloc-vs-procore',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAppDashboardRoute =
+  AuthenticatedAppDashboardRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 const ApiProjectsIdDocumentsRoute = ApiProjectsIdDocumentsRouteImport.update({
   id: '/$id/documents',
   path: '/$id/documents',
@@ -151,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/vs/5bloc-vs-fieldwire': typeof Vs5blocVsFieldwireRoute
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
+  '/dashboard': typeof AuthenticatedAppDashboardRoute
   '/api/projects/$id/documents': typeof ApiProjectsIdDocumentsRoute
 }
 export interface FileRoutesByTo {
@@ -173,11 +191,13 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/vs/5bloc-vs-fieldwire': typeof Vs5blocVsFieldwireRoute
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
+  '/dashboard': typeof AuthenticatedAppDashboardRoute
   '/api/projects/$id/documents': typeof ApiProjectsIdDocumentsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/changelog': typeof ChangelogRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -186,6 +206,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/_authenticated/_app': typeof AuthenticatedAppRouteRouteWithChildren
   '/api/activity': typeof ApiActivityRoute
   '/api/bids': typeof ApiBidsRoute
   '/api/clients': typeof ApiClientsRoute
@@ -196,6 +217,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/vs/5bloc-vs-fieldwire': typeof Vs5blocVsFieldwireRoute
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
+  '/_authenticated/_app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/api/projects/$id/documents': typeof ApiProjectsIdDocumentsRoute
 }
 export interface FileRouteTypes {
@@ -220,6 +242,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/vs/5bloc-vs-fieldwire'
     | '/vs/5bloc-vs-procore'
+    | '/dashboard'
     | '/api/projects/$id/documents'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -242,10 +265,12 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/vs/5bloc-vs-fieldwire'
     | '/vs/5bloc-vs-procore'
+    | '/dashboard'
     | '/api/projects/$id/documents'
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
     | '/about'
     | '/changelog'
     | '/forgot-password'
@@ -254,6 +279,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/signup'
     | '/terms'
+    | '/_authenticated/_app'
     | '/api/activity'
     | '/api/bids'
     | '/api/clients'
@@ -264,11 +290,13 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/vs/5bloc-vs-fieldwire'
     | '/vs/5bloc-vs-procore'
+    | '/_authenticated/_app/dashboard'
     | '/api/projects/$id/documents'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   ChangelogRoute: typeof ChangelogRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
@@ -296,6 +324,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -353,6 +388,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/_app': {
+      id: '/_authenticated/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedAppRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/activity': {
       id: '/api/activity'
@@ -424,6 +466,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Vs5blocVsProcoreRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/_app/dashboard': {
+      id: '/_authenticated/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedAppDashboardRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/api/projects/$id/documents': {
       id: '/api/projects/$id/documents'
       path: '/$id/documents'
@@ -433,6 +482,30 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthenticatedAppRouteRouteChildren {
+  AuthenticatedAppDashboardRoute: typeof AuthenticatedAppDashboardRoute
+}
+
+const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
+  AuthenticatedAppDashboardRoute: AuthenticatedAppDashboardRoute,
+}
+
+const AuthenticatedAppRouteRouteWithChildren =
+  AuthenticatedAppRouteRoute._addFileChildren(
+    AuthenticatedAppRouteRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAppRouteRoute: typeof AuthenticatedAppRouteRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAppRouteRoute: AuthenticatedAppRouteRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 interface ApiProjectsRouteChildren {
   ApiProjectsIdDocumentsRoute: typeof ApiProjectsIdDocumentsRoute
@@ -448,6 +521,7 @@ const ApiProjectsRouteWithChildren = ApiProjectsRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   ChangelogRoute: ChangelogRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
