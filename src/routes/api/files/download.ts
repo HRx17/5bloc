@@ -5,21 +5,21 @@ import { resolveStorageDownloadUrl } from '@/lib/files/resolve-download'
 const handleGET = async ({ request }: any) => {
   try {
     const auth = await getAuthUserOrNull(request)
-    const docId = req.nextUrl.searchParams.get('id')
-    const inline = req.nextUrl.searchParams.get('inline') === '1'
+    const docId = new URL(request.url).searchParams.get('id')
+    const inline = new URL(request.url).searchParams.get('inline') === '1'
 
     if (!docId) {
       return json({ error: 'Missing document id parameter' }, { status: 400 })
     }
 
-    if (!auth.supabase) {
+    if (!auth?.supabase) {
       return json(
         { error: 'Auth/storage not configured', provider: 'mock' },
         { status: 503 }
       )
     }
 
-    const { data: doc, error } = await auth.supabase
+    const { data: doc, error } = await auth.supabase!
       .from('documents')
       .select('r2_key, storage_path, name, original_filename, extension')
       .eq('id', docId)
