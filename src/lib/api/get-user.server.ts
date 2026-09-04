@@ -8,6 +8,10 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/integrations/supabase/types'
 
+// Ported endpoints were written against an untyped client; keep that shape so the
+// query builders behave exactly as they did before.
+type AnyClient = SupabaseClient<any, any, any>
+
 export type AuthProfile = {
   id: string
   auth_id?: string
@@ -26,7 +30,7 @@ export type AuthProfile = {
 export type AuthContext = {
   user: { id: string; email?: string | null }
   profile: AuthProfile
-  supabase: SupabaseClient<Database>
+  supabase: AnyClient
   orgId: string | null
   isMock: false
 }
@@ -51,7 +55,7 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
   }
 }
 
-export function userClient(token: string): SupabaseClient<Database> {
+export function userClient(token: string): AnyClient {
   const url = process.env['SUPABASE_URL']!
   const key = process.env['SUPABASE_PUBLISHABLE_KEY']!
   return createClient<Database>(url, key, {
@@ -64,7 +68,7 @@ export function userClient(token: string): SupabaseClient<Database> {
 }
 
 async function loadProfile(
-  supabase: SupabaseClient<Database>,
+  supabase: AnyClient,
   authUserId: string,
 ): Promise<AuthProfile | null> {
   const { data } = await supabase
