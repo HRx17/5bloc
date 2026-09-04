@@ -115,7 +115,7 @@ export function WaitlistForm({
     setBusy(true)
     setError('')
     try {
-      const payload: Record<string, string | null> = {
+      const payload = {
         email: email.trim().toLowerCase(),
         name: name.trim() || null,
         role,
@@ -130,6 +130,7 @@ export function WaitlistForm({
           email: payload.email,
           name: payload.name,
           role: payload.role,
+
           firm: [firm.trim(), city.trim()].filter(Boolean).join(' · ') || null,
         })
         dbError = retry.error

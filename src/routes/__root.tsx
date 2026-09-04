@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { installAuthedFetch } from "../lib/api/authed-fetch";
 
 function NotFoundComponent() {
   return (
@@ -101,6 +102,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
+
+// Patch before any component effect runs, so the first /api call carries the token.
+installAuthedFetch();
 
 function RootShell({ children }: { children: ReactNode }) {
   return (

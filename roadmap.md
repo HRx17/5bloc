@@ -34,10 +34,21 @@ framework, keeping the same design, content and behaviour.
   (`/api/public/*` for webhooks: Stripe, Razorpay, cron).
 - Secrets needed: Stripe, Razorpay, Resend, Anthropic, Upstash, R2/S3, Autodesk, Google OAuth.
 
-## Stage 3: authenticated app
-- Auth pages: login, signup, forgot-password, onboarding, accept-invite, auth callback.
-- App shell (Sidebar, TopNav, notifications, toast/confirm/prompt/messages providers).
-- App pages: dashboard, projects (+ per-project tabs), clients, marketplace, invoices,
+## Stage 3: authenticated app (in progress)
+- Done: auth pages login, signup, forgot-password, onboarding, auth callback; Google sign-in via
+  the managed OAuth helper; `completeOnboarding` server function creates profile + org + contractor row.
+- Done: app shell (AppShell, Sidebar, TopNav, NotificationsBell reading the notifications table,
+  Toast/Confirm/Prompt providers, placeholder MessagesProvider) under
+  `src/routes/_authenticated/route.tsx` (gate) + `_authenticated/_app/route.tsx` (shell).
+- Done: `/api/*` porting harness — `/tmp/port_api.py` converts Next route handlers to TanStack
+  server routes; `src/lib/api/get-user.server.ts` resolves the caller from the bearer token and
+  `src/lib/api/authed-fetch.ts` patches window.fetch so ported `fetch('/api/...')` calls stay unchanged.
+- Done: endpoints ported: me, projects, clients, activity, bids, invoices, meetings,
+  projects/$id/documents. Dashboard screen live at `/dashboard`.
+- Todo: accept-invite screen (needs `/api/invites/accept`, `/api/org/invites/accept`),
+  admin role-alias page, `next_invoice_number` RPC.
+- Todo: ported UI kit lives in `src/components/ui5/` (renamed to avoid casing clashes with shadcn).
+- App pages (remaining): projects (+ per-project tabs), clients, marketplace, invoices,
   documents, messages, calendar, catalog, CAD, AI tools, integrations, settings,
   role dashboards (builder, contractor, consultant, client), admin.
 - Client portal + payment link pages (`/portal/:token`, `/pay/:token`).
