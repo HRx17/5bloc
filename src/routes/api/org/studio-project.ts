@@ -17,7 +17,7 @@ async function findStudio(supabase: any, orgId: string) {
 const handleGET = async ({ request }: any) => {
   const auth = await getAuthUserOrNull(request)
   if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
-  const project = await findStudio(auth.supabase, auth.orgId)
+  const project = await findStudio(auth.supabase, auth.orgId!)
   return json({ project })
 }
 
@@ -31,7 +31,7 @@ const handlePOST = async ({ request }: any) => {
     return json({ error: 'Complete firm onboarding first' }, { status: 400 })
   }
 
-  const existing = await findStudio(auth.supabase, auth.orgId)
+  const existing = await findStudio(auth.supabase, auth.orgId!)
   if (existing) return json({ project: existing, created: false })
 
   const dates = studioDates()
