@@ -100,3 +100,13 @@ Autodesk OAuth credentials. All third-party services are the repo's own, not pla
 ## Out of scope / cannot port
 - Electron desktop wrapper (`electron/`) — desktop builds stay in the GitHub repo.
 - Service worker / offline PWA behaviour needs rebuilding on this framework.
+
+## Third-party services (own accounts, nothing platform-provided)
+- Supabase: auth, Postgres, RLS, realtime, `documents` storage fallback
+- Resend: transactional email from contact@5bloc.com
+- Anthropic: AI estimate / contract scan / code Q&A
+- Razorpay + Stripe: subscriptions, invoice pay links, webhooks at `/api/public/webhooks/{razorpay,stripe}`
+- Cloudflare R2 (primary files) with Supabase Storage fallback; Autodesk APS for CAD
+- Google OAuth + Workspace (Drive/Gmail/Calendar); Google Fonts CDN
+- Upstash Redis rate limiting; cron `/api/public/cron/meeting-reminders` (CRON_SECRET)
+- HeyCatch analytics, PostHog (VITE_POSTHOG_KEY), Sentry envelopes (SENTRY_DSN / VITE_SENTRY_DSN)
