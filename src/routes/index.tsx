@@ -1,24 +1,34 @@
 import { createFileRoute } from "@tanstack/react-router";
+import HomePage from "@/components/site/HomePage";
+import { SITE_DESCRIPTION, SITE_TITLE, homepageJsonLd } from "@/lib/site/marketing";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
-export const Route = createFileRoute("/")({
-  component: Index,
-});
+function IndexPage() {
+  const jsonLd = homepageJsonLd();
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
-function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <>
+      {jsonLd.map((block, i) => (
+        <script
+          key={(block as { "@type"?: string })["@type"] ?? i}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(block) }}
+        />
+      ))}
+      <HomePage />
+    </>
   );
 }
+
+export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: SITE_TITLE },
+      { name: "description", content: SITE_DESCRIPTION },
+      { property: "og:title", content: SITE_TITLE },
+      { property: "og:description", content: SITE_DESCRIPTION },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: IndexPage,
+});
