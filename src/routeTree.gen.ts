@@ -42,6 +42,7 @@ import { Route as ApiContractorsArchitectsRouteImport } from './routes/api/contr
 import { Route as ApiFilesDownloadRouteImport } from './routes/api/files/download'
 import { Route as ApiFilesUploadRouteImport } from './routes/api/files/upload'
 import { Route as ApiInvoicesIdRouteImport } from './routes/api/invoices/$id'
+import { Route as ApiMessagesConversationsRouteImport } from './routes/api/messages/conversations'
 import { Route as ApiOrgStudioProjectRouteImport } from './routes/api/org/studio-project'
 import { Route as ApiOrgTeamRouteImport } from './routes/api/org/team'
 import { Route as ApiProjectsIdRouteImport } from './routes/api/projects/$id'
@@ -253,6 +254,12 @@ const ApiInvoicesIdRoute = ApiInvoicesIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiInvoicesRoute,
 } as any)
+const ApiMessagesConversationsRoute =
+  ApiMessagesConversationsRouteImport.update({
+    id: '/api/messages/conversations',
+    path: '/api/messages/conversations',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiOrgStudioProjectRoute = ApiOrgStudioProjectRouteImport.update({
   id: '/api/org/studio-project',
   path: '/api/org/studio-project',
@@ -533,6 +540,7 @@ export interface FileRoutesByFullPath {
   '/api/files/download': typeof ApiFilesDownloadRoute
   '/api/files/upload': typeof ApiFilesUploadRoute
   '/api/invoices/$id': typeof ApiInvoicesIdRoute
+  '/api/messages/conversations': typeof ApiMessagesConversationsRoute
   '/api/org/studio-project': typeof ApiOrgStudioProjectRoute
   '/api/org/team': typeof ApiOrgTeamRoute
   '/api/projects/$id': typeof ApiProjectsIdRouteWithChildren
@@ -610,6 +618,7 @@ export interface FileRoutesByTo {
   '/api/files/download': typeof ApiFilesDownloadRoute
   '/api/files/upload': typeof ApiFilesUploadRoute
   '/api/invoices/$id': typeof ApiInvoicesIdRoute
+  '/api/messages/conversations': typeof ApiMessagesConversationsRoute
   '/api/org/studio-project': typeof ApiOrgStudioProjectRoute
   '/api/org/team': typeof ApiOrgTeamRoute
   '/api/projects/$id': typeof ApiProjectsIdRouteWithChildren
@@ -690,6 +699,7 @@ export interface FileRoutesById {
   '/api/files/download': typeof ApiFilesDownloadRoute
   '/api/files/upload': typeof ApiFilesUploadRoute
   '/api/invoices/$id': typeof ApiInvoicesIdRoute
+  '/api/messages/conversations': typeof ApiMessagesConversationsRoute
   '/api/org/studio-project': typeof ApiOrgStudioProjectRoute
   '/api/org/team': typeof ApiOrgTeamRoute
   '/api/projects/$id': typeof ApiProjectsIdRouteWithChildren
@@ -769,6 +779,7 @@ export interface FileRouteTypes {
     | '/api/files/download'
     | '/api/files/upload'
     | '/api/invoices/$id'
+    | '/api/messages/conversations'
     | '/api/org/studio-project'
     | '/api/org/team'
     | '/api/projects/$id'
@@ -846,6 +857,7 @@ export interface FileRouteTypes {
     | '/api/files/download'
     | '/api/files/upload'
     | '/api/invoices/$id'
+    | '/api/messages/conversations'
     | '/api/org/studio-project'
     | '/api/org/team'
     | '/api/projects/$id'
@@ -925,6 +937,7 @@ export interface FileRouteTypes {
     | '/api/files/download'
     | '/api/files/upload'
     | '/api/invoices/$id'
+    | '/api/messages/conversations'
     | '/api/org/studio-project'
     | '/api/org/team'
     | '/api/projects/$id'
@@ -998,6 +1011,7 @@ export interface RootRouteChildren {
   Vs5blocVsProcoreRoute: typeof Vs5blocVsProcoreRoute
   ApiFilesDownloadRoute: typeof ApiFilesDownloadRoute
   ApiFilesUploadRoute: typeof ApiFilesUploadRoute
+  ApiMessagesConversationsRoute: typeof ApiMessagesConversationsRoute
   ApiOrgStudioProjectRoute: typeof ApiOrgStudioProjectRoute
   ApiOrgTeamRoute: typeof ApiOrgTeamRoute
   ApiMessagesUsersSearchRoute: typeof ApiMessagesUsersSearchRoute
@@ -1235,6 +1249,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/invoices/$id'
       preLoaderRoute: typeof ApiInvoicesIdRouteImport
       parentRoute: typeof ApiInvoicesRoute
+    }
+    '/api/messages/conversations': {
+      id: '/api/messages/conversations'
+      path: '/api/messages/conversations'
+      fullPath: '/api/messages/conversations'
+      preLoaderRoute: typeof ApiMessagesConversationsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/org/studio-project': {
       id: '/api/org/studio-project'
@@ -1771,6 +1792,7 @@ const rootRouteChildren: RootRouteChildren = {
   Vs5blocVsProcoreRoute: Vs5blocVsProcoreRoute,
   ApiFilesDownloadRoute: ApiFilesDownloadRoute,
   ApiFilesUploadRoute: ApiFilesUploadRoute,
+  ApiMessagesConversationsRoute: ApiMessagesConversationsRoute,
   ApiOrgStudioProjectRoute: ApiOrgStudioProjectRoute,
   ApiOrgTeamRoute: ApiOrgTeamRoute,
   ApiMessagesUsersSearchRoute: ApiMessagesUsersSearchRoute,
