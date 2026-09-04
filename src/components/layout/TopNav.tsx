@@ -63,20 +63,13 @@ export default function TopNav({
           <Logo size={24} showTagline={false} />
         </div>
 
-        <div className="hidden lg:flex items-center relative max-w-[280px] w-full">
-          <span
-            className="material-icons-outlined absolute left-2.5 text-[15px] pointer-events-none"
-            style={{ color: 'var(--stone)' }}
-          >
-            search
-          </span>
-          <input
-            type="text"
-            placeholder="Search projects, contacts..."
-            className="input-5bloc pl-9 text-[12.5px] py-2"
-            style={{ background: 'var(--surface-container-low)' }}
-          />
+        <div className="hidden lg:block max-w-[320px] w-full">
+          <div className="search-5bloc">
+            <span className="material-icons-outlined">search</span>
+            <input type="text" placeholder="Search projects, contacts..." />
+          </div>
         </div>
+
       </div>
 
       <div className="flex items-center gap-1">
