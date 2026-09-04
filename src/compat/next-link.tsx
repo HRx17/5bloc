@@ -21,7 +21,8 @@ export default function Link({
   children,
   ...rest
 }: LinkProps) {
-  const isInternal = typeof href === "string" && href.startsWith("/") && !href.startsWith("//");
+  const isInternal =
+    typeof href === "string" && href.startsWith("/") && !href.startsWith("//");
 
   if (!isInternal) {
     return (
@@ -32,7 +33,7 @@ export default function Link({
   }
 
   return (
-    <RouterLink to={href} replace={replace} {...rest}>
+    <RouterLink to={href} replace={replace === true} {...rest}>
       {children}
     </RouterLink>
   );
