@@ -5,7 +5,9 @@ import { draftRFIResponse } from '@/lib/ai/rfi'
 
 const handlePOST = async ({ request }: any) => {
   try {
-    const { profile } = await getAuthUserOrNull(request)
+    const auth = await getAuthUserOrNull(request)
+    if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
+    const { profile } = auth
 
     // Check rate limit
     const limit = await checkAIRateLimit(

@@ -11,7 +11,7 @@ const handleGET = async ({ request }: any) => {
     const auth = await getAuthUserOrNull(request)
     const docId = new URL(request.url).searchParams.get('id')
     if (!docId) return json({ error: 'Missing document id' }, { status: 400 })
-    if (!auth.supabase) {
+    if (!auth?.supabase) {
       return json({ error: 'Auth/storage not configured' }, { status: 503 })
     }
 

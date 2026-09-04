@@ -78,7 +78,19 @@ export async function fetchSubscription(subscriptionId: string) {
   return call<any>(`/subscriptions/${subscriptionId}`)
 }
 
-export async function cancelSubscription(subscriptionId: string) {
+export async function cancelSubscription(subscriptionId: string, atCycleEnd = true) {
   if (!subscriptionId || subscriptionId.startsWith('sub_mock_')) return null
-  return call<any>(`/subscriptions/${subscriptionId}/cancel`, { method: 'POST' })
+  return call<any>(`/subscriptions/${subscriptionId}/cancel`, {
+    method: 'POST',
+    body: JSON.stringify({ cancel_at_cycle_end: atCycleEnd ? 1 : 0 }),
+  })
+}
+
+/** Recent invoices raised against a subscription (billing history). */
+export async function listSubscriptionInvoices(subscriptionId: string) {
+  if (!subscriptionId || subscriptionId.startsWith('sub_mock_')) return []
+  const res = await call<{ items?: any[] }>(
+    `/invoices?subscription_id=${encodeURIComponent(subscriptionId)}&count=12`,
+  )
+  return res?.items ?? []
 }

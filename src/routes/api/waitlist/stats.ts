@@ -1,7 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { createClient } from '@supabase/supabase-js'
-import { hasSupabaseEnv } from '@/lib/rbac/mock'
-import { hasValidServiceRoleKey } from '@/lib/supabase/server'
+import { json } from '@/lib/api/get-user.server'
+import { createServiceRoleClient, createSupabasePublicClient, hasValidServiceRoleKey, isSupabaseConfigured } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,14 +20,10 @@ const handleGET = async ({ request }: any) => {
     last_label: 'Someone joined the waitlist recently',
   }
 
-  if (!hasSupabaseEnv()) return json(fallback)
+  if (!isSupabaseConfigured()) return json(fallback)
 
   try {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const key = hasValidServiceRoleKey()
-      ? process.env.SUPABASE_SERVICE_ROLE_KEY!
-      : process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    const supabase = createClient(url, key, { auth: { persistSession: false } })
+    const supabase = hasValidServiceRoleKey() ? createServiceRoleClient() : createSupabasePublicClient()
     const { data } = await supabase
       .from('waitlist')
       .select('city, created_at')
