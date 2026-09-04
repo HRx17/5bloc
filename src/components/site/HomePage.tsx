@@ -11,7 +11,7 @@ import { Logo } from '@/components/brand/LogoMark'
 import { createSupabaseClient } from '@/lib/supabase/client'
 import { FAQS, FOUNDERS, FOUNDER_STORY, TESTIMONIALS, WAITLIST_AVATARS } from '@/lib/site/marketing'
 import { UnlockLandingScroll } from '@/components/site/UnlockLandingScroll'
-import '../../app/landing.css'
+import '@/landing.css'
 
 const WAITLIST_COUNT = '400+'
 

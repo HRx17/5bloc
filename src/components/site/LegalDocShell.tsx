@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { Logo } from '@/components/brand/LogoMark'
 import { UnlockLandingScroll } from '@/components/site/UnlockLandingScroll'
-import '@/app/landing.css'
+import '@/landing.css'
 
 /** Light cream legal/doc chrome — matches https://5bloc.com marketing surface */
 export function LegalDocShell({
