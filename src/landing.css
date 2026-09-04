@@ -126,6 +126,7 @@ html.landing-page-active body {
   font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.01em;
+  white-space: nowrap;
   color: #fff;
 }
 
@@ -280,6 +281,7 @@ html.landing-page-active body {
 .landing-apple .lp-nav-link {
   font-size: 0.75rem;
   font-weight: 400;
+  white-space: nowrap;
   color: var(--lp-text);
   opacity: 0.88;
   transition: opacity 0.2s ease;

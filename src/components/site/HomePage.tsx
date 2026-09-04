@@ -72,12 +72,12 @@ function AppleNav() {
         borderBottom: scrolled ? '1px solid var(--lp-border)' : '1px solid transparent',
       }}
     >
-      <div className="mx-auto flex h-11 max-w-[980px] items-center justify-between px-5 sm:px-6">
+      <div className="mx-auto flex h-11 max-w-[1180px] items-center justify-between px-5 sm:px-6">
         <Link href="/" className="opacity-90 hover:opacity-100 transition-opacity select-none">
           <Logo size={22} showTagline={false} color="var(--lp-text)" />
         </Link>
 
-        <nav className="hidden md:flex items-center gap-7">
+        <nav className="hidden lg:flex items-center gap-6">
           {links.map((l) => (
             <Link key={l.href} href={l.href} className="lp-nav-link">
               {l.label}
@@ -85,7 +85,7 @@ function AppleNav() {
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-2.5">
+        <div className="hidden lg:flex items-center gap-2.5 ml-6 shrink-0">
           <a href="#architect-waitlist" className="lp-nav-link hidden lg:inline">Architects</a>
           <Link href="/list-your-business" className="lp-btn lp-btn-nav">
             Contractors (free)
@@ -97,7 +97,7 @@ function AppleNav() {
 
         <button
           type="button"
-          className="md:hidden p-2 -mr-2"
+          className="lg:hidden p-2 -mr-2"
           onClick={() => setOpen((v) => !v)}
           aria-label="Menu"
         >
@@ -109,7 +109,7 @@ function AppleNav() {
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          className="md:hidden border-t"
+          className="lg:hidden border-t"
           style={{ borderColor: 'var(--lp-border)', background: 'var(--lp-nav-bg-scrolled)' }}
         >
           <div className="px-5 py-4 space-y-1">
