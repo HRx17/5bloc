@@ -18,9 +18,17 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as ApiActivityRouteImport } from './routes/api/activity'
+import { Route as ApiBidsRouteImport } from './routes/api/bids'
+import { Route as ApiClientsRouteImport } from './routes/api/clients'
+import { Route as ApiInvoicesRouteImport } from './routes/api/invoices'
+import { Route as ApiMeRouteImport } from './routes/api/me'
+import { Route as ApiMeetingsRouteImport } from './routes/api/meetings'
+import { Route as ApiProjectsRouteImport } from './routes/api/projects'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as Vs5blocVsFieldwireRouteImport } from './routes/vs/5bloc-vs-fieldwire'
 import { Route as Vs5blocVsProcoreRouteImport } from './routes/vs/5bloc-vs-procore'
+import { Route as ApiProjectsIdDocumentsRouteImport } from './routes/api/projects/$id/documents'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -67,6 +75,41 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiActivityRoute = ApiActivityRouteImport.update({
+  id: '/api/activity',
+  path: '/api/activity',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBidsRoute = ApiBidsRouteImport.update({
+  id: '/api/bids',
+  path: '/api/bids',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiClientsRoute = ApiClientsRouteImport.update({
+  id: '/api/clients',
+  path: '/api/clients',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiInvoicesRoute = ApiInvoicesRouteImport.update({
+  id: '/api/invoices',
+  path: '/api/invoices',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMeRoute = ApiMeRouteImport.update({
+  id: '/api/me',
+  path: '/api/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMeetingsRoute = ApiMeetingsRouteImport.update({
+  id: '/api/meetings',
+  path: '/api/meetings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiProjectsRoute = ApiProjectsRouteImport.update({
+  id: '/api/projects',
+  path: '/api/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
@@ -82,6 +125,11 @@ const Vs5blocVsProcoreRoute = Vs5blocVsProcoreRouteImport.update({
   path: '/vs/5bloc-vs-procore',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiProjectsIdDocumentsRoute = ApiProjectsIdDocumentsRouteImport.update({
+  id: '/$id/documents',
+  path: '/$id/documents',
+  getParentRoute: () => ApiProjectsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -93,9 +141,17 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/api/activity': typeof ApiActivityRoute
+  '/api/bids': typeof ApiBidsRoute
+  '/api/clients': typeof ApiClientsRoute
+  '/api/invoices': typeof ApiInvoicesRoute
+  '/api/me': typeof ApiMeRoute
+  '/api/meetings': typeof ApiMeetingsRoute
+  '/api/projects': typeof ApiProjectsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/vs/5bloc-vs-fieldwire': typeof Vs5blocVsFieldwireRoute
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
+  '/api/projects/$id/documents': typeof ApiProjectsIdDocumentsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -107,9 +163,17 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/api/activity': typeof ApiActivityRoute
+  '/api/bids': typeof ApiBidsRoute
+  '/api/clients': typeof ApiClientsRoute
+  '/api/invoices': typeof ApiInvoicesRoute
+  '/api/me': typeof ApiMeRoute
+  '/api/meetings': typeof ApiMeetingsRoute
+  '/api/projects': typeof ApiProjectsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/vs/5bloc-vs-fieldwire': typeof Vs5blocVsFieldwireRoute
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
+  '/api/projects/$id/documents': typeof ApiProjectsIdDocumentsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -122,9 +186,17 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/api/activity': typeof ApiActivityRoute
+  '/api/bids': typeof ApiBidsRoute
+  '/api/clients': typeof ApiClientsRoute
+  '/api/invoices': typeof ApiInvoicesRoute
+  '/api/me': typeof ApiMeRoute
+  '/api/meetings': typeof ApiMeetingsRoute
+  '/api/projects': typeof ApiProjectsRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/vs/5bloc-vs-fieldwire': typeof Vs5blocVsFieldwireRoute
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
+  '/api/projects/$id/documents': typeof ApiProjectsIdDocumentsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -138,9 +210,17 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/signup'
     | '/terms'
+    | '/api/activity'
+    | '/api/bids'
+    | '/api/clients'
+    | '/api/invoices'
+    | '/api/me'
+    | '/api/meetings'
+    | '/api/projects'
     | '/auth/callback'
     | '/vs/5bloc-vs-fieldwire'
     | '/vs/5bloc-vs-procore'
+    | '/api/projects/$id/documents'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -152,9 +232,17 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/signup'
     | '/terms'
+    | '/api/activity'
+    | '/api/bids'
+    | '/api/clients'
+    | '/api/invoices'
+    | '/api/me'
+    | '/api/meetings'
+    | '/api/projects'
     | '/auth/callback'
     | '/vs/5bloc-vs-fieldwire'
     | '/vs/5bloc-vs-procore'
+    | '/api/projects/$id/documents'
   id:
     | '__root__'
     | '/'
@@ -166,9 +254,17 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/signup'
     | '/terms'
+    | '/api/activity'
+    | '/api/bids'
+    | '/api/clients'
+    | '/api/invoices'
+    | '/api/me'
+    | '/api/meetings'
+    | '/api/projects'
     | '/auth/callback'
     | '/vs/5bloc-vs-fieldwire'
     | '/vs/5bloc-vs-procore'
+    | '/api/projects/$id/documents'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -181,6 +277,13 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   SignupRoute: typeof SignupRoute
   TermsRoute: typeof TermsRoute
+  ApiActivityRoute: typeof ApiActivityRoute
+  ApiBidsRoute: typeof ApiBidsRoute
+  ApiClientsRoute: typeof ApiClientsRoute
+  ApiInvoicesRoute: typeof ApiInvoicesRoute
+  ApiMeRoute: typeof ApiMeRoute
+  ApiMeetingsRoute: typeof ApiMeetingsRoute
+  ApiProjectsRoute: typeof ApiProjectsRouteWithChildren
   AuthCallbackRoute: typeof AuthCallbackRoute
   Vs5blocVsFieldwireRoute: typeof Vs5blocVsFieldwireRoute
   Vs5blocVsProcoreRoute: typeof Vs5blocVsProcoreRoute
@@ -251,6 +354,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/activity': {
+      id: '/api/activity'
+      path: '/api/activity'
+      fullPath: '/api/activity'
+      preLoaderRoute: typeof ApiActivityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/bids': {
+      id: '/api/bids'
+      path: '/api/bids'
+      fullPath: '/api/bids'
+      preLoaderRoute: typeof ApiBidsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/clients': {
+      id: '/api/clients'
+      path: '/api/clients'
+      fullPath: '/api/clients'
+      preLoaderRoute: typeof ApiClientsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/invoices': {
+      id: '/api/invoices'
+      path: '/api/invoices'
+      fullPath: '/api/invoices'
+      preLoaderRoute: typeof ApiInvoicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/me': {
+      id: '/api/me'
+      path: '/api/me'
+      fullPath: '/api/me'
+      preLoaderRoute: typeof ApiMeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/meetings': {
+      id: '/api/meetings'
+      path: '/api/meetings'
+      fullPath: '/api/meetings'
+      preLoaderRoute: typeof ApiMeetingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/projects': {
+      id: '/api/projects'
+      path: '/api/projects'
+      fullPath: '/api/projects'
+      preLoaderRoute: typeof ApiProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/callback': {
       id: '/auth/callback'
       path: '/auth/callback'
@@ -272,8 +424,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Vs5blocVsProcoreRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/projects/$id/documents': {
+      id: '/api/projects/$id/documents'
+      path: '/$id/documents'
+      fullPath: '/api/projects/$id/documents'
+      preLoaderRoute: typeof ApiProjectsIdDocumentsRouteImport
+      parentRoute: typeof ApiProjectsRoute
+    }
   }
 }
+
+interface ApiProjectsRouteChildren {
+  ApiProjectsIdDocumentsRoute: typeof ApiProjectsIdDocumentsRoute
+}
+
+const ApiProjectsRouteChildren: ApiProjectsRouteChildren = {
+  ApiProjectsIdDocumentsRoute: ApiProjectsIdDocumentsRoute,
+}
+
+const ApiProjectsRouteWithChildren = ApiProjectsRoute._addFileChildren(
+  ApiProjectsRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -285,6 +456,13 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   SignupRoute: SignupRoute,
   TermsRoute: TermsRoute,
+  ApiActivityRoute: ApiActivityRoute,
+  ApiBidsRoute: ApiBidsRoute,
+  ApiClientsRoute: ApiClientsRoute,
+  ApiInvoicesRoute: ApiInvoicesRoute,
+  ApiMeRoute: ApiMeRoute,
+  ApiMeetingsRoute: ApiMeetingsRoute,
+  ApiProjectsRoute: ApiProjectsRouteWithChildren,
   AuthCallbackRoute: AuthCallbackRoute,
   Vs5blocVsFieldwireRoute: Vs5blocVsFieldwireRoute,
   Vs5blocVsProcoreRoute: Vs5blocVsProcoreRoute,
