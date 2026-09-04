@@ -47,14 +47,20 @@ framework, keeping the same design, content and behaviour.
   invoices, meetings, projects/$id/documents, files/upload (Supabase Storage), org/studio-project.
 - Done: `documents` storage bucket (private, 25 MB cap) with per-user folder access rules.
 - Done: screens live — `/dashboard`, `/projects`, `/projects/new`, `/clients`, `/clients/:id`,
-  `/documents`.
+  `/documents`, `/invoices`, `/invoices/new`, `/marketplace`, `/marketplace/:id`,
+  `/marketplace/architects/:id`, `/marketplace/tenders/:id`.
+- Done: endpoints added: invoices/$id, contractors (+ $id, architects, architects/$id),
+  tenders (+ $id), notifications, org/team, projects/$id/tenders; `src/lib/supabase/server.ts`
+  (service-role + publishable server clients) and `src/lib/email/resend.ts` (Resend HTTP API,
+  no-ops without a key).
 - Todo: accept-invite screen (needs `/api/invites/accept`, `/api/org/invites/accept`),
   admin role-alias page, `next_invoice_number` RPC.
 - Todo: ported UI kit lives in `src/components/ui5/` (renamed to avoid casing clashes with shadcn).
 - App pages (remaining): per-project tabs (overview, documents, rfis, submittals, issues,
   site, meetings, transmittals, permits, invoices, team, messages, portal),
-  marketplace, invoices, messages, calendar, catalog, CAD, AI tools, integrations, settings,
+  messages, calendar, catalog, CAD, AI tools, integrations, settings,
   role dashboards (builder, contractor, consultant, client), admin.
+
 - Client portal + payment link pages (`/portal/:token`, `/pay/:token`).
 
 ## Out of scope / cannot port
