@@ -1141,3 +1141,98 @@ svg.lucide {
   --color-slate: #6e6e73;
   --color-sandstone: var(--sandstone);
 }
+
+/* ══════════════════════════════════
+   MATERIAL SURFACES — light rail + data tables
+   (design direction: "Light rail, data tables")
+════════════════════════════════════ */
+.card-m {
+  background: var(--surface-elevated);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04), inset 0 0 0 1px var(--hairline);
+  transition: box-shadow 0.18s ease;
+}
+.card-m-hover:hover {
+  box-shadow: 0 6px 18px rgba(0,0,0,0.07), inset 0 0 0 1px var(--hairline-strong);
+}
+.card-m-head {
+  padding: 16px 20px;
+  box-shadow: inset 0 -1px 0 var(--hairline);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.card-m-title { font-size: 15px; font-weight: 650; letter-spacing: -0.01em; }
+
+.stat-m { padding: 18px 20px; }
+.stat-m .stat-m-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--stone);
+}
+.stat-m .stat-m-value {
+  font-size: 30px;
+  line-height: 1.1;
+  font-weight: 680;
+  letter-spacing: -0.02em;
+  margin-top: 6px;
+  color: var(--on-surface);
+}
+.stat-m .stat-m-note { font-size: 11.5px; margin-top: 8px; color: var(--stone); }
+
+.table-m { width: 100%; text-align: left; border-collapse: collapse; }
+.table-m thead th {
+  padding: 10px 20px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--stone);
+  background: var(--surface-container-low);
+  box-shadow: inset 0 -1px 0 var(--hairline);
+  white-space: nowrap;
+}
+.table-m tbody td { padding: 14px 20px; font-size: 13.5px; vertical-align: middle; }
+.table-m tbody tr { box-shadow: inset 0 -1px 0 var(--hairline); transition: background 0.15s ease; }
+.table-m tbody tr:last-child { box-shadow: none; }
+.table-m tbody tr:hover { background: var(--overlay-hover); }
+
+.chip-m {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--surface-container-high);
+  color: var(--on-surface-variant);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+.chip-m-amber { background: rgba(245,166,35,0.12); color: var(--amber-dk); }
+.chip-m-blue  { background: rgba(0,102,204,0.10);  color: var(--blue); }
+.chip-m-green { background: rgba(46,204,138,0.14); color: #1a8f61; }
+.chip-m-red   { background: rgba(255,59,48,0.10);  color: var(--error); }
+.dark .chip-m-green { color: #63e0ac; }
+.dark .chip-m-amber { color: var(--amber-lt); }
+
+.meter-m { height: 6px; border-radius: 999px; background: var(--surface-container-high); overflow: hidden; flex: 1; }
+.meter-m > span { display: block; height: 100%; border-radius: 999px; background: var(--amber); }
+
+.feed-m-icon {
+  width: 30px; height: 30px; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  background: var(--surface-container-high);
+  color: var(--on-surface-variant);
+}
+.feed-m-icon .material-icons-outlined { font-size: 16px !important; }
+
+.page-m { padding: 28px 32px 48px; max-width: 1200px; margin: 0 auto; }
+@media (max-width: 640px) { .page-m { padding: 20px 16px 40px; } }
+.page-m-title { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+.page-m-sub { font-size: 13.5px; color: var(--stone); margin-top: 4px; }
