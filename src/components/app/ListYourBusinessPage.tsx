@@ -15,7 +15,7 @@ import {
   usePartnerPageScroll,
   type PartnerCountry,
 } from '@/components/site/PartnerSignupChrome'
-import '../landing.css'
+import '@/landing.css'
 
 const SPECIALIZATIONS = [
   'General Contracting',

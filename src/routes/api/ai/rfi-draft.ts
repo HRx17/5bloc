@@ -14,7 +14,7 @@ const handlePOST = async ({ request }: any) => {
       profile.id, 
       'rfi_draft', 
       profile.plan, 
-      profile.ai_add_on
+      !!profile.ai_add_on
     )
 
     if (!limit.allowed) {
