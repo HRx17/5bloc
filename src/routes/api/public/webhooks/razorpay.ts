@@ -40,7 +40,7 @@ const handlePOST = async ({ request }: any) => {
       )
     }
 
-    const supabase = createServiceRoleClient()
+    const supabase: any = createServiceRoleClient()
 
     if (invoiceId && (event.event === 'payment.captured' || event.event === 'order.paid')) {
       const { data: invoice } = await supabase

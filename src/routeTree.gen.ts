@@ -139,6 +139,7 @@ import { Route as ApiPublicPartnerContractorSignupRouteImport } from './routes/a
 import { Route as ApiPublicPartnerVendorSignupRouteImport } from './routes/api/public/partner/vendor-signup'
 import { Route as ApiPublicPaymentsInvoiceRouteImport } from './routes/api/public/payments/invoice'
 import { Route as ApiPublicPortalTokenRouteImport } from './routes/api/public/portal/$token'
+import { Route as ApiPublicWebhooksRazorpayRouteImport } from './routes/api/public/webhooks/razorpay'
 import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks/stripe'
 import { Route as AuthenticatedAppMarketplaceArchitectsIdRouteImport } from './routes/_authenticated/_app/marketplace/architects/$id'
 import { Route as AuthenticatedAppMarketplaceTendersIdRouteImport } from './routes/_authenticated/_app/marketplace/tenders/$id'
@@ -858,6 +859,12 @@ const ApiPublicPortalTokenRoute = ApiPublicPortalTokenRouteImport.update({
   path: '/api/public/portal/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicWebhooksRazorpayRoute =
+  ApiPublicWebhooksRazorpayRouteImport.update({
+    id: '/api/public/webhooks/razorpay',
+    path: '/api/public/webhooks/razorpay',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicWebhooksStripeRoute = ApiPublicWebhooksStripeRouteImport.update({
   id: '/api/public/webhooks/stripe',
   path: '/api/public/webhooks/stripe',
@@ -1095,6 +1102,7 @@ export interface FileRoutesByFullPath {
   '/api/public/partner/vendor-signup': typeof ApiPublicPartnerVendorSignupRoute
   '/api/public/payments/invoice': typeof ApiPublicPaymentsInvoiceRoute
   '/api/public/portal/$token': typeof ApiPublicPortalTokenRouteWithChildren
+  '/api/public/webhooks/razorpay': typeof ApiPublicWebhooksRazorpayRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/builder/': typeof AuthenticatedAppBuilderIndexRoute
   '/clients/': typeof AuthenticatedAppClientsIndexRoute
@@ -1244,6 +1252,7 @@ export interface FileRoutesByTo {
   '/api/public/partner/vendor-signup': typeof ApiPublicPartnerVendorSignupRoute
   '/api/public/payments/invoice': typeof ApiPublicPaymentsInvoiceRoute
   '/api/public/portal/$token': typeof ApiPublicPortalTokenRouteWithChildren
+  '/api/public/webhooks/razorpay': typeof ApiPublicWebhooksRazorpayRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/builder': typeof AuthenticatedAppBuilderIndexRoute
   '/clients': typeof AuthenticatedAppClientsIndexRoute
@@ -1396,6 +1405,7 @@ export interface FileRoutesById {
   '/api/public/partner/vendor-signup': typeof ApiPublicPartnerVendorSignupRoute
   '/api/public/payments/invoice': typeof ApiPublicPaymentsInvoiceRoute
   '/api/public/portal/$token': typeof ApiPublicPortalTokenRouteWithChildren
+  '/api/public/webhooks/razorpay': typeof ApiPublicWebhooksRazorpayRoute
   '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/_authenticated/_app/builder/': typeof AuthenticatedAppBuilderIndexRoute
   '/_authenticated/_app/clients/': typeof AuthenticatedAppClientsIndexRoute
@@ -1547,6 +1557,7 @@ export interface FileRouteTypes {
     | '/api/public/partner/vendor-signup'
     | '/api/public/payments/invoice'
     | '/api/public/portal/$token'
+    | '/api/public/webhooks/razorpay'
     | '/api/public/webhooks/stripe'
     | '/builder/'
     | '/clients/'
@@ -1696,6 +1707,7 @@ export interface FileRouteTypes {
     | '/api/public/partner/vendor-signup'
     | '/api/public/payments/invoice'
     | '/api/public/portal/$token'
+    | '/api/public/webhooks/razorpay'
     | '/api/public/webhooks/stripe'
     | '/builder'
     | '/clients'
@@ -1847,6 +1859,7 @@ export interface FileRouteTypes {
     | '/api/public/partner/vendor-signup'
     | '/api/public/payments/invoice'
     | '/api/public/portal/$token'
+    | '/api/public/webhooks/razorpay'
     | '/api/public/webhooks/stripe'
     | '/_authenticated/_app/builder/'
     | '/_authenticated/_app/clients/'
@@ -1949,6 +1962,7 @@ export interface RootRouteChildren {
   ApiPublicPartnerVendorSignupRoute: typeof ApiPublicPartnerVendorSignupRoute
   ApiPublicPaymentsInvoiceRoute: typeof ApiPublicPaymentsInvoiceRoute
   ApiPublicPortalTokenRoute: typeof ApiPublicPortalTokenRouteWithChildren
+  ApiPublicWebhooksRazorpayRoute: typeof ApiPublicWebhooksRazorpayRoute
   ApiPublicWebhooksStripeRoute: typeof ApiPublicWebhooksStripeRoute
 }
 
@@ -2864,6 +2878,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPortalTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/webhooks/razorpay': {
+      id: '/api/public/webhooks/razorpay'
+      path: '/api/public/webhooks/razorpay'
+      fullPath: '/api/public/webhooks/razorpay'
+      preLoaderRoute: typeof ApiPublicWebhooksRazorpayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/stripe': {
       id: '/api/public/webhooks/stripe'
       path: '/api/public/webhooks/stripe'
@@ -3372,6 +3393,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPartnerVendorSignupRoute: ApiPublicPartnerVendorSignupRoute,
   ApiPublicPaymentsInvoiceRoute: ApiPublicPaymentsInvoiceRoute,
   ApiPublicPortalTokenRoute: ApiPublicPortalTokenRouteWithChildren,
+  ApiPublicWebhooksRazorpayRoute: ApiPublicWebhooksRazorpayRoute,
   ApiPublicWebhooksStripeRoute: ApiPublicWebhooksStripeRoute,
 }
 export const routeTree = rootRouteImport
