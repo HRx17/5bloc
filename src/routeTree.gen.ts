@@ -23,24 +23,40 @@ import { Route as AuthenticatedAppRouteRouteImport } from './routes/_authenticat
 import { Route as ApiActivityRouteImport } from './routes/api/activity'
 import { Route as ApiBidsRouteImport } from './routes/api/bids'
 import { Route as ApiClientsRouteImport } from './routes/api/clients'
+import { Route as ApiContractorsRouteImport } from './routes/api/contractors'
 import { Route as ApiInvoicesRouteImport } from './routes/api/invoices'
 import { Route as ApiMeRouteImport } from './routes/api/me'
 import { Route as ApiMeetingsRouteImport } from './routes/api/meetings'
+import { Route as ApiNotificationsRouteImport } from './routes/api/notifications'
 import { Route as ApiProjectsRouteImport } from './routes/api/projects'
+import { Route as ApiTendersRouteImport } from './routes/api/tenders'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as Vs5blocVsFieldwireRouteImport } from './routes/vs/5bloc-vs-fieldwire'
 import { Route as Vs5blocVsProcoreRouteImport } from './routes/vs/5bloc-vs-procore'
 import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authenticated/_app/dashboard'
 import { Route as AuthenticatedAppDocumentsRouteImport } from './routes/_authenticated/_app/documents'
 import { Route as ApiClientsIdRouteImport } from './routes/api/clients/$id'
+import { Route as ApiContractorsIdRouteImport } from './routes/api/contractors/$id'
+import { Route as ApiContractorsArchitectsRouteImport } from './routes/api/contractors/architects'
 import { Route as ApiFilesUploadRouteImport } from './routes/api/files/upload'
+import { Route as ApiInvoicesIdRouteImport } from './routes/api/invoices/$id'
 import { Route as ApiOrgStudioProjectRouteImport } from './routes/api/org/studio-project'
+import { Route as ApiOrgTeamRouteImport } from './routes/api/org/team'
 import { Route as ApiProjectsIdRouteImport } from './routes/api/projects/$id'
+import { Route as ApiTendersIdRouteImport } from './routes/api/tenders/$id'
 import { Route as AuthenticatedAppClientsIndexRouteImport } from './routes/_authenticated/_app/clients/index'
 import { Route as AuthenticatedAppClientsIdRouteImport } from './routes/_authenticated/_app/clients/$id'
+import { Route as AuthenticatedAppInvoicesIndexRouteImport } from './routes/_authenticated/_app/invoices/index'
+import { Route as AuthenticatedAppInvoicesNewRouteImport } from './routes/_authenticated/_app/invoices/new'
+import { Route as AuthenticatedAppMarketplaceIndexRouteImport } from './routes/_authenticated/_app/marketplace/index'
+import { Route as AuthenticatedAppMarketplaceIdRouteImport } from './routes/_authenticated/_app/marketplace/$id'
 import { Route as AuthenticatedAppProjectsIndexRouteImport } from './routes/_authenticated/_app/projects/index'
 import { Route as AuthenticatedAppProjectsNewRouteImport } from './routes/_authenticated/_app/projects/new'
+import { Route as ApiContractorsArchitectsIdRouteImport } from './routes/api/contractors/architects/$id'
 import { Route as ApiProjectsIdDocumentsRouteImport } from './routes/api/projects/$id/documents'
+import { Route as ApiProjectsIdTendersRouteImport } from './routes/api/projects/$id/tenders'
+import { Route as AuthenticatedAppMarketplaceArchitectsIdRouteImport } from './routes/_authenticated/_app/marketplace/architects/$id'
+import { Route as AuthenticatedAppMarketplaceTendersIdRouteImport } from './routes/_authenticated/_app/marketplace/tenders/$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -110,6 +126,11 @@ const ApiClientsRoute = ApiClientsRouteImport.update({
   path: '/api/clients',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiContractorsRoute = ApiContractorsRouteImport.update({
+  id: '/api/contractors',
+  path: '/api/contractors',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiInvoicesRoute = ApiInvoicesRouteImport.update({
   id: '/api/invoices',
   path: '/api/invoices',
@@ -125,9 +146,19 @@ const ApiMeetingsRoute = ApiMeetingsRouteImport.update({
   path: '/api/meetings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiNotificationsRoute = ApiNotificationsRouteImport.update({
+  id: '/api/notifications',
+  path: '/api/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiProjectsRoute = ApiProjectsRouteImport.update({
   id: '/api/projects',
   path: '/api/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTendersRoute = ApiTendersRouteImport.update({
+  id: '/api/tenders',
+  path: '/api/tenders',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
@@ -162,20 +193,46 @@ const ApiClientsIdRoute = ApiClientsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiClientsRoute,
 } as any)
+const ApiContractorsIdRoute = ApiContractorsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiContractorsRoute,
+} as any)
+const ApiContractorsArchitectsRoute =
+  ApiContractorsArchitectsRouteImport.update({
+    id: '/architects',
+    path: '/architects',
+    getParentRoute: () => ApiContractorsRoute,
+  } as any)
 const ApiFilesUploadRoute = ApiFilesUploadRouteImport.update({
   id: '/api/files/upload',
   path: '/api/files/upload',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiInvoicesIdRoute = ApiInvoicesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiInvoicesRoute,
 } as any)
 const ApiOrgStudioProjectRoute = ApiOrgStudioProjectRouteImport.update({
   id: '/api/org/studio-project',
   path: '/api/org/studio-project',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiOrgTeamRoute = ApiOrgTeamRouteImport.update({
+  id: '/api/org/team',
+  path: '/api/org/team',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiProjectsIdRoute = ApiProjectsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => ApiProjectsRoute,
+} as any)
+const ApiTendersIdRoute = ApiTendersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiTendersRoute,
 } as any)
 const AuthenticatedAppClientsIndexRoute =
   AuthenticatedAppClientsIndexRouteImport.update({
@@ -187,6 +244,30 @@ const AuthenticatedAppClientsIdRoute =
   AuthenticatedAppClientsIdRouteImport.update({
     id: '/clients/$id',
     path: '/clients/$id',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppInvoicesIndexRoute =
+  AuthenticatedAppInvoicesIndexRouteImport.update({
+    id: '/invoices/',
+    path: '/invoices/',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppInvoicesNewRoute =
+  AuthenticatedAppInvoicesNewRouteImport.update({
+    id: '/invoices/new',
+    path: '/invoices/new',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppMarketplaceIndexRoute =
+  AuthenticatedAppMarketplaceIndexRouteImport.update({
+    id: '/marketplace/',
+    path: '/marketplace/',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppMarketplaceIdRoute =
+  AuthenticatedAppMarketplaceIdRouteImport.update({
+    id: '/marketplace/$id',
+    path: '/marketplace/$id',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const AuthenticatedAppProjectsIndexRoute =
@@ -201,11 +282,34 @@ const AuthenticatedAppProjectsNewRoute =
     path: '/projects/new',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const ApiContractorsArchitectsIdRoute =
+  ApiContractorsArchitectsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => ApiContractorsArchitectsRoute,
+  } as any)
 const ApiProjectsIdDocumentsRoute = ApiProjectsIdDocumentsRouteImport.update({
   id: '/documents',
   path: '/documents',
   getParentRoute: () => ApiProjectsIdRoute,
 } as any)
+const ApiProjectsIdTendersRoute = ApiProjectsIdTendersRouteImport.update({
+  id: '/tenders',
+  path: '/tenders',
+  getParentRoute: () => ApiProjectsIdRoute,
+} as any)
+const AuthenticatedAppMarketplaceArchitectsIdRoute =
+  AuthenticatedAppMarketplaceArchitectsIdRouteImport.update({
+    id: '/marketplace/architects/$id',
+    path: '/marketplace/architects/$id',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppMarketplaceTendersIdRoute =
+  AuthenticatedAppMarketplaceTendersIdRouteImport.update({
+    id: '/marketplace/tenders/$id',
+    path: '/marketplace/tenders/$id',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -220,24 +324,40 @@ export interface FileRoutesByFullPath {
   '/api/activity': typeof ApiActivityRoute
   '/api/bids': typeof ApiBidsRoute
   '/api/clients': typeof ApiClientsRouteWithChildren
-  '/api/invoices': typeof ApiInvoicesRoute
+  '/api/contractors': typeof ApiContractorsRouteWithChildren
+  '/api/invoices': typeof ApiInvoicesRouteWithChildren
   '/api/me': typeof ApiMeRoute
   '/api/meetings': typeof ApiMeetingsRoute
+  '/api/notifications': typeof ApiNotificationsRoute
   '/api/projects': typeof ApiProjectsRouteWithChildren
+  '/api/tenders': typeof ApiTendersRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/vs/5bloc-vs-fieldwire': typeof Vs5blocVsFieldwireRoute
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
   '/dashboard': typeof AuthenticatedAppDashboardRoute
   '/documents': typeof AuthenticatedAppDocumentsRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
+  '/api/contractors/$id': typeof ApiContractorsIdRoute
+  '/api/contractors/architects': typeof ApiContractorsArchitectsRouteWithChildren
   '/api/files/upload': typeof ApiFilesUploadRoute
+  '/api/invoices/$id': typeof ApiInvoicesIdRoute
   '/api/org/studio-project': typeof ApiOrgStudioProjectRoute
+  '/api/org/team': typeof ApiOrgTeamRoute
   '/api/projects/$id': typeof ApiProjectsIdRouteWithChildren
+  '/api/tenders/$id': typeof ApiTendersIdRoute
   '/clients/$id': typeof AuthenticatedAppClientsIdRoute
+  '/invoices/new': typeof AuthenticatedAppInvoicesNewRoute
+  '/marketplace/$id': typeof AuthenticatedAppMarketplaceIdRoute
   '/projects/new': typeof AuthenticatedAppProjectsNewRoute
+  '/api/contractors/architects/$id': typeof ApiContractorsArchitectsIdRoute
   '/api/projects/$id/documents': typeof ApiProjectsIdDocumentsRoute
+  '/api/projects/$id/tenders': typeof ApiProjectsIdTendersRoute
   '/clients/': typeof AuthenticatedAppClientsIndexRoute
+  '/invoices/': typeof AuthenticatedAppInvoicesIndexRoute
+  '/marketplace/': typeof AuthenticatedAppMarketplaceIndexRoute
   '/projects/': typeof AuthenticatedAppProjectsIndexRoute
+  '/marketplace/architects/$id': typeof AuthenticatedAppMarketplaceArchitectsIdRoute
+  '/marketplace/tenders/$id': typeof AuthenticatedAppMarketplaceTendersIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -252,24 +372,40 @@ export interface FileRoutesByTo {
   '/api/activity': typeof ApiActivityRoute
   '/api/bids': typeof ApiBidsRoute
   '/api/clients': typeof ApiClientsRouteWithChildren
-  '/api/invoices': typeof ApiInvoicesRoute
+  '/api/contractors': typeof ApiContractorsRouteWithChildren
+  '/api/invoices': typeof ApiInvoicesRouteWithChildren
   '/api/me': typeof ApiMeRoute
   '/api/meetings': typeof ApiMeetingsRoute
+  '/api/notifications': typeof ApiNotificationsRoute
   '/api/projects': typeof ApiProjectsRouteWithChildren
+  '/api/tenders': typeof ApiTendersRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/vs/5bloc-vs-fieldwire': typeof Vs5blocVsFieldwireRoute
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
   '/dashboard': typeof AuthenticatedAppDashboardRoute
   '/documents': typeof AuthenticatedAppDocumentsRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
+  '/api/contractors/$id': typeof ApiContractorsIdRoute
+  '/api/contractors/architects': typeof ApiContractorsArchitectsRouteWithChildren
   '/api/files/upload': typeof ApiFilesUploadRoute
+  '/api/invoices/$id': typeof ApiInvoicesIdRoute
   '/api/org/studio-project': typeof ApiOrgStudioProjectRoute
+  '/api/org/team': typeof ApiOrgTeamRoute
   '/api/projects/$id': typeof ApiProjectsIdRouteWithChildren
+  '/api/tenders/$id': typeof ApiTendersIdRoute
   '/clients/$id': typeof AuthenticatedAppClientsIdRoute
+  '/invoices/new': typeof AuthenticatedAppInvoicesNewRoute
+  '/marketplace/$id': typeof AuthenticatedAppMarketplaceIdRoute
   '/projects/new': typeof AuthenticatedAppProjectsNewRoute
+  '/api/contractors/architects/$id': typeof ApiContractorsArchitectsIdRoute
   '/api/projects/$id/documents': typeof ApiProjectsIdDocumentsRoute
+  '/api/projects/$id/tenders': typeof ApiProjectsIdTendersRoute
   '/clients': typeof AuthenticatedAppClientsIndexRoute
+  '/invoices': typeof AuthenticatedAppInvoicesIndexRoute
+  '/marketplace': typeof AuthenticatedAppMarketplaceIndexRoute
   '/projects': typeof AuthenticatedAppProjectsIndexRoute
+  '/marketplace/architects/$id': typeof AuthenticatedAppMarketplaceArchitectsIdRoute
+  '/marketplace/tenders/$id': typeof AuthenticatedAppMarketplaceTendersIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -287,24 +423,40 @@ export interface FileRoutesById {
   '/api/activity': typeof ApiActivityRoute
   '/api/bids': typeof ApiBidsRoute
   '/api/clients': typeof ApiClientsRouteWithChildren
-  '/api/invoices': typeof ApiInvoicesRoute
+  '/api/contractors': typeof ApiContractorsRouteWithChildren
+  '/api/invoices': typeof ApiInvoicesRouteWithChildren
   '/api/me': typeof ApiMeRoute
   '/api/meetings': typeof ApiMeetingsRoute
+  '/api/notifications': typeof ApiNotificationsRoute
   '/api/projects': typeof ApiProjectsRouteWithChildren
+  '/api/tenders': typeof ApiTendersRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/vs/5bloc-vs-fieldwire': typeof Vs5blocVsFieldwireRoute
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
   '/_authenticated/_app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/_authenticated/_app/documents': typeof AuthenticatedAppDocumentsRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
+  '/api/contractors/$id': typeof ApiContractorsIdRoute
+  '/api/contractors/architects': typeof ApiContractorsArchitectsRouteWithChildren
   '/api/files/upload': typeof ApiFilesUploadRoute
+  '/api/invoices/$id': typeof ApiInvoicesIdRoute
   '/api/org/studio-project': typeof ApiOrgStudioProjectRoute
+  '/api/org/team': typeof ApiOrgTeamRoute
   '/api/projects/$id': typeof ApiProjectsIdRouteWithChildren
+  '/api/tenders/$id': typeof ApiTendersIdRoute
   '/_authenticated/_app/clients/$id': typeof AuthenticatedAppClientsIdRoute
+  '/_authenticated/_app/invoices/new': typeof AuthenticatedAppInvoicesNewRoute
+  '/_authenticated/_app/marketplace/$id': typeof AuthenticatedAppMarketplaceIdRoute
   '/_authenticated/_app/projects/new': typeof AuthenticatedAppProjectsNewRoute
+  '/api/contractors/architects/$id': typeof ApiContractorsArchitectsIdRoute
   '/api/projects/$id/documents': typeof ApiProjectsIdDocumentsRoute
+  '/api/projects/$id/tenders': typeof ApiProjectsIdTendersRoute
   '/_authenticated/_app/clients/': typeof AuthenticatedAppClientsIndexRoute
+  '/_authenticated/_app/invoices/': typeof AuthenticatedAppInvoicesIndexRoute
+  '/_authenticated/_app/marketplace/': typeof AuthenticatedAppMarketplaceIndexRoute
   '/_authenticated/_app/projects/': typeof AuthenticatedAppProjectsIndexRoute
+  '/_authenticated/_app/marketplace/architects/$id': typeof AuthenticatedAppMarketplaceArchitectsIdRoute
+  '/_authenticated/_app/marketplace/tenders/$id': typeof AuthenticatedAppMarketplaceTendersIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -321,24 +473,40 @@ export interface FileRouteTypes {
     | '/api/activity'
     | '/api/bids'
     | '/api/clients'
+    | '/api/contractors'
     | '/api/invoices'
     | '/api/me'
     | '/api/meetings'
+    | '/api/notifications'
     | '/api/projects'
+    | '/api/tenders'
     | '/auth/callback'
     | '/vs/5bloc-vs-fieldwire'
     | '/vs/5bloc-vs-procore'
     | '/dashboard'
     | '/documents'
     | '/api/clients/$id'
+    | '/api/contractors/$id'
+    | '/api/contractors/architects'
     | '/api/files/upload'
+    | '/api/invoices/$id'
     | '/api/org/studio-project'
+    | '/api/org/team'
     | '/api/projects/$id'
+    | '/api/tenders/$id'
     | '/clients/$id'
+    | '/invoices/new'
+    | '/marketplace/$id'
     | '/projects/new'
+    | '/api/contractors/architects/$id'
     | '/api/projects/$id/documents'
+    | '/api/projects/$id/tenders'
     | '/clients/'
+    | '/invoices/'
+    | '/marketplace/'
     | '/projects/'
+    | '/marketplace/architects/$id'
+    | '/marketplace/tenders/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -353,24 +521,40 @@ export interface FileRouteTypes {
     | '/api/activity'
     | '/api/bids'
     | '/api/clients'
+    | '/api/contractors'
     | '/api/invoices'
     | '/api/me'
     | '/api/meetings'
+    | '/api/notifications'
     | '/api/projects'
+    | '/api/tenders'
     | '/auth/callback'
     | '/vs/5bloc-vs-fieldwire'
     | '/vs/5bloc-vs-procore'
     | '/dashboard'
     | '/documents'
     | '/api/clients/$id'
+    | '/api/contractors/$id'
+    | '/api/contractors/architects'
     | '/api/files/upload'
+    | '/api/invoices/$id'
     | '/api/org/studio-project'
+    | '/api/org/team'
     | '/api/projects/$id'
+    | '/api/tenders/$id'
     | '/clients/$id'
+    | '/invoices/new'
+    | '/marketplace/$id'
     | '/projects/new'
+    | '/api/contractors/architects/$id'
     | '/api/projects/$id/documents'
+    | '/api/projects/$id/tenders'
     | '/clients'
+    | '/invoices'
+    | '/marketplace'
     | '/projects'
+    | '/marketplace/architects/$id'
+    | '/marketplace/tenders/$id'
   id:
     | '__root__'
     | '/'
@@ -387,24 +571,40 @@ export interface FileRouteTypes {
     | '/api/activity'
     | '/api/bids'
     | '/api/clients'
+    | '/api/contractors'
     | '/api/invoices'
     | '/api/me'
     | '/api/meetings'
+    | '/api/notifications'
     | '/api/projects'
+    | '/api/tenders'
     | '/auth/callback'
     | '/vs/5bloc-vs-fieldwire'
     | '/vs/5bloc-vs-procore'
     | '/_authenticated/_app/dashboard'
     | '/_authenticated/_app/documents'
     | '/api/clients/$id'
+    | '/api/contractors/$id'
+    | '/api/contractors/architects'
     | '/api/files/upload'
+    | '/api/invoices/$id'
     | '/api/org/studio-project'
+    | '/api/org/team'
     | '/api/projects/$id'
+    | '/api/tenders/$id'
     | '/_authenticated/_app/clients/$id'
+    | '/_authenticated/_app/invoices/new'
+    | '/_authenticated/_app/marketplace/$id'
     | '/_authenticated/_app/projects/new'
+    | '/api/contractors/architects/$id'
     | '/api/projects/$id/documents'
+    | '/api/projects/$id/tenders'
     | '/_authenticated/_app/clients/'
+    | '/_authenticated/_app/invoices/'
+    | '/_authenticated/_app/marketplace/'
     | '/_authenticated/_app/projects/'
+    | '/_authenticated/_app/marketplace/architects/$id'
+    | '/_authenticated/_app/marketplace/tenders/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -421,15 +621,19 @@ export interface RootRouteChildren {
   ApiActivityRoute: typeof ApiActivityRoute
   ApiBidsRoute: typeof ApiBidsRoute
   ApiClientsRoute: typeof ApiClientsRouteWithChildren
-  ApiInvoicesRoute: typeof ApiInvoicesRoute
+  ApiContractorsRoute: typeof ApiContractorsRouteWithChildren
+  ApiInvoicesRoute: typeof ApiInvoicesRouteWithChildren
   ApiMeRoute: typeof ApiMeRoute
   ApiMeetingsRoute: typeof ApiMeetingsRoute
+  ApiNotificationsRoute: typeof ApiNotificationsRoute
   ApiProjectsRoute: typeof ApiProjectsRouteWithChildren
+  ApiTendersRoute: typeof ApiTendersRouteWithChildren
   AuthCallbackRoute: typeof AuthCallbackRoute
   Vs5blocVsFieldwireRoute: typeof Vs5blocVsFieldwireRoute
   Vs5blocVsProcoreRoute: typeof Vs5blocVsProcoreRoute
   ApiFilesUploadRoute: typeof ApiFilesUploadRoute
   ApiOrgStudioProjectRoute: typeof ApiOrgStudioProjectRoute
+  ApiOrgTeamRoute: typeof ApiOrgTeamRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -532,6 +736,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiClientsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/contractors': {
+      id: '/api/contractors'
+      path: '/api/contractors'
+      fullPath: '/api/contractors'
+      preLoaderRoute: typeof ApiContractorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/invoices': {
       id: '/api/invoices'
       path: '/api/invoices'
@@ -553,11 +764,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMeetingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/notifications': {
+      id: '/api/notifications'
+      path: '/api/notifications'
+      fullPath: '/api/notifications'
+      preLoaderRoute: typeof ApiNotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/projects': {
       id: '/api/projects'
       path: '/api/projects'
       fullPath: '/api/projects'
       preLoaderRoute: typeof ApiProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tenders': {
+      id: '/api/tenders'
+      path: '/api/tenders'
+      fullPath: '/api/tenders'
+      preLoaderRoute: typeof ApiTendersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
@@ -602,12 +827,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiClientsIdRouteImport
       parentRoute: typeof ApiClientsRoute
     }
+    '/api/contractors/$id': {
+      id: '/api/contractors/$id'
+      path: '/$id'
+      fullPath: '/api/contractors/$id'
+      preLoaderRoute: typeof ApiContractorsIdRouteImport
+      parentRoute: typeof ApiContractorsRoute
+    }
+    '/api/contractors/architects': {
+      id: '/api/contractors/architects'
+      path: '/architects'
+      fullPath: '/api/contractors/architects'
+      preLoaderRoute: typeof ApiContractorsArchitectsRouteImport
+      parentRoute: typeof ApiContractorsRoute
+    }
     '/api/files/upload': {
       id: '/api/files/upload'
       path: '/api/files/upload'
       fullPath: '/api/files/upload'
       preLoaderRoute: typeof ApiFilesUploadRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/invoices/$id': {
+      id: '/api/invoices/$id'
+      path: '/$id'
+      fullPath: '/api/invoices/$id'
+      preLoaderRoute: typeof ApiInvoicesIdRouteImport
+      parentRoute: typeof ApiInvoicesRoute
     }
     '/api/org/studio-project': {
       id: '/api/org/studio-project'
@@ -616,12 +862,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiOrgStudioProjectRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/org/team': {
+      id: '/api/org/team'
+      path: '/api/org/team'
+      fullPath: '/api/org/team'
+      preLoaderRoute: typeof ApiOrgTeamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/projects/$id': {
       id: '/api/projects/$id'
       path: '/$id'
       fullPath: '/api/projects/$id'
       preLoaderRoute: typeof ApiProjectsIdRouteImport
       parentRoute: typeof ApiProjectsRoute
+    }
+    '/api/tenders/$id': {
+      id: '/api/tenders/$id'
+      path: '/$id'
+      fullPath: '/api/tenders/$id'
+      preLoaderRoute: typeof ApiTendersIdRouteImport
+      parentRoute: typeof ApiTendersRoute
     }
     '/_authenticated/_app/clients/': {
       id: '/_authenticated/_app/clients/'
@@ -635,6 +895,34 @@ declare module '@tanstack/react-router' {
       path: '/clients/$id'
       fullPath: '/clients/$id'
       preLoaderRoute: typeof AuthenticatedAppClientsIdRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/invoices/': {
+      id: '/_authenticated/_app/invoices/'
+      path: '/invoices'
+      fullPath: '/invoices/'
+      preLoaderRoute: typeof AuthenticatedAppInvoicesIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/invoices/new': {
+      id: '/_authenticated/_app/invoices/new'
+      path: '/invoices/new'
+      fullPath: '/invoices/new'
+      preLoaderRoute: typeof AuthenticatedAppInvoicesNewRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/marketplace/': {
+      id: '/_authenticated/_app/marketplace/'
+      path: '/marketplace'
+      fullPath: '/marketplace/'
+      preLoaderRoute: typeof AuthenticatedAppMarketplaceIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/marketplace/$id': {
+      id: '/_authenticated/_app/marketplace/$id'
+      path: '/marketplace/$id'
+      fullPath: '/marketplace/$id'
+      preLoaderRoute: typeof AuthenticatedAppMarketplaceIdRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/_authenticated/_app/projects/': {
@@ -651,12 +939,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppProjectsNewRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/api/contractors/architects/$id': {
+      id: '/api/contractors/architects/$id'
+      path: '/$id'
+      fullPath: '/api/contractors/architects/$id'
+      preLoaderRoute: typeof ApiContractorsArchitectsIdRouteImport
+      parentRoute: typeof ApiContractorsArchitectsRoute
+    }
     '/api/projects/$id/documents': {
       id: '/api/projects/$id/documents'
       path: '/documents'
       fullPath: '/api/projects/$id/documents'
       preLoaderRoute: typeof ApiProjectsIdDocumentsRouteImport
       parentRoute: typeof ApiProjectsIdRoute
+    }
+    '/api/projects/$id/tenders': {
+      id: '/api/projects/$id/tenders'
+      path: '/tenders'
+      fullPath: '/api/projects/$id/tenders'
+      preLoaderRoute: typeof ApiProjectsIdTendersRouteImport
+      parentRoute: typeof ApiProjectsIdRoute
+    }
+    '/_authenticated/_app/marketplace/architects/$id': {
+      id: '/_authenticated/_app/marketplace/architects/$id'
+      path: '/marketplace/architects/$id'
+      fullPath: '/marketplace/architects/$id'
+      preLoaderRoute: typeof AuthenticatedAppMarketplaceArchitectsIdRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/marketplace/tenders/$id': {
+      id: '/_authenticated/_app/marketplace/tenders/$id'
+      path: '/marketplace/tenders/$id'
+      fullPath: '/marketplace/tenders/$id'
+      preLoaderRoute: typeof AuthenticatedAppMarketplaceTendersIdRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
     }
   }
 }
@@ -665,18 +981,32 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppDashboardRoute: typeof AuthenticatedAppDashboardRoute
   AuthenticatedAppDocumentsRoute: typeof AuthenticatedAppDocumentsRoute
   AuthenticatedAppClientsIdRoute: typeof AuthenticatedAppClientsIdRoute
+  AuthenticatedAppInvoicesNewRoute: typeof AuthenticatedAppInvoicesNewRoute
+  AuthenticatedAppMarketplaceIdRoute: typeof AuthenticatedAppMarketplaceIdRoute
   AuthenticatedAppProjectsNewRoute: typeof AuthenticatedAppProjectsNewRoute
   AuthenticatedAppClientsIndexRoute: typeof AuthenticatedAppClientsIndexRoute
+  AuthenticatedAppInvoicesIndexRoute: typeof AuthenticatedAppInvoicesIndexRoute
+  AuthenticatedAppMarketplaceIndexRoute: typeof AuthenticatedAppMarketplaceIndexRoute
   AuthenticatedAppProjectsIndexRoute: typeof AuthenticatedAppProjectsIndexRoute
+  AuthenticatedAppMarketplaceArchitectsIdRoute: typeof AuthenticatedAppMarketplaceArchitectsIdRoute
+  AuthenticatedAppMarketplaceTendersIdRoute: typeof AuthenticatedAppMarketplaceTendersIdRoute
 }
 
 const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppDashboardRoute: AuthenticatedAppDashboardRoute,
   AuthenticatedAppDocumentsRoute: AuthenticatedAppDocumentsRoute,
   AuthenticatedAppClientsIdRoute: AuthenticatedAppClientsIdRoute,
+  AuthenticatedAppInvoicesNewRoute: AuthenticatedAppInvoicesNewRoute,
+  AuthenticatedAppMarketplaceIdRoute: AuthenticatedAppMarketplaceIdRoute,
   AuthenticatedAppProjectsNewRoute: AuthenticatedAppProjectsNewRoute,
   AuthenticatedAppClientsIndexRoute: AuthenticatedAppClientsIndexRoute,
+  AuthenticatedAppInvoicesIndexRoute: AuthenticatedAppInvoicesIndexRoute,
+  AuthenticatedAppMarketplaceIndexRoute: AuthenticatedAppMarketplaceIndexRoute,
   AuthenticatedAppProjectsIndexRoute: AuthenticatedAppProjectsIndexRoute,
+  AuthenticatedAppMarketplaceArchitectsIdRoute:
+    AuthenticatedAppMarketplaceArchitectsIdRoute,
+  AuthenticatedAppMarketplaceTendersIdRoute:
+    AuthenticatedAppMarketplaceTendersIdRoute,
 }
 
 const AuthenticatedAppRouteRouteWithChildren =
@@ -707,12 +1037,54 @@ const ApiClientsRouteWithChildren = ApiClientsRoute._addFileChildren(
   ApiClientsRouteChildren,
 )
 
+interface ApiContractorsArchitectsRouteChildren {
+  ApiContractorsArchitectsIdRoute: typeof ApiContractorsArchitectsIdRoute
+}
+
+const ApiContractorsArchitectsRouteChildren: ApiContractorsArchitectsRouteChildren =
+  {
+    ApiContractorsArchitectsIdRoute: ApiContractorsArchitectsIdRoute,
+  }
+
+const ApiContractorsArchitectsRouteWithChildren =
+  ApiContractorsArchitectsRoute._addFileChildren(
+    ApiContractorsArchitectsRouteChildren,
+  )
+
+interface ApiContractorsRouteChildren {
+  ApiContractorsIdRoute: typeof ApiContractorsIdRoute
+  ApiContractorsArchitectsRoute: typeof ApiContractorsArchitectsRouteWithChildren
+}
+
+const ApiContractorsRouteChildren: ApiContractorsRouteChildren = {
+  ApiContractorsIdRoute: ApiContractorsIdRoute,
+  ApiContractorsArchitectsRoute: ApiContractorsArchitectsRouteWithChildren,
+}
+
+const ApiContractorsRouteWithChildren = ApiContractorsRoute._addFileChildren(
+  ApiContractorsRouteChildren,
+)
+
+interface ApiInvoicesRouteChildren {
+  ApiInvoicesIdRoute: typeof ApiInvoicesIdRoute
+}
+
+const ApiInvoicesRouteChildren: ApiInvoicesRouteChildren = {
+  ApiInvoicesIdRoute: ApiInvoicesIdRoute,
+}
+
+const ApiInvoicesRouteWithChildren = ApiInvoicesRoute._addFileChildren(
+  ApiInvoicesRouteChildren,
+)
+
 interface ApiProjectsIdRouteChildren {
   ApiProjectsIdDocumentsRoute: typeof ApiProjectsIdDocumentsRoute
+  ApiProjectsIdTendersRoute: typeof ApiProjectsIdTendersRoute
 }
 
 const ApiProjectsIdRouteChildren: ApiProjectsIdRouteChildren = {
   ApiProjectsIdDocumentsRoute: ApiProjectsIdDocumentsRoute,
+  ApiProjectsIdTendersRoute: ApiProjectsIdTendersRoute,
 }
 
 const ApiProjectsIdRouteWithChildren = ApiProjectsIdRoute._addFileChildren(
@@ -731,6 +1103,18 @@ const ApiProjectsRouteWithChildren = ApiProjectsRoute._addFileChildren(
   ApiProjectsRouteChildren,
 )
 
+interface ApiTendersRouteChildren {
+  ApiTendersIdRoute: typeof ApiTendersIdRoute
+}
+
+const ApiTendersRouteChildren: ApiTendersRouteChildren = {
+  ApiTendersIdRoute: ApiTendersIdRoute,
+}
+
+const ApiTendersRouteWithChildren = ApiTendersRoute._addFileChildren(
+  ApiTendersRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -745,15 +1129,19 @@ const rootRouteChildren: RootRouteChildren = {
   ApiActivityRoute: ApiActivityRoute,
   ApiBidsRoute: ApiBidsRoute,
   ApiClientsRoute: ApiClientsRouteWithChildren,
-  ApiInvoicesRoute: ApiInvoicesRoute,
+  ApiContractorsRoute: ApiContractorsRouteWithChildren,
+  ApiInvoicesRoute: ApiInvoicesRouteWithChildren,
   ApiMeRoute: ApiMeRoute,
   ApiMeetingsRoute: ApiMeetingsRoute,
+  ApiNotificationsRoute: ApiNotificationsRoute,
   ApiProjectsRoute: ApiProjectsRouteWithChildren,
+  ApiTendersRoute: ApiTendersRouteWithChildren,
   AuthCallbackRoute: AuthCallbackRoute,
   Vs5blocVsFieldwireRoute: Vs5blocVsFieldwireRoute,
   Vs5blocVsProcoreRoute: Vs5blocVsProcoreRoute,
   ApiFilesUploadRoute: ApiFilesUploadRoute,
   ApiOrgStudioProjectRoute: ApiOrgStudioProjectRoute,
+  ApiOrgTeamRoute: ApiOrgTeamRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
