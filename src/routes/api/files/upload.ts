@@ -1,7 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { getAuthUserOrNull, json } from '@/lib/api/get-user.server'
+import { hasR2Storage, uploadToR2 } from '@/lib/files/r2-client'
+import { resolveStorageDownloadUrl } from '@/lib/files/resolve-download'
 
-const BUCKET = 'documents'
+const BUCKET = process.env['SUPABASE_STORAGE_BUCKET'] || 'documents'
 
 /** Multipart upload into the project's file storage. */
 const handlePOST = async ({ request }: any) => {
@@ -32,6 +34,21 @@ const handlePOST = async ({ request }: any) => {
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
   const contentType = file.type || 'application/octet-stream'
   const buffer = new Uint8Array(await file.arrayBuffer())
+  // Prefer Cloudflare R2 when configured
+  if (hasR2Storage()) {
+    const r2Key = `${prefix}/${Date.now()}-${safeName}`
+    await uploadToR2(r2Key, buffer, contentType)
+    return json({
+      r2_key: r2Key,
+      storage_path: r2Key,
+      url: r2Key,
+      size_bytes: file.size,
+      filename: file.name,
+      content_type: contentType,
+      provider: 'r2',
+    })
+  }
+
   const storagePath = `${auth.user.id}/${prefix}/${Date.now()}-${safeName}`
 
   const { error } = await auth.supabase.storage
@@ -63,12 +80,20 @@ const handleGET = async ({ request }: any) => {
   const key = url.searchParams.get('key')
   if (!key) return json({ error: 'key required' }, { status: 400 })
 
-  const path = key.startsWith('supabase:') ? key.slice('supabase:'.length) : key
-  const { data, error } = await auth.supabase.storage.from(BUCKET).createSignedUrl(path, 900)
-  if (error || !data?.signedUrl) {
-    return json({ error: error?.message || 'Signed URL failed' }, { status: 500 })
+  try {
+    const resolved = await resolveStorageDownloadUrl(
+      key,
+      key.split('/').pop() || 'file',
+      auth.supabase,
+      { inline: true },
+    )
+    return json({ url: resolved.url, provider: resolved.provider })
+  } catch (e) {
+    return json(
+      { error: e instanceof Error ? e.message : 'Signed URL failed' },
+      { status: 500 },
+    )
   }
-  return json({ url: data.signedUrl, provider: 'supabase' })
 }
 
 export const Route = createFileRoute('/api/files/upload')({
