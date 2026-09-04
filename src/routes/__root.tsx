@@ -12,6 +12,8 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { installAuthedFetch } from "../lib/api/authed-fetch";
+import Observability from "../components/Observability";
+import { reportError } from "../lib/observability/reportError";
 
 function NotFoundComponent() {
   return (
@@ -40,6 +42,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    void reportError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
   return (
@@ -131,6 +134,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <Observability />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
     </QueryClientProvider>

@@ -135,10 +135,13 @@ import { Route as ApiProjectsIdSiteRouteImport } from './routes/api/projects/$id
 import { Route as ApiProjectsIdSubmittalsRouteImport } from './routes/api/projects/$id/submittals'
 import { Route as ApiProjectsIdTendersRouteImport } from './routes/api/projects/$id/tenders'
 import { Route as ApiProjectsIdTransmittalsRouteImport } from './routes/api/projects/$id/transmittals'
+import { Route as ApiPublicCronMeetingRemindersRouteImport } from './routes/api/public/cron/meeting-reminders'
 import { Route as ApiPublicPartnerContractorSignupRouteImport } from './routes/api/public/partner/contractor-signup'
 import { Route as ApiPublicPartnerVendorSignupRouteImport } from './routes/api/public/partner/vendor-signup'
 import { Route as ApiPublicPaymentsInvoiceRouteImport } from './routes/api/public/payments/invoice'
 import { Route as ApiPublicPortalTokenRouteImport } from './routes/api/public/portal/$token'
+import { Route as ApiPublicWebhooksRazorpayRouteImport } from './routes/api/public/webhooks/razorpay'
+import { Route as ApiPublicWebhooksStripeRouteImport } from './routes/api/public/webhooks/stripe'
 import { Route as AuthenticatedAppMarketplaceArchitectsIdRouteImport } from './routes/_authenticated/_app/marketplace/architects/$id'
 import { Route as AuthenticatedAppMarketplaceTendersIdRouteImport } from './routes/_authenticated/_app/marketplace/tenders/$id'
 import { Route as AuthenticatedAppProjectsIdIndexRouteImport } from './routes/_authenticated/_app/projects/$id/index'
@@ -834,6 +837,12 @@ const ApiProjectsIdTransmittalsRoute =
     path: '/transmittals',
     getParentRoute: () => ApiProjectsIdRoute,
   } as any)
+const ApiPublicCronMeetingRemindersRoute =
+  ApiPublicCronMeetingRemindersRouteImport.update({
+    id: '/api/public/cron/meeting-reminders',
+    path: '/api/public/cron/meeting-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPartnerContractorSignupRoute =
   ApiPublicPartnerContractorSignupRouteImport.update({
     id: '/api/public/partner/contractor-signup',
@@ -855,6 +864,17 @@ const ApiPublicPaymentsInvoiceRoute =
 const ApiPublicPortalTokenRoute = ApiPublicPortalTokenRouteImport.update({
   id: '/api/public/portal/$token',
   path: '/api/public/portal/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicWebhooksRazorpayRoute =
+  ApiPublicWebhooksRazorpayRouteImport.update({
+    id: '/api/public/webhooks/razorpay',
+    path: '/api/public/webhooks/razorpay',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicWebhooksStripeRoute = ApiPublicWebhooksStripeRouteImport.update({
+  id: '/api/public/webhooks/stripe',
+  path: '/api/public/webhooks/stripe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAppMarketplaceArchitectsIdRoute =
@@ -1085,10 +1105,13 @@ export interface FileRoutesByFullPath {
   '/api/projects/$id/submittals': typeof ApiProjectsIdSubmittalsRoute
   '/api/projects/$id/tenders': typeof ApiProjectsIdTendersRoute
   '/api/projects/$id/transmittals': typeof ApiProjectsIdTransmittalsRoute
+  '/api/public/cron/meeting-reminders': typeof ApiPublicCronMeetingRemindersRoute
   '/api/public/partner/contractor-signup': typeof ApiPublicPartnerContractorSignupRoute
   '/api/public/partner/vendor-signup': typeof ApiPublicPartnerVendorSignupRoute
   '/api/public/payments/invoice': typeof ApiPublicPaymentsInvoiceRoute
   '/api/public/portal/$token': typeof ApiPublicPortalTokenRouteWithChildren
+  '/api/public/webhooks/razorpay': typeof ApiPublicWebhooksRazorpayRoute
+  '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/builder/': typeof AuthenticatedAppBuilderIndexRoute
   '/clients/': typeof AuthenticatedAppClientsIndexRoute
   '/contractor/': typeof AuthenticatedAppContractorIndexRoute
@@ -1233,10 +1256,13 @@ export interface FileRoutesByTo {
   '/api/projects/$id/submittals': typeof ApiProjectsIdSubmittalsRoute
   '/api/projects/$id/tenders': typeof ApiProjectsIdTendersRoute
   '/api/projects/$id/transmittals': typeof ApiProjectsIdTransmittalsRoute
+  '/api/public/cron/meeting-reminders': typeof ApiPublicCronMeetingRemindersRoute
   '/api/public/partner/contractor-signup': typeof ApiPublicPartnerContractorSignupRoute
   '/api/public/partner/vendor-signup': typeof ApiPublicPartnerVendorSignupRoute
   '/api/public/payments/invoice': typeof ApiPublicPaymentsInvoiceRoute
   '/api/public/portal/$token': typeof ApiPublicPortalTokenRouteWithChildren
+  '/api/public/webhooks/razorpay': typeof ApiPublicWebhooksRazorpayRoute
+  '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/builder': typeof AuthenticatedAppBuilderIndexRoute
   '/clients': typeof AuthenticatedAppClientsIndexRoute
   '/contractor': typeof AuthenticatedAppContractorIndexRoute
@@ -1384,10 +1410,13 @@ export interface FileRoutesById {
   '/api/projects/$id/submittals': typeof ApiProjectsIdSubmittalsRoute
   '/api/projects/$id/tenders': typeof ApiProjectsIdTendersRoute
   '/api/projects/$id/transmittals': typeof ApiProjectsIdTransmittalsRoute
+  '/api/public/cron/meeting-reminders': typeof ApiPublicCronMeetingRemindersRoute
   '/api/public/partner/contractor-signup': typeof ApiPublicPartnerContractorSignupRoute
   '/api/public/partner/vendor-signup': typeof ApiPublicPartnerVendorSignupRoute
   '/api/public/payments/invoice': typeof ApiPublicPaymentsInvoiceRoute
   '/api/public/portal/$token': typeof ApiPublicPortalTokenRouteWithChildren
+  '/api/public/webhooks/razorpay': typeof ApiPublicWebhooksRazorpayRoute
+  '/api/public/webhooks/stripe': typeof ApiPublicWebhooksStripeRoute
   '/_authenticated/_app/builder/': typeof AuthenticatedAppBuilderIndexRoute
   '/_authenticated/_app/clients/': typeof AuthenticatedAppClientsIndexRoute
   '/_authenticated/_app/contractor/': typeof AuthenticatedAppContractorIndexRoute
@@ -1534,10 +1563,13 @@ export interface FileRouteTypes {
     | '/api/projects/$id/submittals'
     | '/api/projects/$id/tenders'
     | '/api/projects/$id/transmittals'
+    | '/api/public/cron/meeting-reminders'
     | '/api/public/partner/contractor-signup'
     | '/api/public/partner/vendor-signup'
     | '/api/public/payments/invoice'
     | '/api/public/portal/$token'
+    | '/api/public/webhooks/razorpay'
+    | '/api/public/webhooks/stripe'
     | '/builder/'
     | '/clients/'
     | '/contractor/'
@@ -1682,10 +1714,13 @@ export interface FileRouteTypes {
     | '/api/projects/$id/submittals'
     | '/api/projects/$id/tenders'
     | '/api/projects/$id/transmittals'
+    | '/api/public/cron/meeting-reminders'
     | '/api/public/partner/contractor-signup'
     | '/api/public/partner/vendor-signup'
     | '/api/public/payments/invoice'
     | '/api/public/portal/$token'
+    | '/api/public/webhooks/razorpay'
+    | '/api/public/webhooks/stripe'
     | '/builder'
     | '/clients'
     | '/contractor'
@@ -1832,10 +1867,13 @@ export interface FileRouteTypes {
     | '/api/projects/$id/submittals'
     | '/api/projects/$id/tenders'
     | '/api/projects/$id/transmittals'
+    | '/api/public/cron/meeting-reminders'
     | '/api/public/partner/contractor-signup'
     | '/api/public/partner/vendor-signup'
     | '/api/public/payments/invoice'
     | '/api/public/portal/$token'
+    | '/api/public/webhooks/razorpay'
+    | '/api/public/webhooks/stripe'
     | '/_authenticated/_app/builder/'
     | '/_authenticated/_app/clients/'
     | '/_authenticated/_app/contractor/'
@@ -1933,10 +1971,13 @@ export interface RootRouteChildren {
   ApiIntegrationsGoogleTokenRoute: typeof ApiIntegrationsGoogleTokenRoute
   ApiMessagesUsersSearchRoute: typeof ApiMessagesUsersSearchRoute
   ApiOrgInvitesAcceptRoute: typeof ApiOrgInvitesAcceptRoute
+  ApiPublicCronMeetingRemindersRoute: typeof ApiPublicCronMeetingRemindersRoute
   ApiPublicPartnerContractorSignupRoute: typeof ApiPublicPartnerContractorSignupRoute
   ApiPublicPartnerVendorSignupRoute: typeof ApiPublicPartnerVendorSignupRoute
   ApiPublicPaymentsInvoiceRoute: typeof ApiPublicPaymentsInvoiceRoute
   ApiPublicPortalTokenRoute: typeof ApiPublicPortalTokenRouteWithChildren
+  ApiPublicWebhooksRazorpayRoute: typeof ApiPublicWebhooksRazorpayRoute
+  ApiPublicWebhooksStripeRoute: typeof ApiPublicWebhooksStripeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -2823,6 +2864,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiProjectsIdTransmittalsRouteImport
       parentRoute: typeof ApiProjectsIdRoute
     }
+    '/api/public/cron/meeting-reminders': {
+      id: '/api/public/cron/meeting-reminders'
+      path: '/api/public/cron/meeting-reminders'
+      fullPath: '/api/public/cron/meeting-reminders'
+      preLoaderRoute: typeof ApiPublicCronMeetingRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/partner/contractor-signup': {
       id: '/api/public/partner/contractor-signup'
       path: '/api/public/partner/contractor-signup'
@@ -2849,6 +2897,20 @@ declare module '@tanstack/react-router' {
       path: '/api/public/portal/$token'
       fullPath: '/api/public/portal/$token'
       preLoaderRoute: typeof ApiPublicPortalTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/webhooks/razorpay': {
+      id: '/api/public/webhooks/razorpay'
+      path: '/api/public/webhooks/razorpay'
+      fullPath: '/api/public/webhooks/razorpay'
+      preLoaderRoute: typeof ApiPublicWebhooksRazorpayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/webhooks/stripe': {
+      id: '/api/public/webhooks/stripe'
+      path: '/api/public/webhooks/stripe'
+      fullPath: '/api/public/webhooks/stripe'
+      preLoaderRoute: typeof ApiPublicWebhooksStripeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/_app/marketplace/architects/$id': {
@@ -3348,10 +3410,13 @@ const rootRouteChildren: RootRouteChildren = {
   ApiIntegrationsGoogleTokenRoute: ApiIntegrationsGoogleTokenRoute,
   ApiMessagesUsersSearchRoute: ApiMessagesUsersSearchRoute,
   ApiOrgInvitesAcceptRoute: ApiOrgInvitesAcceptRoute,
+  ApiPublicCronMeetingRemindersRoute: ApiPublicCronMeetingRemindersRoute,
   ApiPublicPartnerContractorSignupRoute: ApiPublicPartnerContractorSignupRoute,
   ApiPublicPartnerVendorSignupRoute: ApiPublicPartnerVendorSignupRoute,
   ApiPublicPaymentsInvoiceRoute: ApiPublicPaymentsInvoiceRoute,
   ApiPublicPortalTokenRoute: ApiPublicPortalTokenRouteWithChildren,
+  ApiPublicWebhooksRazorpayRoute: ApiPublicWebhooksRazorpayRoute,
+  ApiPublicWebhooksStripeRoute: ApiPublicWebhooksStripeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -13,7 +13,7 @@ import {
   SMOKE_PASSWORD,
 } from '@/lib/auth/local-dev-logins'
 import { sendConfirmEmail } from '@/lib/auth/send-confirm-email'
-import { analytics } from '@/lib/analytics/stub'
+import { analytics } from '@/lib/analytics/heycatch'
 
 type LoginMode = 'standard' | 'admin'
 

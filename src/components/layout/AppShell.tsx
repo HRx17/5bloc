@@ -6,7 +6,7 @@ import { ToastProvider } from '@/components/ui5/Toast'
 import { ConfirmProvider } from '@/components/ui5/ConfirmProvider'
 import { PromptProvider } from '@/components/ui5/PromptProvider'
 import { MessagesProvider } from '@/components/messages/MessagesProvider'
-import { analytics } from '@/lib/analytics/stub'
+import { analytics } from '@/lib/analytics/heycatch'
 
 interface AppShellProps {
   children: React.ReactNode

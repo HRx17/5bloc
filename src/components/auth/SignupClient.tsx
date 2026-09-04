@@ -7,7 +7,7 @@ import { lovable } from '@/integrations/lovable'
 import { SELF_REGISTER_ROLES, ROLES, type RoleKey, isRoleKey } from '@/lib/rbac/roles'
 import { hasSupabaseEnv, isMockAuthEnabled } from '@/lib/rbac/mock'
 import { sendConfirmEmail } from '@/lib/auth/send-confirm-email'
-import { analytics } from '@/lib/analytics/stub'
+import { analytics } from '@/lib/analytics/heycatch'
 
 export default function Signup() {
   const router = useRouter()
