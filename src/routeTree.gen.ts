@@ -63,6 +63,7 @@ import { Route as ApiProjectsIdExpensesRouteImport } from './routes/api/projects
 import { Route as ApiProjectsIdIssuesRouteImport } from './routes/api/projects/$id/issues'
 import { Route as ApiProjectsIdMeetingsRouteImport } from './routes/api/projects/$id/meetings'
 import { Route as ApiProjectsIdMembersRouteImport } from './routes/api/projects/$id/members'
+import { Route as ApiProjectsIdMessagesRouteImport } from './routes/api/projects/$id/messages'
 import { Route as ApiProjectsIdMilestonesRouteImport } from './routes/api/projects/$id/milestones'
 import { Route as ApiProjectsIdPermitsRouteImport } from './routes/api/projects/$id/permits'
 import { Route as ApiProjectsIdRfisRouteImport } from './routes/api/projects/$id/rfis'
@@ -368,6 +369,11 @@ const ApiProjectsIdMembersRoute = ApiProjectsIdMembersRouteImport.update({
   path: '/members',
   getParentRoute: () => ApiProjectsIdRoute,
 } as any)
+const ApiProjectsIdMessagesRoute = ApiProjectsIdMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => ApiProjectsIdRoute,
+} as any)
 const ApiProjectsIdMilestonesRoute = ApiProjectsIdMilestonesRouteImport.update({
   id: '/milestones',
   path: '/milestones',
@@ -538,6 +544,7 @@ export interface FileRoutesByFullPath {
   '/api/projects/$id/issues': typeof ApiProjectsIdIssuesRoute
   '/api/projects/$id/meetings': typeof ApiProjectsIdMeetingsRoute
   '/api/projects/$id/members': typeof ApiProjectsIdMembersRoute
+  '/api/projects/$id/messages': typeof ApiProjectsIdMessagesRoute
   '/api/projects/$id/milestones': typeof ApiProjectsIdMilestonesRoute
   '/api/projects/$id/permits': typeof ApiProjectsIdPermitsRoute
   '/api/projects/$id/rfis': typeof ApiProjectsIdRfisRoute
@@ -613,6 +620,7 @@ export interface FileRoutesByTo {
   '/api/projects/$id/issues': typeof ApiProjectsIdIssuesRoute
   '/api/projects/$id/meetings': typeof ApiProjectsIdMeetingsRoute
   '/api/projects/$id/members': typeof ApiProjectsIdMembersRoute
+  '/api/projects/$id/messages': typeof ApiProjectsIdMessagesRoute
   '/api/projects/$id/milestones': typeof ApiProjectsIdMilestonesRoute
   '/api/projects/$id/permits': typeof ApiProjectsIdPermitsRoute
   '/api/projects/$id/rfis': typeof ApiProjectsIdRfisRoute
@@ -691,6 +699,7 @@ export interface FileRoutesById {
   '/api/projects/$id/issues': typeof ApiProjectsIdIssuesRoute
   '/api/projects/$id/meetings': typeof ApiProjectsIdMeetingsRoute
   '/api/projects/$id/members': typeof ApiProjectsIdMembersRoute
+  '/api/projects/$id/messages': typeof ApiProjectsIdMessagesRoute
   '/api/projects/$id/milestones': typeof ApiProjectsIdMilestonesRoute
   '/api/projects/$id/permits': typeof ApiProjectsIdPermitsRoute
   '/api/projects/$id/rfis': typeof ApiProjectsIdRfisRoute
@@ -768,6 +777,7 @@ export interface FileRouteTypes {
     | '/api/projects/$id/issues'
     | '/api/projects/$id/meetings'
     | '/api/projects/$id/members'
+    | '/api/projects/$id/messages'
     | '/api/projects/$id/milestones'
     | '/api/projects/$id/permits'
     | '/api/projects/$id/rfis'
@@ -843,6 +853,7 @@ export interface FileRouteTypes {
     | '/api/projects/$id/issues'
     | '/api/projects/$id/meetings'
     | '/api/projects/$id/members'
+    | '/api/projects/$id/messages'
     | '/api/projects/$id/milestones'
     | '/api/projects/$id/permits'
     | '/api/projects/$id/rfis'
@@ -920,6 +931,7 @@ export interface FileRouteTypes {
     | '/api/projects/$id/issues'
     | '/api/projects/$id/meetings'
     | '/api/projects/$id/members'
+    | '/api/projects/$id/messages'
     | '/api/projects/$id/milestones'
     | '/api/projects/$id/permits'
     | '/api/projects/$id/rfis'
@@ -1358,6 +1370,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiProjectsIdMembersRouteImport
       parentRoute: typeof ApiProjectsIdRoute
     }
+    '/api/projects/$id/messages': {
+      id: '/api/projects/$id/messages'
+      path: '/messages'
+      fullPath: '/api/projects/$id/messages'
+      preLoaderRoute: typeof ApiProjectsIdMessagesRouteImport
+      parentRoute: typeof ApiProjectsIdRoute
+    }
     '/api/projects/$id/milestones': {
       id: '/api/projects/$id/milestones'
       path: '/milestones'
@@ -1648,6 +1667,7 @@ interface ApiProjectsIdRouteChildren {
   ApiProjectsIdIssuesRoute: typeof ApiProjectsIdIssuesRoute
   ApiProjectsIdMeetingsRoute: typeof ApiProjectsIdMeetingsRoute
   ApiProjectsIdMembersRoute: typeof ApiProjectsIdMembersRoute
+  ApiProjectsIdMessagesRoute: typeof ApiProjectsIdMessagesRoute
   ApiProjectsIdMilestonesRoute: typeof ApiProjectsIdMilestonesRoute
   ApiProjectsIdPermitsRoute: typeof ApiProjectsIdPermitsRoute
   ApiProjectsIdRfisRoute: typeof ApiProjectsIdRfisRoute
@@ -1666,6 +1686,7 @@ const ApiProjectsIdRouteChildren: ApiProjectsIdRouteChildren = {
   ApiProjectsIdIssuesRoute: ApiProjectsIdIssuesRoute,
   ApiProjectsIdMeetingsRoute: ApiProjectsIdMeetingsRoute,
   ApiProjectsIdMembersRoute: ApiProjectsIdMembersRoute,
+  ApiProjectsIdMessagesRoute: ApiProjectsIdMessagesRoute,
   ApiProjectsIdMilestonesRoute: ApiProjectsIdMilestonesRoute,
   ApiProjectsIdPermitsRoute: ApiProjectsIdPermitsRoute,
   ApiProjectsIdRfisRoute: ApiProjectsIdRfisRoute,
