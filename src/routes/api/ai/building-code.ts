@@ -12,10 +12,12 @@ function normalizePlan(raw: unknown): Plan {
 
 const handlePOST = async ({ request }: any) => {
   try {
-    const { profile } = await getAuthUserOrNull(request)
-    const plan = normalizePlan(profile.plan || profile.organisations?.plan)
+    const auth = await getAuthUserOrNull(request)
+    if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
+    const { profile } = auth
+    const plan = normalizePlan((profile as any).plan || (profile as any).organisations?.plan)
 
-    if (!canUse(plan, 'ai_estimator', !!profile.ai_add_on)) {
+    if (!canUse(plan, 'ai_estimator', !!(profile as any).ai_add_on)) {
       return json(
         {
           error: 'AI Building Code Checker requires Solo, Team, or the AI add-on.',
@@ -25,7 +27,7 @@ const handlePOST = async ({ request }: any) => {
       )
     }
 
-    const limit = await checkAIRateLimit(profile.id, 'building_code', plan, profile.ai_add_on)
+    const limit = await checkAIRateLimit(profile.id, 'building_code', plan, (profile as any).ai_add_on)
     if (!limit.allowed) {
       return json(
         {

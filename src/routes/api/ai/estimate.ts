@@ -12,10 +12,12 @@ function normalizePlan(raw: unknown): Plan {
 
 const handlePOST = async ({ request }: any) => {
   try {
-    const { profile, supabase } = await getAuthUserOrNull(request)
-    const plan = normalizePlan(profile.plan || profile.organisations?.plan)
+    const auth = await getAuthUserOrNull(request)
+    if (!auth) return json({ error: 'Unauthorized' }, { status: 401 })
+    const { profile, supabase } = auth
+    const plan = normalizePlan((profile as any).plan || (profile as any).organisations?.plan)
 
-    if (!canUse(plan, 'ai_estimator', !!profile.ai_add_on)) {
+    if (!canUse(plan, 'ai_estimator', !!(profile as any).ai_add_on)) {
       return json(
         {
           error: 'AI Cost Estimator requires Solo, Team, or the AI add-on.',
@@ -30,7 +32,7 @@ const handlePOST = async ({ request }: any) => {
       profile.id,
       'estimate',
       plan,
-      profile.ai_add_on
+      (profile as any).ai_add_on
     )
 
     if (!limit.allowed) {
@@ -49,7 +51,7 @@ const handlePOST = async ({ request }: any) => {
       supabase
         .from('ai_estimates')
         .insert({
-          org_id: profile.org_id,
+          org_id: (profile as any).org_id,
           profile_id: profile.id,
           user_id: profile.id,
           project_id: body.projectId || null,
