@@ -77,7 +77,7 @@ function AppleNav() {
           <Logo size={22} showTagline={false} color="var(--lp-text)" />
         </Link>
 
-        <nav className="hidden md:flex items-center gap-7">
+        <nav className="hidden lg:flex items-center gap-6">
           {links.map((l) => (
             <Link key={l.href} href={l.href} className="lp-nav-link">
               {l.label}
@@ -85,7 +85,7 @@ function AppleNav() {
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-2.5">
+        <div className="hidden lg:flex items-center gap-2.5">
           <a href="#architect-waitlist" className="lp-nav-link hidden lg:inline">Architects</a>
           <Link href="/list-your-business" className="lp-btn lp-btn-nav">
             Contractors (free)
@@ -97,7 +97,7 @@ function AppleNav() {
 
         <button
           type="button"
-          className="md:hidden p-2 -mr-2"
+          className="lg:hidden p-2 -mr-2"
           onClick={() => setOpen((v) => !v)}
           aria-label="Menu"
         >
