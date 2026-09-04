@@ -56,8 +56,12 @@ framework, keeping the same design, content and behaviour.
 - Todo: accept-invite screen (needs `/api/invites/accept`, `/api/org/invites/accept`),
   admin role-alias page, `next_invoice_number` RPC.
 - Todo: ported UI kit lives in `src/components/ui5/` (renamed to avoid casing clashes with shadcn).
-- App pages (remaining): per-project tabs (overview, documents, rfis, submittals, issues,
-  site, meetings, transmittals, permits, invoices, team, messages, portal),
+- Done: per-project tabs at `/projects/:id` (overview, documents, rfis, submittals, issues,
+  site, meetings, transmittals, permits, invoices, team; settings redirects to overview),
+  plus endpoints projects/$id/{rfis,submittals,issues,site,meetings,transmittals,permits,
+  members,milestones,expenses,consultant-payments,document-annotations,document-versions},
+  invites, files/download.
+- App pages (remaining): project messages + portal tabs,
   messages, calendar, catalog, CAD, AI tools, integrations, settings,
   role dashboards (builder, contractor, consultant, client), admin.
 
