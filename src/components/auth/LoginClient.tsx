@@ -3,6 +3,7 @@ import Link from '@/compat/next-link'
 import { useRouter, useSearchParams } from '@/compat/next-navigation'
 import { AuthShell } from '@/components/auth/AuthShell'
 import { createClient } from '@/lib/supabase/client'
+import { lovable } from '@/integrations/lovable'
 import { hasSupabaseEnv, isMockAuthEnabled } from '@/lib/rbac/mock'
 import { homeForRole, isRoleKey, type RoleKey } from '@/lib/rbac/roles'
 import {
@@ -108,13 +109,9 @@ export default function LoginClient({ mode = 'standard' }: { mode?: LoginMode })
     setOauthLoading(true)
     setError('')
     try {
-      const supabase = createClient()
-      const origin = window.location.origin
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: `${origin}/auth/callback` },
+      await lovable.auth.signInWithOAuth('google', {
+        redirect_uri: `${window.location.origin}/auth/callback`,
       })
-      if (oauthError) throw oauthError
     } catch (err: any) {
       setError(err?.message || 'Google sign-in failed')
       setOauthLoading(false)

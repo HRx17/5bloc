@@ -3,6 +3,7 @@ import Link from '@/compat/next-link'
 import { useRouter, useSearchParams } from '@/compat/next-navigation'
 import { AuthShell } from '@/components/auth/AuthShell'
 import { createClient } from '@/lib/supabase/client'
+import { lovable } from '@/integrations/lovable'
 import { SELF_REGISTER_ROLES, ROLES, type RoleKey, isRoleKey } from '@/lib/rbac/roles'
 import { hasSupabaseEnv, isMockAuthEnabled } from '@/lib/rbac/mock'
 import { sendConfirmEmail } from '@/lib/auth/send-confirm-email'
@@ -54,15 +55,9 @@ export default function Signup() {
     setOauthLoading(true)
     setError('')
     try {
-      const supabase = createClient()
-      const origin = window.location.origin
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(`/onboarding?${onboardingQuery()}`)}`,
-        },
+      await lovable.auth.signInWithOAuth('google', {
+        redirect_uri: `${window.location.origin}/auth/callback`,
       })
-      if (oauthError) throw oauthError
     } catch (err: any) {
       setError(err?.message || 'Google sign-in failed')
       setOauthLoading(false)
