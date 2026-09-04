@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import Link from 'next/link'
+import Link from '@/compat/next-link'
+import { supabase } from '@/integrations/supabase/client'
 
 type Notification = {
   id: string
@@ -16,12 +17,18 @@ export default function NotificationsBell({ userId }: { userId?: string }) {
   const [open, setOpen] = useState(false)
   const [items, setItems] = useState<Notification[]>([])
 
+  const fetchNotifications = async () => {
+    const { data } = await supabase
+      .from('notifications')
+      .select('id, title, body, href, read_at, created_at')
+      .order('created_at', { ascending: false })
+      .limit(20)
+    return (data || []) as Notification[]
+  }
+
   const load = async () => {
     try {
-      const res = await fetch('/api/notifications')
-      if (!res.ok) return
-      const data = await res.json()
-      setItems(data.notifications || [])
+      setItems(await fetchNotifications())
     } catch {
       // ignore
     }
@@ -31,10 +38,8 @@ export default function NotificationsBell({ userId }: { userId?: string }) {
     let cancelled = false
     const refresh = async () => {
       try {
-        const res = await fetch('/api/notifications')
-        if (!res.ok) return
-        const data = await res.json()
-        if (!cancelled) setItems(data.notifications || [])
+        const next = await fetchNotifications()
+        if (!cancelled) setItems(next)
       } catch {
         // ignore
       }
@@ -55,11 +60,14 @@ export default function NotificationsBell({ userId }: { userId?: string }) {
         markAllRead || n.id === id ? { ...n, read_at: n.read_at || new Date().toISOString() } : n
       )
     )
-    await fetch('/api/notifications', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(markAllRead ? { markAllRead: true } : { id }),
-    }).catch(() => {})
+    try {
+      const stamp = new Date().toISOString()
+      let q = supabase.from('notifications').update({ read_at: stamp }).is('read_at', null)
+      if (!markAllRead && id) q = q.eq('id', id)
+      await q
+    } catch {
+      // ignore
+    }
   }
 
   return (
