@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { ArrowRight, Check, Loader2 } from 'lucide-react'
 import { createSupabaseClient } from '@/lib/supabase/client'
-import { analytics } from '@/lib/analytics/stub'
+import { analytics } from '@/lib/analytics/heycatch'
 
 const DARK = {
   base: '#0b0c10',

@@ -135,6 +135,7 @@ import { Route as ApiProjectsIdSiteRouteImport } from './routes/api/projects/$id
 import { Route as ApiProjectsIdSubmittalsRouteImport } from './routes/api/projects/$id/submittals'
 import { Route as ApiProjectsIdTendersRouteImport } from './routes/api/projects/$id/tenders'
 import { Route as ApiProjectsIdTransmittalsRouteImport } from './routes/api/projects/$id/transmittals'
+import { Route as ApiPublicCronMeetingRemindersRouteImport } from './routes/api/public/cron/meeting-reminders'
 import { Route as ApiPublicPartnerContractorSignupRouteImport } from './routes/api/public/partner/contractor-signup'
 import { Route as ApiPublicPartnerVendorSignupRouteImport } from './routes/api/public/partner/vendor-signup'
 import { Route as ApiPublicPaymentsInvoiceRouteImport } from './routes/api/public/payments/invoice'
@@ -836,6 +837,12 @@ const ApiProjectsIdTransmittalsRoute =
     path: '/transmittals',
     getParentRoute: () => ApiProjectsIdRoute,
   } as any)
+const ApiPublicCronMeetingRemindersRoute =
+  ApiPublicCronMeetingRemindersRouteImport.update({
+    id: '/api/public/cron/meeting-reminders',
+    path: '/api/public/cron/meeting-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPartnerContractorSignupRoute =
   ApiPublicPartnerContractorSignupRouteImport.update({
     id: '/api/public/partner/contractor-signup',
@@ -1098,6 +1105,7 @@ export interface FileRoutesByFullPath {
   '/api/projects/$id/submittals': typeof ApiProjectsIdSubmittalsRoute
   '/api/projects/$id/tenders': typeof ApiProjectsIdTendersRoute
   '/api/projects/$id/transmittals': typeof ApiProjectsIdTransmittalsRoute
+  '/api/public/cron/meeting-reminders': typeof ApiPublicCronMeetingRemindersRoute
   '/api/public/partner/contractor-signup': typeof ApiPublicPartnerContractorSignupRoute
   '/api/public/partner/vendor-signup': typeof ApiPublicPartnerVendorSignupRoute
   '/api/public/payments/invoice': typeof ApiPublicPaymentsInvoiceRoute
@@ -1248,6 +1256,7 @@ export interface FileRoutesByTo {
   '/api/projects/$id/submittals': typeof ApiProjectsIdSubmittalsRoute
   '/api/projects/$id/tenders': typeof ApiProjectsIdTendersRoute
   '/api/projects/$id/transmittals': typeof ApiProjectsIdTransmittalsRoute
+  '/api/public/cron/meeting-reminders': typeof ApiPublicCronMeetingRemindersRoute
   '/api/public/partner/contractor-signup': typeof ApiPublicPartnerContractorSignupRoute
   '/api/public/partner/vendor-signup': typeof ApiPublicPartnerVendorSignupRoute
   '/api/public/payments/invoice': typeof ApiPublicPaymentsInvoiceRoute
@@ -1401,6 +1410,7 @@ export interface FileRoutesById {
   '/api/projects/$id/submittals': typeof ApiProjectsIdSubmittalsRoute
   '/api/projects/$id/tenders': typeof ApiProjectsIdTendersRoute
   '/api/projects/$id/transmittals': typeof ApiProjectsIdTransmittalsRoute
+  '/api/public/cron/meeting-reminders': typeof ApiPublicCronMeetingRemindersRoute
   '/api/public/partner/contractor-signup': typeof ApiPublicPartnerContractorSignupRoute
   '/api/public/partner/vendor-signup': typeof ApiPublicPartnerVendorSignupRoute
   '/api/public/payments/invoice': typeof ApiPublicPaymentsInvoiceRoute
@@ -1553,6 +1563,7 @@ export interface FileRouteTypes {
     | '/api/projects/$id/submittals'
     | '/api/projects/$id/tenders'
     | '/api/projects/$id/transmittals'
+    | '/api/public/cron/meeting-reminders'
     | '/api/public/partner/contractor-signup'
     | '/api/public/partner/vendor-signup'
     | '/api/public/payments/invoice'
@@ -1703,6 +1714,7 @@ export interface FileRouteTypes {
     | '/api/projects/$id/submittals'
     | '/api/projects/$id/tenders'
     | '/api/projects/$id/transmittals'
+    | '/api/public/cron/meeting-reminders'
     | '/api/public/partner/contractor-signup'
     | '/api/public/partner/vendor-signup'
     | '/api/public/payments/invoice'
@@ -1855,6 +1867,7 @@ export interface FileRouteTypes {
     | '/api/projects/$id/submittals'
     | '/api/projects/$id/tenders'
     | '/api/projects/$id/transmittals'
+    | '/api/public/cron/meeting-reminders'
     | '/api/public/partner/contractor-signup'
     | '/api/public/partner/vendor-signup'
     | '/api/public/payments/invoice'
@@ -1958,6 +1971,7 @@ export interface RootRouteChildren {
   ApiIntegrationsGoogleTokenRoute: typeof ApiIntegrationsGoogleTokenRoute
   ApiMessagesUsersSearchRoute: typeof ApiMessagesUsersSearchRoute
   ApiOrgInvitesAcceptRoute: typeof ApiOrgInvitesAcceptRoute
+  ApiPublicCronMeetingRemindersRoute: typeof ApiPublicCronMeetingRemindersRoute
   ApiPublicPartnerContractorSignupRoute: typeof ApiPublicPartnerContractorSignupRoute
   ApiPublicPartnerVendorSignupRoute: typeof ApiPublicPartnerVendorSignupRoute
   ApiPublicPaymentsInvoiceRoute: typeof ApiPublicPaymentsInvoiceRoute
@@ -2850,6 +2864,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiProjectsIdTransmittalsRouteImport
       parentRoute: typeof ApiProjectsIdRoute
     }
+    '/api/public/cron/meeting-reminders': {
+      id: '/api/public/cron/meeting-reminders'
+      path: '/api/public/cron/meeting-reminders'
+      fullPath: '/api/public/cron/meeting-reminders'
+      preLoaderRoute: typeof ApiPublicCronMeetingRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/partner/contractor-signup': {
       id: '/api/public/partner/contractor-signup'
       path: '/api/public/partner/contractor-signup'
@@ -3389,6 +3410,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiIntegrationsGoogleTokenRoute: ApiIntegrationsGoogleTokenRoute,
   ApiMessagesUsersSearchRoute: ApiMessagesUsersSearchRoute,
   ApiOrgInvitesAcceptRoute: ApiOrgInvitesAcceptRoute,
+  ApiPublicCronMeetingRemindersRoute: ApiPublicCronMeetingRemindersRoute,
   ApiPublicPartnerContractorSignupRoute: ApiPublicPartnerContractorSignupRoute,
   ApiPublicPartnerVendorSignupRoute: ApiPublicPartnerVendorSignupRoute,
   ApiPublicPaymentsInvoiceRoute: ApiPublicPaymentsInvoiceRoute,
