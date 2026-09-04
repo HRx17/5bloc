@@ -72,7 +72,7 @@ export default function MarketplaceArchitectPage() {
 
   if (loading) {
     return (
-      <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6">
+      <div className="page-m space-y-6">
         <Skeleton style={{ height: 14, width: 160 }} />
         <div className="card-5bloc space-y-3">
           <Skeleton style={{ height: 24, width: '45%' }} />
@@ -85,7 +85,7 @@ export default function MarketplaceArchitectPage() {
 
   if (error) {
     return (
-      <div className="p-6 md:p-8 max-w-3xl mx-auto space-y-4">
+      <div className="page-m space-y-4">
         <ErrorState title="Could not load this architect profile" error={error} onRetry={load} />
         <Link href="/marketplace" className="btn-secondary text-[12px] inline-flex">
           Back to marketplace
@@ -96,7 +96,7 @@ export default function MarketplaceArchitectPage() {
 
   if (notFound || !architect) {
     return (
-      <div className="p-6 md:p-8 max-w-3xl mx-auto">
+      <div className="page-m">
         <EmptyState
           icon="search_off"
           title="This architect profile is not available"
@@ -113,7 +113,7 @@ export default function MarketplaceArchitectPage() {
   const { cover, portrait } = architectCover(architect)
 
   return (
-    <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6">
+    <div className="page-m space-y-6">
       <Link href="/marketplace" className="text-xs flex items-center gap-1" style={{ color: 'var(--stone)' }}>
         <span className="material-icons-outlined text-[14px]">arrow_back</span> Back to marketplace
       </Link>
@@ -151,7 +151,7 @@ export default function MarketplaceArchitectPage() {
               Architect
             </span>
           </div>
-          <h1 className="font-display text-[32px] leading-tight">
+          <h1 className="page-m-title leading-tight">
             {name}
           </h1>
           <p className="text-sm" style={{ color: 'var(--stone)' }}>

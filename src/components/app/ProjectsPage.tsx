@@ -51,10 +51,10 @@ export default function ProjectsPage() {
   )
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="page-m space-y-6">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-[36px]">Projects</h1>
+          <h1 className="page-m-title">Projects</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
             {canCreate ? 'Your firm’s project workspaces.' : 'Project workspaces you have been invited to.'}
           </p>
@@ -130,27 +130,51 @@ export default function ProjectsPage() {
           href={!q && canCreate ? '/projects/new' : undefined}
         />
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((p) => (
-            <Link
-              key={p.id}
-              href={`/projects/${p.id}`}
-              className="p-5 rounded-2xl block"
-              style={{ background: 'var(--surface-container)', boxShadow: 'var(--shadow-2)' }}
-            >
-              <div className="flex justify-between gap-2">
-                <p className="font-semibold">{p.name}</p>
-                <span className="chip capitalize text-[10px]" style={{ color: 'var(--stone)' }}>
-                  {p.status}
-                </span>
-              </div>
-              <p className="text-[12px] mt-2" style={{ color: 'var(--stone)' }}>
-                {p.city}, {p.state} · {String(p.phase || '').replaceAll('_', ' ')}
-              </p>
-            </Link>
-          ))}
+        <div className="card-m overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="table-m">
+              <thead>
+                <tr>
+                  <th>Project</th>
+                  <th>Location</th>
+                  <th>Phase</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((p) => {
+                  const status = String(p.status || 'active')
+                  const tone =
+                    status === 'completed'
+                      ? 'chip-m chip-m-green'
+                      : status === 'on_hold'
+                        ? 'chip-m chip-m-red'
+                        : 'chip-m chip-m-amber'
+                  return (
+                    <tr key={p.id}>
+                      <td>
+                        <Link href={`/projects/${p.id}`} className="font-semibold">
+                          {p.name}
+                        </Link>
+                      </td>
+                      <td style={{ color: 'var(--on-surface-variant)' }}>
+                        {[p.city, p.state].filter(Boolean).join(', ') || '—'}
+                      </td>
+                      <td className="capitalize" style={{ color: 'var(--on-surface-variant)' }}>
+                        {String(p.phase || '').replaceAll('_', ' ') || '—'}
+                      </td>
+                      <td>
+                        <span className={tone}>{status.replaceAll('_', ' ')}</span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
+
     </div>
   )
 }

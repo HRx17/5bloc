@@ -95,10 +95,10 @@ export default function ClientsPage() {
   }
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="page-m space-y-6">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-[36px]">CRM contacts</h1>
+          <h1 className="page-m-title">CRM contacts</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
             Firm pipeline contacts — separate from project client portal users.
           </p>
@@ -133,17 +133,18 @@ export default function ClientsPage() {
           onClick={openForm}
         />
       ) : view === 'pipeline' ? (
-        <div className="grid md:grid-cols-5 gap-3 overflow-x-auto">
+        <div className="grid md:grid-cols-5 gap-4 overflow-x-auto">
           {STAGES.map((stage) => {
             const inStage = clients.filter((c) => c.pipeline_stage === stage)
             return (
-              <div key={stage} className="min-w-[160px]">
-                <p className="text-[11px] uppercase mb-2 capitalize" style={{ color: 'var(--stone)' }}>
-                  {stage} ({inStage.length})
-                </p>
-                <div className="space-y-2">
+              <div key={stage} className="card-m min-w-[168px] overflow-hidden">
+                <div className="card-m-head flex items-center justify-between">
+                  <span className="stat-m-label capitalize">{stage}</span>
+                  <span className="chip-m">{inStage.length}</span>
+                </div>
+                <div className="p-3 space-y-2">
                   {inStage.length === 0 ? (
-                    <p className="text-[11px] p-3 rounded-xl" style={{ color: 'var(--stone)', background: 'var(--surface-container-low)' }}>
+                    <p className="text-[11.5px] px-1 py-2" style={{ color: 'var(--stone)' }}>
                       Nobody at this stage.
                     </p>
                   ) : (
@@ -151,11 +152,10 @@ export default function ClientsPage() {
                       <Link
                         key={c.id}
                         href={`/clients/${c.id}`}
-                        className="block p-3 rounded-xl"
-                        style={{ background: 'var(--surface-container)' }}
+                        className="block p-3 rounded-xl card-m card-m-hover"
                       >
                         <p className="text-sm font-semibold">{c.full_name}</p>
-                        <p className="text-[11px]" style={{ color: 'var(--stone)' }}>
+                        <p className="text-[11.5px]" style={{ color: 'var(--stone)' }}>
                           {c.company || c.city || '—'}
                         </p>
                       </Link>
@@ -167,16 +167,18 @@ export default function ClientsPage() {
           })}
         </div>
       ) : (
-        <div className="rounded-2xl overflow-x-auto" style={{ background: 'var(--surface-container)' }}>
-          <table className="w-full text-sm">
+        <div className="card-m overflow-hidden">
+          <div className="overflow-x-auto">
+          <table className="table-m">
             <thead>
-              <tr style={{ color: 'var(--stone)' }}>
-                <th className="text-left p-4">Name</th>
-                <th className="text-left p-4">Company</th>
-                <th className="text-left p-4">Stage</th>
-                <th className="text-left p-4">Value</th>
+              <tr>
+                <th>Name</th>
+                <th>Company</th>
+                <th>Stage</th>
+                <th>Value</th>
               </tr>
             </thead>
+
             <tbody>
               {clients.map((c) => (
                 <tr key={c.id} style={{ boxShadow: 'inset 0 1px 0 rgba(159,142,122,0.08)' }}>

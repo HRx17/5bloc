@@ -49,17 +49,15 @@ export default function Sidebar({
 
   return (
     <aside
-      className="w-[220px] h-screen flex flex-col z-40 select-none"
+      className="w-[248px] h-screen flex flex-col z-40 select-none"
       style={{
-        background: 'var(--glass-bg)',
-        backdropFilter: 'var(--glass-blur)',
-        WebkitBackdropFilter: 'var(--glass-blur)',
-        boxShadow: 'var(--shadow-3)',
+        background: 'var(--surface-elevated)',
+        boxShadow: 'inset -1px 0 0 var(--hairline)',
       }}
     >
       <div
-        className="h-[56px] px-5 flex items-center justify-between shrink-0"
-        style={{ boxShadow: '0 1px 0 rgba(159,142,122,0.08)' }}
+        className="h-[60px] px-5 flex items-center justify-between shrink-0"
+        style={{ boxShadow: 'inset 0 -1px 0 var(--hairline)' }}
       >
         <Link
           href={getNavForRole(userRole)[0]?.items[0]?.path || '/dashboard'}
@@ -90,10 +88,10 @@ export default function Sidebar({
                     key={item.name}
                     href={item.path}
                     onClick={onClose}
-                    className="flex items-center gap-3 px-3 py-2.5 text-[13px] font-medium rounded-xl transition-all duration-150"
+                    className={`flex items-center gap-3 px-3 py-2.5 text-[13.5px] rounded-[10px] transition-colors duration-150 ${active ? 'font-semibold' : 'font-medium hover:bg-[var(--overlay-hover)]'}`}
                     style={{
-                      color: active ? 'var(--amber)' : 'var(--on-surface-variant)',
-                      background: active ? 'rgba(245, 166, 35, 0.08)' : 'transparent',
+                      color: active ? 'var(--amber-dk)' : 'var(--on-surface-variant)',
+                      background: active ? 'rgba(245, 166, 35, 0.12)' : 'transparent',
                     }}
                   >
                     <span className="material-icons-outlined text-[20px]">{item.icon}</span>
@@ -116,7 +114,7 @@ export default function Sidebar({
 
       <div
         className="px-4 py-4 shrink-0"
-        style={{ boxShadow: '0 -1px 0 rgba(159,142,122,0.08)' }}
+        style={{ boxShadow: 'inset 0 1px 0 var(--hairline)' }}
       >
         <p className="text-[12px] font-semibold truncate" style={{ color: 'var(--on-surface)' }}>
           {displayOrg}

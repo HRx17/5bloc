@@ -217,11 +217,11 @@ export default function DashboardPage() {
   ])
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-8">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="page-m space-y-7">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-[36px]">Workspace dashboard</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
+          <h1 className="page-m-title">Workspace dashboard</h1>
+          <p className="page-m-sub">
             {isArchitect
               ? 'Your first-week checklist: projects, clients, and what needs attention.'
               : 'Projects, CRM contacts, and what needs attention.'}
@@ -237,6 +237,7 @@ export default function DashboardPage() {
           </Link>
         )}
       </div>
+
 
       {showFirstWeekGuide && (
         <section
@@ -319,110 +320,162 @@ export default function DashboardPage() {
         </section>
       )}
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {[
-          { label: 'Active projects', value: active },
-          { label: 'CRM contacts', value: clients.length },
-          { label: 'Total projects', value: projects.length },
+          { label: 'Active projects', value: active, note: `${projects.length} total in workspace` },
+          { label: 'CRM contacts', value: clients.length, note: 'Clients linked to billing' },
+          { label: 'Total projects', value: projects.length, note: 'Across all phases' },
           {
             label: 'Pipeline value',
             value: `₹${clients.reduce((s, c) => s + Number(c.total_value || 0), 0).toLocaleString()}`,
+            note: 'Sum of client contract values',
           },
         ].map((k) => (
-          <div
-            key={k.label}
-            className="p-5 rounded-2xl"
-            style={{ background: 'var(--surface-container)', boxShadow: 'var(--shadow-2)' }}
-          >
-            <p className="text-[12px]" style={{ color: 'var(--stone)' }}>
-              {k.label}
-            </p>
+          <div key={k.label} className="card-m stat-m">
+            <p className="stat-m-label">{k.label}</p>
             {loading ? (
-              <Skeleton className="h-7 w-20 mt-2" />
+              <Skeleton className="h-8 w-20 mt-2" />
             ) : (
-              <p className="text-[24px] font-semibold mt-1">{error ? '—' : k.value}</p>
+              <p className="stat-m-value">{error ? '—' : k.value}</p>
             )}
+            <p className="stat-m-note">{k.note}</p>
           </div>
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        <section className="lg:col-span-2">
-          <div className="flex justify-between mb-4">
-            <h2 className="text-lg font-semibold">Projects</h2>
-            <Link href="/projects" className="text-[12px]" style={{ color: 'var(--amber)' }}>
+      <div className="grid lg:grid-cols-3 gap-6 items-start">
+        <section className="lg:col-span-2 card-m overflow-hidden">
+          <div className="card-m-head">
+            <h2 className="card-m-title">Projects</h2>
+            <Link href="/projects" className="text-[12px] font-semibold" style={{ color: 'var(--amber-dk)' }}>
               View all
             </Link>
           </div>
           {loading ? (
-            <div className="grid md:grid-cols-2 gap-3">
+            <div className="p-5 space-y-3">
               {Array.from({ length: 4 }, (_, i) => (
-                <Skeleton key={i} className="h-20 w-full" />
+                <Skeleton key={i} className="h-10 w-full" />
               ))}
             </div>
           ) : error ? (
-            <ErrorState
-              title="Could not load your projects"
-              description="Your workspace is fine — we just could not fetch it. Retry, or refresh in a moment."
-              error={error}
-              onRetry={load}
-            />
+            <div className="p-5">
+              <ErrorState
+                title="Could not load your projects"
+                description="Your workspace is fine — we just could not fetch it. Retry, or refresh in a moment."
+                error={error}
+                onRetry={load}
+              />
+            </div>
           ) : projects.length === 0 ? (
-            <EmptyState
-              icon="apartment"
-              title="No projects yet"
-              description="Create your first project to invite contractors, share drawings, and open a client portal."
-              actionLabel="Create project"
-              href="/projects/new"
-            />
+            <div className="p-5">
+              <EmptyState
+                icon="apartment"
+                title="No projects yet"
+                description="Create your first project to invite contractors, share drawings, and open a client portal."
+                actionLabel="Create project"
+                href="/projects/new"
+              />
+            </div>
           ) : (
-            <div className="grid md:grid-cols-2 gap-3">
-              {projects.slice(0, 4).map((p) => (
-                <Link
-                  key={p.id}
-                  href={`/projects/${p.id}`}
-                  className="p-4 rounded-xl block"
-                  style={{ background: 'var(--surface-container)' }}
-                >
-                  <p className="font-semibold">{p.name}</p>
-                  <p className="text-[12px] mt-1" style={{ color: 'var(--stone)' }}>
-                    {p.city} · {String(p.phase || '').replaceAll('_', ' ')}
-                  </p>
-                </Link>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="table-m">
+                <thead>
+                  <tr>
+                    <th>Project</th>
+                    <th>Phase</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {projects.slice(0, 6).map((p) => {
+                    const phase = String(p.phase || '').replaceAll('_', ' ')
+                    const status = String(p.status || 'active')
+                    const tone =
+                      status === 'completed'
+                        ? 'chip-m chip-m-green'
+                        : status === 'on_hold'
+                          ? 'chip-m chip-m-red'
+                          : 'chip-m chip-m-amber'
+                    return (
+                      <tr
+                        key={p.id}
+                        className="cursor-pointer"
+                      >
+                        <td>
+                          <Link href={`/projects/${p.id}`} className="font-semibold">
+                            {p.name}
+                          </Link>
+                          <div className="text-[11.5px] mt-0.5" style={{ color: 'var(--stone)' }}>
+                            {p.city || 'Location not set'}
+                          </div>
+                        </td>
+                        <td className="capitalize" style={{ color: 'var(--on-surface-variant)' }}>
+                          {phase || '—'}
+                        </td>
+                        <td>
+                          <span className={tone}>{status.replaceAll('_', ' ')}</span>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </section>
 
-        <section>
-          <h2 className="text-lg font-semibold mb-4">Activity</h2>
+        <section className="card-m overflow-hidden">
+          <div className="card-m-head">
+            <h2 className="card-m-title">Activity</h2>
+          </div>
           {activityError ? (
-            <ErrorState
-              compact
-              title="Activity is unavailable"
-              description="The feed did not load. Your project history is unaffected."
-              onRetry={loadActivity}
-            />
+            <div className="p-5">
+              <ErrorState
+                compact
+                title="Activity is unavailable"
+                description="The feed did not load. Your project history is unaffected."
+                onRetry={loadActivity}
+              />
+            </div>
           ) : (
-            <div className="p-4 rounded-2xl space-y-3" style={{ background: 'var(--surface-container)' }}>
+            <div className="p-5 space-y-4">
               {activity.length === 0 ? (
-                <p className="text-[12px]" style={{ color: 'var(--stone)' }}>
+                <p className="text-[12.5px]" style={{ color: 'var(--stone)' }}>
                   Nothing yet. Uploads, approvals and invoices show up here as your team works.
                 </p>
               ) : (
-                activity.map((a) => (
-                  <div key={a.id} className="text-[12px]">
-                    <p className="font-medium">{a.entity_name || a.action}</p>
-                    <p style={{ color: 'var(--stone)' }}>
-                      {a.action} · {a.project_name || 'Project'} · {a.created_at?.slice(0, 10)}
-                    </p>
-                  </div>
-                ))
+                activity.map((a) => {
+                  const action = String(a.action || '')
+                  const icon = action.includes('invoice')
+                    ? 'receipt_long'
+                    : action.includes('meeting')
+                      ? 'event'
+                      : action.includes('document') || action.includes('submittal')
+                        ? 'description'
+                        : action.includes('project')
+                          ? 'apartment'
+                          : 'bolt'
+                  return (
+                    <div key={a.id} className="flex gap-3">
+                      <span className="feed-m-icon">
+                        <span className="material-icons-outlined">{icon}</span>
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-medium truncate">{a.entity_name || action}</p>
+                        <p className="text-[11.5px] mt-0.5" style={{ color: 'var(--stone)' }}>
+                          {action.replaceAll('.', ' ')} · {a.project_name || 'Project'}
+                          {a.created_at ? ` · ${a.created_at.slice(0, 10)}` : ''}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })
               )}
             </div>
           )}
         </section>
       </div>
+
 
       <OnboardingChecklist />
     </div>

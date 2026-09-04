@@ -232,7 +232,7 @@ export default function ClientDetailPage() {
 
   if (loading) {
     return (
-      <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6">
+      <div className="page-m space-y-6">
         <div className="space-y-2">
           <Skeleton className="h-4 w-28" />
           <Skeleton className="h-9 w-64" />
@@ -249,7 +249,7 @@ export default function ClientDetailPage() {
 
   if (error || !client) {
     return (
-      <div className="p-6 md:p-8 max-w-3xl mx-auto space-y-4">
+      <div className="page-m space-y-4">
         <ErrorState
           title="Could not open this contact"
           error={error}
@@ -268,13 +268,13 @@ export default function ClientDetailPage() {
   const logs = client.notes_log?.length ? client.notes_log : client.commLogs
 
   return (
-    <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6">
+    <div className="page-m space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
           <Link href="/clients" className="text-[12px]" style={{ color: 'var(--stone)' }}>
             ← CRM contacts
           </Link>
-          <h1 className="font-display text-[32px] mt-2">{client.full_name}</h1>
+          <h1 className="page-m-title mt-2">{client.full_name}</h1>
           <p className="text-sm" style={{ color: 'var(--stone)' }}>
             {client.company || 'Individual'} · {client.city || '—'}
           </p>

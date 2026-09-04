@@ -71,9 +71,9 @@ export default function BuilderDashboardPage() {
   }
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-8">
+    <div className="page-m space-y-8">
       <div>
-        <h1 className="font-display text-[36px]">Builder portfolio</h1>
+        <h1 className="page-m-title">Builder portfolio</h1>
         <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
           All projects across your architects — approvals, budget, vendor recommendations.
         </p>
