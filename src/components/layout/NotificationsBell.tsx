@@ -1,5 +1,3 @@
-'use client'
-
 import React, { useEffect, useState } from 'react'
 import Link from '@/compat/next-link'
 import { supabase } from '@/integrations/supabase/client'

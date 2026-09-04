@@ -1,7 +1,5 @@
-'use client'
-
 import React, { useState, useEffect } from 'react'
-import Link from 'next/link'
+import Link from '@/compat/next-link'
 import { Logo } from '../brand/LogoMark'
 
 interface TopNavProps {

@@ -1,5 +1,3 @@
-'use client'
-
 import React, { useEffect, useState } from 'react'
 import Sidebar from './Sidebar'
 import TopNav from './TopNav'
@@ -8,7 +6,7 @@ import { ToastProvider } from '@/components/ui/Toast'
 import { ConfirmProvider } from '@/components/ui/ConfirmProvider'
 import { PromptProvider } from '@/components/ui/PromptProvider'
 import { MessagesProvider } from '@/components/messages/MessagesProvider'
-import { analytics } from '@heycatch/sdk'
+import { analytics } from '@/lib/analytics/stub'
 
 interface AppShellProps {
   children: React.ReactNode

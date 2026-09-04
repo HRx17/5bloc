@@ -1,8 +1,6 @@
-'use client'
-
 import React from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import Link from '@/compat/next-link'
+import { usePathname } from '@/compat/next-navigation'
 import { Logo } from '../brand/LogoMark'
 import { getNavForRole } from '@/lib/rbac/nav'
 import { ROLES, type RoleKey } from '@/lib/rbac/roles'
