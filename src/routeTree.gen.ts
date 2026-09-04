@@ -12,8 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as JoinAsVendorRouteImport } from './routes/join-as-vendor'
+import { Route as ListYourBusinessRouteImport } from './routes/list-your-business'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -22,6 +26,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedAppRouteRouteImport } from './routes/_authenticated/_app/route'
 import { Route as ApiActivityRouteImport } from './routes/api/activity'
 import { Route as ApiBidsRouteImport } from './routes/api/bids'
+import { Route as ApiCadModelsRouteImport } from './routes/api/cad-models'
 import { Route as ApiClientsRouteImport } from './routes/api/clients'
 import { Route as ApiContractorsRouteImport } from './routes/api/contractors'
 import { Route as ApiInvitesRouteImport } from './routes/api/invites'
@@ -30,8 +35,13 @@ import { Route as ApiMeRouteImport } from './routes/api/me'
 import { Route as ApiMeetingsRouteImport } from './routes/api/meetings'
 import { Route as ApiNotificationsRouteImport } from './routes/api/notifications'
 import { Route as ApiProjectsRouteImport } from './routes/api/projects'
+import { Route as ApiSendEmailRouteImport } from './routes/api/send-email'
 import { Route as ApiTendersRouteImport } from './routes/api/tenders'
+import { Route as ApiTimelineRouteImport } from './routes/api/timeline'
+import { Route as ApiVendorRecommendationsRouteImport } from './routes/api/vendor-recommendations'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
+import { Route as PayTokenRouteImport } from './routes/pay/$token'
+import { Route as PortalTokenRouteImport } from './routes/portal/$token'
 import { Route as Vs5blocVsFieldwireRouteImport } from './routes/vs/5bloc-vs-fieldwire'
 import { Route as Vs5blocVsProcoreRouteImport } from './routes/vs/5bloc-vs-procore'
 import { Route as AuthenticatedAppCadRouteImport } from './routes/_authenticated/_app/cad'
@@ -48,17 +58,28 @@ import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenti
 import { Route as ApiAiBuildingCodeRouteImport } from './routes/api/ai/building-code'
 import { Route as ApiAiContractScanRouteImport } from './routes/api/ai/contract-scan'
 import { Route as ApiAiEstimateRouteImport } from './routes/api/ai/estimate'
+import { Route as ApiAiRfiDraftRouteImport } from './routes/api/ai/rfi-draft'
 import { Route as ApiClientsIdRouteImport } from './routes/api/clients/$id'
 import { Route as ApiContractorsIdRouteImport } from './routes/api/contractors/$id'
 import { Route as ApiContractorsArchitectsRouteImport } from './routes/api/contractors/architects'
+import { Route as ApiFilesBlobRouteImport } from './routes/api/files/blob'
 import { Route as ApiFilesDownloadRouteImport } from './routes/api/files/download'
 import { Route as ApiFilesUploadRouteImport } from './routes/api/files/upload'
+import { Route as ApiIntegrationsStatusRouteImport } from './routes/api/integrations/status'
+import { Route as ApiIntegrationsSyncRouteImport } from './routes/api/integrations/sync'
+import { Route as ApiInvitesAcceptRouteImport } from './routes/api/invites/accept'
 import { Route as ApiInvoicesIdRouteImport } from './routes/api/invoices/$id'
 import { Route as ApiMessagesConversationsRouteImport } from './routes/api/messages/conversations'
 import { Route as ApiOrgStudioProjectRouteImport } from './routes/api/org/studio-project'
 import { Route as ApiOrgTeamRouteImport } from './routes/api/org/team'
+import { Route as ApiPaymentsMethodsRouteImport } from './routes/api/payments/methods'
+import { Route as ApiPaymentsSubscribeRouteImport } from './routes/api/payments/subscribe'
+import { Route as ApiPaymentsSubscriptionRouteImport } from './routes/api/payments/subscription'
 import { Route as ApiProjectsIdRouteImport } from './routes/api/projects/$id'
+import { Route as ApiPublicContractorPhotoRouteImport } from './routes/api/public/contractor-photo'
+import { Route as ApiPublicVendorCatalogRouteImport } from './routes/api/public/vendor-catalog'
 import { Route as ApiTendersIdRouteImport } from './routes/api/tenders/$id'
+import { Route as ApiWaitlistStatsRouteImport } from './routes/api/waitlist/stats'
 import { Route as AuthenticatedAppAiBuildingCodeRouteImport } from './routes/_authenticated/_app/ai/building-code'
 import { Route as AuthenticatedAppAiContractScanRouteImport } from './routes/_authenticated/_app/ai/contract-scan'
 import { Route as AuthenticatedAppAiEstimateRouteImport } from './routes/_authenticated/_app/ai/estimate'
@@ -76,11 +97,30 @@ import { Route as AuthenticatedAppMarketplaceIdRouteImport } from './routes/_aut
 import { Route as AuthenticatedAppProjectsIndexRouteImport } from './routes/_authenticated/_app/projects/index'
 import { Route as AuthenticatedAppProjectsNewRouteImport } from './routes/_authenticated/_app/projects/new'
 import { Route as ApiContractorsArchitectsIdRouteImport } from './routes/api/contractors/architects/$id'
+import { Route as ApiIntegrationsAutodeskCallbackRouteImport } from './routes/api/integrations/autodesk/callback'
+import { Route as ApiIntegrationsAutodeskCompleteUploadRouteImport } from './routes/api/integrations/autodesk/complete-upload'
+import { Route as ApiIntegrationsAutodeskConnectRouteImport } from './routes/api/integrations/autodesk/connect'
+import { Route as ApiIntegrationsAutodeskDisconnectRouteImport } from './routes/api/integrations/autodesk/disconnect'
+import { Route as ApiIntegrationsAutodeskTranslateStatusRouteImport } from './routes/api/integrations/autodesk/translate-status'
+import { Route as ApiIntegrationsAutodeskUploadRouteImport } from './routes/api/integrations/autodesk/upload'
+import { Route as ApiIntegrationsAutodeskUploadUrlRouteImport } from './routes/api/integrations/autodesk/upload-url'
+import { Route as ApiIntegrationsAutodeskViewerTokenRouteImport } from './routes/api/integrations/autodesk/viewer-token'
+import { Route as ApiIntegrationsGoogleCalendarRouteImport } from './routes/api/integrations/google/calendar'
+import { Route as ApiIntegrationsGoogleCallbackRouteImport } from './routes/api/integrations/google/callback'
+import { Route as ApiIntegrationsGoogleConnectRouteImport } from './routes/api/integrations/google/connect'
+import { Route as ApiIntegrationsGoogleDisconnectRouteImport } from './routes/api/integrations/google/disconnect'
+import { Route as ApiIntegrationsGoogleDriveRouteImport } from './routes/api/integrations/google/drive'
+import { Route as ApiIntegrationsGoogleGmailRouteImport } from './routes/api/integrations/google/gmail'
+import { Route as ApiIntegrationsGoogleTokenRouteImport } from './routes/api/integrations/google/token'
+import { Route as ApiInvoicesIdPayLinkRouteImport } from './routes/api/invoices/$id/pay-link'
+import { Route as ApiInvoicesIdSendRouteImport } from './routes/api/invoices/$id/send'
 import { Route as ApiMessagesUsersSearchRouteImport } from './routes/api/messages/users/search'
+import { Route as ApiOrgInvitesAcceptRouteImport } from './routes/api/org/invites/accept'
 import { Route as ApiProjectsIdConsultantPaymentsRouteImport } from './routes/api/projects/$id/consultant-payments'
 import { Route as ApiProjectsIdDocumentAnnotationsRouteImport } from './routes/api/projects/$id/document-annotations'
 import { Route as ApiProjectsIdDocumentVersionsRouteImport } from './routes/api/projects/$id/document-versions'
 import { Route as ApiProjectsIdDocumentsRouteImport } from './routes/api/projects/$id/documents'
+import { Route as ApiProjectsIdEstimatesRouteImport } from './routes/api/projects/$id/estimates'
 import { Route as ApiProjectsIdExpensesRouteImport } from './routes/api/projects/$id/expenses'
 import { Route as ApiProjectsIdIssuesRouteImport } from './routes/api/projects/$id/issues'
 import { Route as ApiProjectsIdMeetingsRouteImport } from './routes/api/projects/$id/meetings'
@@ -88,11 +128,16 @@ import { Route as ApiProjectsIdMembersRouteImport } from './routes/api/projects/
 import { Route as ApiProjectsIdMessagesRouteImport } from './routes/api/projects/$id/messages'
 import { Route as ApiProjectsIdMilestonesRouteImport } from './routes/api/projects/$id/milestones'
 import { Route as ApiProjectsIdPermitsRouteImport } from './routes/api/projects/$id/permits'
+import { Route as ApiProjectsIdPortalRouteImport } from './routes/api/projects/$id/portal'
 import { Route as ApiProjectsIdRfisRouteImport } from './routes/api/projects/$id/rfis'
 import { Route as ApiProjectsIdSiteRouteImport } from './routes/api/projects/$id/site'
 import { Route as ApiProjectsIdSubmittalsRouteImport } from './routes/api/projects/$id/submittals'
 import { Route as ApiProjectsIdTendersRouteImport } from './routes/api/projects/$id/tenders'
 import { Route as ApiProjectsIdTransmittalsRouteImport } from './routes/api/projects/$id/transmittals'
+import { Route as ApiPublicPartnerContractorSignupRouteImport } from './routes/api/public/partner/contractor-signup'
+import { Route as ApiPublicPartnerVendorSignupRouteImport } from './routes/api/public/partner/vendor-signup'
+import { Route as ApiPublicPaymentsInvoiceRouteImport } from './routes/api/public/payments/invoice'
+import { Route as ApiPublicPortalTokenRouteImport } from './routes/api/public/portal/$token'
 import { Route as AuthenticatedAppMarketplaceArchitectsIdRouteImport } from './routes/_authenticated/_app/marketplace/architects/$id'
 import { Route as AuthenticatedAppMarketplaceTendersIdRouteImport } from './routes/_authenticated/_app/marketplace/tenders/$id'
 import { Route as AuthenticatedAppProjectsIdIndexRouteImport } from './routes/_authenticated/_app/projects/$id/index'
@@ -110,6 +155,7 @@ import { Route as AuthenticatedAppProjectsIdSubmittalsRouteImport } from './rout
 import { Route as AuthenticatedAppProjectsIdTeamRouteImport } from './routes/_authenticated/_app/projects/$id/team'
 import { Route as AuthenticatedAppProjectsIdTransmittalsRouteImport } from './routes/_authenticated/_app/projects/$id/transmittals'
 import { Route as ApiMessagesConversationsIdMembersRouteImport } from './routes/api/messages/conversations/$id/members'
+import { Route as ApiPublicPortalTokenDownloadRouteImport } from './routes/api/public/portal/$token/download'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -125,6 +171,16 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AcceptInviteRoute = AcceptInviteRouteImport.update({
+  id: '/accept-invite',
+  path: '/accept-invite',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ChangelogRoute = ChangelogRouteImport.update({
   id: '/changelog',
   path: '/changelog',
@@ -133,6 +189,16 @@ const ChangelogRoute = ChangelogRouteImport.update({
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinAsVendorRoute = JoinAsVendorRouteImport.update({
+  id: '/join-as-vendor',
+  path: '/join-as-vendor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ListYourBusinessRoute = ListYourBusinessRouteImport.update({
+  id: '/list-your-business',
+  path: '/list-your-business',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -172,6 +238,11 @@ const ApiActivityRoute = ApiActivityRouteImport.update({
 const ApiBidsRoute = ApiBidsRouteImport.update({
   id: '/api/bids',
   path: '/api/bids',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCadModelsRoute = ApiCadModelsRouteImport.update({
+  id: '/api/cad-models',
+  path: '/api/cad-models',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiClientsRoute = ApiClientsRouteImport.update({
@@ -214,14 +285,40 @@ const ApiProjectsRoute = ApiProjectsRouteImport.update({
   path: '/api/projects',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSendEmailRoute = ApiSendEmailRouteImport.update({
+  id: '/api/send-email',
+  path: '/api/send-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTendersRoute = ApiTendersRouteImport.update({
   id: '/api/tenders',
   path: '/api/tenders',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTimelineRoute = ApiTimelineRouteImport.update({
+  id: '/api/timeline',
+  path: '/api/timeline',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiVendorRecommendationsRoute =
+  ApiVendorRecommendationsRouteImport.update({
+    id: '/api/vendor-recommendations',
+    path: '/api/vendor-recommendations',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PayTokenRoute = PayTokenRouteImport.update({
+  id: '/pay/$token',
+  path: '/pay/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalTokenRoute = PortalTokenRouteImport.update({
+  id: '/portal/$token',
+  path: '/portal/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Vs5blocVsFieldwireRoute = Vs5blocVsFieldwireRouteImport.update({
@@ -312,6 +409,11 @@ const ApiAiEstimateRoute = ApiAiEstimateRouteImport.update({
   path: '/api/ai/estimate',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAiRfiDraftRoute = ApiAiRfiDraftRouteImport.update({
+  id: '/api/ai/rfi-draft',
+  path: '/api/ai/rfi-draft',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiClientsIdRoute = ApiClientsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -328,6 +430,11 @@ const ApiContractorsArchitectsRoute =
     path: '/architects',
     getParentRoute: () => ApiContractorsRoute,
   } as any)
+const ApiFilesBlobRoute = ApiFilesBlobRouteImport.update({
+  id: '/api/files/blob',
+  path: '/api/files/blob',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiFilesDownloadRoute = ApiFilesDownloadRouteImport.update({
   id: '/api/files/download',
   path: '/api/files/download',
@@ -337,6 +444,21 @@ const ApiFilesUploadRoute = ApiFilesUploadRouteImport.update({
   id: '/api/files/upload',
   path: '/api/files/upload',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiIntegrationsStatusRoute = ApiIntegrationsStatusRouteImport.update({
+  id: '/api/integrations/status',
+  path: '/api/integrations/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiIntegrationsSyncRoute = ApiIntegrationsSyncRouteImport.update({
+  id: '/api/integrations/sync',
+  path: '/api/integrations/sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiInvitesAcceptRoute = ApiInvitesAcceptRouteImport.update({
+  id: '/accept',
+  path: '/accept',
+  getParentRoute: () => ApiInvitesRoute,
 } as any)
 const ApiInvoicesIdRoute = ApiInvoicesIdRouteImport.update({
   id: '/$id',
@@ -359,15 +481,46 @@ const ApiOrgTeamRoute = ApiOrgTeamRouteImport.update({
   path: '/api/org/team',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPaymentsMethodsRoute = ApiPaymentsMethodsRouteImport.update({
+  id: '/api/payments/methods',
+  path: '/api/payments/methods',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPaymentsSubscribeRoute = ApiPaymentsSubscribeRouteImport.update({
+  id: '/api/payments/subscribe',
+  path: '/api/payments/subscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPaymentsSubscriptionRoute = ApiPaymentsSubscriptionRouteImport.update({
+  id: '/api/payments/subscription',
+  path: '/api/payments/subscription',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiProjectsIdRoute = ApiProjectsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => ApiProjectsRoute,
 } as any)
+const ApiPublicContractorPhotoRoute =
+  ApiPublicContractorPhotoRouteImport.update({
+    id: '/api/public/contractor-photo',
+    path: '/api/public/contractor-photo',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicVendorCatalogRoute = ApiPublicVendorCatalogRouteImport.update({
+  id: '/api/public/vendor-catalog',
+  path: '/api/public/vendor-catalog',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTendersIdRoute = ApiTendersIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => ApiTendersRoute,
+} as any)
+const ApiWaitlistStatsRoute = ApiWaitlistStatsRouteImport.update({
+  id: '/api/waitlist/stats',
+  path: '/api/waitlist/stats',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAppAiBuildingCodeRoute =
   AuthenticatedAppAiBuildingCodeRouteImport.update({
@@ -471,9 +624,114 @@ const ApiContractorsArchitectsIdRoute =
     path: '/$id',
     getParentRoute: () => ApiContractorsArchitectsRoute,
   } as any)
+const ApiIntegrationsAutodeskCallbackRoute =
+  ApiIntegrationsAutodeskCallbackRouteImport.update({
+    id: '/api/integrations/autodesk/callback',
+    path: '/api/integrations/autodesk/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsAutodeskCompleteUploadRoute =
+  ApiIntegrationsAutodeskCompleteUploadRouteImport.update({
+    id: '/api/integrations/autodesk/complete-upload',
+    path: '/api/integrations/autodesk/complete-upload',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsAutodeskConnectRoute =
+  ApiIntegrationsAutodeskConnectRouteImport.update({
+    id: '/api/integrations/autodesk/connect',
+    path: '/api/integrations/autodesk/connect',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsAutodeskDisconnectRoute =
+  ApiIntegrationsAutodeskDisconnectRouteImport.update({
+    id: '/api/integrations/autodesk/disconnect',
+    path: '/api/integrations/autodesk/disconnect',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsAutodeskTranslateStatusRoute =
+  ApiIntegrationsAutodeskTranslateStatusRouteImport.update({
+    id: '/api/integrations/autodesk/translate-status',
+    path: '/api/integrations/autodesk/translate-status',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsAutodeskUploadRoute =
+  ApiIntegrationsAutodeskUploadRouteImport.update({
+    id: '/api/integrations/autodesk/upload',
+    path: '/api/integrations/autodesk/upload',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsAutodeskUploadUrlRoute =
+  ApiIntegrationsAutodeskUploadUrlRouteImport.update({
+    id: '/api/integrations/autodesk/upload-url',
+    path: '/api/integrations/autodesk/upload-url',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsAutodeskViewerTokenRoute =
+  ApiIntegrationsAutodeskViewerTokenRouteImport.update({
+    id: '/api/integrations/autodesk/viewer-token',
+    path: '/api/integrations/autodesk/viewer-token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsGoogleCalendarRoute =
+  ApiIntegrationsGoogleCalendarRouteImport.update({
+    id: '/api/integrations/google/calendar',
+    path: '/api/integrations/google/calendar',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsGoogleCallbackRoute =
+  ApiIntegrationsGoogleCallbackRouteImport.update({
+    id: '/api/integrations/google/callback',
+    path: '/api/integrations/google/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsGoogleConnectRoute =
+  ApiIntegrationsGoogleConnectRouteImport.update({
+    id: '/api/integrations/google/connect',
+    path: '/api/integrations/google/connect',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsGoogleDisconnectRoute =
+  ApiIntegrationsGoogleDisconnectRouteImport.update({
+    id: '/api/integrations/google/disconnect',
+    path: '/api/integrations/google/disconnect',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsGoogleDriveRoute =
+  ApiIntegrationsGoogleDriveRouteImport.update({
+    id: '/api/integrations/google/drive',
+    path: '/api/integrations/google/drive',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsGoogleGmailRoute =
+  ApiIntegrationsGoogleGmailRouteImport.update({
+    id: '/api/integrations/google/gmail',
+    path: '/api/integrations/google/gmail',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiIntegrationsGoogleTokenRoute =
+  ApiIntegrationsGoogleTokenRouteImport.update({
+    id: '/api/integrations/google/token',
+    path: '/api/integrations/google/token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiInvoicesIdPayLinkRoute = ApiInvoicesIdPayLinkRouteImport.update({
+  id: '/pay-link',
+  path: '/pay-link',
+  getParentRoute: () => ApiInvoicesIdRoute,
+} as any)
+const ApiInvoicesIdSendRoute = ApiInvoicesIdSendRouteImport.update({
+  id: '/send',
+  path: '/send',
+  getParentRoute: () => ApiInvoicesIdRoute,
+} as any)
 const ApiMessagesUsersSearchRoute = ApiMessagesUsersSearchRouteImport.update({
   id: '/api/messages/users/search',
   path: '/api/messages/users/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiOrgInvitesAcceptRoute = ApiOrgInvitesAcceptRouteImport.update({
+  id: '/api/org/invites/accept',
+  path: '/api/org/invites/accept',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiProjectsIdConsultantPaymentsRoute =
@@ -497,6 +755,11 @@ const ApiProjectsIdDocumentVersionsRoute =
 const ApiProjectsIdDocumentsRoute = ApiProjectsIdDocumentsRouteImport.update({
   id: '/documents',
   path: '/documents',
+  getParentRoute: () => ApiProjectsIdRoute,
+} as any)
+const ApiProjectsIdEstimatesRoute = ApiProjectsIdEstimatesRouteImport.update({
+  id: '/estimates',
+  path: '/estimates',
   getParentRoute: () => ApiProjectsIdRoute,
 } as any)
 const ApiProjectsIdExpensesRoute = ApiProjectsIdExpensesRouteImport.update({
@@ -534,6 +797,11 @@ const ApiProjectsIdPermitsRoute = ApiProjectsIdPermitsRouteImport.update({
   path: '/permits',
   getParentRoute: () => ApiProjectsIdRoute,
 } as any)
+const ApiProjectsIdPortalRoute = ApiProjectsIdPortalRouteImport.update({
+  id: '/portal',
+  path: '/portal',
+  getParentRoute: () => ApiProjectsIdRoute,
+} as any)
 const ApiProjectsIdRfisRoute = ApiProjectsIdRfisRouteImport.update({
   id: '/rfis',
   path: '/rfis',
@@ -560,6 +828,29 @@ const ApiProjectsIdTransmittalsRoute =
     path: '/transmittals',
     getParentRoute: () => ApiProjectsIdRoute,
   } as any)
+const ApiPublicPartnerContractorSignupRoute =
+  ApiPublicPartnerContractorSignupRouteImport.update({
+    id: '/api/public/partner/contractor-signup',
+    path: '/api/public/partner/contractor-signup',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPartnerVendorSignupRoute =
+  ApiPublicPartnerVendorSignupRouteImport.update({
+    id: '/api/public/partner/vendor-signup',
+    path: '/api/public/partner/vendor-signup',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPaymentsInvoiceRoute =
+  ApiPublicPaymentsInvoiceRouteImport.update({
+    id: '/api/public/payments/invoice',
+    path: '/api/public/payments/invoice',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPortalTokenRoute = ApiPublicPortalTokenRouteImport.update({
+  id: '/api/public/portal/$token',
+  path: '/api/public/portal/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAppMarketplaceArchitectsIdRoute =
   AuthenticatedAppMarketplaceArchitectsIdRouteImport.update({
     id: '/marketplace/architects/$id',
@@ -662,12 +953,22 @@ const ApiMessagesConversationsIdMembersRoute =
     path: '/$id/members',
     getParentRoute: () => ApiMessagesConversationsRoute,
   } as any)
+const ApiPublicPortalTokenDownloadRoute =
+  ApiPublicPortalTokenDownloadRouteImport.update({
+    id: '/download',
+    path: '/download',
+    getParentRoute: () => ApiPublicPortalTokenRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/accept-invite': typeof AcceptInviteRoute
+  '/admin': typeof AdminRoute
   '/changelog': typeof ChangelogRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/join-as-vendor': typeof JoinAsVendorRoute
+  '/list-your-business': typeof ListYourBusinessRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
@@ -675,16 +976,22 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/api/activity': typeof ApiActivityRoute
   '/api/bids': typeof ApiBidsRoute
+  '/api/cad-models': typeof ApiCadModelsRoute
   '/api/clients': typeof ApiClientsRouteWithChildren
   '/api/contractors': typeof ApiContractorsRouteWithChildren
-  '/api/invites': typeof ApiInvitesRoute
+  '/api/invites': typeof ApiInvitesRouteWithChildren
   '/api/invoices': typeof ApiInvoicesRouteWithChildren
   '/api/me': typeof ApiMeRoute
   '/api/meetings': typeof ApiMeetingsRoute
   '/api/notifications': typeof ApiNotificationsRoute
   '/api/projects': typeof ApiProjectsRouteWithChildren
+  '/api/send-email': typeof ApiSendEmailRoute
   '/api/tenders': typeof ApiTendersRouteWithChildren
+  '/api/timeline': typeof ApiTimelineRoute
+  '/api/vendor-recommendations': typeof ApiVendorRecommendationsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/pay/$token': typeof PayTokenRoute
+  '/portal/$token': typeof PortalTokenRoute
   '/vs/5bloc-vs-fieldwire': typeof Vs5blocVsFieldwireRoute
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
   '/cad': typeof AuthenticatedAppCadRoute
@@ -701,17 +1008,28 @@ export interface FileRoutesByFullPath {
   '/api/ai/building-code': typeof ApiAiBuildingCodeRoute
   '/api/ai/contract-scan': typeof ApiAiContractScanRoute
   '/api/ai/estimate': typeof ApiAiEstimateRoute
+  '/api/ai/rfi-draft': typeof ApiAiRfiDraftRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/contractors/$id': typeof ApiContractorsIdRoute
   '/api/contractors/architects': typeof ApiContractorsArchitectsRouteWithChildren
+  '/api/files/blob': typeof ApiFilesBlobRoute
   '/api/files/download': typeof ApiFilesDownloadRoute
   '/api/files/upload': typeof ApiFilesUploadRoute
-  '/api/invoices/$id': typeof ApiInvoicesIdRoute
+  '/api/integrations/status': typeof ApiIntegrationsStatusRoute
+  '/api/integrations/sync': typeof ApiIntegrationsSyncRoute
+  '/api/invites/accept': typeof ApiInvitesAcceptRoute
+  '/api/invoices/$id': typeof ApiInvoicesIdRouteWithChildren
   '/api/messages/conversations': typeof ApiMessagesConversationsRouteWithChildren
   '/api/org/studio-project': typeof ApiOrgStudioProjectRoute
   '/api/org/team': typeof ApiOrgTeamRoute
+  '/api/payments/methods': typeof ApiPaymentsMethodsRoute
+  '/api/payments/subscribe': typeof ApiPaymentsSubscribeRoute
+  '/api/payments/subscription': typeof ApiPaymentsSubscriptionRoute
   '/api/projects/$id': typeof ApiProjectsIdRouteWithChildren
+  '/api/public/contractor-photo': typeof ApiPublicContractorPhotoRoute
+  '/api/public/vendor-catalog': typeof ApiPublicVendorCatalogRoute
   '/api/tenders/$id': typeof ApiTendersIdRoute
+  '/api/waitlist/stats': typeof ApiWaitlistStatsRoute
   '/ai/building-code': typeof AuthenticatedAppAiBuildingCodeRoute
   '/ai/contract-scan': typeof AuthenticatedAppAiContractScanRoute
   '/ai/estimate': typeof AuthenticatedAppAiEstimateRoute
@@ -723,11 +1041,30 @@ export interface FileRoutesByFullPath {
   '/marketplace/$id': typeof AuthenticatedAppMarketplaceIdRoute
   '/projects/new': typeof AuthenticatedAppProjectsNewRoute
   '/api/contractors/architects/$id': typeof ApiContractorsArchitectsIdRoute
+  '/api/integrations/autodesk/callback': typeof ApiIntegrationsAutodeskCallbackRoute
+  '/api/integrations/autodesk/complete-upload': typeof ApiIntegrationsAutodeskCompleteUploadRoute
+  '/api/integrations/autodesk/connect': typeof ApiIntegrationsAutodeskConnectRoute
+  '/api/integrations/autodesk/disconnect': typeof ApiIntegrationsAutodeskDisconnectRoute
+  '/api/integrations/autodesk/translate-status': typeof ApiIntegrationsAutodeskTranslateStatusRoute
+  '/api/integrations/autodesk/upload': typeof ApiIntegrationsAutodeskUploadRoute
+  '/api/integrations/autodesk/upload-url': typeof ApiIntegrationsAutodeskUploadUrlRoute
+  '/api/integrations/autodesk/viewer-token': typeof ApiIntegrationsAutodeskViewerTokenRoute
+  '/api/integrations/google/calendar': typeof ApiIntegrationsGoogleCalendarRoute
+  '/api/integrations/google/callback': typeof ApiIntegrationsGoogleCallbackRoute
+  '/api/integrations/google/connect': typeof ApiIntegrationsGoogleConnectRoute
+  '/api/integrations/google/disconnect': typeof ApiIntegrationsGoogleDisconnectRoute
+  '/api/integrations/google/drive': typeof ApiIntegrationsGoogleDriveRoute
+  '/api/integrations/google/gmail': typeof ApiIntegrationsGoogleGmailRoute
+  '/api/integrations/google/token': typeof ApiIntegrationsGoogleTokenRoute
+  '/api/invoices/$id/pay-link': typeof ApiInvoicesIdPayLinkRoute
+  '/api/invoices/$id/send': typeof ApiInvoicesIdSendRoute
   '/api/messages/users/search': typeof ApiMessagesUsersSearchRoute
+  '/api/org/invites/accept': typeof ApiOrgInvitesAcceptRoute
   '/api/projects/$id/consultant-payments': typeof ApiProjectsIdConsultantPaymentsRoute
   '/api/projects/$id/document-annotations': typeof ApiProjectsIdDocumentAnnotationsRoute
   '/api/projects/$id/document-versions': typeof ApiProjectsIdDocumentVersionsRoute
   '/api/projects/$id/documents': typeof ApiProjectsIdDocumentsRoute
+  '/api/projects/$id/estimates': typeof ApiProjectsIdEstimatesRoute
   '/api/projects/$id/expenses': typeof ApiProjectsIdExpensesRoute
   '/api/projects/$id/issues': typeof ApiProjectsIdIssuesRoute
   '/api/projects/$id/meetings': typeof ApiProjectsIdMeetingsRoute
@@ -735,11 +1072,16 @@ export interface FileRoutesByFullPath {
   '/api/projects/$id/messages': typeof ApiProjectsIdMessagesRoute
   '/api/projects/$id/milestones': typeof ApiProjectsIdMilestonesRoute
   '/api/projects/$id/permits': typeof ApiProjectsIdPermitsRoute
+  '/api/projects/$id/portal': typeof ApiProjectsIdPortalRoute
   '/api/projects/$id/rfis': typeof ApiProjectsIdRfisRoute
   '/api/projects/$id/site': typeof ApiProjectsIdSiteRoute
   '/api/projects/$id/submittals': typeof ApiProjectsIdSubmittalsRoute
   '/api/projects/$id/tenders': typeof ApiProjectsIdTendersRoute
   '/api/projects/$id/transmittals': typeof ApiProjectsIdTransmittalsRoute
+  '/api/public/partner/contractor-signup': typeof ApiPublicPartnerContractorSignupRoute
+  '/api/public/partner/vendor-signup': typeof ApiPublicPartnerVendorSignupRoute
+  '/api/public/payments/invoice': typeof ApiPublicPaymentsInvoiceRoute
+  '/api/public/portal/$token': typeof ApiPublicPortalTokenRouteWithChildren
   '/builder/': typeof AuthenticatedAppBuilderIndexRoute
   '/clients/': typeof AuthenticatedAppClientsIndexRoute
   '/contractor/': typeof AuthenticatedAppContractorIndexRoute
@@ -762,13 +1104,18 @@ export interface FileRoutesByFullPath {
   '/projects/$id/team': typeof AuthenticatedAppProjectsIdTeamRoute
   '/projects/$id/transmittals': typeof AuthenticatedAppProjectsIdTransmittalsRoute
   '/api/messages/conversations/$id/members': typeof ApiMessagesConversationsIdMembersRoute
+  '/api/public/portal/$token/download': typeof ApiPublicPortalTokenDownloadRoute
   '/projects/$id/': typeof AuthenticatedAppProjectsIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/accept-invite': typeof AcceptInviteRoute
+  '/admin': typeof AdminRoute
   '/changelog': typeof ChangelogRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/join-as-vendor': typeof JoinAsVendorRoute
+  '/list-your-business': typeof ListYourBusinessRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
@@ -776,16 +1123,22 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/api/activity': typeof ApiActivityRoute
   '/api/bids': typeof ApiBidsRoute
+  '/api/cad-models': typeof ApiCadModelsRoute
   '/api/clients': typeof ApiClientsRouteWithChildren
   '/api/contractors': typeof ApiContractorsRouteWithChildren
-  '/api/invites': typeof ApiInvitesRoute
+  '/api/invites': typeof ApiInvitesRouteWithChildren
   '/api/invoices': typeof ApiInvoicesRouteWithChildren
   '/api/me': typeof ApiMeRoute
   '/api/meetings': typeof ApiMeetingsRoute
   '/api/notifications': typeof ApiNotificationsRoute
   '/api/projects': typeof ApiProjectsRouteWithChildren
+  '/api/send-email': typeof ApiSendEmailRoute
   '/api/tenders': typeof ApiTendersRouteWithChildren
+  '/api/timeline': typeof ApiTimelineRoute
+  '/api/vendor-recommendations': typeof ApiVendorRecommendationsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/pay/$token': typeof PayTokenRoute
+  '/portal/$token': typeof PortalTokenRoute
   '/vs/5bloc-vs-fieldwire': typeof Vs5blocVsFieldwireRoute
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
   '/cad': typeof AuthenticatedAppCadRoute
@@ -802,17 +1155,28 @@ export interface FileRoutesByTo {
   '/api/ai/building-code': typeof ApiAiBuildingCodeRoute
   '/api/ai/contract-scan': typeof ApiAiContractScanRoute
   '/api/ai/estimate': typeof ApiAiEstimateRoute
+  '/api/ai/rfi-draft': typeof ApiAiRfiDraftRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/contractors/$id': typeof ApiContractorsIdRoute
   '/api/contractors/architects': typeof ApiContractorsArchitectsRouteWithChildren
+  '/api/files/blob': typeof ApiFilesBlobRoute
   '/api/files/download': typeof ApiFilesDownloadRoute
   '/api/files/upload': typeof ApiFilesUploadRoute
-  '/api/invoices/$id': typeof ApiInvoicesIdRoute
+  '/api/integrations/status': typeof ApiIntegrationsStatusRoute
+  '/api/integrations/sync': typeof ApiIntegrationsSyncRoute
+  '/api/invites/accept': typeof ApiInvitesAcceptRoute
+  '/api/invoices/$id': typeof ApiInvoicesIdRouteWithChildren
   '/api/messages/conversations': typeof ApiMessagesConversationsRouteWithChildren
   '/api/org/studio-project': typeof ApiOrgStudioProjectRoute
   '/api/org/team': typeof ApiOrgTeamRoute
+  '/api/payments/methods': typeof ApiPaymentsMethodsRoute
+  '/api/payments/subscribe': typeof ApiPaymentsSubscribeRoute
+  '/api/payments/subscription': typeof ApiPaymentsSubscriptionRoute
   '/api/projects/$id': typeof ApiProjectsIdRouteWithChildren
+  '/api/public/contractor-photo': typeof ApiPublicContractorPhotoRoute
+  '/api/public/vendor-catalog': typeof ApiPublicVendorCatalogRoute
   '/api/tenders/$id': typeof ApiTendersIdRoute
+  '/api/waitlist/stats': typeof ApiWaitlistStatsRoute
   '/ai/building-code': typeof AuthenticatedAppAiBuildingCodeRoute
   '/ai/contract-scan': typeof AuthenticatedAppAiContractScanRoute
   '/ai/estimate': typeof AuthenticatedAppAiEstimateRoute
@@ -824,11 +1188,30 @@ export interface FileRoutesByTo {
   '/marketplace/$id': typeof AuthenticatedAppMarketplaceIdRoute
   '/projects/new': typeof AuthenticatedAppProjectsNewRoute
   '/api/contractors/architects/$id': typeof ApiContractorsArchitectsIdRoute
+  '/api/integrations/autodesk/callback': typeof ApiIntegrationsAutodeskCallbackRoute
+  '/api/integrations/autodesk/complete-upload': typeof ApiIntegrationsAutodeskCompleteUploadRoute
+  '/api/integrations/autodesk/connect': typeof ApiIntegrationsAutodeskConnectRoute
+  '/api/integrations/autodesk/disconnect': typeof ApiIntegrationsAutodeskDisconnectRoute
+  '/api/integrations/autodesk/translate-status': typeof ApiIntegrationsAutodeskTranslateStatusRoute
+  '/api/integrations/autodesk/upload': typeof ApiIntegrationsAutodeskUploadRoute
+  '/api/integrations/autodesk/upload-url': typeof ApiIntegrationsAutodeskUploadUrlRoute
+  '/api/integrations/autodesk/viewer-token': typeof ApiIntegrationsAutodeskViewerTokenRoute
+  '/api/integrations/google/calendar': typeof ApiIntegrationsGoogleCalendarRoute
+  '/api/integrations/google/callback': typeof ApiIntegrationsGoogleCallbackRoute
+  '/api/integrations/google/connect': typeof ApiIntegrationsGoogleConnectRoute
+  '/api/integrations/google/disconnect': typeof ApiIntegrationsGoogleDisconnectRoute
+  '/api/integrations/google/drive': typeof ApiIntegrationsGoogleDriveRoute
+  '/api/integrations/google/gmail': typeof ApiIntegrationsGoogleGmailRoute
+  '/api/integrations/google/token': typeof ApiIntegrationsGoogleTokenRoute
+  '/api/invoices/$id/pay-link': typeof ApiInvoicesIdPayLinkRoute
+  '/api/invoices/$id/send': typeof ApiInvoicesIdSendRoute
   '/api/messages/users/search': typeof ApiMessagesUsersSearchRoute
+  '/api/org/invites/accept': typeof ApiOrgInvitesAcceptRoute
   '/api/projects/$id/consultant-payments': typeof ApiProjectsIdConsultantPaymentsRoute
   '/api/projects/$id/document-annotations': typeof ApiProjectsIdDocumentAnnotationsRoute
   '/api/projects/$id/document-versions': typeof ApiProjectsIdDocumentVersionsRoute
   '/api/projects/$id/documents': typeof ApiProjectsIdDocumentsRoute
+  '/api/projects/$id/estimates': typeof ApiProjectsIdEstimatesRoute
   '/api/projects/$id/expenses': typeof ApiProjectsIdExpensesRoute
   '/api/projects/$id/issues': typeof ApiProjectsIdIssuesRoute
   '/api/projects/$id/meetings': typeof ApiProjectsIdMeetingsRoute
@@ -836,11 +1219,16 @@ export interface FileRoutesByTo {
   '/api/projects/$id/messages': typeof ApiProjectsIdMessagesRoute
   '/api/projects/$id/milestones': typeof ApiProjectsIdMilestonesRoute
   '/api/projects/$id/permits': typeof ApiProjectsIdPermitsRoute
+  '/api/projects/$id/portal': typeof ApiProjectsIdPortalRoute
   '/api/projects/$id/rfis': typeof ApiProjectsIdRfisRoute
   '/api/projects/$id/site': typeof ApiProjectsIdSiteRoute
   '/api/projects/$id/submittals': typeof ApiProjectsIdSubmittalsRoute
   '/api/projects/$id/tenders': typeof ApiProjectsIdTendersRoute
   '/api/projects/$id/transmittals': typeof ApiProjectsIdTransmittalsRoute
+  '/api/public/partner/contractor-signup': typeof ApiPublicPartnerContractorSignupRoute
+  '/api/public/partner/vendor-signup': typeof ApiPublicPartnerVendorSignupRoute
+  '/api/public/payments/invoice': typeof ApiPublicPaymentsInvoiceRoute
+  '/api/public/portal/$token': typeof ApiPublicPortalTokenRouteWithChildren
   '/builder': typeof AuthenticatedAppBuilderIndexRoute
   '/clients': typeof AuthenticatedAppClientsIndexRoute
   '/contractor': typeof AuthenticatedAppContractorIndexRoute
@@ -863,6 +1251,7 @@ export interface FileRoutesByTo {
   '/projects/$id/team': typeof AuthenticatedAppProjectsIdTeamRoute
   '/projects/$id/transmittals': typeof AuthenticatedAppProjectsIdTransmittalsRoute
   '/api/messages/conversations/$id/members': typeof ApiMessagesConversationsIdMembersRoute
+  '/api/public/portal/$token/download': typeof ApiPublicPortalTokenDownloadRoute
   '/projects/$id': typeof AuthenticatedAppProjectsIdIndexRoute
 }
 export interface FileRoutesById {
@@ -870,8 +1259,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
+  '/accept-invite': typeof AcceptInviteRoute
+  '/admin': typeof AdminRoute
   '/changelog': typeof ChangelogRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/join-as-vendor': typeof JoinAsVendorRoute
+  '/list-your-business': typeof ListYourBusinessRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
@@ -880,16 +1273,22 @@ export interface FileRoutesById {
   '/_authenticated/_app': typeof AuthenticatedAppRouteRouteWithChildren
   '/api/activity': typeof ApiActivityRoute
   '/api/bids': typeof ApiBidsRoute
+  '/api/cad-models': typeof ApiCadModelsRoute
   '/api/clients': typeof ApiClientsRouteWithChildren
   '/api/contractors': typeof ApiContractorsRouteWithChildren
-  '/api/invites': typeof ApiInvitesRoute
+  '/api/invites': typeof ApiInvitesRouteWithChildren
   '/api/invoices': typeof ApiInvoicesRouteWithChildren
   '/api/me': typeof ApiMeRoute
   '/api/meetings': typeof ApiMeetingsRoute
   '/api/notifications': typeof ApiNotificationsRoute
   '/api/projects': typeof ApiProjectsRouteWithChildren
+  '/api/send-email': typeof ApiSendEmailRoute
   '/api/tenders': typeof ApiTendersRouteWithChildren
+  '/api/timeline': typeof ApiTimelineRoute
+  '/api/vendor-recommendations': typeof ApiVendorRecommendationsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/pay/$token': typeof PayTokenRoute
+  '/portal/$token': typeof PortalTokenRoute
   '/vs/5bloc-vs-fieldwire': typeof Vs5blocVsFieldwireRoute
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
   '/_authenticated/_app/cad': typeof AuthenticatedAppCadRoute
@@ -906,17 +1305,28 @@ export interface FileRoutesById {
   '/api/ai/building-code': typeof ApiAiBuildingCodeRoute
   '/api/ai/contract-scan': typeof ApiAiContractScanRoute
   '/api/ai/estimate': typeof ApiAiEstimateRoute
+  '/api/ai/rfi-draft': typeof ApiAiRfiDraftRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/contractors/$id': typeof ApiContractorsIdRoute
   '/api/contractors/architects': typeof ApiContractorsArchitectsRouteWithChildren
+  '/api/files/blob': typeof ApiFilesBlobRoute
   '/api/files/download': typeof ApiFilesDownloadRoute
   '/api/files/upload': typeof ApiFilesUploadRoute
-  '/api/invoices/$id': typeof ApiInvoicesIdRoute
+  '/api/integrations/status': typeof ApiIntegrationsStatusRoute
+  '/api/integrations/sync': typeof ApiIntegrationsSyncRoute
+  '/api/invites/accept': typeof ApiInvitesAcceptRoute
+  '/api/invoices/$id': typeof ApiInvoicesIdRouteWithChildren
   '/api/messages/conversations': typeof ApiMessagesConversationsRouteWithChildren
   '/api/org/studio-project': typeof ApiOrgStudioProjectRoute
   '/api/org/team': typeof ApiOrgTeamRoute
+  '/api/payments/methods': typeof ApiPaymentsMethodsRoute
+  '/api/payments/subscribe': typeof ApiPaymentsSubscribeRoute
+  '/api/payments/subscription': typeof ApiPaymentsSubscriptionRoute
   '/api/projects/$id': typeof ApiProjectsIdRouteWithChildren
+  '/api/public/contractor-photo': typeof ApiPublicContractorPhotoRoute
+  '/api/public/vendor-catalog': typeof ApiPublicVendorCatalogRoute
   '/api/tenders/$id': typeof ApiTendersIdRoute
+  '/api/waitlist/stats': typeof ApiWaitlistStatsRoute
   '/_authenticated/_app/ai/building-code': typeof AuthenticatedAppAiBuildingCodeRoute
   '/_authenticated/_app/ai/contract-scan': typeof AuthenticatedAppAiContractScanRoute
   '/_authenticated/_app/ai/estimate': typeof AuthenticatedAppAiEstimateRoute
@@ -928,11 +1338,30 @@ export interface FileRoutesById {
   '/_authenticated/_app/marketplace/$id': typeof AuthenticatedAppMarketplaceIdRoute
   '/_authenticated/_app/projects/new': typeof AuthenticatedAppProjectsNewRoute
   '/api/contractors/architects/$id': typeof ApiContractorsArchitectsIdRoute
+  '/api/integrations/autodesk/callback': typeof ApiIntegrationsAutodeskCallbackRoute
+  '/api/integrations/autodesk/complete-upload': typeof ApiIntegrationsAutodeskCompleteUploadRoute
+  '/api/integrations/autodesk/connect': typeof ApiIntegrationsAutodeskConnectRoute
+  '/api/integrations/autodesk/disconnect': typeof ApiIntegrationsAutodeskDisconnectRoute
+  '/api/integrations/autodesk/translate-status': typeof ApiIntegrationsAutodeskTranslateStatusRoute
+  '/api/integrations/autodesk/upload': typeof ApiIntegrationsAutodeskUploadRoute
+  '/api/integrations/autodesk/upload-url': typeof ApiIntegrationsAutodeskUploadUrlRoute
+  '/api/integrations/autodesk/viewer-token': typeof ApiIntegrationsAutodeskViewerTokenRoute
+  '/api/integrations/google/calendar': typeof ApiIntegrationsGoogleCalendarRoute
+  '/api/integrations/google/callback': typeof ApiIntegrationsGoogleCallbackRoute
+  '/api/integrations/google/connect': typeof ApiIntegrationsGoogleConnectRoute
+  '/api/integrations/google/disconnect': typeof ApiIntegrationsGoogleDisconnectRoute
+  '/api/integrations/google/drive': typeof ApiIntegrationsGoogleDriveRoute
+  '/api/integrations/google/gmail': typeof ApiIntegrationsGoogleGmailRoute
+  '/api/integrations/google/token': typeof ApiIntegrationsGoogleTokenRoute
+  '/api/invoices/$id/pay-link': typeof ApiInvoicesIdPayLinkRoute
+  '/api/invoices/$id/send': typeof ApiInvoicesIdSendRoute
   '/api/messages/users/search': typeof ApiMessagesUsersSearchRoute
+  '/api/org/invites/accept': typeof ApiOrgInvitesAcceptRoute
   '/api/projects/$id/consultant-payments': typeof ApiProjectsIdConsultantPaymentsRoute
   '/api/projects/$id/document-annotations': typeof ApiProjectsIdDocumentAnnotationsRoute
   '/api/projects/$id/document-versions': typeof ApiProjectsIdDocumentVersionsRoute
   '/api/projects/$id/documents': typeof ApiProjectsIdDocumentsRoute
+  '/api/projects/$id/estimates': typeof ApiProjectsIdEstimatesRoute
   '/api/projects/$id/expenses': typeof ApiProjectsIdExpensesRoute
   '/api/projects/$id/issues': typeof ApiProjectsIdIssuesRoute
   '/api/projects/$id/meetings': typeof ApiProjectsIdMeetingsRoute
@@ -940,11 +1369,16 @@ export interface FileRoutesById {
   '/api/projects/$id/messages': typeof ApiProjectsIdMessagesRoute
   '/api/projects/$id/milestones': typeof ApiProjectsIdMilestonesRoute
   '/api/projects/$id/permits': typeof ApiProjectsIdPermitsRoute
+  '/api/projects/$id/portal': typeof ApiProjectsIdPortalRoute
   '/api/projects/$id/rfis': typeof ApiProjectsIdRfisRoute
   '/api/projects/$id/site': typeof ApiProjectsIdSiteRoute
   '/api/projects/$id/submittals': typeof ApiProjectsIdSubmittalsRoute
   '/api/projects/$id/tenders': typeof ApiProjectsIdTendersRoute
   '/api/projects/$id/transmittals': typeof ApiProjectsIdTransmittalsRoute
+  '/api/public/partner/contractor-signup': typeof ApiPublicPartnerContractorSignupRoute
+  '/api/public/partner/vendor-signup': typeof ApiPublicPartnerVendorSignupRoute
+  '/api/public/payments/invoice': typeof ApiPublicPaymentsInvoiceRoute
+  '/api/public/portal/$token': typeof ApiPublicPortalTokenRouteWithChildren
   '/_authenticated/_app/builder/': typeof AuthenticatedAppBuilderIndexRoute
   '/_authenticated/_app/clients/': typeof AuthenticatedAppClientsIndexRoute
   '/_authenticated/_app/contractor/': typeof AuthenticatedAppContractorIndexRoute
@@ -967,6 +1401,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/projects/$id/team': typeof AuthenticatedAppProjectsIdTeamRoute
   '/_authenticated/_app/projects/$id/transmittals': typeof AuthenticatedAppProjectsIdTransmittalsRoute
   '/api/messages/conversations/$id/members': typeof ApiMessagesConversationsIdMembersRoute
+  '/api/public/portal/$token/download': typeof ApiPublicPortalTokenDownloadRoute
   '/_authenticated/_app/projects/$id/': typeof AuthenticatedAppProjectsIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -974,8 +1409,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/accept-invite'
+    | '/admin'
     | '/changelog'
     | '/forgot-password'
+    | '/join-as-vendor'
+    | '/list-your-business'
     | '/login'
     | '/onboarding'
     | '/privacy'
@@ -983,6 +1422,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/api/activity'
     | '/api/bids'
+    | '/api/cad-models'
     | '/api/clients'
     | '/api/contractors'
     | '/api/invites'
@@ -991,8 +1431,13 @@ export interface FileRouteTypes {
     | '/api/meetings'
     | '/api/notifications'
     | '/api/projects'
+    | '/api/send-email'
     | '/api/tenders'
+    | '/api/timeline'
+    | '/api/vendor-recommendations'
     | '/auth/callback'
+    | '/pay/$token'
+    | '/portal/$token'
     | '/vs/5bloc-vs-fieldwire'
     | '/vs/5bloc-vs-procore'
     | '/cad'
@@ -1009,17 +1454,28 @@ export interface FileRouteTypes {
     | '/api/ai/building-code'
     | '/api/ai/contract-scan'
     | '/api/ai/estimate'
+    | '/api/ai/rfi-draft'
     | '/api/clients/$id'
     | '/api/contractors/$id'
     | '/api/contractors/architects'
+    | '/api/files/blob'
     | '/api/files/download'
     | '/api/files/upload'
+    | '/api/integrations/status'
+    | '/api/integrations/sync'
+    | '/api/invites/accept'
     | '/api/invoices/$id'
     | '/api/messages/conversations'
     | '/api/org/studio-project'
     | '/api/org/team'
+    | '/api/payments/methods'
+    | '/api/payments/subscribe'
+    | '/api/payments/subscription'
     | '/api/projects/$id'
+    | '/api/public/contractor-photo'
+    | '/api/public/vendor-catalog'
     | '/api/tenders/$id'
+    | '/api/waitlist/stats'
     | '/ai/building-code'
     | '/ai/contract-scan'
     | '/ai/estimate'
@@ -1031,11 +1487,30 @@ export interface FileRouteTypes {
     | '/marketplace/$id'
     | '/projects/new'
     | '/api/contractors/architects/$id'
+    | '/api/integrations/autodesk/callback'
+    | '/api/integrations/autodesk/complete-upload'
+    | '/api/integrations/autodesk/connect'
+    | '/api/integrations/autodesk/disconnect'
+    | '/api/integrations/autodesk/translate-status'
+    | '/api/integrations/autodesk/upload'
+    | '/api/integrations/autodesk/upload-url'
+    | '/api/integrations/autodesk/viewer-token'
+    | '/api/integrations/google/calendar'
+    | '/api/integrations/google/callback'
+    | '/api/integrations/google/connect'
+    | '/api/integrations/google/disconnect'
+    | '/api/integrations/google/drive'
+    | '/api/integrations/google/gmail'
+    | '/api/integrations/google/token'
+    | '/api/invoices/$id/pay-link'
+    | '/api/invoices/$id/send'
     | '/api/messages/users/search'
+    | '/api/org/invites/accept'
     | '/api/projects/$id/consultant-payments'
     | '/api/projects/$id/document-annotations'
     | '/api/projects/$id/document-versions'
     | '/api/projects/$id/documents'
+    | '/api/projects/$id/estimates'
     | '/api/projects/$id/expenses'
     | '/api/projects/$id/issues'
     | '/api/projects/$id/meetings'
@@ -1043,11 +1518,16 @@ export interface FileRouteTypes {
     | '/api/projects/$id/messages'
     | '/api/projects/$id/milestones'
     | '/api/projects/$id/permits'
+    | '/api/projects/$id/portal'
     | '/api/projects/$id/rfis'
     | '/api/projects/$id/site'
     | '/api/projects/$id/submittals'
     | '/api/projects/$id/tenders'
     | '/api/projects/$id/transmittals'
+    | '/api/public/partner/contractor-signup'
+    | '/api/public/partner/vendor-signup'
+    | '/api/public/payments/invoice'
+    | '/api/public/portal/$token'
     | '/builder/'
     | '/clients/'
     | '/contractor/'
@@ -1070,13 +1550,18 @@ export interface FileRouteTypes {
     | '/projects/$id/team'
     | '/projects/$id/transmittals'
     | '/api/messages/conversations/$id/members'
+    | '/api/public/portal/$token/download'
     | '/projects/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
+    | '/accept-invite'
+    | '/admin'
     | '/changelog'
     | '/forgot-password'
+    | '/join-as-vendor'
+    | '/list-your-business'
     | '/login'
     | '/onboarding'
     | '/privacy'
@@ -1084,6 +1569,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/api/activity'
     | '/api/bids'
+    | '/api/cad-models'
     | '/api/clients'
     | '/api/contractors'
     | '/api/invites'
@@ -1092,8 +1578,13 @@ export interface FileRouteTypes {
     | '/api/meetings'
     | '/api/notifications'
     | '/api/projects'
+    | '/api/send-email'
     | '/api/tenders'
+    | '/api/timeline'
+    | '/api/vendor-recommendations'
     | '/auth/callback'
+    | '/pay/$token'
+    | '/portal/$token'
     | '/vs/5bloc-vs-fieldwire'
     | '/vs/5bloc-vs-procore'
     | '/cad'
@@ -1110,17 +1601,28 @@ export interface FileRouteTypes {
     | '/api/ai/building-code'
     | '/api/ai/contract-scan'
     | '/api/ai/estimate'
+    | '/api/ai/rfi-draft'
     | '/api/clients/$id'
     | '/api/contractors/$id'
     | '/api/contractors/architects'
+    | '/api/files/blob'
     | '/api/files/download'
     | '/api/files/upload'
+    | '/api/integrations/status'
+    | '/api/integrations/sync'
+    | '/api/invites/accept'
     | '/api/invoices/$id'
     | '/api/messages/conversations'
     | '/api/org/studio-project'
     | '/api/org/team'
+    | '/api/payments/methods'
+    | '/api/payments/subscribe'
+    | '/api/payments/subscription'
     | '/api/projects/$id'
+    | '/api/public/contractor-photo'
+    | '/api/public/vendor-catalog'
     | '/api/tenders/$id'
+    | '/api/waitlist/stats'
     | '/ai/building-code'
     | '/ai/contract-scan'
     | '/ai/estimate'
@@ -1132,11 +1634,30 @@ export interface FileRouteTypes {
     | '/marketplace/$id'
     | '/projects/new'
     | '/api/contractors/architects/$id'
+    | '/api/integrations/autodesk/callback'
+    | '/api/integrations/autodesk/complete-upload'
+    | '/api/integrations/autodesk/connect'
+    | '/api/integrations/autodesk/disconnect'
+    | '/api/integrations/autodesk/translate-status'
+    | '/api/integrations/autodesk/upload'
+    | '/api/integrations/autodesk/upload-url'
+    | '/api/integrations/autodesk/viewer-token'
+    | '/api/integrations/google/calendar'
+    | '/api/integrations/google/callback'
+    | '/api/integrations/google/connect'
+    | '/api/integrations/google/disconnect'
+    | '/api/integrations/google/drive'
+    | '/api/integrations/google/gmail'
+    | '/api/integrations/google/token'
+    | '/api/invoices/$id/pay-link'
+    | '/api/invoices/$id/send'
     | '/api/messages/users/search'
+    | '/api/org/invites/accept'
     | '/api/projects/$id/consultant-payments'
     | '/api/projects/$id/document-annotations'
     | '/api/projects/$id/document-versions'
     | '/api/projects/$id/documents'
+    | '/api/projects/$id/estimates'
     | '/api/projects/$id/expenses'
     | '/api/projects/$id/issues'
     | '/api/projects/$id/meetings'
@@ -1144,11 +1665,16 @@ export interface FileRouteTypes {
     | '/api/projects/$id/messages'
     | '/api/projects/$id/milestones'
     | '/api/projects/$id/permits'
+    | '/api/projects/$id/portal'
     | '/api/projects/$id/rfis'
     | '/api/projects/$id/site'
     | '/api/projects/$id/submittals'
     | '/api/projects/$id/tenders'
     | '/api/projects/$id/transmittals'
+    | '/api/public/partner/contractor-signup'
+    | '/api/public/partner/vendor-signup'
+    | '/api/public/payments/invoice'
+    | '/api/public/portal/$token'
     | '/builder'
     | '/clients'
     | '/contractor'
@@ -1171,14 +1697,19 @@ export interface FileRouteTypes {
     | '/projects/$id/team'
     | '/projects/$id/transmittals'
     | '/api/messages/conversations/$id/members'
+    | '/api/public/portal/$token/download'
     | '/projects/$id'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/about'
+    | '/accept-invite'
+    | '/admin'
     | '/changelog'
     | '/forgot-password'
+    | '/join-as-vendor'
+    | '/list-your-business'
     | '/login'
     | '/onboarding'
     | '/privacy'
@@ -1187,6 +1718,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app'
     | '/api/activity'
     | '/api/bids'
+    | '/api/cad-models'
     | '/api/clients'
     | '/api/contractors'
     | '/api/invites'
@@ -1195,8 +1727,13 @@ export interface FileRouteTypes {
     | '/api/meetings'
     | '/api/notifications'
     | '/api/projects'
+    | '/api/send-email'
     | '/api/tenders'
+    | '/api/timeline'
+    | '/api/vendor-recommendations'
     | '/auth/callback'
+    | '/pay/$token'
+    | '/portal/$token'
     | '/vs/5bloc-vs-fieldwire'
     | '/vs/5bloc-vs-procore'
     | '/_authenticated/_app/cad'
@@ -1213,17 +1750,28 @@ export interface FileRouteTypes {
     | '/api/ai/building-code'
     | '/api/ai/contract-scan'
     | '/api/ai/estimate'
+    | '/api/ai/rfi-draft'
     | '/api/clients/$id'
     | '/api/contractors/$id'
     | '/api/contractors/architects'
+    | '/api/files/blob'
     | '/api/files/download'
     | '/api/files/upload'
+    | '/api/integrations/status'
+    | '/api/integrations/sync'
+    | '/api/invites/accept'
     | '/api/invoices/$id'
     | '/api/messages/conversations'
     | '/api/org/studio-project'
     | '/api/org/team'
+    | '/api/payments/methods'
+    | '/api/payments/subscribe'
+    | '/api/payments/subscription'
     | '/api/projects/$id'
+    | '/api/public/contractor-photo'
+    | '/api/public/vendor-catalog'
     | '/api/tenders/$id'
+    | '/api/waitlist/stats'
     | '/_authenticated/_app/ai/building-code'
     | '/_authenticated/_app/ai/contract-scan'
     | '/_authenticated/_app/ai/estimate'
@@ -1235,11 +1783,30 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/marketplace/$id'
     | '/_authenticated/_app/projects/new'
     | '/api/contractors/architects/$id'
+    | '/api/integrations/autodesk/callback'
+    | '/api/integrations/autodesk/complete-upload'
+    | '/api/integrations/autodesk/connect'
+    | '/api/integrations/autodesk/disconnect'
+    | '/api/integrations/autodesk/translate-status'
+    | '/api/integrations/autodesk/upload'
+    | '/api/integrations/autodesk/upload-url'
+    | '/api/integrations/autodesk/viewer-token'
+    | '/api/integrations/google/calendar'
+    | '/api/integrations/google/callback'
+    | '/api/integrations/google/connect'
+    | '/api/integrations/google/disconnect'
+    | '/api/integrations/google/drive'
+    | '/api/integrations/google/gmail'
+    | '/api/integrations/google/token'
+    | '/api/invoices/$id/pay-link'
+    | '/api/invoices/$id/send'
     | '/api/messages/users/search'
+    | '/api/org/invites/accept'
     | '/api/projects/$id/consultant-payments'
     | '/api/projects/$id/document-annotations'
     | '/api/projects/$id/document-versions'
     | '/api/projects/$id/documents'
+    | '/api/projects/$id/estimates'
     | '/api/projects/$id/expenses'
     | '/api/projects/$id/issues'
     | '/api/projects/$id/meetings'
@@ -1247,11 +1814,16 @@ export interface FileRouteTypes {
     | '/api/projects/$id/messages'
     | '/api/projects/$id/milestones'
     | '/api/projects/$id/permits'
+    | '/api/projects/$id/portal'
     | '/api/projects/$id/rfis'
     | '/api/projects/$id/site'
     | '/api/projects/$id/submittals'
     | '/api/projects/$id/tenders'
     | '/api/projects/$id/transmittals'
+    | '/api/public/partner/contractor-signup'
+    | '/api/public/partner/vendor-signup'
+    | '/api/public/payments/invoice'
+    | '/api/public/portal/$token'
     | '/_authenticated/_app/builder/'
     | '/_authenticated/_app/clients/'
     | '/_authenticated/_app/contractor/'
@@ -1274,6 +1846,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/projects/$id/team'
     | '/_authenticated/_app/projects/$id/transmittals'
     | '/api/messages/conversations/$id/members'
+    | '/api/public/portal/$token/download'
     | '/_authenticated/_app/projects/$id/'
   fileRoutesById: FileRoutesById
 }
@@ -1281,8 +1854,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
+  AcceptInviteRoute: typeof AcceptInviteRoute
+  AdminRoute: typeof AdminRoute
   ChangelogRoute: typeof ChangelogRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  JoinAsVendorRoute: typeof JoinAsVendorRoute
+  ListYourBusinessRoute: typeof ListYourBusinessRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -1290,27 +1867,63 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   ApiActivityRoute: typeof ApiActivityRoute
   ApiBidsRoute: typeof ApiBidsRoute
+  ApiCadModelsRoute: typeof ApiCadModelsRoute
   ApiClientsRoute: typeof ApiClientsRouteWithChildren
   ApiContractorsRoute: typeof ApiContractorsRouteWithChildren
-  ApiInvitesRoute: typeof ApiInvitesRoute
+  ApiInvitesRoute: typeof ApiInvitesRouteWithChildren
   ApiInvoicesRoute: typeof ApiInvoicesRouteWithChildren
   ApiMeRoute: typeof ApiMeRoute
   ApiMeetingsRoute: typeof ApiMeetingsRoute
   ApiNotificationsRoute: typeof ApiNotificationsRoute
   ApiProjectsRoute: typeof ApiProjectsRouteWithChildren
+  ApiSendEmailRoute: typeof ApiSendEmailRoute
   ApiTendersRoute: typeof ApiTendersRouteWithChildren
+  ApiTimelineRoute: typeof ApiTimelineRoute
+  ApiVendorRecommendationsRoute: typeof ApiVendorRecommendationsRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  PayTokenRoute: typeof PayTokenRoute
+  PortalTokenRoute: typeof PortalTokenRoute
   Vs5blocVsFieldwireRoute: typeof Vs5blocVsFieldwireRoute
   Vs5blocVsProcoreRoute: typeof Vs5blocVsProcoreRoute
   ApiAiBuildingCodeRoute: typeof ApiAiBuildingCodeRoute
   ApiAiContractScanRoute: typeof ApiAiContractScanRoute
   ApiAiEstimateRoute: typeof ApiAiEstimateRoute
+  ApiAiRfiDraftRoute: typeof ApiAiRfiDraftRoute
+  ApiFilesBlobRoute: typeof ApiFilesBlobRoute
   ApiFilesDownloadRoute: typeof ApiFilesDownloadRoute
   ApiFilesUploadRoute: typeof ApiFilesUploadRoute
+  ApiIntegrationsStatusRoute: typeof ApiIntegrationsStatusRoute
+  ApiIntegrationsSyncRoute: typeof ApiIntegrationsSyncRoute
   ApiMessagesConversationsRoute: typeof ApiMessagesConversationsRouteWithChildren
   ApiOrgStudioProjectRoute: typeof ApiOrgStudioProjectRoute
   ApiOrgTeamRoute: typeof ApiOrgTeamRoute
+  ApiPaymentsMethodsRoute: typeof ApiPaymentsMethodsRoute
+  ApiPaymentsSubscribeRoute: typeof ApiPaymentsSubscribeRoute
+  ApiPaymentsSubscriptionRoute: typeof ApiPaymentsSubscriptionRoute
+  ApiPublicContractorPhotoRoute: typeof ApiPublicContractorPhotoRoute
+  ApiPublicVendorCatalogRoute: typeof ApiPublicVendorCatalogRoute
+  ApiWaitlistStatsRoute: typeof ApiWaitlistStatsRoute
+  ApiIntegrationsAutodeskCallbackRoute: typeof ApiIntegrationsAutodeskCallbackRoute
+  ApiIntegrationsAutodeskCompleteUploadRoute: typeof ApiIntegrationsAutodeskCompleteUploadRoute
+  ApiIntegrationsAutodeskConnectRoute: typeof ApiIntegrationsAutodeskConnectRoute
+  ApiIntegrationsAutodeskDisconnectRoute: typeof ApiIntegrationsAutodeskDisconnectRoute
+  ApiIntegrationsAutodeskTranslateStatusRoute: typeof ApiIntegrationsAutodeskTranslateStatusRoute
+  ApiIntegrationsAutodeskUploadRoute: typeof ApiIntegrationsAutodeskUploadRoute
+  ApiIntegrationsAutodeskUploadUrlRoute: typeof ApiIntegrationsAutodeskUploadUrlRoute
+  ApiIntegrationsAutodeskViewerTokenRoute: typeof ApiIntegrationsAutodeskViewerTokenRoute
+  ApiIntegrationsGoogleCalendarRoute: typeof ApiIntegrationsGoogleCalendarRoute
+  ApiIntegrationsGoogleCallbackRoute: typeof ApiIntegrationsGoogleCallbackRoute
+  ApiIntegrationsGoogleConnectRoute: typeof ApiIntegrationsGoogleConnectRoute
+  ApiIntegrationsGoogleDisconnectRoute: typeof ApiIntegrationsGoogleDisconnectRoute
+  ApiIntegrationsGoogleDriveRoute: typeof ApiIntegrationsGoogleDriveRoute
+  ApiIntegrationsGoogleGmailRoute: typeof ApiIntegrationsGoogleGmailRoute
+  ApiIntegrationsGoogleTokenRoute: typeof ApiIntegrationsGoogleTokenRoute
   ApiMessagesUsersSearchRoute: typeof ApiMessagesUsersSearchRoute
+  ApiOrgInvitesAcceptRoute: typeof ApiOrgInvitesAcceptRoute
+  ApiPublicPartnerContractorSignupRoute: typeof ApiPublicPartnerContractorSignupRoute
+  ApiPublicPartnerVendorSignupRoute: typeof ApiPublicPartnerVendorSignupRoute
+  ApiPublicPaymentsInvoiceRoute: typeof ApiPublicPaymentsInvoiceRoute
+  ApiPublicPortalTokenRoute: typeof ApiPublicPortalTokenRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -1336,6 +1949,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/accept-invite': {
+      id: '/accept-invite'
+      path: '/accept-invite'
+      fullPath: '/accept-invite'
+      preLoaderRoute: typeof AcceptInviteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/changelog': {
       id: '/changelog'
       path: '/changelog'
@@ -1348,6 +1975,20 @@ declare module '@tanstack/react-router' {
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join-as-vendor': {
+      id: '/join-as-vendor'
+      path: '/join-as-vendor'
+      fullPath: '/join-as-vendor'
+      preLoaderRoute: typeof JoinAsVendorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/list-your-business': {
+      id: '/list-your-business'
+      path: '/list-your-business'
+      fullPath: '/list-your-business'
+      preLoaderRoute: typeof ListYourBusinessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -1406,6 +2047,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiBidsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cad-models': {
+      id: '/api/cad-models'
+      path: '/api/cad-models'
+      fullPath: '/api/cad-models'
+      preLoaderRoute: typeof ApiCadModelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/clients': {
       id: '/api/clients'
       path: '/api/clients'
@@ -1462,6 +2110,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiProjectsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/send-email': {
+      id: '/api/send-email'
+      path: '/api/send-email'
+      fullPath: '/api/send-email'
+      preLoaderRoute: typeof ApiSendEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/tenders': {
       id: '/api/tenders'
       path: '/api/tenders'
@@ -1469,11 +2124,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTendersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/timeline': {
+      id: '/api/timeline'
+      path: '/api/timeline'
+      fullPath: '/api/timeline'
+      preLoaderRoute: typeof ApiTimelineRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/vendor-recommendations': {
+      id: '/api/vendor-recommendations'
+      path: '/api/vendor-recommendations'
+      fullPath: '/api/vendor-recommendations'
+      preLoaderRoute: typeof ApiVendorRecommendationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/callback': {
       id: '/auth/callback'
       path: '/auth/callback'
       fullPath: '/auth/callback'
       preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pay/$token': {
+      id: '/pay/$token'
+      path: '/pay/$token'
+      fullPath: '/pay/$token'
+      preLoaderRoute: typeof PayTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal/$token': {
+      id: '/portal/$token'
+      path: '/portal/$token'
+      fullPath: '/portal/$token'
+      preLoaderRoute: typeof PortalTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/vs/5bloc-vs-fieldwire': {
@@ -1588,6 +2271,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAiEstimateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ai/rfi-draft': {
+      id: '/api/ai/rfi-draft'
+      path: '/api/ai/rfi-draft'
+      fullPath: '/api/ai/rfi-draft'
+      preLoaderRoute: typeof ApiAiRfiDraftRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/clients/$id': {
       id: '/api/clients/$id'
       path: '/$id'
@@ -1609,6 +2299,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiContractorsArchitectsRouteImport
       parentRoute: typeof ApiContractorsRoute
     }
+    '/api/files/blob': {
+      id: '/api/files/blob'
+      path: '/api/files/blob'
+      fullPath: '/api/files/blob'
+      preLoaderRoute: typeof ApiFilesBlobRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/files/download': {
       id: '/api/files/download'
       path: '/api/files/download'
@@ -1622,6 +2319,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/files/upload'
       preLoaderRoute: typeof ApiFilesUploadRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/status': {
+      id: '/api/integrations/status'
+      path: '/api/integrations/status'
+      fullPath: '/api/integrations/status'
+      preLoaderRoute: typeof ApiIntegrationsStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/sync': {
+      id: '/api/integrations/sync'
+      path: '/api/integrations/sync'
+      fullPath: '/api/integrations/sync'
+      preLoaderRoute: typeof ApiIntegrationsSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/invites/accept': {
+      id: '/api/invites/accept'
+      path: '/accept'
+      fullPath: '/api/invites/accept'
+      preLoaderRoute: typeof ApiInvitesAcceptRouteImport
+      parentRoute: typeof ApiInvitesRoute
     }
     '/api/invoices/$id': {
       id: '/api/invoices/$id'
@@ -1651,6 +2369,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiOrgTeamRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/payments/methods': {
+      id: '/api/payments/methods'
+      path: '/api/payments/methods'
+      fullPath: '/api/payments/methods'
+      preLoaderRoute: typeof ApiPaymentsMethodsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/payments/subscribe': {
+      id: '/api/payments/subscribe'
+      path: '/api/payments/subscribe'
+      fullPath: '/api/payments/subscribe'
+      preLoaderRoute: typeof ApiPaymentsSubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/payments/subscription': {
+      id: '/api/payments/subscription'
+      path: '/api/payments/subscription'
+      fullPath: '/api/payments/subscription'
+      preLoaderRoute: typeof ApiPaymentsSubscriptionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/projects/$id': {
       id: '/api/projects/$id'
       path: '/$id'
@@ -1658,12 +2397,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiProjectsIdRouteImport
       parentRoute: typeof ApiProjectsRoute
     }
+    '/api/public/contractor-photo': {
+      id: '/api/public/contractor-photo'
+      path: '/api/public/contractor-photo'
+      fullPath: '/api/public/contractor-photo'
+      preLoaderRoute: typeof ApiPublicContractorPhotoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/vendor-catalog': {
+      id: '/api/public/vendor-catalog'
+      path: '/api/public/vendor-catalog'
+      fullPath: '/api/public/vendor-catalog'
+      preLoaderRoute: typeof ApiPublicVendorCatalogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/tenders/$id': {
       id: '/api/tenders/$id'
       path: '/$id'
       fullPath: '/api/tenders/$id'
       preLoaderRoute: typeof ApiTendersIdRouteImport
       parentRoute: typeof ApiTendersRoute
+    }
+    '/api/waitlist/stats': {
+      id: '/api/waitlist/stats'
+      path: '/api/waitlist/stats'
+      fullPath: '/api/waitlist/stats'
+      preLoaderRoute: typeof ApiWaitlistStatsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/_app/ai/building-code': {
       id: '/_authenticated/_app/ai/building-code'
@@ -1784,11 +2544,137 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiContractorsArchitectsIdRouteImport
       parentRoute: typeof ApiContractorsArchitectsRoute
     }
+    '/api/integrations/autodesk/callback': {
+      id: '/api/integrations/autodesk/callback'
+      path: '/api/integrations/autodesk/callback'
+      fullPath: '/api/integrations/autodesk/callback'
+      preLoaderRoute: typeof ApiIntegrationsAutodeskCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/autodesk/complete-upload': {
+      id: '/api/integrations/autodesk/complete-upload'
+      path: '/api/integrations/autodesk/complete-upload'
+      fullPath: '/api/integrations/autodesk/complete-upload'
+      preLoaderRoute: typeof ApiIntegrationsAutodeskCompleteUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/autodesk/connect': {
+      id: '/api/integrations/autodesk/connect'
+      path: '/api/integrations/autodesk/connect'
+      fullPath: '/api/integrations/autodesk/connect'
+      preLoaderRoute: typeof ApiIntegrationsAutodeskConnectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/autodesk/disconnect': {
+      id: '/api/integrations/autodesk/disconnect'
+      path: '/api/integrations/autodesk/disconnect'
+      fullPath: '/api/integrations/autodesk/disconnect'
+      preLoaderRoute: typeof ApiIntegrationsAutodeskDisconnectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/autodesk/translate-status': {
+      id: '/api/integrations/autodesk/translate-status'
+      path: '/api/integrations/autodesk/translate-status'
+      fullPath: '/api/integrations/autodesk/translate-status'
+      preLoaderRoute: typeof ApiIntegrationsAutodeskTranslateStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/autodesk/upload': {
+      id: '/api/integrations/autodesk/upload'
+      path: '/api/integrations/autodesk/upload'
+      fullPath: '/api/integrations/autodesk/upload'
+      preLoaderRoute: typeof ApiIntegrationsAutodeskUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/autodesk/upload-url': {
+      id: '/api/integrations/autodesk/upload-url'
+      path: '/api/integrations/autodesk/upload-url'
+      fullPath: '/api/integrations/autodesk/upload-url'
+      preLoaderRoute: typeof ApiIntegrationsAutodeskUploadUrlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/autodesk/viewer-token': {
+      id: '/api/integrations/autodesk/viewer-token'
+      path: '/api/integrations/autodesk/viewer-token'
+      fullPath: '/api/integrations/autodesk/viewer-token'
+      preLoaderRoute: typeof ApiIntegrationsAutodeskViewerTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/google/calendar': {
+      id: '/api/integrations/google/calendar'
+      path: '/api/integrations/google/calendar'
+      fullPath: '/api/integrations/google/calendar'
+      preLoaderRoute: typeof ApiIntegrationsGoogleCalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/google/callback': {
+      id: '/api/integrations/google/callback'
+      path: '/api/integrations/google/callback'
+      fullPath: '/api/integrations/google/callback'
+      preLoaderRoute: typeof ApiIntegrationsGoogleCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/google/connect': {
+      id: '/api/integrations/google/connect'
+      path: '/api/integrations/google/connect'
+      fullPath: '/api/integrations/google/connect'
+      preLoaderRoute: typeof ApiIntegrationsGoogleConnectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/google/disconnect': {
+      id: '/api/integrations/google/disconnect'
+      path: '/api/integrations/google/disconnect'
+      fullPath: '/api/integrations/google/disconnect'
+      preLoaderRoute: typeof ApiIntegrationsGoogleDisconnectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/google/drive': {
+      id: '/api/integrations/google/drive'
+      path: '/api/integrations/google/drive'
+      fullPath: '/api/integrations/google/drive'
+      preLoaderRoute: typeof ApiIntegrationsGoogleDriveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/google/gmail': {
+      id: '/api/integrations/google/gmail'
+      path: '/api/integrations/google/gmail'
+      fullPath: '/api/integrations/google/gmail'
+      preLoaderRoute: typeof ApiIntegrationsGoogleGmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/integrations/google/token': {
+      id: '/api/integrations/google/token'
+      path: '/api/integrations/google/token'
+      fullPath: '/api/integrations/google/token'
+      preLoaderRoute: typeof ApiIntegrationsGoogleTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/invoices/$id/pay-link': {
+      id: '/api/invoices/$id/pay-link'
+      path: '/pay-link'
+      fullPath: '/api/invoices/$id/pay-link'
+      preLoaderRoute: typeof ApiInvoicesIdPayLinkRouteImport
+      parentRoute: typeof ApiInvoicesIdRoute
+    }
+    '/api/invoices/$id/send': {
+      id: '/api/invoices/$id/send'
+      path: '/send'
+      fullPath: '/api/invoices/$id/send'
+      preLoaderRoute: typeof ApiInvoicesIdSendRouteImport
+      parentRoute: typeof ApiInvoicesIdRoute
+    }
     '/api/messages/users/search': {
       id: '/api/messages/users/search'
       path: '/api/messages/users/search'
       fullPath: '/api/messages/users/search'
       preLoaderRoute: typeof ApiMessagesUsersSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/org/invites/accept': {
+      id: '/api/org/invites/accept'
+      path: '/api/org/invites/accept'
+      fullPath: '/api/org/invites/accept'
+      preLoaderRoute: typeof ApiOrgInvitesAcceptRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/projects/$id/consultant-payments': {
@@ -1817,6 +2703,13 @@ declare module '@tanstack/react-router' {
       path: '/documents'
       fullPath: '/api/projects/$id/documents'
       preLoaderRoute: typeof ApiProjectsIdDocumentsRouteImport
+      parentRoute: typeof ApiProjectsIdRoute
+    }
+    '/api/projects/$id/estimates': {
+      id: '/api/projects/$id/estimates'
+      path: '/estimates'
+      fullPath: '/api/projects/$id/estimates'
+      preLoaderRoute: typeof ApiProjectsIdEstimatesRouteImport
       parentRoute: typeof ApiProjectsIdRoute
     }
     '/api/projects/$id/expenses': {
@@ -1868,6 +2761,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiProjectsIdPermitsRouteImport
       parentRoute: typeof ApiProjectsIdRoute
     }
+    '/api/projects/$id/portal': {
+      id: '/api/projects/$id/portal'
+      path: '/portal'
+      fullPath: '/api/projects/$id/portal'
+      preLoaderRoute: typeof ApiProjectsIdPortalRouteImport
+      parentRoute: typeof ApiProjectsIdRoute
+    }
     '/api/projects/$id/rfis': {
       id: '/api/projects/$id/rfis'
       path: '/rfis'
@@ -1902,6 +2802,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/projects/$id/transmittals'
       preLoaderRoute: typeof ApiProjectsIdTransmittalsRouteImport
       parentRoute: typeof ApiProjectsIdRoute
+    }
+    '/api/public/partner/contractor-signup': {
+      id: '/api/public/partner/contractor-signup'
+      path: '/api/public/partner/contractor-signup'
+      fullPath: '/api/public/partner/contractor-signup'
+      preLoaderRoute: typeof ApiPublicPartnerContractorSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/partner/vendor-signup': {
+      id: '/api/public/partner/vendor-signup'
+      path: '/api/public/partner/vendor-signup'
+      fullPath: '/api/public/partner/vendor-signup'
+      preLoaderRoute: typeof ApiPublicPartnerVendorSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/payments/invoice': {
+      id: '/api/public/payments/invoice'
+      path: '/api/public/payments/invoice'
+      fullPath: '/api/public/payments/invoice'
+      preLoaderRoute: typeof ApiPublicPaymentsInvoiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/portal/$token': {
+      id: '/api/public/portal/$token'
+      path: '/api/public/portal/$token'
+      fullPath: '/api/public/portal/$token'
+      preLoaderRoute: typeof ApiPublicPortalTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/_app/marketplace/architects/$id': {
       id: '/_authenticated/_app/marketplace/architects/$id'
@@ -2021,6 +2949,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/messages/conversations/$id/members'
       preLoaderRoute: typeof ApiMessagesConversationsIdMembersRouteImport
       parentRoute: typeof ApiMessagesConversationsRoute
+    }
+    '/api/public/portal/$token/download': {
+      id: '/api/public/portal/$token/download'
+      path: '/download'
+      fullPath: '/api/public/portal/$token/download'
+      preLoaderRoute: typeof ApiPublicPortalTokenDownloadRouteImport
+      parentRoute: typeof ApiPublicPortalTokenRoute
     }
   }
 }
@@ -2184,12 +3119,38 @@ const ApiContractorsRouteWithChildren = ApiContractorsRoute._addFileChildren(
   ApiContractorsRouteChildren,
 )
 
+interface ApiInvitesRouteChildren {
+  ApiInvitesAcceptRoute: typeof ApiInvitesAcceptRoute
+}
+
+const ApiInvitesRouteChildren: ApiInvitesRouteChildren = {
+  ApiInvitesAcceptRoute: ApiInvitesAcceptRoute,
+}
+
+const ApiInvitesRouteWithChildren = ApiInvitesRoute._addFileChildren(
+  ApiInvitesRouteChildren,
+)
+
+interface ApiInvoicesIdRouteChildren {
+  ApiInvoicesIdPayLinkRoute: typeof ApiInvoicesIdPayLinkRoute
+  ApiInvoicesIdSendRoute: typeof ApiInvoicesIdSendRoute
+}
+
+const ApiInvoicesIdRouteChildren: ApiInvoicesIdRouteChildren = {
+  ApiInvoicesIdPayLinkRoute: ApiInvoicesIdPayLinkRoute,
+  ApiInvoicesIdSendRoute: ApiInvoicesIdSendRoute,
+}
+
+const ApiInvoicesIdRouteWithChildren = ApiInvoicesIdRoute._addFileChildren(
+  ApiInvoicesIdRouteChildren,
+)
+
 interface ApiInvoicesRouteChildren {
-  ApiInvoicesIdRoute: typeof ApiInvoicesIdRoute
+  ApiInvoicesIdRoute: typeof ApiInvoicesIdRouteWithChildren
 }
 
 const ApiInvoicesRouteChildren: ApiInvoicesRouteChildren = {
-  ApiInvoicesIdRoute: ApiInvoicesIdRoute,
+  ApiInvoicesIdRoute: ApiInvoicesIdRouteWithChildren,
 }
 
 const ApiInvoicesRouteWithChildren = ApiInvoicesRoute._addFileChildren(
@@ -2201,6 +3162,7 @@ interface ApiProjectsIdRouteChildren {
   ApiProjectsIdDocumentAnnotationsRoute: typeof ApiProjectsIdDocumentAnnotationsRoute
   ApiProjectsIdDocumentVersionsRoute: typeof ApiProjectsIdDocumentVersionsRoute
   ApiProjectsIdDocumentsRoute: typeof ApiProjectsIdDocumentsRoute
+  ApiProjectsIdEstimatesRoute: typeof ApiProjectsIdEstimatesRoute
   ApiProjectsIdExpensesRoute: typeof ApiProjectsIdExpensesRoute
   ApiProjectsIdIssuesRoute: typeof ApiProjectsIdIssuesRoute
   ApiProjectsIdMeetingsRoute: typeof ApiProjectsIdMeetingsRoute
@@ -2208,6 +3170,7 @@ interface ApiProjectsIdRouteChildren {
   ApiProjectsIdMessagesRoute: typeof ApiProjectsIdMessagesRoute
   ApiProjectsIdMilestonesRoute: typeof ApiProjectsIdMilestonesRoute
   ApiProjectsIdPermitsRoute: typeof ApiProjectsIdPermitsRoute
+  ApiProjectsIdPortalRoute: typeof ApiProjectsIdPortalRoute
   ApiProjectsIdRfisRoute: typeof ApiProjectsIdRfisRoute
   ApiProjectsIdSiteRoute: typeof ApiProjectsIdSiteRoute
   ApiProjectsIdSubmittalsRoute: typeof ApiProjectsIdSubmittalsRoute
@@ -2220,6 +3183,7 @@ const ApiProjectsIdRouteChildren: ApiProjectsIdRouteChildren = {
   ApiProjectsIdDocumentAnnotationsRoute: ApiProjectsIdDocumentAnnotationsRoute,
   ApiProjectsIdDocumentVersionsRoute: ApiProjectsIdDocumentVersionsRoute,
   ApiProjectsIdDocumentsRoute: ApiProjectsIdDocumentsRoute,
+  ApiProjectsIdEstimatesRoute: ApiProjectsIdEstimatesRoute,
   ApiProjectsIdExpensesRoute: ApiProjectsIdExpensesRoute,
   ApiProjectsIdIssuesRoute: ApiProjectsIdIssuesRoute,
   ApiProjectsIdMeetingsRoute: ApiProjectsIdMeetingsRoute,
@@ -2227,6 +3191,7 @@ const ApiProjectsIdRouteChildren: ApiProjectsIdRouteChildren = {
   ApiProjectsIdMessagesRoute: ApiProjectsIdMessagesRoute,
   ApiProjectsIdMilestonesRoute: ApiProjectsIdMilestonesRoute,
   ApiProjectsIdPermitsRoute: ApiProjectsIdPermitsRoute,
+  ApiProjectsIdPortalRoute: ApiProjectsIdPortalRoute,
   ApiProjectsIdRfisRoute: ApiProjectsIdRfisRoute,
   ApiProjectsIdSiteRoute: ApiProjectsIdSiteRoute,
   ApiProjectsIdSubmittalsRoute: ApiProjectsIdSubmittalsRoute,
@@ -2277,12 +3242,27 @@ const ApiMessagesConversationsRouteWithChildren =
     ApiMessagesConversationsRouteChildren,
   )
 
+interface ApiPublicPortalTokenRouteChildren {
+  ApiPublicPortalTokenDownloadRoute: typeof ApiPublicPortalTokenDownloadRoute
+}
+
+const ApiPublicPortalTokenRouteChildren: ApiPublicPortalTokenRouteChildren = {
+  ApiPublicPortalTokenDownloadRoute: ApiPublicPortalTokenDownloadRoute,
+}
+
+const ApiPublicPortalTokenRouteWithChildren =
+  ApiPublicPortalTokenRoute._addFileChildren(ApiPublicPortalTokenRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
+  AcceptInviteRoute: AcceptInviteRoute,
+  AdminRoute: AdminRoute,
   ChangelogRoute: ChangelogRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  JoinAsVendorRoute: JoinAsVendorRoute,
+  ListYourBusinessRoute: ListYourBusinessRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
   PrivacyRoute: PrivacyRoute,
@@ -2290,27 +3270,67 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   ApiActivityRoute: ApiActivityRoute,
   ApiBidsRoute: ApiBidsRoute,
+  ApiCadModelsRoute: ApiCadModelsRoute,
   ApiClientsRoute: ApiClientsRouteWithChildren,
   ApiContractorsRoute: ApiContractorsRouteWithChildren,
-  ApiInvitesRoute: ApiInvitesRoute,
+  ApiInvitesRoute: ApiInvitesRouteWithChildren,
   ApiInvoicesRoute: ApiInvoicesRouteWithChildren,
   ApiMeRoute: ApiMeRoute,
   ApiMeetingsRoute: ApiMeetingsRoute,
   ApiNotificationsRoute: ApiNotificationsRoute,
   ApiProjectsRoute: ApiProjectsRouteWithChildren,
+  ApiSendEmailRoute: ApiSendEmailRoute,
   ApiTendersRoute: ApiTendersRouteWithChildren,
+  ApiTimelineRoute: ApiTimelineRoute,
+  ApiVendorRecommendationsRoute: ApiVendorRecommendationsRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  PayTokenRoute: PayTokenRoute,
+  PortalTokenRoute: PortalTokenRoute,
   Vs5blocVsFieldwireRoute: Vs5blocVsFieldwireRoute,
   Vs5blocVsProcoreRoute: Vs5blocVsProcoreRoute,
   ApiAiBuildingCodeRoute: ApiAiBuildingCodeRoute,
   ApiAiContractScanRoute: ApiAiContractScanRoute,
   ApiAiEstimateRoute: ApiAiEstimateRoute,
+  ApiAiRfiDraftRoute: ApiAiRfiDraftRoute,
+  ApiFilesBlobRoute: ApiFilesBlobRoute,
   ApiFilesDownloadRoute: ApiFilesDownloadRoute,
   ApiFilesUploadRoute: ApiFilesUploadRoute,
+  ApiIntegrationsStatusRoute: ApiIntegrationsStatusRoute,
+  ApiIntegrationsSyncRoute: ApiIntegrationsSyncRoute,
   ApiMessagesConversationsRoute: ApiMessagesConversationsRouteWithChildren,
   ApiOrgStudioProjectRoute: ApiOrgStudioProjectRoute,
   ApiOrgTeamRoute: ApiOrgTeamRoute,
+  ApiPaymentsMethodsRoute: ApiPaymentsMethodsRoute,
+  ApiPaymentsSubscribeRoute: ApiPaymentsSubscribeRoute,
+  ApiPaymentsSubscriptionRoute: ApiPaymentsSubscriptionRoute,
+  ApiPublicContractorPhotoRoute: ApiPublicContractorPhotoRoute,
+  ApiPublicVendorCatalogRoute: ApiPublicVendorCatalogRoute,
+  ApiWaitlistStatsRoute: ApiWaitlistStatsRoute,
+  ApiIntegrationsAutodeskCallbackRoute: ApiIntegrationsAutodeskCallbackRoute,
+  ApiIntegrationsAutodeskCompleteUploadRoute:
+    ApiIntegrationsAutodeskCompleteUploadRoute,
+  ApiIntegrationsAutodeskConnectRoute: ApiIntegrationsAutodeskConnectRoute,
+  ApiIntegrationsAutodeskDisconnectRoute:
+    ApiIntegrationsAutodeskDisconnectRoute,
+  ApiIntegrationsAutodeskTranslateStatusRoute:
+    ApiIntegrationsAutodeskTranslateStatusRoute,
+  ApiIntegrationsAutodeskUploadRoute: ApiIntegrationsAutodeskUploadRoute,
+  ApiIntegrationsAutodeskUploadUrlRoute: ApiIntegrationsAutodeskUploadUrlRoute,
+  ApiIntegrationsAutodeskViewerTokenRoute:
+    ApiIntegrationsAutodeskViewerTokenRoute,
+  ApiIntegrationsGoogleCalendarRoute: ApiIntegrationsGoogleCalendarRoute,
+  ApiIntegrationsGoogleCallbackRoute: ApiIntegrationsGoogleCallbackRoute,
+  ApiIntegrationsGoogleConnectRoute: ApiIntegrationsGoogleConnectRoute,
+  ApiIntegrationsGoogleDisconnectRoute: ApiIntegrationsGoogleDisconnectRoute,
+  ApiIntegrationsGoogleDriveRoute: ApiIntegrationsGoogleDriveRoute,
+  ApiIntegrationsGoogleGmailRoute: ApiIntegrationsGoogleGmailRoute,
+  ApiIntegrationsGoogleTokenRoute: ApiIntegrationsGoogleTokenRoute,
   ApiMessagesUsersSearchRoute: ApiMessagesUsersSearchRoute,
+  ApiOrgInvitesAcceptRoute: ApiOrgInvitesAcceptRoute,
+  ApiPublicPartnerContractorSignupRoute: ApiPublicPartnerContractorSignupRoute,
+  ApiPublicPartnerVendorSignupRoute: ApiPublicPartnerVendorSignupRoute,
+  ApiPublicPaymentsInvoiceRoute: ApiPublicPaymentsInvoiceRoute,
+  ApiPublicPortalTokenRoute: ApiPublicPortalTokenRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

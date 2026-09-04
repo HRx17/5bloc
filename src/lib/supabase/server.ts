@@ -49,3 +49,11 @@ export function createSupabasePublicClient() {
     auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
   })
 }
+
+/**
+ * Server client for privileged, explicitly user-scoped helpers (OAuth token store).
+ * Callers must always filter by `user_id` themselves — this bypasses row level security.
+ */
+export async function createSupabaseServer() {
+  return createServiceRoleClient()
+}

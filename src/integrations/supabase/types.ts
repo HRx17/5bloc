@@ -4044,13 +4044,58 @@ export type Database = {
       }
     }
     Functions: {
+      accept_org_invite: {
+        Args: { p_full_name?: string; p_token: string }
+        Returns: Json
+      }
+      accept_project_invite: {
+        Args: { p_full_name?: string; p_token: string }
+        Returns: Json
+      }
+      approve_portal_document: {
+        Args: {
+          p_action: string
+          p_document_id: string
+          p_note?: string
+          p_token: string
+        }
+        Returns: Json
+      }
       can_access_project: { Args: { proj: string }; Returns: boolean }
+      create_conversation: {
+        Args: {
+          p_member_ids?: string[]
+          p_project_id?: string
+          p_title?: string
+          p_type: string
+        }
+        Returns: string
+      }
       current_user_id: { Args: never; Returns: string }
       current_user_org_id: { Args: never; Returns: string }
+      get_invite_by_token: { Args: { p_token: string }; Returns: Json }
+      get_my_messaging_profile: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          email: string
+          full_name: string
+          id: string
+          org_id: string
+          role: string
+        }[]
+      }
       get_or_create_project_channel: {
         Args: { p_channel: string; p_project_id: string }
         Returns: string
       }
+      get_org_invite_by_token: { Args: { p_token: string }; Returns: Json }
+      get_portal_document_key: {
+        Args: { p_document_id: string; p_token: string }
+        Returns: Json
+      }
+      get_portal_payload: { Args: { p_token: string }; Returns: Json }
+      get_portal_project: { Args: { p_token: string }; Returns: Json }
       is_conversation_member: {
         Args: { _conversation_id: string }
         Returns: boolean
@@ -4063,8 +4108,38 @@ export type Database = {
       }
       my_org_id: { Args: never; Returns: string }
       my_profile_id: { Args: never; Returns: string }
+      next_invoice_number: { Args: { p_org_id: string }; Returns: string }
+      notify_user: {
+        Args: {
+          p_body?: string
+          p_href?: string
+          p_title: string
+          p_type?: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       post_project_channel_message: {
         Args: { p_body: string; p_channel: string; p_project_id: string }
+        Returns: Json
+      }
+      search_messaging_profiles: {
+        Args: { result_limit?: number; search_query: string }
+        Returns: {
+          avatar_url: string
+          email: string
+          full_name: string
+          id: string
+          role: string
+        }[]
+      }
+      submit_portal_question: {
+        Args: {
+          p_email?: string
+          p_name?: string
+          p_question: string
+          p_token: string
+        }
         Returns: Json
       }
     }
