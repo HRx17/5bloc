@@ -29,6 +29,7 @@ import { Route as ApiBidsRouteImport } from './routes/api/bids'
 import { Route as ApiCadModelsRouteImport } from './routes/api/cad-models'
 import { Route as ApiClientsRouteImport } from './routes/api/clients'
 import { Route as ApiContractorsRouteImport } from './routes/api/contractors'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiInvitesRouteImport } from './routes/api/invites'
 import { Route as ApiInvoicesRouteImport } from './routes/api/invoices'
 import { Route as ApiMeRouteImport } from './routes/api/me'
@@ -39,6 +40,7 @@ import { Route as ApiSendEmailRouteImport } from './routes/api/send-email'
 import { Route as ApiTendersRouteImport } from './routes/api/tenders'
 import { Route as ApiTimelineRouteImport } from './routes/api/timeline'
 import { Route as ApiVendorRecommendationsRouteImport } from './routes/api/vendor-recommendations'
+import { Route as ApiWaitlistRouteImport } from './routes/api/waitlist'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as PayTokenRouteImport } from './routes/pay/$token'
 import { Route as PortalTokenRouteImport } from './routes/portal/$token'
@@ -58,7 +60,9 @@ import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenti
 import { Route as ApiAiBuildingCodeRouteImport } from './routes/api/ai/building-code'
 import { Route as ApiAiContractScanRouteImport } from './routes/api/ai/contract-scan'
 import { Route as ApiAiEstimateRouteImport } from './routes/api/ai/estimate'
+import { Route as ApiAiReraReportRouteImport } from './routes/api/ai/rera-report'
 import { Route as ApiAiRfiDraftRouteImport } from './routes/api/ai/rfi-draft'
+import { Route as ApiAiSpecRouteImport } from './routes/api/ai/spec'
 import { Route as ApiAuthConfirmEmailRouteImport } from './routes/api/auth/confirm-email'
 import { Route as ApiClientsIdRouteImport } from './routes/api/clients/$id'
 import { Route as ApiContractorsIdRouteImport } from './routes/api/contractors/$id'
@@ -66,6 +70,7 @@ import { Route as ApiContractorsArchitectsRouteImport } from './routes/api/contr
 import { Route as ApiFilesBlobRouteImport } from './routes/api/files/blob'
 import { Route as ApiFilesDownloadRouteImport } from './routes/api/files/download'
 import { Route as ApiFilesUploadRouteImport } from './routes/api/files/upload'
+import { Route as ApiHealthSupabaseRouteImport } from './routes/api/health/supabase'
 import { Route as ApiIntegrationsStatusRouteImport } from './routes/api/integrations/status'
 import { Route as ApiIntegrationsSyncRouteImport } from './routes/api/integrations/sync'
 import { Route as ApiInvitesAcceptRouteImport } from './routes/api/invites/accept'
@@ -114,6 +119,7 @@ import { Route as ApiIntegrationsGoogleDriveRouteImport } from './routes/api/int
 import { Route as ApiIntegrationsGoogleGmailRouteImport } from './routes/api/integrations/google/gmail'
 import { Route as ApiIntegrationsGoogleTokenRouteImport } from './routes/api/integrations/google/token'
 import { Route as ApiInvoicesIdPayLinkRouteImport } from './routes/api/invoices/$id/pay-link'
+import { Route as ApiInvoicesIdPdfRouteImport } from './routes/api/invoices/$id/pdf'
 import { Route as ApiInvoicesIdSendRouteImport } from './routes/api/invoices/$id/send'
 import { Route as ApiMessagesUsersSearchRouteImport } from './routes/api/messages/users/search'
 import { Route as ApiOrgInvitesAcceptRouteImport } from './routes/api/org/invites/accept'
@@ -259,6 +265,11 @@ const ApiContractorsRoute = ApiContractorsRouteImport.update({
   path: '/api/contractors',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiInvitesRoute = ApiInvitesRouteImport.update({
   id: '/api/invites',
   path: '/api/invites',
@@ -310,6 +321,11 @@ const ApiVendorRecommendationsRoute =
     path: '/api/vendor-recommendations',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiWaitlistRoute = ApiWaitlistRouteImport.update({
+  id: '/api/waitlist',
+  path: '/api/waitlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
@@ -413,9 +429,19 @@ const ApiAiEstimateRoute = ApiAiEstimateRouteImport.update({
   path: '/api/ai/estimate',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAiReraReportRoute = ApiAiReraReportRouteImport.update({
+  id: '/api/ai/rera-report',
+  path: '/api/ai/rera-report',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAiRfiDraftRoute = ApiAiRfiDraftRouteImport.update({
   id: '/api/ai/rfi-draft',
   path: '/api/ai/rfi-draft',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAiSpecRoute = ApiAiSpecRouteImport.update({
+  id: '/api/ai/spec',
+  path: '/api/ai/spec',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAuthConfirmEmailRoute = ApiAuthConfirmEmailRouteImport.update({
@@ -453,6 +479,11 @@ const ApiFilesUploadRoute = ApiFilesUploadRouteImport.update({
   id: '/api/files/upload',
   path: '/api/files/upload',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHealthSupabaseRoute = ApiHealthSupabaseRouteImport.update({
+  id: '/supabase',
+  path: '/supabase',
+  getParentRoute: () => ApiHealthRoute,
 } as any)
 const ApiIntegrationsStatusRoute = ApiIntegrationsStatusRouteImport.update({
   id: '/api/integrations/status',
@@ -527,9 +558,9 @@ const ApiTendersIdRoute = ApiTendersIdRouteImport.update({
   getParentRoute: () => ApiTendersRoute,
 } as any)
 const ApiWaitlistStatsRoute = ApiWaitlistStatsRouteImport.update({
-  id: '/api/waitlist/stats',
-  path: '/api/waitlist/stats',
-  getParentRoute: () => rootRouteImport,
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => ApiWaitlistRoute,
 } as any)
 const AuthenticatedAppAiBuildingCodeRoute =
   AuthenticatedAppAiBuildingCodeRouteImport.update({
@@ -726,6 +757,11 @@ const ApiIntegrationsGoogleTokenRoute =
 const ApiInvoicesIdPayLinkRoute = ApiInvoicesIdPayLinkRouteImport.update({
   id: '/pay-link',
   path: '/pay-link',
+  getParentRoute: () => ApiInvoicesIdRoute,
+} as any)
+const ApiInvoicesIdPdfRoute = ApiInvoicesIdPdfRouteImport.update({
+  id: '/pdf',
+  path: '/pdf',
   getParentRoute: () => ApiInvoicesIdRoute,
 } as any)
 const ApiInvoicesIdSendRoute = ApiInvoicesIdSendRouteImport.update({
@@ -1005,6 +1041,7 @@ export interface FileRoutesByFullPath {
   '/api/cad-models': typeof ApiCadModelsRoute
   '/api/clients': typeof ApiClientsRouteWithChildren
   '/api/contractors': typeof ApiContractorsRouteWithChildren
+  '/api/health': typeof ApiHealthRouteWithChildren
   '/api/invites': typeof ApiInvitesRouteWithChildren
   '/api/invoices': typeof ApiInvoicesRouteWithChildren
   '/api/me': typeof ApiMeRoute
@@ -1015,6 +1052,7 @@ export interface FileRoutesByFullPath {
   '/api/tenders': typeof ApiTendersRouteWithChildren
   '/api/timeline': typeof ApiTimelineRoute
   '/api/vendor-recommendations': typeof ApiVendorRecommendationsRoute
+  '/api/waitlist': typeof ApiWaitlistRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/pay/$token': typeof PayTokenRoute
   '/portal/$token': typeof PortalTokenRoute
@@ -1034,7 +1072,9 @@ export interface FileRoutesByFullPath {
   '/api/ai/building-code': typeof ApiAiBuildingCodeRoute
   '/api/ai/contract-scan': typeof ApiAiContractScanRoute
   '/api/ai/estimate': typeof ApiAiEstimateRoute
+  '/api/ai/rera-report': typeof ApiAiReraReportRoute
   '/api/ai/rfi-draft': typeof ApiAiRfiDraftRoute
+  '/api/ai/spec': typeof ApiAiSpecRoute
   '/api/auth/confirm-email': typeof ApiAuthConfirmEmailRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/contractors/$id': typeof ApiContractorsIdRoute
@@ -1042,6 +1082,7 @@ export interface FileRoutesByFullPath {
   '/api/files/blob': typeof ApiFilesBlobRoute
   '/api/files/download': typeof ApiFilesDownloadRoute
   '/api/files/upload': typeof ApiFilesUploadRoute
+  '/api/health/supabase': typeof ApiHealthSupabaseRoute
   '/api/integrations/status': typeof ApiIntegrationsStatusRoute
   '/api/integrations/sync': typeof ApiIntegrationsSyncRoute
   '/api/invites/accept': typeof ApiInvitesAcceptRoute
@@ -1084,6 +1125,7 @@ export interface FileRoutesByFullPath {
   '/api/integrations/google/gmail': typeof ApiIntegrationsGoogleGmailRoute
   '/api/integrations/google/token': typeof ApiIntegrationsGoogleTokenRoute
   '/api/invoices/$id/pay-link': typeof ApiInvoicesIdPayLinkRoute
+  '/api/invoices/$id/pdf': typeof ApiInvoicesIdPdfRoute
   '/api/invoices/$id/send': typeof ApiInvoicesIdSendRoute
   '/api/messages/users/search': typeof ApiMessagesUsersSearchRoute
   '/api/org/invites/accept': typeof ApiOrgInvitesAcceptRoute
@@ -1156,6 +1198,7 @@ export interface FileRoutesByTo {
   '/api/cad-models': typeof ApiCadModelsRoute
   '/api/clients': typeof ApiClientsRouteWithChildren
   '/api/contractors': typeof ApiContractorsRouteWithChildren
+  '/api/health': typeof ApiHealthRouteWithChildren
   '/api/invites': typeof ApiInvitesRouteWithChildren
   '/api/invoices': typeof ApiInvoicesRouteWithChildren
   '/api/me': typeof ApiMeRoute
@@ -1166,6 +1209,7 @@ export interface FileRoutesByTo {
   '/api/tenders': typeof ApiTendersRouteWithChildren
   '/api/timeline': typeof ApiTimelineRoute
   '/api/vendor-recommendations': typeof ApiVendorRecommendationsRoute
+  '/api/waitlist': typeof ApiWaitlistRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/pay/$token': typeof PayTokenRoute
   '/portal/$token': typeof PortalTokenRoute
@@ -1185,7 +1229,9 @@ export interface FileRoutesByTo {
   '/api/ai/building-code': typeof ApiAiBuildingCodeRoute
   '/api/ai/contract-scan': typeof ApiAiContractScanRoute
   '/api/ai/estimate': typeof ApiAiEstimateRoute
+  '/api/ai/rera-report': typeof ApiAiReraReportRoute
   '/api/ai/rfi-draft': typeof ApiAiRfiDraftRoute
+  '/api/ai/spec': typeof ApiAiSpecRoute
   '/api/auth/confirm-email': typeof ApiAuthConfirmEmailRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/contractors/$id': typeof ApiContractorsIdRoute
@@ -1193,6 +1239,7 @@ export interface FileRoutesByTo {
   '/api/files/blob': typeof ApiFilesBlobRoute
   '/api/files/download': typeof ApiFilesDownloadRoute
   '/api/files/upload': typeof ApiFilesUploadRoute
+  '/api/health/supabase': typeof ApiHealthSupabaseRoute
   '/api/integrations/status': typeof ApiIntegrationsStatusRoute
   '/api/integrations/sync': typeof ApiIntegrationsSyncRoute
   '/api/invites/accept': typeof ApiInvitesAcceptRoute
@@ -1235,6 +1282,7 @@ export interface FileRoutesByTo {
   '/api/integrations/google/gmail': typeof ApiIntegrationsGoogleGmailRoute
   '/api/integrations/google/token': typeof ApiIntegrationsGoogleTokenRoute
   '/api/invoices/$id/pay-link': typeof ApiInvoicesIdPayLinkRoute
+  '/api/invoices/$id/pdf': typeof ApiInvoicesIdPdfRoute
   '/api/invoices/$id/send': typeof ApiInvoicesIdSendRoute
   '/api/messages/users/search': typeof ApiMessagesUsersSearchRoute
   '/api/org/invites/accept': typeof ApiOrgInvitesAcceptRoute
@@ -1310,6 +1358,7 @@ export interface FileRoutesById {
   '/api/cad-models': typeof ApiCadModelsRoute
   '/api/clients': typeof ApiClientsRouteWithChildren
   '/api/contractors': typeof ApiContractorsRouteWithChildren
+  '/api/health': typeof ApiHealthRouteWithChildren
   '/api/invites': typeof ApiInvitesRouteWithChildren
   '/api/invoices': typeof ApiInvoicesRouteWithChildren
   '/api/me': typeof ApiMeRoute
@@ -1320,6 +1369,7 @@ export interface FileRoutesById {
   '/api/tenders': typeof ApiTendersRouteWithChildren
   '/api/timeline': typeof ApiTimelineRoute
   '/api/vendor-recommendations': typeof ApiVendorRecommendationsRoute
+  '/api/waitlist': typeof ApiWaitlistRouteWithChildren
   '/auth/callback': typeof AuthCallbackRoute
   '/pay/$token': typeof PayTokenRoute
   '/portal/$token': typeof PortalTokenRoute
@@ -1339,7 +1389,9 @@ export interface FileRoutesById {
   '/api/ai/building-code': typeof ApiAiBuildingCodeRoute
   '/api/ai/contract-scan': typeof ApiAiContractScanRoute
   '/api/ai/estimate': typeof ApiAiEstimateRoute
+  '/api/ai/rera-report': typeof ApiAiReraReportRoute
   '/api/ai/rfi-draft': typeof ApiAiRfiDraftRoute
+  '/api/ai/spec': typeof ApiAiSpecRoute
   '/api/auth/confirm-email': typeof ApiAuthConfirmEmailRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/contractors/$id': typeof ApiContractorsIdRoute
@@ -1347,6 +1399,7 @@ export interface FileRoutesById {
   '/api/files/blob': typeof ApiFilesBlobRoute
   '/api/files/download': typeof ApiFilesDownloadRoute
   '/api/files/upload': typeof ApiFilesUploadRoute
+  '/api/health/supabase': typeof ApiHealthSupabaseRoute
   '/api/integrations/status': typeof ApiIntegrationsStatusRoute
   '/api/integrations/sync': typeof ApiIntegrationsSyncRoute
   '/api/invites/accept': typeof ApiInvitesAcceptRoute
@@ -1389,6 +1442,7 @@ export interface FileRoutesById {
   '/api/integrations/google/gmail': typeof ApiIntegrationsGoogleGmailRoute
   '/api/integrations/google/token': typeof ApiIntegrationsGoogleTokenRoute
   '/api/invoices/$id/pay-link': typeof ApiInvoicesIdPayLinkRoute
+  '/api/invoices/$id/pdf': typeof ApiInvoicesIdPdfRoute
   '/api/invoices/$id/send': typeof ApiInvoicesIdSendRoute
   '/api/messages/users/search': typeof ApiMessagesUsersSearchRoute
   '/api/org/invites/accept': typeof ApiOrgInvitesAcceptRoute
@@ -1463,6 +1517,7 @@ export interface FileRouteTypes {
     | '/api/cad-models'
     | '/api/clients'
     | '/api/contractors'
+    | '/api/health'
     | '/api/invites'
     | '/api/invoices'
     | '/api/me'
@@ -1473,6 +1528,7 @@ export interface FileRouteTypes {
     | '/api/tenders'
     | '/api/timeline'
     | '/api/vendor-recommendations'
+    | '/api/waitlist'
     | '/auth/callback'
     | '/pay/$token'
     | '/portal/$token'
@@ -1492,7 +1548,9 @@ export interface FileRouteTypes {
     | '/api/ai/building-code'
     | '/api/ai/contract-scan'
     | '/api/ai/estimate'
+    | '/api/ai/rera-report'
     | '/api/ai/rfi-draft'
+    | '/api/ai/spec'
     | '/api/auth/confirm-email'
     | '/api/clients/$id'
     | '/api/contractors/$id'
@@ -1500,6 +1558,7 @@ export interface FileRouteTypes {
     | '/api/files/blob'
     | '/api/files/download'
     | '/api/files/upload'
+    | '/api/health/supabase'
     | '/api/integrations/status'
     | '/api/integrations/sync'
     | '/api/invites/accept'
@@ -1542,6 +1601,7 @@ export interface FileRouteTypes {
     | '/api/integrations/google/gmail'
     | '/api/integrations/google/token'
     | '/api/invoices/$id/pay-link'
+    | '/api/invoices/$id/pdf'
     | '/api/invoices/$id/send'
     | '/api/messages/users/search'
     | '/api/org/invites/accept'
@@ -1614,6 +1674,7 @@ export interface FileRouteTypes {
     | '/api/cad-models'
     | '/api/clients'
     | '/api/contractors'
+    | '/api/health'
     | '/api/invites'
     | '/api/invoices'
     | '/api/me'
@@ -1624,6 +1685,7 @@ export interface FileRouteTypes {
     | '/api/tenders'
     | '/api/timeline'
     | '/api/vendor-recommendations'
+    | '/api/waitlist'
     | '/auth/callback'
     | '/pay/$token'
     | '/portal/$token'
@@ -1643,7 +1705,9 @@ export interface FileRouteTypes {
     | '/api/ai/building-code'
     | '/api/ai/contract-scan'
     | '/api/ai/estimate'
+    | '/api/ai/rera-report'
     | '/api/ai/rfi-draft'
+    | '/api/ai/spec'
     | '/api/auth/confirm-email'
     | '/api/clients/$id'
     | '/api/contractors/$id'
@@ -1651,6 +1715,7 @@ export interface FileRouteTypes {
     | '/api/files/blob'
     | '/api/files/download'
     | '/api/files/upload'
+    | '/api/health/supabase'
     | '/api/integrations/status'
     | '/api/integrations/sync'
     | '/api/invites/accept'
@@ -1693,6 +1758,7 @@ export interface FileRouteTypes {
     | '/api/integrations/google/gmail'
     | '/api/integrations/google/token'
     | '/api/invoices/$id/pay-link'
+    | '/api/invoices/$id/pdf'
     | '/api/invoices/$id/send'
     | '/api/messages/users/search'
     | '/api/org/invites/accept'
@@ -1767,6 +1833,7 @@ export interface FileRouteTypes {
     | '/api/cad-models'
     | '/api/clients'
     | '/api/contractors'
+    | '/api/health'
     | '/api/invites'
     | '/api/invoices'
     | '/api/me'
@@ -1777,6 +1844,7 @@ export interface FileRouteTypes {
     | '/api/tenders'
     | '/api/timeline'
     | '/api/vendor-recommendations'
+    | '/api/waitlist'
     | '/auth/callback'
     | '/pay/$token'
     | '/portal/$token'
@@ -1796,7 +1864,9 @@ export interface FileRouteTypes {
     | '/api/ai/building-code'
     | '/api/ai/contract-scan'
     | '/api/ai/estimate'
+    | '/api/ai/rera-report'
     | '/api/ai/rfi-draft'
+    | '/api/ai/spec'
     | '/api/auth/confirm-email'
     | '/api/clients/$id'
     | '/api/contractors/$id'
@@ -1804,6 +1874,7 @@ export interface FileRouteTypes {
     | '/api/files/blob'
     | '/api/files/download'
     | '/api/files/upload'
+    | '/api/health/supabase'
     | '/api/integrations/status'
     | '/api/integrations/sync'
     | '/api/invites/accept'
@@ -1846,6 +1917,7 @@ export interface FileRouteTypes {
     | '/api/integrations/google/gmail'
     | '/api/integrations/google/token'
     | '/api/invoices/$id/pay-link'
+    | '/api/invoices/$id/pdf'
     | '/api/invoices/$id/send'
     | '/api/messages/users/search'
     | '/api/org/invites/accept'
@@ -1920,6 +1992,7 @@ export interface RootRouteChildren {
   ApiCadModelsRoute: typeof ApiCadModelsRoute
   ApiClientsRoute: typeof ApiClientsRouteWithChildren
   ApiContractorsRoute: typeof ApiContractorsRouteWithChildren
+  ApiHealthRoute: typeof ApiHealthRouteWithChildren
   ApiInvitesRoute: typeof ApiInvitesRouteWithChildren
   ApiInvoicesRoute: typeof ApiInvoicesRouteWithChildren
   ApiMeRoute: typeof ApiMeRoute
@@ -1930,6 +2003,7 @@ export interface RootRouteChildren {
   ApiTendersRoute: typeof ApiTendersRouteWithChildren
   ApiTimelineRoute: typeof ApiTimelineRoute
   ApiVendorRecommendationsRoute: typeof ApiVendorRecommendationsRoute
+  ApiWaitlistRoute: typeof ApiWaitlistRouteWithChildren
   AuthCallbackRoute: typeof AuthCallbackRoute
   PayTokenRoute: typeof PayTokenRoute
   PortalTokenRoute: typeof PortalTokenRoute
@@ -1938,7 +2012,9 @@ export interface RootRouteChildren {
   ApiAiBuildingCodeRoute: typeof ApiAiBuildingCodeRoute
   ApiAiContractScanRoute: typeof ApiAiContractScanRoute
   ApiAiEstimateRoute: typeof ApiAiEstimateRoute
+  ApiAiReraReportRoute: typeof ApiAiReraReportRoute
   ApiAiRfiDraftRoute: typeof ApiAiRfiDraftRoute
+  ApiAiSpecRoute: typeof ApiAiSpecRoute
   ApiAuthConfirmEmailRoute: typeof ApiAuthConfirmEmailRoute
   ApiFilesBlobRoute: typeof ApiFilesBlobRoute
   ApiFilesDownloadRoute: typeof ApiFilesDownloadRoute
@@ -1953,7 +2029,6 @@ export interface RootRouteChildren {
   ApiPaymentsSubscriptionRoute: typeof ApiPaymentsSubscriptionRoute
   ApiPublicContractorPhotoRoute: typeof ApiPublicContractorPhotoRoute
   ApiPublicVendorCatalogRoute: typeof ApiPublicVendorCatalogRoute
-  ApiWaitlistStatsRoute: typeof ApiWaitlistStatsRoute
   ApiIntegrationsAutodeskCallbackRoute: typeof ApiIntegrationsAutodeskCallbackRoute
   ApiIntegrationsAutodeskCompleteUploadRoute: typeof ApiIntegrationsAutodeskCompleteUploadRoute
   ApiIntegrationsAutodeskConnectRoute: typeof ApiIntegrationsAutodeskConnectRoute
@@ -2122,6 +2197,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiContractorsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/invites': {
       id: '/api/invites'
       path: '/api/invites'
@@ -2190,6 +2272,13 @@ declare module '@tanstack/react-router' {
       path: '/api/vendor-recommendations'
       fullPath: '/api/vendor-recommendations'
       preLoaderRoute: typeof ApiVendorRecommendationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/waitlist': {
+      id: '/api/waitlist'
+      path: '/api/waitlist'
+      fullPath: '/api/waitlist'
+      preLoaderRoute: typeof ApiWaitlistRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
@@ -2325,11 +2414,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAiEstimateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ai/rera-report': {
+      id: '/api/ai/rera-report'
+      path: '/api/ai/rera-report'
+      fullPath: '/api/ai/rera-report'
+      preLoaderRoute: typeof ApiAiReraReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/ai/rfi-draft': {
       id: '/api/ai/rfi-draft'
       path: '/api/ai/rfi-draft'
       fullPath: '/api/ai/rfi-draft'
       preLoaderRoute: typeof ApiAiRfiDraftRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ai/spec': {
+      id: '/api/ai/spec'
+      path: '/api/ai/spec'
+      fullPath: '/api/ai/spec'
+      preLoaderRoute: typeof ApiAiSpecRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/auth/confirm-email': {
@@ -2380,6 +2483,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/files/upload'
       preLoaderRoute: typeof ApiFilesUploadRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/health/supabase': {
+      id: '/api/health/supabase'
+      path: '/supabase'
+      fullPath: '/api/health/supabase'
+      preLoaderRoute: typeof ApiHealthSupabaseRouteImport
+      parentRoute: typeof ApiHealthRoute
     }
     '/api/integrations/status': {
       id: '/api/integrations/status'
@@ -2481,10 +2591,10 @@ declare module '@tanstack/react-router' {
     }
     '/api/waitlist/stats': {
       id: '/api/waitlist/stats'
-      path: '/api/waitlist/stats'
+      path: '/stats'
       fullPath: '/api/waitlist/stats'
       preLoaderRoute: typeof ApiWaitlistStatsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof ApiWaitlistRoute
     }
     '/_authenticated/_app/ai/building-code': {
       id: '/_authenticated/_app/ai/building-code'
@@ -2715,6 +2825,13 @@ declare module '@tanstack/react-router' {
       path: '/pay-link'
       fullPath: '/api/invoices/$id/pay-link'
       preLoaderRoute: typeof ApiInvoicesIdPayLinkRouteImport
+      parentRoute: typeof ApiInvoicesIdRoute
+    }
+    '/api/invoices/$id/pdf': {
+      id: '/api/invoices/$id/pdf'
+      path: '/pdf'
+      fullPath: '/api/invoices/$id/pdf'
+      preLoaderRoute: typeof ApiInvoicesIdPdfRouteImport
       parentRoute: typeof ApiInvoicesIdRoute
     }
     '/api/invoices/$id/send': {
@@ -3201,6 +3318,18 @@ const ApiContractorsRouteWithChildren = ApiContractorsRoute._addFileChildren(
   ApiContractorsRouteChildren,
 )
 
+interface ApiHealthRouteChildren {
+  ApiHealthSupabaseRoute: typeof ApiHealthSupabaseRoute
+}
+
+const ApiHealthRouteChildren: ApiHealthRouteChildren = {
+  ApiHealthSupabaseRoute: ApiHealthSupabaseRoute,
+}
+
+const ApiHealthRouteWithChildren = ApiHealthRoute._addFileChildren(
+  ApiHealthRouteChildren,
+)
+
 interface ApiInvitesRouteChildren {
   ApiInvitesAcceptRoute: typeof ApiInvitesAcceptRoute
 }
@@ -3215,11 +3344,13 @@ const ApiInvitesRouteWithChildren = ApiInvitesRoute._addFileChildren(
 
 interface ApiInvoicesIdRouteChildren {
   ApiInvoicesIdPayLinkRoute: typeof ApiInvoicesIdPayLinkRoute
+  ApiInvoicesIdPdfRoute: typeof ApiInvoicesIdPdfRoute
   ApiInvoicesIdSendRoute: typeof ApiInvoicesIdSendRoute
 }
 
 const ApiInvoicesIdRouteChildren: ApiInvoicesIdRouteChildren = {
   ApiInvoicesIdPayLinkRoute: ApiInvoicesIdPayLinkRoute,
+  ApiInvoicesIdPdfRoute: ApiInvoicesIdPdfRoute,
   ApiInvoicesIdSendRoute: ApiInvoicesIdSendRoute,
 }
 
@@ -3309,6 +3440,18 @@ const ApiTendersRouteWithChildren = ApiTendersRoute._addFileChildren(
   ApiTendersRouteChildren,
 )
 
+interface ApiWaitlistRouteChildren {
+  ApiWaitlistStatsRoute: typeof ApiWaitlistStatsRoute
+}
+
+const ApiWaitlistRouteChildren: ApiWaitlistRouteChildren = {
+  ApiWaitlistStatsRoute: ApiWaitlistStatsRoute,
+}
+
+const ApiWaitlistRouteWithChildren = ApiWaitlistRoute._addFileChildren(
+  ApiWaitlistRouteChildren,
+)
+
 interface ApiMessagesConversationsRouteChildren {
   ApiMessagesConversationsIdMembersRoute: typeof ApiMessagesConversationsIdMembersRoute
 }
@@ -3355,6 +3498,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiCadModelsRoute: ApiCadModelsRoute,
   ApiClientsRoute: ApiClientsRouteWithChildren,
   ApiContractorsRoute: ApiContractorsRouteWithChildren,
+  ApiHealthRoute: ApiHealthRouteWithChildren,
   ApiInvitesRoute: ApiInvitesRouteWithChildren,
   ApiInvoicesRoute: ApiInvoicesRouteWithChildren,
   ApiMeRoute: ApiMeRoute,
@@ -3365,6 +3509,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTendersRoute: ApiTendersRouteWithChildren,
   ApiTimelineRoute: ApiTimelineRoute,
   ApiVendorRecommendationsRoute: ApiVendorRecommendationsRoute,
+  ApiWaitlistRoute: ApiWaitlistRouteWithChildren,
   AuthCallbackRoute: AuthCallbackRoute,
   PayTokenRoute: PayTokenRoute,
   PortalTokenRoute: PortalTokenRoute,
@@ -3373,7 +3518,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiBuildingCodeRoute: ApiAiBuildingCodeRoute,
   ApiAiContractScanRoute: ApiAiContractScanRoute,
   ApiAiEstimateRoute: ApiAiEstimateRoute,
+  ApiAiReraReportRoute: ApiAiReraReportRoute,
   ApiAiRfiDraftRoute: ApiAiRfiDraftRoute,
+  ApiAiSpecRoute: ApiAiSpecRoute,
   ApiAuthConfirmEmailRoute: ApiAuthConfirmEmailRoute,
   ApiFilesBlobRoute: ApiFilesBlobRoute,
   ApiFilesDownloadRoute: ApiFilesDownloadRoute,
@@ -3388,7 +3535,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPaymentsSubscriptionRoute: ApiPaymentsSubscriptionRoute,
   ApiPublicContractorPhotoRoute: ApiPublicContractorPhotoRoute,
   ApiPublicVendorCatalogRoute: ApiPublicVendorCatalogRoute,
-  ApiWaitlistStatsRoute: ApiWaitlistStatsRoute,
   ApiIntegrationsAutodeskCallbackRoute: ApiIntegrationsAutodeskCallbackRoute,
   ApiIntegrationsAutodeskCompleteUploadRoute:
     ApiIntegrationsAutodeskCompleteUploadRoute,

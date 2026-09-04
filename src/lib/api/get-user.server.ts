@@ -73,7 +73,7 @@ async function loadProfile(
 ): Promise<AuthProfile | null> {
   const { data } = await supabase
     .from('profiles')
-    .select('*, organisations(*)')
+    .select('*, organisations!fk_profiles_org_id(*)')
     .eq('auth_id', authUserId)
     .maybeSingle()
   return (data as unknown as AuthProfile) ?? null

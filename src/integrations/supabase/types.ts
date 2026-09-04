@@ -2003,6 +2003,76 @@ export type Database = {
           },
         ]
       }
+      payment_methods: {
+        Row: {
+          brand: string | null
+          created_at: string
+          exp_month: number | null
+          exp_year: number | null
+          id: string
+          is_default: boolean
+          kind: string
+          label: string | null
+          last4: string | null
+          org_id: string | null
+          profile_id: string
+          provider: string | null
+          upi_vpa: string | null
+        }
+        Insert: {
+          brand?: string | null
+          created_at?: string
+          exp_month?: number | null
+          exp_year?: number | null
+          id?: string
+          is_default?: boolean
+          kind?: string
+          label?: string | null
+          last4?: string | null
+          org_id?: string | null
+          profile_id: string
+          provider?: string | null
+          upi_vpa?: string | null
+        }
+        Update: {
+          brand?: string | null
+          created_at?: string
+          exp_month?: number | null
+          exp_year?: number | null
+          id?: string
+          is_default?: boolean
+          kind?: string
+          label?: string | null
+          last4?: string | null
+          org_id?: string | null
+          profile_id?: string
+          provider?: string | null
+          upi_vpa?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_methods_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_methods_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_methods_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permits: {
         Row: {
           approval_name: string

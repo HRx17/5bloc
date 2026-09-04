@@ -1,7 +1,11 @@
 /**
  * Navigation shims so ported pages keep their original call sites.
  */
-import { useRouter as useTanstackRouter, useLocation } from "@tanstack/react-router";
+import {
+  useRouter as useTanstackRouter,
+  useLocation,
+  useParams as useTanstackParams,
+} from "@tanstack/react-router";
 import { useMemo } from "react";
 
 type PushOptions = { scroll?: boolean };
@@ -44,8 +48,8 @@ export function usePathname(): string {
 }
 
 export function useParams<T = Record<string, string>>(): T {
-  const location = useLocation();
-  return (location as unknown as { params?: T }).params ?? ({} as T);
+  const params = useTanstackParams({ strict: false });
+  return (params ?? {}) as T;
 }
 
 export function redirect(href: string): never {
