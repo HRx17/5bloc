@@ -36,6 +36,7 @@ import { Route as Vs5blocVsFieldwireRouteImport } from './routes/vs/5bloc-vs-fie
 import { Route as Vs5blocVsProcoreRouteImport } from './routes/vs/5bloc-vs-procore'
 import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authenticated/_app/dashboard'
 import { Route as AuthenticatedAppDocumentsRouteImport } from './routes/_authenticated/_app/documents'
+import { Route as AuthenticatedAppMessagesRouteImport } from './routes/_authenticated/_app/messages'
 import { Route as ApiClientsIdRouteImport } from './routes/api/clients/$id'
 import { Route as ApiContractorsIdRouteImport } from './routes/api/contractors/$id'
 import { Route as ApiContractorsArchitectsRouteImport } from './routes/api/contractors/architects'
@@ -223,6 +224,12 @@ const AuthenticatedAppDocumentsRoute =
   AuthenticatedAppDocumentsRouteImport.update({
     id: '/documents',
     path: '/documents',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppMessagesRoute =
+  AuthenticatedAppMessagesRouteImport.update({
+    id: '/messages',
+    path: '/messages',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const ApiClientsIdRoute = ApiClientsIdRouteImport.update({
@@ -548,6 +555,7 @@ export interface FileRoutesByFullPath {
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
   '/dashboard': typeof AuthenticatedAppDashboardRoute
   '/documents': typeof AuthenticatedAppDocumentsRoute
+  '/messages': typeof AuthenticatedAppMessagesRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/contractors/$id': typeof ApiContractorsIdRoute
   '/api/contractors/architects': typeof ApiContractorsArchitectsRouteWithChildren
@@ -628,6 +636,7 @@ export interface FileRoutesByTo {
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
   '/dashboard': typeof AuthenticatedAppDashboardRoute
   '/documents': typeof AuthenticatedAppDocumentsRoute
+  '/messages': typeof AuthenticatedAppMessagesRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/contractors/$id': typeof ApiContractorsIdRoute
   '/api/contractors/architects': typeof ApiContractorsArchitectsRouteWithChildren
@@ -711,6 +720,7 @@ export interface FileRoutesById {
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
   '/_authenticated/_app/dashboard': typeof AuthenticatedAppDashboardRoute
   '/_authenticated/_app/documents': typeof AuthenticatedAppDocumentsRoute
+  '/_authenticated/_app/messages': typeof AuthenticatedAppMessagesRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/contractors/$id': typeof ApiContractorsIdRoute
   '/api/contractors/architects': typeof ApiContractorsArchitectsRouteWithChildren
@@ -793,6 +803,7 @@ export interface FileRouteTypes {
     | '/vs/5bloc-vs-procore'
     | '/dashboard'
     | '/documents'
+    | '/messages'
     | '/api/clients/$id'
     | '/api/contractors/$id'
     | '/api/contractors/architects'
@@ -873,6 +884,7 @@ export interface FileRouteTypes {
     | '/vs/5bloc-vs-procore'
     | '/dashboard'
     | '/documents'
+    | '/messages'
     | '/api/clients/$id'
     | '/api/contractors/$id'
     | '/api/contractors/architects'
@@ -955,6 +967,7 @@ export interface FileRouteTypes {
     | '/vs/5bloc-vs-procore'
     | '/_authenticated/_app/dashboard'
     | '/_authenticated/_app/documents'
+    | '/_authenticated/_app/messages'
     | '/api/clients/$id'
     | '/api/contractors/$id'
     | '/api/contractors/architects'
@@ -1232,6 +1245,13 @@ declare module '@tanstack/react-router' {
       path: '/documents'
       fullPath: '/documents'
       preLoaderRoute: typeof AuthenticatedAppDocumentsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/messages': {
+      id: '/_authenticated/_app/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof AuthenticatedAppMessagesRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/api/clients/$id': {
@@ -1611,6 +1631,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppDashboardRoute: typeof AuthenticatedAppDashboardRoute
   AuthenticatedAppDocumentsRoute: typeof AuthenticatedAppDocumentsRoute
+  AuthenticatedAppMessagesRoute: typeof AuthenticatedAppMessagesRoute
   AuthenticatedAppClientsIdRoute: typeof AuthenticatedAppClientsIdRoute
   AuthenticatedAppInvoicesNewRoute: typeof AuthenticatedAppInvoicesNewRoute
   AuthenticatedAppMarketplaceIdRoute: typeof AuthenticatedAppMarketplaceIdRoute
@@ -1639,6 +1660,7 @@ interface AuthenticatedAppRouteRouteChildren {
 const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
   AuthenticatedAppDashboardRoute: AuthenticatedAppDashboardRoute,
   AuthenticatedAppDocumentsRoute: AuthenticatedAppDocumentsRoute,
+  AuthenticatedAppMessagesRoute: AuthenticatedAppMessagesRoute,
   AuthenticatedAppClientsIdRoute: AuthenticatedAppClientsIdRoute,
   AuthenticatedAppInvoicesNewRoute: AuthenticatedAppInvoicesNewRoute,
   AuthenticatedAppMarketplaceIdRoute: AuthenticatedAppMarketplaceIdRoute,
