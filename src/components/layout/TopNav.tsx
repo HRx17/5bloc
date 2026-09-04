@@ -44,14 +44,15 @@ export default function TopNav({
 
   return (
     <header
-      className="h-[56px] px-5 flex items-center justify-between z-30 w-full shrink-0 select-none"
+      className="h-[60px] px-5 flex items-center justify-between z-30 w-full shrink-0 select-none"
       style={{
         background: 'var(--glass-bg)',
         backdropFilter: 'var(--glass-blur)',
         WebkitBackdropFilter: 'var(--glass-blur)',
-        boxShadow: 'var(--shadow-2)',
+        boxShadow: 'inset 0 -1px 0 var(--hairline)',
       }}
     >
+
       <div className="flex items-center gap-3 flex-1">
         {onMenuToggle && (
           <button onClick={onMenuToggle} className="lg:hidden" style={{ color: 'var(--stone)' }}>
