@@ -12,7 +12,7 @@ const handleGET = async ({ request }: any) => {
   const error = searchParams.get('error')
 
   if (error || !code || !state) {
-    return Response.redirect(new URL(`/integrations?error=google_denied`, request.url)))
+    return Response.redirect(new URL(`/integrations?error=google_denied`, request.url))
   }
 
   try {
@@ -33,12 +33,12 @@ const handleGET = async ({ request }: any) => {
       provider_name: userInfo.name,
     })
 
-    return Response.redirect(new URL('/integrations?connected=google', origin)))
+    return Response.redirect(new URL('/integrations?connected=google', origin))
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : 'unknown'
     console.error('Google callback error:', message)
     const errMsg = encodeURIComponent(message)
-    return Response.redirect(new URL(`/integrations?error=google_callback_failed&msg=${errMsg}`, request.url)))
+    return Response.redirect(new URL(`/integrations?error=google_callback_failed&msg=${errMsg}`, request.url))
   }
 }
 

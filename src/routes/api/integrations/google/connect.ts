@@ -12,7 +12,7 @@ const handleGET = async ({ request }: any) => {
   if (!user) return Response.redirect(new URL('/login', request.url)))
 
   if (!process.env.GOOGLE_CLIENT_ID) {
-    return Response.redirect(new URL('/integrations?error=google_not_configured', request.url)))
+    return Response.redirect(new URL('/integrations?error=google_not_configured', request.url))
   }
 
   try {
@@ -23,7 +23,7 @@ const handleGET = async ({ request }: any) => {
     return Response.redirect(authUrl)
   } catch (e) {
     console.error('Google connect error:', e)
-    return Response.redirect(new URL('/integrations?error=google_not_configured', request.url)))
+    return Response.redirect(new URL('/integrations?error=google_not_configured', request.url))
   }
 }
 
