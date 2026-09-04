@@ -121,7 +121,7 @@ export default function MarketplaceTenderPage() {
 
   if (loading) {
     return (
-      <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6">
+      <div className="page-m space-y-6">
         <Skeleton className="h-4 w-20" />
         <div className="space-y-2">
           <Skeleton className="h-9 w-72" />
@@ -140,7 +140,7 @@ export default function MarketplaceTenderPage() {
 
   if (error) {
     return (
-      <div className="p-6 md:p-8 max-w-3xl mx-auto space-y-4">
+      <div className="page-m space-y-4">
         <ErrorState title="Could not load this project" error={error} onRetry={load} />
         <Link href="/marketplace" className="btn-secondary text-xs inline-flex">
           Back to marketplace
@@ -151,7 +151,7 @@ export default function MarketplaceTenderPage() {
 
   if (notFound || !tender) {
     return (
-      <div className="p-6 md:p-8 max-w-3xl mx-auto">
+      <div className="page-m">
         <EmptyState
           icon="search_off"
           title="This project is no longer open for service"
@@ -167,14 +167,14 @@ export default function MarketplaceTenderPage() {
   const closed = tender.status !== 'open'
 
   return (
-    <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-6">
+    <div className="page-m space-y-6">
       <button onClick={() => router.back()} className="text-xs flex items-center gap-1" style={{ color: 'var(--stone)' }}>
         <span className="material-icons-outlined text-[14px]">arrow_back</span> Back
       </button>
 
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div>
-          <h1 className="font-display text-[32px]">{tender.project_name || tender.title}</h1>
+          <h1 className="page-m-title">{tender.project_name || tender.title}</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
             {tender.city || '—'} · Bids due {tender.deadline || 'Open'} · {bidCount} bid{bidCount === 1 ? '' : 's'} so far
           </p>

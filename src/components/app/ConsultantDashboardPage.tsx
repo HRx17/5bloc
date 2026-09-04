@@ -70,9 +70,9 @@ export default function ConsultantDashboardPage() {
   const retry = useCallback(() => setReloadKey((k) => k + 1), [])
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="page-m space-y-6">
       <div>
-        <h1 className="font-display text-[36px]">Consultant workspace</h1>
+        <h1 className="page-m-title">Consultant workspace</h1>
         <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
           Discipline-scoped drawings, RFIs and submittals — without the firm noise.
         </p>

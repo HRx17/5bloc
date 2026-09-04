@@ -108,9 +108,9 @@ export default function ContractorProfilePage() {
   }
 
   return (
-    <div className="p-6 md:p-8 max-w-3xl mx-auto space-y-6">
+    <div className="page-m space-y-6">
       <div>
-        <h1 className="font-display text-[32px]">Vendor profile</h1>
+        <h1 className="page-m-title">Vendor profile</h1>
         <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
           This is how architects find you in the marketplace.
         </p>

@@ -33,8 +33,8 @@ export default function ContractorBidsPage() {
   useLiveReload(load, ['bids', 'tenders'])
 
   return (
-    <div className="p-6 md:p-8 max-w-5xl mx-auto">
-      <h1 className="font-display text-[32px] mb-2">My bids</h1>
+    <div className="page-m">
+      <h1 className="page-m-title mb-2">My bids</h1>
       <p className="text-sm mb-6" style={{ color: 'var(--stone)' }}>
         Track submitted, shortlisted, accepted and rejected bids.
       </p>

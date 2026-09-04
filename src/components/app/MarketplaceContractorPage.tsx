@@ -126,7 +126,7 @@ export default function MarketplaceContractorPage() {
 
   if (loading) {
     return (
-      <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
+      <div className="page-m space-y-6">
         <Skeleton style={{ height: 14, width: 160 }} />
         <div className="card-5bloc space-y-3">
           <Skeleton style={{ height: 24, width: '45%' }} />
@@ -139,7 +139,7 @@ export default function MarketplaceContractorPage() {
 
   if (error) {
     return (
-      <div className="p-6 md:p-8 max-w-3xl mx-auto space-y-4">
+      <div className="page-m space-y-4">
         <ErrorState title="Could not load this listing" error={error} onRetry={loadListing} />
         <Link href="/marketplace" className="btn-secondary text-[12px] inline-flex">
           Back to marketplace
@@ -150,7 +150,7 @@ export default function MarketplaceContractorPage() {
 
   if (notFound || !listing) {
     return (
-      <div className="p-6 md:p-8 max-w-3xl mx-auto space-y-4">
+      <div className="page-m space-y-4">
         <EmptyState
           icon="search_off"
           title="This listing is no longer available"
@@ -177,7 +177,7 @@ export default function MarketplaceContractorPage() {
   ]
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="page-m space-y-6">
       <Link href="/marketplace" className="text-xs flex items-center gap-1" style={{ color: 'var(--stone)' }}>
         <span className="material-icons-outlined text-[14px]">arrow_back</span> Back to marketplace
       </Link>
@@ -212,7 +212,7 @@ export default function MarketplaceContractorPage() {
                 </span>
               )}
             </div>
-            <h1 className="font-display text-[32px] leading-tight text-white">{listing.company_name}</h1>
+            <h1 className="page-m-title leading-tight text-white">{listing.company_name}</h1>
             <p className="text-sm text-white/75">
               {location || 'Service area not shared yet'}
             </p>

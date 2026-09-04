@@ -82,7 +82,7 @@ export default function ClientDashboardPage() {
 
   if (loading) {
     return (
-      <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-8">
+      <div className="page-m space-y-8">
         <div className="space-y-2">
           <Skeleton className="h-9 w-64" />
           <Skeleton className="h-4 w-80" />
@@ -101,9 +101,9 @@ export default function ClientDashboardPage() {
   }
 
   return (
-    <div className="p-6 md:p-8 max-w-5xl mx-auto space-y-8">
+    <div className="page-m space-y-8">
       <div>
-        <h1 className="font-display text-[36px]">Your projects</h1>
+        <h1 className="page-m-title">Your projects</h1>
         <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
           Progress, drawings to review, and what your architect has been working on.
         </p>

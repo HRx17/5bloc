@@ -51,10 +51,10 @@ export default function ProjectsPage() {
   )
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="page-m space-y-6">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-[36px]">Projects</h1>
+          <h1 className="page-m-title">Projects</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
             {canCreate ? 'Your firm’s project workspaces.' : 'Project workspaces you have been invited to.'}
           </p>

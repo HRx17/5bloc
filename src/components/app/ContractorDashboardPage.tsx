@@ -117,9 +117,9 @@ export default function ContractorDashboardPage() {
   ]
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-8">
+    <div className="page-m space-y-8">
       <div>
-        <h1 className="font-display text-[36px]" style={{ color: 'var(--on-surface)' }}>
+        <h1 className="page-m-title" style={{ color: 'var(--on-surface)' }}>
           Contractor workspace
         </h1>
         <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>

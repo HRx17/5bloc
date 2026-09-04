@@ -183,10 +183,10 @@ export default function CalendarPage() {
   const todayKey = ymd(now.getFullYear(), now.getMonth(), now.getDate())
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="page-m space-y-6">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-[36px]">Calendar</h1>
+          <h1 className="page-m-title">Calendar</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
             Schedule project meetings, send invites, and get reminders before they start.
           </p>

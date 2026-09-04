@@ -92,8 +92,8 @@ export default function BuilderApprovalsPage() {
   }
 
   return (
-    <div className="p-6 md:p-8 max-w-4xl mx-auto">
-      <h1 className="font-display text-[32px] mb-2">Approval inbox</h1>
+    <div className="page-m">
+      <h1 className="page-m-title mb-2">Approval inbox</h1>
       <p className="text-sm mb-6" style={{ color: 'var(--stone)' }}>
         Drawings and variations waiting for your decision.
       </p>
