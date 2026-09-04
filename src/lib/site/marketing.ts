@@ -1,6 +1,6 @@
 export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  process.env.NEXT_PUBLIC_APP_URL ||
+  import.meta.env['VITE_SITE_URL'] ||
+  import.meta.env['VITE_APP_URL'] ||
   'https://5bloc.com'
 ).replace(/\/$/, '')
 
