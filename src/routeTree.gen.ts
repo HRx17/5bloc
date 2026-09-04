@@ -43,6 +43,9 @@ import { Route as AuthenticatedAppDocumentsRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppIntegrationsRouteImport } from './routes/_authenticated/_app/integrations'
 import { Route as AuthenticatedAppMessagesRouteImport } from './routes/_authenticated/_app/messages'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/_app/settings'
+import { Route as ApiAiBuildingCodeRouteImport } from './routes/api/ai/building-code'
+import { Route as ApiAiContractScanRouteImport } from './routes/api/ai/contract-scan'
+import { Route as ApiAiEstimateRouteImport } from './routes/api/ai/estimate'
 import { Route as ApiClientsIdRouteImport } from './routes/api/clients/$id'
 import { Route as ApiContractorsIdRouteImport } from './routes/api/contractors/$id'
 import { Route as ApiContractorsArchitectsRouteImport } from './routes/api/contractors/architects'
@@ -273,6 +276,21 @@ const AuthenticatedAppSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const ApiAiBuildingCodeRoute = ApiAiBuildingCodeRouteImport.update({
+  id: '/api/ai/building-code',
+  path: '/api/ai/building-code',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAiContractScanRoute = ApiAiContractScanRouteImport.update({
+  id: '/api/ai/contract-scan',
+  path: '/api/ai/contract-scan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAiEstimateRoute = ApiAiEstimateRouteImport.update({
+  id: '/api/ai/estimate',
+  path: '/api/ai/estimate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiClientsIdRoute = ApiClientsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -609,6 +627,9 @@ export interface FileRoutesByFullPath {
   '/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/messages': typeof AuthenticatedAppMessagesRoute
   '/settings': typeof AuthenticatedAppSettingsRoute
+  '/api/ai/building-code': typeof ApiAiBuildingCodeRoute
+  '/api/ai/contract-scan': typeof ApiAiContractScanRoute
+  '/api/ai/estimate': typeof ApiAiEstimateRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/contractors/$id': typeof ApiContractorsIdRoute
   '/api/contractors/architects': typeof ApiContractorsArchitectsRouteWithChildren
@@ -697,6 +718,9 @@ export interface FileRoutesByTo {
   '/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/messages': typeof AuthenticatedAppMessagesRoute
   '/settings': typeof AuthenticatedAppSettingsRoute
+  '/api/ai/building-code': typeof ApiAiBuildingCodeRoute
+  '/api/ai/contract-scan': typeof ApiAiContractScanRoute
+  '/api/ai/estimate': typeof ApiAiEstimateRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/contractors/$id': typeof ApiContractorsIdRoute
   '/api/contractors/architects': typeof ApiContractorsArchitectsRouteWithChildren
@@ -788,6 +812,9 @@ export interface FileRoutesById {
   '/_authenticated/_app/integrations': typeof AuthenticatedAppIntegrationsRoute
   '/_authenticated/_app/messages': typeof AuthenticatedAppMessagesRoute
   '/_authenticated/_app/settings': typeof AuthenticatedAppSettingsRoute
+  '/api/ai/building-code': typeof ApiAiBuildingCodeRoute
+  '/api/ai/contract-scan': typeof ApiAiContractScanRoute
+  '/api/ai/estimate': typeof ApiAiEstimateRoute
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/contractors/$id': typeof ApiContractorsIdRoute
   '/api/contractors/architects': typeof ApiContractorsArchitectsRouteWithChildren
@@ -878,6 +905,9 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/messages'
     | '/settings'
+    | '/api/ai/building-code'
+    | '/api/ai/contract-scan'
+    | '/api/ai/estimate'
     | '/api/clients/$id'
     | '/api/contractors/$id'
     | '/api/contractors/architects'
@@ -966,6 +996,9 @@ export interface FileRouteTypes {
     | '/integrations'
     | '/messages'
     | '/settings'
+    | '/api/ai/building-code'
+    | '/api/ai/contract-scan'
+    | '/api/ai/estimate'
     | '/api/clients/$id'
     | '/api/contractors/$id'
     | '/api/contractors/architects'
@@ -1056,6 +1089,9 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/integrations'
     | '/_authenticated/_app/messages'
     | '/_authenticated/_app/settings'
+    | '/api/ai/building-code'
+    | '/api/ai/contract-scan'
+    | '/api/ai/estimate'
     | '/api/clients/$id'
     | '/api/contractors/$id'
     | '/api/contractors/architects'
@@ -1137,6 +1173,9 @@ export interface RootRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
   Vs5blocVsFieldwireRoute: typeof Vs5blocVsFieldwireRoute
   Vs5blocVsProcoreRoute: typeof Vs5blocVsProcoreRoute
+  ApiAiBuildingCodeRoute: typeof ApiAiBuildingCodeRoute
+  ApiAiContractScanRoute: typeof ApiAiContractScanRoute
+  ApiAiEstimateRoute: typeof ApiAiEstimateRoute
   ApiFilesDownloadRoute: typeof ApiFilesDownloadRoute
   ApiFilesUploadRoute: typeof ApiFilesUploadRoute
   ApiMessagesConversationsRoute: typeof ApiMessagesConversationsRouteWithChildren
@@ -1384,6 +1423,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/api/ai/building-code': {
+      id: '/api/ai/building-code'
+      path: '/api/ai/building-code'
+      fullPath: '/api/ai/building-code'
+      preLoaderRoute: typeof ApiAiBuildingCodeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ai/contract-scan': {
+      id: '/api/ai/contract-scan'
+      path: '/api/ai/contract-scan'
+      fullPath: '/api/ai/contract-scan'
+      preLoaderRoute: typeof ApiAiContractScanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ai/estimate': {
+      id: '/api/ai/estimate'
+      path: '/api/ai/estimate'
+      fullPath: '/api/ai/estimate'
+      preLoaderRoute: typeof ApiAiEstimateRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/clients/$id': {
       id: '/api/clients/$id'
@@ -2022,6 +2082,9 @@ const rootRouteChildren: RootRouteChildren = {
   AuthCallbackRoute: AuthCallbackRoute,
   Vs5blocVsFieldwireRoute: Vs5blocVsFieldwireRoute,
   Vs5blocVsProcoreRoute: Vs5blocVsProcoreRoute,
+  ApiAiBuildingCodeRoute: ApiAiBuildingCodeRoute,
+  ApiAiContractScanRoute: ApiAiContractScanRoute,
+  ApiAiEstimateRoute: ApiAiEstimateRoute,
   ApiFilesDownloadRoute: ApiFilesDownloadRoute,
   ApiFilesUploadRoute: ApiFilesUploadRoute,
   ApiMessagesConversationsRoute: ApiMessagesConversationsRouteWithChildren,
