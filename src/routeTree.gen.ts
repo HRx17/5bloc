@@ -72,6 +72,18 @@ import { Route as ApiProjectsIdTendersRouteImport } from './routes/api/projects/
 import { Route as ApiProjectsIdTransmittalsRouteImport } from './routes/api/projects/$id/transmittals'
 import { Route as AuthenticatedAppMarketplaceArchitectsIdRouteImport } from './routes/_authenticated/_app/marketplace/architects/$id'
 import { Route as AuthenticatedAppMarketplaceTendersIdRouteImport } from './routes/_authenticated/_app/marketplace/tenders/$id'
+import { Route as AuthenticatedAppProjectsIdIndexRouteImport } from './routes/_authenticated/_app/projects/$id/index'
+import { Route as AuthenticatedAppProjectsIdDocumentsRouteImport } from './routes/_authenticated/_app/projects/$id/documents'
+import { Route as AuthenticatedAppProjectsIdInvoicesRouteImport } from './routes/_authenticated/_app/projects/$id/invoices'
+import { Route as AuthenticatedAppProjectsIdIssuesRouteImport } from './routes/_authenticated/_app/projects/$id/issues'
+import { Route as AuthenticatedAppProjectsIdMeetingsRouteImport } from './routes/_authenticated/_app/projects/$id/meetings'
+import { Route as AuthenticatedAppProjectsIdPermitsRouteImport } from './routes/_authenticated/_app/projects/$id/permits'
+import { Route as AuthenticatedAppProjectsIdRfisRouteImport } from './routes/_authenticated/_app/projects/$id/rfis'
+import { Route as AuthenticatedAppProjectsIdSettingsRouteImport } from './routes/_authenticated/_app/projects/$id/settings'
+import { Route as AuthenticatedAppProjectsIdSiteRouteImport } from './routes/_authenticated/_app/projects/$id/site'
+import { Route as AuthenticatedAppProjectsIdSubmittalsRouteImport } from './routes/_authenticated/_app/projects/$id/submittals'
+import { Route as AuthenticatedAppProjectsIdTeamRouteImport } from './routes/_authenticated/_app/projects/$id/team'
+import { Route as AuthenticatedAppProjectsIdTransmittalsRouteImport } from './routes/_authenticated/_app/projects/$id/transmittals'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -404,6 +416,78 @@ const AuthenticatedAppMarketplaceTendersIdRoute =
     path: '/marketplace/tenders/$id',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
+const AuthenticatedAppProjectsIdIndexRoute =
+  AuthenticatedAppProjectsIdIndexRouteImport.update({
+    id: '/projects/$id/',
+    path: '/projects/$id/',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppProjectsIdDocumentsRoute =
+  AuthenticatedAppProjectsIdDocumentsRouteImport.update({
+    id: '/projects/$id/documents',
+    path: '/projects/$id/documents',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppProjectsIdInvoicesRoute =
+  AuthenticatedAppProjectsIdInvoicesRouteImport.update({
+    id: '/projects/$id/invoices',
+    path: '/projects/$id/invoices',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppProjectsIdIssuesRoute =
+  AuthenticatedAppProjectsIdIssuesRouteImport.update({
+    id: '/projects/$id/issues',
+    path: '/projects/$id/issues',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppProjectsIdMeetingsRoute =
+  AuthenticatedAppProjectsIdMeetingsRouteImport.update({
+    id: '/projects/$id/meetings',
+    path: '/projects/$id/meetings',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppProjectsIdPermitsRoute =
+  AuthenticatedAppProjectsIdPermitsRouteImport.update({
+    id: '/projects/$id/permits',
+    path: '/projects/$id/permits',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppProjectsIdRfisRoute =
+  AuthenticatedAppProjectsIdRfisRouteImport.update({
+    id: '/projects/$id/rfis',
+    path: '/projects/$id/rfis',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppProjectsIdSettingsRoute =
+  AuthenticatedAppProjectsIdSettingsRouteImport.update({
+    id: '/projects/$id/settings',
+    path: '/projects/$id/settings',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppProjectsIdSiteRoute =
+  AuthenticatedAppProjectsIdSiteRouteImport.update({
+    id: '/projects/$id/site',
+    path: '/projects/$id/site',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppProjectsIdSubmittalsRoute =
+  AuthenticatedAppProjectsIdSubmittalsRouteImport.update({
+    id: '/projects/$id/submittals',
+    path: '/projects/$id/submittals',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppProjectsIdTeamRoute =
+  AuthenticatedAppProjectsIdTeamRouteImport.update({
+    id: '/projects/$id/team',
+    path: '/projects/$id/team',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppProjectsIdTransmittalsRoute =
+  AuthenticatedAppProjectsIdTransmittalsRouteImport.update({
+    id: '/projects/$id/transmittals',
+    path: '/projects/$id/transmittals',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -467,6 +551,18 @@ export interface FileRoutesByFullPath {
   '/projects/': typeof AuthenticatedAppProjectsIndexRoute
   '/marketplace/architects/$id': typeof AuthenticatedAppMarketplaceArchitectsIdRoute
   '/marketplace/tenders/$id': typeof AuthenticatedAppMarketplaceTendersIdRoute
+  '/projects/$id/documents': typeof AuthenticatedAppProjectsIdDocumentsRoute
+  '/projects/$id/invoices': typeof AuthenticatedAppProjectsIdInvoicesRoute
+  '/projects/$id/issues': typeof AuthenticatedAppProjectsIdIssuesRoute
+  '/projects/$id/meetings': typeof AuthenticatedAppProjectsIdMeetingsRoute
+  '/projects/$id/permits': typeof AuthenticatedAppProjectsIdPermitsRoute
+  '/projects/$id/rfis': typeof AuthenticatedAppProjectsIdRfisRoute
+  '/projects/$id/settings': typeof AuthenticatedAppProjectsIdSettingsRoute
+  '/projects/$id/site': typeof AuthenticatedAppProjectsIdSiteRoute
+  '/projects/$id/submittals': typeof AuthenticatedAppProjectsIdSubmittalsRoute
+  '/projects/$id/team': typeof AuthenticatedAppProjectsIdTeamRoute
+  '/projects/$id/transmittals': typeof AuthenticatedAppProjectsIdTransmittalsRoute
+  '/projects/$id/': typeof AuthenticatedAppProjectsIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -530,6 +626,18 @@ export interface FileRoutesByTo {
   '/projects': typeof AuthenticatedAppProjectsIndexRoute
   '/marketplace/architects/$id': typeof AuthenticatedAppMarketplaceArchitectsIdRoute
   '/marketplace/tenders/$id': typeof AuthenticatedAppMarketplaceTendersIdRoute
+  '/projects/$id/documents': typeof AuthenticatedAppProjectsIdDocumentsRoute
+  '/projects/$id/invoices': typeof AuthenticatedAppProjectsIdInvoicesRoute
+  '/projects/$id/issues': typeof AuthenticatedAppProjectsIdIssuesRoute
+  '/projects/$id/meetings': typeof AuthenticatedAppProjectsIdMeetingsRoute
+  '/projects/$id/permits': typeof AuthenticatedAppProjectsIdPermitsRoute
+  '/projects/$id/rfis': typeof AuthenticatedAppProjectsIdRfisRoute
+  '/projects/$id/settings': typeof AuthenticatedAppProjectsIdSettingsRoute
+  '/projects/$id/site': typeof AuthenticatedAppProjectsIdSiteRoute
+  '/projects/$id/submittals': typeof AuthenticatedAppProjectsIdSubmittalsRoute
+  '/projects/$id/team': typeof AuthenticatedAppProjectsIdTeamRoute
+  '/projects/$id/transmittals': typeof AuthenticatedAppProjectsIdTransmittalsRoute
+  '/projects/$id': typeof AuthenticatedAppProjectsIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -596,6 +704,18 @@ export interface FileRoutesById {
   '/_authenticated/_app/projects/': typeof AuthenticatedAppProjectsIndexRoute
   '/_authenticated/_app/marketplace/architects/$id': typeof AuthenticatedAppMarketplaceArchitectsIdRoute
   '/_authenticated/_app/marketplace/tenders/$id': typeof AuthenticatedAppMarketplaceTendersIdRoute
+  '/_authenticated/_app/projects/$id/documents': typeof AuthenticatedAppProjectsIdDocumentsRoute
+  '/_authenticated/_app/projects/$id/invoices': typeof AuthenticatedAppProjectsIdInvoicesRoute
+  '/_authenticated/_app/projects/$id/issues': typeof AuthenticatedAppProjectsIdIssuesRoute
+  '/_authenticated/_app/projects/$id/meetings': typeof AuthenticatedAppProjectsIdMeetingsRoute
+  '/_authenticated/_app/projects/$id/permits': typeof AuthenticatedAppProjectsIdPermitsRoute
+  '/_authenticated/_app/projects/$id/rfis': typeof AuthenticatedAppProjectsIdRfisRoute
+  '/_authenticated/_app/projects/$id/settings': typeof AuthenticatedAppProjectsIdSettingsRoute
+  '/_authenticated/_app/projects/$id/site': typeof AuthenticatedAppProjectsIdSiteRoute
+  '/_authenticated/_app/projects/$id/submittals': typeof AuthenticatedAppProjectsIdSubmittalsRoute
+  '/_authenticated/_app/projects/$id/team': typeof AuthenticatedAppProjectsIdTeamRoute
+  '/_authenticated/_app/projects/$id/transmittals': typeof AuthenticatedAppProjectsIdTransmittalsRoute
+  '/_authenticated/_app/projects/$id/': typeof AuthenticatedAppProjectsIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -661,6 +781,18 @@ export interface FileRouteTypes {
     | '/projects/'
     | '/marketplace/architects/$id'
     | '/marketplace/tenders/$id'
+    | '/projects/$id/documents'
+    | '/projects/$id/invoices'
+    | '/projects/$id/issues'
+    | '/projects/$id/meetings'
+    | '/projects/$id/permits'
+    | '/projects/$id/rfis'
+    | '/projects/$id/settings'
+    | '/projects/$id/site'
+    | '/projects/$id/submittals'
+    | '/projects/$id/team'
+    | '/projects/$id/transmittals'
+    | '/projects/$id/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -724,6 +856,18 @@ export interface FileRouteTypes {
     | '/projects'
     | '/marketplace/architects/$id'
     | '/marketplace/tenders/$id'
+    | '/projects/$id/documents'
+    | '/projects/$id/invoices'
+    | '/projects/$id/issues'
+    | '/projects/$id/meetings'
+    | '/projects/$id/permits'
+    | '/projects/$id/rfis'
+    | '/projects/$id/settings'
+    | '/projects/$id/site'
+    | '/projects/$id/submittals'
+    | '/projects/$id/team'
+    | '/projects/$id/transmittals'
+    | '/projects/$id'
   id:
     | '__root__'
     | '/'
@@ -789,6 +933,18 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/projects/'
     | '/_authenticated/_app/marketplace/architects/$id'
     | '/_authenticated/_app/marketplace/tenders/$id'
+    | '/_authenticated/_app/projects/$id/documents'
+    | '/_authenticated/_app/projects/$id/invoices'
+    | '/_authenticated/_app/projects/$id/issues'
+    | '/_authenticated/_app/projects/$id/meetings'
+    | '/_authenticated/_app/projects/$id/permits'
+    | '/_authenticated/_app/projects/$id/rfis'
+    | '/_authenticated/_app/projects/$id/settings'
+    | '/_authenticated/_app/projects/$id/site'
+    | '/_authenticated/_app/projects/$id/submittals'
+    | '/_authenticated/_app/projects/$id/team'
+    | '/_authenticated/_app/projects/$id/transmittals'
+    | '/_authenticated/_app/projects/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1265,6 +1421,90 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppMarketplaceTendersIdRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
+    '/_authenticated/_app/projects/$id/': {
+      id: '/_authenticated/_app/projects/$id/'
+      path: '/projects/$id'
+      fullPath: '/projects/$id/'
+      preLoaderRoute: typeof AuthenticatedAppProjectsIdIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/projects/$id/documents': {
+      id: '/_authenticated/_app/projects/$id/documents'
+      path: '/projects/$id/documents'
+      fullPath: '/projects/$id/documents'
+      preLoaderRoute: typeof AuthenticatedAppProjectsIdDocumentsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/projects/$id/invoices': {
+      id: '/_authenticated/_app/projects/$id/invoices'
+      path: '/projects/$id/invoices'
+      fullPath: '/projects/$id/invoices'
+      preLoaderRoute: typeof AuthenticatedAppProjectsIdInvoicesRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/projects/$id/issues': {
+      id: '/_authenticated/_app/projects/$id/issues'
+      path: '/projects/$id/issues'
+      fullPath: '/projects/$id/issues'
+      preLoaderRoute: typeof AuthenticatedAppProjectsIdIssuesRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/projects/$id/meetings': {
+      id: '/_authenticated/_app/projects/$id/meetings'
+      path: '/projects/$id/meetings'
+      fullPath: '/projects/$id/meetings'
+      preLoaderRoute: typeof AuthenticatedAppProjectsIdMeetingsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/projects/$id/permits': {
+      id: '/_authenticated/_app/projects/$id/permits'
+      path: '/projects/$id/permits'
+      fullPath: '/projects/$id/permits'
+      preLoaderRoute: typeof AuthenticatedAppProjectsIdPermitsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/projects/$id/rfis': {
+      id: '/_authenticated/_app/projects/$id/rfis'
+      path: '/projects/$id/rfis'
+      fullPath: '/projects/$id/rfis'
+      preLoaderRoute: typeof AuthenticatedAppProjectsIdRfisRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/projects/$id/settings': {
+      id: '/_authenticated/_app/projects/$id/settings'
+      path: '/projects/$id/settings'
+      fullPath: '/projects/$id/settings'
+      preLoaderRoute: typeof AuthenticatedAppProjectsIdSettingsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/projects/$id/site': {
+      id: '/_authenticated/_app/projects/$id/site'
+      path: '/projects/$id/site'
+      fullPath: '/projects/$id/site'
+      preLoaderRoute: typeof AuthenticatedAppProjectsIdSiteRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/projects/$id/submittals': {
+      id: '/_authenticated/_app/projects/$id/submittals'
+      path: '/projects/$id/submittals'
+      fullPath: '/projects/$id/submittals'
+      preLoaderRoute: typeof AuthenticatedAppProjectsIdSubmittalsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/projects/$id/team': {
+      id: '/_authenticated/_app/projects/$id/team'
+      path: '/projects/$id/team'
+      fullPath: '/projects/$id/team'
+      preLoaderRoute: typeof AuthenticatedAppProjectsIdTeamRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/projects/$id/transmittals': {
+      id: '/_authenticated/_app/projects/$id/transmittals'
+      path: '/projects/$id/transmittals'
+      fullPath: '/projects/$id/transmittals'
+      preLoaderRoute: typeof AuthenticatedAppProjectsIdTransmittalsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
   }
 }
 
@@ -1281,6 +1521,18 @@ interface AuthenticatedAppRouteRouteChildren {
   AuthenticatedAppProjectsIndexRoute: typeof AuthenticatedAppProjectsIndexRoute
   AuthenticatedAppMarketplaceArchitectsIdRoute: typeof AuthenticatedAppMarketplaceArchitectsIdRoute
   AuthenticatedAppMarketplaceTendersIdRoute: typeof AuthenticatedAppMarketplaceTendersIdRoute
+  AuthenticatedAppProjectsIdDocumentsRoute: typeof AuthenticatedAppProjectsIdDocumentsRoute
+  AuthenticatedAppProjectsIdInvoicesRoute: typeof AuthenticatedAppProjectsIdInvoicesRoute
+  AuthenticatedAppProjectsIdIssuesRoute: typeof AuthenticatedAppProjectsIdIssuesRoute
+  AuthenticatedAppProjectsIdMeetingsRoute: typeof AuthenticatedAppProjectsIdMeetingsRoute
+  AuthenticatedAppProjectsIdPermitsRoute: typeof AuthenticatedAppProjectsIdPermitsRoute
+  AuthenticatedAppProjectsIdRfisRoute: typeof AuthenticatedAppProjectsIdRfisRoute
+  AuthenticatedAppProjectsIdSettingsRoute: typeof AuthenticatedAppProjectsIdSettingsRoute
+  AuthenticatedAppProjectsIdSiteRoute: typeof AuthenticatedAppProjectsIdSiteRoute
+  AuthenticatedAppProjectsIdSubmittalsRoute: typeof AuthenticatedAppProjectsIdSubmittalsRoute
+  AuthenticatedAppProjectsIdTeamRoute: typeof AuthenticatedAppProjectsIdTeamRoute
+  AuthenticatedAppProjectsIdTransmittalsRoute: typeof AuthenticatedAppProjectsIdTransmittalsRoute
+  AuthenticatedAppProjectsIdIndexRoute: typeof AuthenticatedAppProjectsIdIndexRoute
 }
 
 const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
@@ -1298,6 +1550,25 @@ const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
     AuthenticatedAppMarketplaceArchitectsIdRoute,
   AuthenticatedAppMarketplaceTendersIdRoute:
     AuthenticatedAppMarketplaceTendersIdRoute,
+  AuthenticatedAppProjectsIdDocumentsRoute:
+    AuthenticatedAppProjectsIdDocumentsRoute,
+  AuthenticatedAppProjectsIdInvoicesRoute:
+    AuthenticatedAppProjectsIdInvoicesRoute,
+  AuthenticatedAppProjectsIdIssuesRoute: AuthenticatedAppProjectsIdIssuesRoute,
+  AuthenticatedAppProjectsIdMeetingsRoute:
+    AuthenticatedAppProjectsIdMeetingsRoute,
+  AuthenticatedAppProjectsIdPermitsRoute:
+    AuthenticatedAppProjectsIdPermitsRoute,
+  AuthenticatedAppProjectsIdRfisRoute: AuthenticatedAppProjectsIdRfisRoute,
+  AuthenticatedAppProjectsIdSettingsRoute:
+    AuthenticatedAppProjectsIdSettingsRoute,
+  AuthenticatedAppProjectsIdSiteRoute: AuthenticatedAppProjectsIdSiteRoute,
+  AuthenticatedAppProjectsIdSubmittalsRoute:
+    AuthenticatedAppProjectsIdSubmittalsRoute,
+  AuthenticatedAppProjectsIdTeamRoute: AuthenticatedAppProjectsIdTeamRoute,
+  AuthenticatedAppProjectsIdTransmittalsRoute:
+    AuthenticatedAppProjectsIdTransmittalsRoute,
+  AuthenticatedAppProjectsIdIndexRoute: AuthenticatedAppProjectsIdIndexRoute,
 }
 
 const AuthenticatedAppRouteRouteWithChildren =
