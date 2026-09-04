@@ -30,11 +30,16 @@ import { Route as ApiProjectsRouteImport } from './routes/api/projects'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as Vs5blocVsFieldwireRouteImport } from './routes/vs/5bloc-vs-fieldwire'
 import { Route as Vs5blocVsProcoreRouteImport } from './routes/vs/5bloc-vs-procore'
+import { Route as AuthenticatedAppClientsRouteImport } from './routes/_authenticated/_app/clients'
 import { Route as AuthenticatedAppDashboardRouteImport } from './routes/_authenticated/_app/dashboard'
+import { Route as AuthenticatedAppDocumentsRouteImport } from './routes/_authenticated/_app/documents'
+import { Route as AuthenticatedAppProjectsRouteImport } from './routes/_authenticated/_app/projects'
 import { Route as ApiClientsIdRouteImport } from './routes/api/clients/$id'
 import { Route as ApiFilesUploadRouteImport } from './routes/api/files/upload'
 import { Route as ApiOrgStudioProjectRouteImport } from './routes/api/org/studio-project'
 import { Route as ApiProjectsIdRouteImport } from './routes/api/projects/$id'
+import { Route as AuthenticatedAppClientsIdRouteImport } from './routes/_authenticated/_app/clients/$id'
+import { Route as AuthenticatedAppProjectsNewRouteImport } from './routes/_authenticated/_app/projects/new'
 import { Route as ApiProjectsIdDocumentsRouteImport } from './routes/api/projects/$id/documents'
 
 const IndexRoute = IndexRouteImport.update({
@@ -140,10 +145,27 @@ const Vs5blocVsProcoreRoute = Vs5blocVsProcoreRouteImport.update({
   path: '/vs/5bloc-vs-procore',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAppClientsRoute = AuthenticatedAppClientsRouteImport.update({
+  id: '/clients',
+  path: '/clients',
+  getParentRoute: () => AuthenticatedAppRouteRoute,
+} as any)
 const AuthenticatedAppDashboardRoute =
   AuthenticatedAppDashboardRouteImport.update({
     id: '/dashboard',
     path: '/dashboard',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppDocumentsRoute =
+  AuthenticatedAppDocumentsRouteImport.update({
+    id: '/documents',
+    path: '/documents',
+    getParentRoute: () => AuthenticatedAppRouteRoute,
+  } as any)
+const AuthenticatedAppProjectsRoute =
+  AuthenticatedAppProjectsRouteImport.update({
+    id: '/projects',
+    path: '/projects',
     getParentRoute: () => AuthenticatedAppRouteRoute,
   } as any)
 const ApiClientsIdRoute = ApiClientsIdRouteImport.update({
@@ -166,6 +188,18 @@ const ApiProjectsIdRoute = ApiProjectsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiProjectsRoute,
 } as any)
+const AuthenticatedAppClientsIdRoute =
+  AuthenticatedAppClientsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAppClientsRoute,
+  } as any)
+const AuthenticatedAppProjectsNewRoute =
+  AuthenticatedAppProjectsNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedAppProjectsRoute,
+  } as any)
 const ApiProjectsIdDocumentsRoute = ApiProjectsIdDocumentsRouteImport.update({
   id: '/documents',
   path: '/documents',
@@ -192,11 +226,16 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/vs/5bloc-vs-fieldwire': typeof Vs5blocVsFieldwireRoute
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
+  '/clients': typeof AuthenticatedAppClientsRouteWithChildren
   '/dashboard': typeof AuthenticatedAppDashboardRoute
+  '/documents': typeof AuthenticatedAppDocumentsRoute
+  '/projects': typeof AuthenticatedAppProjectsRouteWithChildren
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/files/upload': typeof ApiFilesUploadRoute
   '/api/org/studio-project': typeof ApiOrgStudioProjectRoute
   '/api/projects/$id': typeof ApiProjectsIdRouteWithChildren
+  '/clients/$id': typeof AuthenticatedAppClientsIdRoute
+  '/projects/new': typeof AuthenticatedAppProjectsNewRoute
   '/api/projects/$id/documents': typeof ApiProjectsIdDocumentsRoute
 }
 export interface FileRoutesByTo {
@@ -219,11 +258,16 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/vs/5bloc-vs-fieldwire': typeof Vs5blocVsFieldwireRoute
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
+  '/clients': typeof AuthenticatedAppClientsRouteWithChildren
   '/dashboard': typeof AuthenticatedAppDashboardRoute
+  '/documents': typeof AuthenticatedAppDocumentsRoute
+  '/projects': typeof AuthenticatedAppProjectsRouteWithChildren
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/files/upload': typeof ApiFilesUploadRoute
   '/api/org/studio-project': typeof ApiOrgStudioProjectRoute
   '/api/projects/$id': typeof ApiProjectsIdRouteWithChildren
+  '/clients/$id': typeof AuthenticatedAppClientsIdRoute
+  '/projects/new': typeof AuthenticatedAppProjectsNewRoute
   '/api/projects/$id/documents': typeof ApiProjectsIdDocumentsRoute
 }
 export interface FileRoutesById {
@@ -249,11 +293,16 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/vs/5bloc-vs-fieldwire': typeof Vs5blocVsFieldwireRoute
   '/vs/5bloc-vs-procore': typeof Vs5blocVsProcoreRoute
+  '/_authenticated/_app/clients': typeof AuthenticatedAppClientsRouteWithChildren
   '/_authenticated/_app/dashboard': typeof AuthenticatedAppDashboardRoute
+  '/_authenticated/_app/documents': typeof AuthenticatedAppDocumentsRoute
+  '/_authenticated/_app/projects': typeof AuthenticatedAppProjectsRouteWithChildren
   '/api/clients/$id': typeof ApiClientsIdRoute
   '/api/files/upload': typeof ApiFilesUploadRoute
   '/api/org/studio-project': typeof ApiOrgStudioProjectRoute
   '/api/projects/$id': typeof ApiProjectsIdRouteWithChildren
+  '/_authenticated/_app/clients/$id': typeof AuthenticatedAppClientsIdRoute
+  '/_authenticated/_app/projects/new': typeof AuthenticatedAppProjectsNewRoute
   '/api/projects/$id/documents': typeof ApiProjectsIdDocumentsRoute
 }
 export interface FileRouteTypes {
@@ -278,11 +327,16 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/vs/5bloc-vs-fieldwire'
     | '/vs/5bloc-vs-procore'
+    | '/clients'
     | '/dashboard'
+    | '/documents'
+    | '/projects'
     | '/api/clients/$id'
     | '/api/files/upload'
     | '/api/org/studio-project'
     | '/api/projects/$id'
+    | '/clients/$id'
+    | '/projects/new'
     | '/api/projects/$id/documents'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -305,11 +359,16 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/vs/5bloc-vs-fieldwire'
     | '/vs/5bloc-vs-procore'
+    | '/clients'
     | '/dashboard'
+    | '/documents'
+    | '/projects'
     | '/api/clients/$id'
     | '/api/files/upload'
     | '/api/org/studio-project'
     | '/api/projects/$id'
+    | '/clients/$id'
+    | '/projects/new'
     | '/api/projects/$id/documents'
   id:
     | '__root__'
@@ -334,11 +393,16 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/vs/5bloc-vs-fieldwire'
     | '/vs/5bloc-vs-procore'
+    | '/_authenticated/_app/clients'
     | '/_authenticated/_app/dashboard'
+    | '/_authenticated/_app/documents'
+    | '/_authenticated/_app/projects'
     | '/api/clients/$id'
     | '/api/files/upload'
     | '/api/org/studio-project'
     | '/api/projects/$id'
+    | '/_authenticated/_app/clients/$id'
+    | '/_authenticated/_app/projects/new'
     | '/api/projects/$id/documents'
   fileRoutesById: FileRoutesById
 }
@@ -516,11 +580,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Vs5blocVsProcoreRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/_app/clients': {
+      id: '/_authenticated/_app/clients'
+      path: '/clients'
+      fullPath: '/clients'
+      preLoaderRoute: typeof AuthenticatedAppClientsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
     '/_authenticated/_app/dashboard': {
       id: '/_authenticated/_app/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedAppDashboardRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/documents': {
+      id: '/_authenticated/_app/documents'
+      path: '/documents'
+      fullPath: '/documents'
+      preLoaderRoute: typeof AuthenticatedAppDocumentsRouteImport
+      parentRoute: typeof AuthenticatedAppRouteRoute
+    }
+    '/_authenticated/_app/projects': {
+      id: '/_authenticated/_app/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof AuthenticatedAppProjectsRouteImport
       parentRoute: typeof AuthenticatedAppRouteRoute
     }
     '/api/clients/$id': {
@@ -551,6 +636,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiProjectsIdRouteImport
       parentRoute: typeof ApiProjectsRoute
     }
+    '/_authenticated/_app/clients/$id': {
+      id: '/_authenticated/_app/clients/$id'
+      path: '/$id'
+      fullPath: '/clients/$id'
+      preLoaderRoute: typeof AuthenticatedAppClientsIdRouteImport
+      parentRoute: typeof AuthenticatedAppClientsRoute
+    }
+    '/_authenticated/_app/projects/new': {
+      id: '/_authenticated/_app/projects/new'
+      path: '/new'
+      fullPath: '/projects/new'
+      preLoaderRoute: typeof AuthenticatedAppProjectsNewRouteImport
+      parentRoute: typeof AuthenticatedAppProjectsRoute
+    }
     '/api/projects/$id/documents': {
       id: '/api/projects/$id/documents'
       path: '/documents'
@@ -561,12 +660,46 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedAppClientsRouteChildren {
+  AuthenticatedAppClientsIdRoute: typeof AuthenticatedAppClientsIdRoute
+}
+
+const AuthenticatedAppClientsRouteChildren: AuthenticatedAppClientsRouteChildren =
+  {
+    AuthenticatedAppClientsIdRoute: AuthenticatedAppClientsIdRoute,
+  }
+
+const AuthenticatedAppClientsRouteWithChildren =
+  AuthenticatedAppClientsRoute._addFileChildren(
+    AuthenticatedAppClientsRouteChildren,
+  )
+
+interface AuthenticatedAppProjectsRouteChildren {
+  AuthenticatedAppProjectsNewRoute: typeof AuthenticatedAppProjectsNewRoute
+}
+
+const AuthenticatedAppProjectsRouteChildren: AuthenticatedAppProjectsRouteChildren =
+  {
+    AuthenticatedAppProjectsNewRoute: AuthenticatedAppProjectsNewRoute,
+  }
+
+const AuthenticatedAppProjectsRouteWithChildren =
+  AuthenticatedAppProjectsRoute._addFileChildren(
+    AuthenticatedAppProjectsRouteChildren,
+  )
+
 interface AuthenticatedAppRouteRouteChildren {
+  AuthenticatedAppClientsRoute: typeof AuthenticatedAppClientsRouteWithChildren
   AuthenticatedAppDashboardRoute: typeof AuthenticatedAppDashboardRoute
+  AuthenticatedAppDocumentsRoute: typeof AuthenticatedAppDocumentsRoute
+  AuthenticatedAppProjectsRoute: typeof AuthenticatedAppProjectsRouteWithChildren
 }
 
 const AuthenticatedAppRouteRouteChildren: AuthenticatedAppRouteRouteChildren = {
+  AuthenticatedAppClientsRoute: AuthenticatedAppClientsRouteWithChildren,
   AuthenticatedAppDashboardRoute: AuthenticatedAppDashboardRoute,
+  AuthenticatedAppDocumentsRoute: AuthenticatedAppDocumentsRoute,
+  AuthenticatedAppProjectsRoute: AuthenticatedAppProjectsRouteWithChildren,
 }
 
 const AuthenticatedAppRouteRouteWithChildren =
