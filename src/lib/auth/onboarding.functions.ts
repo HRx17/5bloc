@@ -24,7 +24,7 @@ const onboardingSchema = z.object({
 
 export const completeOnboarding = createServerFn({ method: 'POST' })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => onboardingSchema.parse(data))
+  .validator((data: unknown) => onboardingSchema.parse(data))
   .handler(async ({ data, context }) => {
     const supabase = context.supabase
     const email = (context.claims as { email?: string }).email ?? null

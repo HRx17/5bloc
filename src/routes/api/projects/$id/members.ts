@@ -11,7 +11,7 @@ const handleGET = async ({ request, params }: any) => {
 
   const { data, error } = await auth.supabase
     .from('project_members')
-    .select('*, profiles(full_name, email)')
+    .select('*, profiles!fk_project_members_profile_id(full_name, email)')
     .eq('project_id', id)
   if (error) return json({ error: error.message }, { status: 500 })
 
