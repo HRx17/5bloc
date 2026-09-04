@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import Link from 'next/link'
+import Link from '@/compat/next-link'
 import { LegalDocShell } from '@/components/site/LegalDocShell'
 
 export function ComparePage({

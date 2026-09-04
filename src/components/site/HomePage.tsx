@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import Link from 'next/link'
+import Link from '@/compat/next-link'
 import { motion, useInView } from 'framer-motion'
 import { ChevronDown, Menu, X } from 'lucide-react'
 import { WaitlistForm } from '@/components/site/WaitlistForm'

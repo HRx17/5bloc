@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import Link from 'next/link'
+import Link from '@/compat/next-link'
 import { Logo } from '@/components/brand/LogoMark'
 import { UnlockLandingScroll } from '@/components/site/UnlockLandingScroll'
 import '@/landing.css'

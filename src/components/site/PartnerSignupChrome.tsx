@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import Link from 'next/link'
+import Link from '@/compat/next-link'
 import { motion } from 'framer-motion'
 import { ArrowRight, Check, Loader2 } from 'lucide-react'
 import { Logo } from '@/components/brand/LogoMark'
