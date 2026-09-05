@@ -128,7 +128,7 @@ export default function MarketplaceContractorPage() {
     return (
       <div className="page-m space-y-6">
         <Skeleton style={{ height: 14, width: 160 }} />
-        <div className="card-5bloc space-y-3">
+        <div className="card-m p-5 space-y-3">
           <Skeleton style={{ height: 24, width: '45%' }} />
           <Skeleton lines={2} />
         </div>
@@ -273,7 +273,7 @@ export default function MarketplaceContractorPage() {
           )}
 
           {activeTab === 'about' && (
-            <div className="card-5bloc space-y-5">
+            <div className="card-m p-5 space-y-5">
               <div>
                 <h4 className="text-xs font-bold font-mono uppercase mb-2" style={{ color: 'var(--stone)' }}>
                   {isVendor ? 'What they supply' : 'About the business'}
@@ -345,7 +345,7 @@ export default function MarketplaceContractorPage() {
           {activeTab === 'reviews' && hasReviews && (
             <div className="space-y-4">
               {reviews.map((rev, idx) => (
-                <div key={idx} className="card-5bloc space-y-2">
+                <div key={idx} className="card-m p-5 space-y-2">
                   <div className="flex justify-between items-start">
                     <span className="text-[10px] font-mono" style={{ color: 'var(--stone)' }}>
                       {new Date(rev.created_at).toLocaleDateString('en-IN')}
@@ -367,7 +367,7 @@ export default function MarketplaceContractorPage() {
 
         <aside className="space-y-4">
           {hasContact && (
-            <div className="card-5bloc space-y-2">
+            <div className="card-m p-5 space-y-2">
               <h3
                 className="text-xs font-bold font-mono uppercase tracking-wider border-b pb-2"
                 style={{ color: 'var(--amber)', borderColor: 'var(--surface-container-high)' }}
@@ -389,7 +389,7 @@ export default function MarketplaceContractorPage() {
           )}
 
           {role === 'architect' && (
-            <div className="card-5bloc space-y-4">
+            <div className="card-m p-5 space-y-4">
               <h3
                 className="text-xs font-bold font-mono uppercase tracking-wider border-b pb-2"
                 style={{ color: 'var(--amber)', borderColor: 'var(--surface-container-high)' }}

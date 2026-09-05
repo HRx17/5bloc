@@ -146,7 +146,7 @@ export default function NewProjectPage() {
  }
 
  return (
- <div className="p-6 font-body max-w-5xl mx-auto select-none">
+ <div className="page-m font-body select-none">
  {/* Header */}
  <div className="mb-6 flex items-center justify-between">
  <div>
@@ -162,8 +162,8 @@ export default function NewProjectPage() {
  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
  
  {/* Left Column: Identification and Location */}
- <div className="card-5bloc space-y-4">
- <h3 className="text-sm font-semibold pb-2 mb-4" style={{ color: 'var(--amber)', boxShadow: '0 1px 0 rgba(159,142,122,0.10)' }}>Project & Client Info</h3>
+ <div className="card-m p-5 space-y-4">
+ <h3 className="card-m-title pb-2 mb-2" style={{ color: 'var(--amber-dk)', boxShadow: 'inset 0 -1px 0 var(--hairline)' }}>Project & Client Info</h3>
  
  <div>
  <label className="block text-[11px] font-semibold text-stone mb-1 font-body">Project Name *</label>
@@ -280,8 +280,8 @@ export default function NewProjectPage() {
  </div>
 
  {/* Right Column: Specifications and Timeline */}
- <div className="card-5bloc space-y-4">
- <h3 className="text-sm font-semibold pb-2 mb-4" style={{ color: 'var(--amber)', boxShadow: '0 1px 0 rgba(159,142,122,0.10)' }}>Specs, Cost & Timeline</h3>
+ <div className="card-m p-5 space-y-4">
+ <h3 className="card-m-title pb-2 mb-2" style={{ color: 'var(--amber-dk)', boxShadow: 'inset 0 -1px 0 var(--hairline)' }}>Specs, Cost & Timeline</h3>
 
  <div className="grid grid-cols-2 gap-4">
  <div>
@@ -324,7 +324,7 @@ export default function NewProjectPage() {
  <div
  key={spec.id}
  onClick={() => setFormData(prev => ({ ...prev, specLevel: spec.id }))}
- className="card-5bloc p-3 text-center cursor-pointer flex flex-col justify-center"
+ className="card-m p-3 text-center cursor-pointer flex flex-col justify-center"
  style={formData.specLevel === spec.id
  ? { boxShadow: 'var(--shadow-amber)', background: 'rgba(245,166,35,.06)', color: 'var(--amber)' }
  : { color: 'var(--on-surface)' }
@@ -379,10 +379,10 @@ export default function NewProjectPage() {
  </div>
 
  {/* RERA Section */}
- <div className="pt-4 space-y-4" style={{ boxShadow: '0 -1px 0 rgba(159,142,122,0.10)' }}>
+ <div className="pt-4 space-y-4" style={{ boxShadow: 'inset 0 1px 0 var(--hairline)' }}>
  <div className="flex items-center justify-between">
  <div>
- <h4 className="text-xs font-bold text-white">RERA Registered Project</h4>
+ <h4 className="text-xs font-bold" style={{ color: 'var(--on-surface)' }}>RERA Registered Project</h4>
  <p className="text-[10px] text-stone">Does this project comply with digital RERA reporting?</p>
  </div>
  <button
@@ -422,10 +422,10 @@ export default function NewProjectPage() {
  </div>
 
  {/* Open bidding → marketplace for contractors/vendors */}
- <div className="card-5bloc space-y-4">
+ <div className="card-m p-5 space-y-4">
  <div className="flex items-start justify-between gap-4">
  <div>
- <h3 className="text-sm font-semibold" style={{ color: 'var(--amber)' }}>Post for open bidding</h3>
+ <h3 className="card-m-title" style={{ color: 'var(--amber-dk)' }}>Post for open bidding</h3>
  <p className="text-[11px] text-stone mt-1">
  When enabled, this project appears as a card for contractors and vendors in the marketplace — only for the services you select.
  </p>
@@ -472,11 +472,7 @@ export default function NewProjectPage() {
  : [...prev.servicesNeeded, svc],
  }))
  }}
- className="chip text-[11px]"
- style={{
- color: on ? 'var(--amber)' : 'var(--stone)',
- background: on ? 'rgba(245,166,35,0.12)' : 'rgba(159,142,122,0.1)',
- }}
+                className={`chip-m text-[11px] ${on ? 'chip-m-amber' : ''}`}
  >
  {svc}
  </button>

@@ -289,11 +289,11 @@ export default function NewInvoicePage() {
   }
 
   return (
-    <div className="p-6 font-body select-none max-w-5xl mx-auto space-y-6">
+    <div className="page-m font-body select-none space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-wide">Generate Tax Invoice</h1>
-          <p className="text-xs text-stone mt-1">
+          <h1 className="page-m-title">Generate Tax Invoice</h1>
+          <p className="page-m-sub">
             Calculates CGST/SGST/IGST dynamically. Numbers are secured server-side.
           </p>
         </div>
@@ -320,8 +320,8 @@ export default function NewInvoicePage() {
       ) : (
       <form onSubmit={handleSubmit} noValidate className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         <div className="lg:col-span-2 space-y-6">
-          <div className="card-5bloc space-y-4">
-            <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-amber pb-2 mb-2">
+          <div className="card-m p-5 space-y-4">
+            <h3 className="card-m-title text-amber-dk pb-2 mb-2" style={{ boxShadow: 'inset 0 -1px 0 var(--hairline)' }}>
               Who should this invoice go to?
             </h3>
             <p className="text-[12px] -mt-2 mb-1" style={{ color: 'var(--stone)' }}>
@@ -347,7 +347,7 @@ export default function NewInvoicePage() {
                         setPartyName('')
                       }
                     }}
-                    className="text-left rounded-xl px-3 py-3 transition-colors"
+                    className="text-left rounded-xl px-3.5 py-3 transition-colors"
                     style={{
                       background: selected ? 'rgba(245,166,35,0.12)' : 'var(--surface)',
                       boxShadow: selected
@@ -443,8 +443,8 @@ export default function NewInvoicePage() {
             )}
           </div>
 
-          <div className="card-5bloc space-y-4">
-            <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-amber pb-2 mb-2">
+          <div className="card-m p-5 space-y-4">
+            <h3 className="card-m-title text-amber-dk pb-2 mb-2" style={{ boxShadow: 'inset 0 -1px 0 var(--hairline)' }}>
               Invoice Details
             </h3>
 
@@ -520,9 +520,9 @@ export default function NewInvoicePage() {
             </div>
           </div>
 
-          <div className="card-5bloc space-y-4">
+          <div className="card-m p-5 space-y-4">
             <div className="flex items-center justify-between pb-2 mb-2">
-              <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-amber">Line Items</h3>
+              <h3 className="card-m-title text-amber-dk">Line Items</h3>
               <button
                 type="button"
                 onClick={handleAddLineItem}
@@ -591,14 +591,14 @@ export default function NewInvoicePage() {
           </div>
         </div>
 
-        <div className="card-5bloc space-y-5">
-          <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-amber pb-2">
+        <div className="card-m p-5 space-y-5">
+          <h3 className="card-m-title text-amber-dk pb-2" style={{ boxShadow: 'inset 0 -1px 0 var(--hairline)' }}>
             Tax Calculation
           </h3>
 
           <div className="flex items-center justify-between text-xs pt-1">
             <div>
-              <span className="text-white font-semibold">Interstate Transaction</span>
+              <span style={{ color: 'var(--on-surface)' }} className="font-semibold">Interstate Transaction</span>
               <p className="text-[10px] text-stone">Applies IGST 18% instead of CGST+SGST</p>
             </div>
             <button
@@ -616,29 +616,29 @@ export default function NewInvoicePage() {
             </button>
           </div>
 
-          <div className=" pt-4 space-y-2.5 text-xs font-mono text-stone">
+          <div className="pt-4 space-y-2.5 text-xs font-mono text-stone">
             <div className="flex justify-between">
               <span>Subtotal:</span>
-              <span className="text-white font-semibold">₹{subtotal.toLocaleString()}</span>
+              <span style={{ color: 'var(--on-surface)' }} className="font-semibold">₹{subtotal.toLocaleString()}</span>
             </div>
             {isInterstate ? (
               <div className="flex justify-between">
                 <span>IGST (18%):</span>
-                <span className="text-white">₹{igstAmount.toLocaleString()}</span>
+                <span style={{ color: 'var(--on-surface)' }}>₹{igstAmount.toLocaleString()}</span>
               </div>
             ) : (
               <>
                 <div className="flex justify-between">
                   <span>CGST (9%):</span>
-                  <span className="text-white">₹{cgstAmount.toLocaleString()}</span>
+                  <span style={{ color: 'var(--on-surface)' }}>₹{cgstAmount.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>SGST (9%):</span>
-                  <span className="text-white">₹{sgstAmount.toLocaleString()}</span>
+                  <span style={{ color: 'var(--on-surface)' }}>₹{sgstAmount.toLocaleString()}</span>
                 </div>
               </>
             )}
-            <div className=" pt-3 flex justify-between text-sm text-white font-bold font-body">
+            <div className="pt-3 flex justify-between text-sm font-bold font-body" style={{ color: 'var(--on-surface)' }}>
               <span>GRAND TOTAL:</span>
               <span className="text-amber">₹{grandTotal.toLocaleString()}</span>
             </div>

@@ -74,7 +74,7 @@ export default function MarketplaceArchitectPage() {
     return (
       <div className="page-m space-y-6">
         <Skeleton style={{ height: 14, width: 160 }} />
-        <div className="card-5bloc space-y-3">
+        <div className="card-m p-5 space-y-3">
           <Skeleton style={{ height: 24, width: '45%' }} />
           <Skeleton lines={2} />
         </div>
@@ -145,8 +145,7 @@ export default function MarketplaceArchitectPage() {
               )}
             </div>
             <span
-              className="chip text-[10px] uppercase w-fit"
-              style={{ color: 'var(--amber)', background: 'rgba(245,166,35,0.12)' }}
+              className="chip-m chip-m-amber text-[10px] uppercase w-fit"
             >
               Architect
             </span>
@@ -158,7 +157,7 @@ export default function MarketplaceArchitectPage() {
             {[architect.firm_name, location].filter(Boolean).join(' · ') || 'Independent practice'}
           </p>
           {architect.discipline && (
-            <span className="chip text-[10px]" style={{ color: 'var(--stone)' }}>
+            <span className="chip-m text-[10px]">
               {architect.discipline}
             </span>
           )}
@@ -177,8 +176,8 @@ export default function MarketplaceArchitectPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
         <div className="md:col-span-2 space-y-5">
-          <section className="card-5bloc">
-            <h2 className="text-xs font-bold font-mono uppercase mb-4" style={{ color: 'var(--stone)' }}>
+          <section className="card-m p-5">
+            <h2 className="card-m-title mb-4" style={{ color: 'var(--stone)' }}>
               Projects open for service
             </h2>
             {tenders.length === 0 ? (
@@ -204,7 +203,7 @@ export default function MarketplaceArchitectPage() {
                     {!!t.services?.length && (
                       <div className="flex flex-wrap gap-1 mt-2">
                         {t.services.map((s) => (
-                          <span key={s} className="chip text-[10px]" style={{ color: 'var(--amber)' }}>
+                          <span key={s} className="chip-m chip-m-amber text-[10px]">
                             {s}
                           </span>
                         ))}
@@ -218,11 +217,8 @@ export default function MarketplaceArchitectPage() {
         </div>
 
         <aside className="space-y-4">
-          <div className="card-5bloc space-y-4">
-            <h3
-              className="text-xs font-bold font-mono uppercase tracking-wider border-b pb-2"
-              style={{ color: 'var(--amber)', borderColor: 'var(--surface-container-high)' }}
-            >
+          <div className="card-m p-5 space-y-4">
+            <h3 className="card-m-title text-amber-dk pb-2" style={{ boxShadow: 'inset 0 -1px 0 var(--hairline)' }}>
               Practice
             </h3>
             <div className="grid grid-cols-2 gap-4">

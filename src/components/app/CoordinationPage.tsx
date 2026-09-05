@@ -549,12 +549,11 @@ export default function CoordinationPage() {
                 {visibleConversations.map((conv) => (
                   <Link key={conv.id} href={`/messages?c=${conv.id}`}>
                     <motion.div
-                      className="flex gap-4 rounded-2xl p-4 cursor-pointer transition-all"
-                      style={{ background: 'var(--surface-container)' }}
+                      className="card-m card-m-hover flex gap-4 p-4 cursor-pointer transition-all"
                       whileHover={{ x: 2 }}
                     >
                       <div
-                        className="w-9 h-9 shrink-0 flex items-center justify-center rounded-full text-[12px] font-bold"
+                        className="feed-m-icon w-9 h-9 text-[12px] font-bold"
                         style={{ background: 'rgba(122,184,255,0.12)', color: 'var(--blue)' }}
                       >
                         {initialsOf(conv.title)}
@@ -570,7 +569,7 @@ export default function CoordinationPage() {
                         <p className="text-[12.5px] line-clamp-2" style={{ color: 'var(--on-surface-variant)' }}>{conv.preview}</p>
                         {conv.project && (
                           <div className="flex items-center gap-2 mt-2">
-                            <span className="text-[11px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--stone)' }}>{conv.project}</span>
+                            <span className="chip-m">{conv.project}</span>
                           </div>
                         )}
                       </div>
@@ -609,10 +608,7 @@ export default function CoordinationPage() {
                   .sort((a, b) => (a.status === b.status ? 0 : a.status === 'upcoming' ? -1 : 1))
                   .map((meeting) => {
                     const row = (
-                      <div
-                        className="flex items-center gap-4 rounded-2xl p-4"
-                        style={{ background: 'var(--surface-container)' }}
-                      >
+                      <div className="card-m card-m-hover flex items-center gap-4 p-4">
                         <div
                           className="w-12 h-12 shrink-0 flex flex-col items-center justify-center rounded-xl text-center"
                           style={{ background: meeting.status === 'upcoming' ? 'rgba(122,184,255,0.10)' : 'rgba(138,128,120,0.10)' }}
@@ -671,39 +667,33 @@ export default function CoordinationPage() {
                 }
               />
             ) : (
-              <div
-                className="rounded-2xl overflow-hidden"
-                style={{ background: 'var(--surface-container)' }}
-              >
-                <table className="w-full text-[13px]">
+              <div className="card-m overflow-hidden">
+                <table className="table-m">
                   <thead>
-                    <tr style={{ boxShadow: '0 1px 0 rgba(255,255,255,0.04)' }}>
-                      <th className="text-left py-3 px-4 text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--stone)' }}>Severity</th>
-                      <th className="text-left py-3 px-4 text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--stone)' }}>Issue</th>
-                      <th className="text-left py-3 px-4 text-[11px] font-semibold uppercase tracking-wider hidden md:table-cell" style={{ color: 'var(--stone)' }}>Project</th>
-                      <th className="text-left py-3 px-4 text-[11px] font-semibold uppercase tracking-wider hidden lg:table-cell" style={{ color: 'var(--stone)' }}>Assigned to</th>
-                      <th className="text-left py-3 px-4 text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--stone)' }}>Status</th>
+                    <tr>
+                      <th>Severity</th>
+                      <th>Issue</th>
+                      <th className="hidden md:table-cell">Project</th>
+                      <th className="hidden lg:table-cell">Assigned to</th>
+                      <th>Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {visibleIssues.map((issue, idx) => (
+                    {visibleIssues.map((issue) => (
                       <tr
                         key={issue.id}
-                        className="transition-colors cursor-pointer"
-                        style={idx > 0 ? { boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' } : {}}
+                        className="cursor-pointer"
                         onClick={() => setSelectedIssue(issue)}
-                        onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.025)')}
-                        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = '')}
                       >
-                        <td className="py-3.5 px-4"><StatusBadge status={issue.severity} /></td>
-                        <td className="py-3.5 px-4 font-medium" style={{ color: 'var(--on-surface)' }}>
+                        <td><StatusBadge status={issue.severity} /></td>
+                        <td className="font-medium" style={{ color: 'var(--on-surface)' }}>
                           <span className="line-clamp-1">{issue.title}</span>
                         </td>
-                        <td className="py-3.5 px-4 hidden md:table-cell" style={{ color: 'var(--on-surface-variant)' }}>
+                        <td className="hidden md:table-cell" style={{ color: 'var(--on-surface-variant)' }}>
                           <span className="line-clamp-1">{issue.project}</span>
                         </td>
-                        <td className="py-3.5 px-4 hidden lg:table-cell" style={{ color: 'var(--stone)' }}>{issue.assigned_to}</td>
-                        <td className="py-3.5 px-4"><StatusBadge status={issue.status} /></td>
+                        <td className="hidden lg:table-cell" style={{ color: 'var(--stone)' }}>{issue.assigned_to}</td>
+                        <td><StatusBadge status={issue.status} /></td>
                       </tr>
                     ))}
                   </tbody>
