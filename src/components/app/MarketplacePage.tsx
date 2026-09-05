@@ -15,11 +15,6 @@ const money = (v?: number | null) => (v ? `₹${Number(v).toLocaleString('en-IN'
 
 const ALL = 'all'
 
-const chipStyle = (active: boolean) => ({
-  color: active ? 'var(--amber)' : 'var(--stone)',
-  background: active ? 'rgba(245,166,35,0.12)' : 'rgba(159,142,122,0.1)',
-})
-
 type Source = 'listings' | 'architects' | 'tenders' | 'bids'
 
 const NO_FAILURES: Record<Source, boolean> = {
@@ -55,12 +50,12 @@ function TagRow({ tags, max = 4 }: { tags: string[]; max?: number }) {
   return (
     <div className="flex flex-wrap gap-1 mt-3">
       {tags.slice(0, max).map((t) => (
-        <span key={t} className="chip text-[10px]" style={{ color: 'var(--stone)' }}>
+        <span key={t} className="chip-m text-[10px]">
           {t}
         </span>
       ))}
       {tags.length > max && (
-        <span className="chip text-[10px]" style={{ color: 'var(--stone)' }}>
+        <span className="chip-m text-[10px]">
           +{tags.length - max}
         </span>
       )}
@@ -76,6 +71,7 @@ function ListingCard({ listing }: { listing: MarketplaceListing }) {
       href={`/marketplace/${listing.id}`}
       cover={cover}
       alt={listing.company_name}
+      className="card-m card-m-hover"
       overlay={
         <>
           <div className="flex flex-wrap gap-1">
@@ -113,6 +109,7 @@ function ArchitectCard({ architect }: { architect: ArchitectListing }) {
       href={`/marketplace/architects/${architect.id}`}
       cover={cover}
       alt={name}
+      className="card-m card-m-hover"
       overlay={
         architect.open_tenders > 0 ? (
           <CardBadge tone="amber">
@@ -145,12 +142,12 @@ function ArchitectCard({ architect }: { architect: ArchitectListing }) {
       </div>
       <div className="flex flex-wrap gap-1 mt-3">
         {architect.discipline && (
-          <span className="chip text-[10px]" style={{ color: 'var(--stone)' }}>
+          <span className="chip-m text-[10px]">
             {architect.discipline}
           </span>
         )}
         {architect.firm_type && (
-          <span className="chip text-[10px]" style={{ color: 'var(--stone)' }}>
+          <span className="chip-m text-[10px]">
             {architect.firm_type}
           </span>
         )}
@@ -203,7 +200,6 @@ export default function MarketplacePage() {
       const nextRole = me.profile?.role || 'architect'
       setRole(nextRole)
       const contractorView = nextRole === 'contractor'
-      // Only choose a default tab on first load, so a retry keeps the user where they were.
       if (!tabPicked.current) {
         setTab(contractorView ? 'projects' : 'contractors')
         tabPicked.current = true
@@ -240,7 +236,6 @@ export default function MarketplacePage() {
 
   useLiveReload(load, ['bids', 'tenders', 'contractors'])
 
-  // Filters mean different things per category, so reset them on every switch.
   const switchTab = (next: Category) => {
     setTab(next)
     setQuery('')
@@ -400,10 +395,10 @@ export default function MarketplacePage() {
           : 'All trades'
 
   return (
-    <div className="page-m space-y-6">
+    <div className="page-m space-y-8">
       <div>
         <h1 className="page-m-title">Marketplace</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
+        <p className="page-m-sub">
           {isContractor
             ? 'Browse projects posted for open bidding, and see who else is working in your city. Private workspaces stay hidden until you are invited or awarded.'
             : 'Find architects, contractors and material vendors — and manage the projects you have opened for bidding.'}
@@ -412,39 +407,53 @@ export default function MarketplacePage() {
 
       <div className="flex gap-2 flex-wrap">
         {categories.map(([key, label]) => (
-          <button key={key} className="chip" style={chipStyle(tab === key)} onClick={() => switchTab(key)}>
+          <button
+            key={key}
+            className={`chip-m cursor-pointer transition-colors ${tab === key ? 'chip-m-amber' : 'hover:bg-overlay-hover'}`}
+            onClick={() => switchTab(key)}
+          >
             {label}
           </button>
         ))}
       </div>
 
       {tab !== 'bids' && (
-        <div className="flex flex-col md:flex-row gap-3">
-          <input
-            className="input-5bloc flex-1"
-            placeholder={searchPlaceholder}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          <select className="input-5bloc" value={filterCity} onChange={(e) => setFilterCity(e.target.value)}>
-            <option value={ALL}>All cities</option>
-            {cityOptions.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-          <select className="input-5bloc" value={filterTag} onChange={(e) => setFilterTag(e.target.value)}>
-            <option value={ALL}>{tagLabel}</option>
-            {tagOptions.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
+        <div className="flex flex-col md:flex-row gap-4 items-center">
+          <div className="search-5bloc flex-1 w-full">
+            <span className="material-icons-outlined">search</span>
+            <input
+              placeholder={searchPlaceholder}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-3 w-full md:w-auto">
+            <div className="select-5bloc flex-1 md:flex-none">
+              <select value={filterCity} onChange={(e) => setFilterCity(e.target.value)}>
+                <option value={ALL}>All cities</option>
+                {cityOptions.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+              <span className="material-icons-outlined chevron">expand_more</span>
+            </div>
+            <div className="select-5bloc flex-1 md:flex-none">
+              <select value={filterTag} onChange={(e) => setFilterTag(e.target.value)}>
+                <option value={ALL}>{tagLabel}</option>
+                {tagOptions.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+              <span className="material-icons-outlined chevron">expand_more</span>
+            </div>
+          </div>
           {(tab === 'contractors' || tab === 'vendors') && (
-            <label className="flex items-center gap-2 text-sm px-2" style={{ color: 'var(--stone)' }}>
-              <input type="checkbox" checked={filterVerified} onChange={(e) => setFilterVerified(e.target.checked)} />
+            <label className="flex items-center gap-2 text-[12px] px-2 shrink-0 cursor-pointer select-none" style={{ color: 'var(--stone)' }}>
+              <input type="checkbox" checked={filterVerified} onChange={(e) => setFilterVerified(e.target.checked)} className="accent-amber" />
               Verified only
             </label>
           )}
@@ -454,7 +463,7 @@ export default function MarketplacePage() {
       {loading && tab !== 'bids' && <CardGridSkeleton />}
 
       {!loading && tab === 'projects' && (
-        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
           {failed.tenders ? (
             <div className="sm:col-span-2 xl:col-span-3">
               <ErrorState
@@ -519,6 +528,7 @@ export default function MarketplacePage() {
                   cover={cover}
                   alt={t.project_name || t.title || 'Project'}
                   overlay={overlay}
+                  className="card-m card-m-hover"
                 >
                   {body}
                 </PhotoCard>
@@ -529,7 +539,7 @@ export default function MarketplacePage() {
       )}
 
       {!loading && tab === 'architects' && (
-        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
           {failed.architects ? (
             <div className="sm:col-span-2 xl:col-span-3">
               <ErrorState
@@ -557,7 +567,7 @@ export default function MarketplacePage() {
       )}
 
       {!loading && (tab === 'contractors' || tab === 'vendors') && (
-        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-6">
           {failed.listings ? (
             <div className="sm:col-span-2 xl:col-span-3">
               <ErrorState
@@ -597,7 +607,7 @@ export default function MarketplacePage() {
       )}
 
       {tab === 'bids' && !isContractor && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {loading ? (
             <Skeleton lines={4} />
           ) : failed.bids ? (
@@ -618,42 +628,44 @@ export default function MarketplacePage() {
             />
           ) : (
             reviewBids.map((b) => (
-              <div key={b.id} className="p-5 rounded-2xl space-y-3" style={{ background: 'var(--surface-container)' }}>
-                <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
+              <div key={b.id} className="card-m card-m-hover p-5 space-y-4">
+                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                   <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold">{b.tenders?.title || b.tender_title || 'Bid'}</p>
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <p className="font-semibold text-[16px]">{b.tenders?.title || b.tender_title || 'Bid'}</p>
                       {b.status === 'shortlisted' && (
-                        <span className="chip text-[10px]" style={chipStyle(true)}>
+                        <span className="chip-m chip-m-amber text-[10px]">
                           Shortlisted
                         </span>
                       )}
                     </div>
-                    <p className="text-[12px] mt-1" style={{ color: 'var(--stone)' }}>
-                      {b.contractors?.company_name || 'Contractor'} · {money(b.amount)} ·{' '}
+                    <p className="text-[13px]" style={{ color: 'var(--stone)' }}>
+                      <span className="font-medium text-on-surface">{b.contractors?.company_name || 'Contractor'}</span> · {money(b.amount)} ·{' '}
                       {b.timeline_weeks ? `${b.timeline_weeks} weeks` : 'Timeline not stated'}
                     </p>
                     {b.methodology && (
-                      <p className="text-[12px] mt-2" style={{ color: 'var(--stone)' }}>
+                      <p className="text-[13px] mt-3 leading-relaxed" style={{ color: 'var(--stone)' }}>
                         {b.methodology}
                       </p>
                     )}
                     {b.boq_url && (
-                      <a
-                        href={b.boq_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-[12px] underline"
-                        style={{ color: 'var(--amber)' }}
-                      >
-                        View BOQ
-                      </a>
+                      <div className="mt-3">
+                        <a
+                          href={b.boq_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="btn-ghost-amber btn-xs"
+                        >
+                          <span className="material-icons-outlined text-[14px]">description</span>
+                          View BOQ
+                        </a>
+                      </div>
                     )}
                   </div>
-                  <div className="flex gap-2 shrink-0">
+                  <div className="flex gap-2 shrink-0 pt-1">
                     {b.status !== 'shortlisted' && (
                       <button
-                        className="btn-secondary text-[12px]"
+                        className="btn-secondary btn-sm"
                         disabled={shortlisting === b.id}
                         onClick={() => shortlistBid(b)}
                       >
@@ -661,14 +673,14 @@ export default function MarketplacePage() {
                       </button>
                     )}
                     <button
-                      className="btn-primary text-[12px]"
+                      className="btn-primary btn-sm"
                       disabled={busyBid === b.id}
                       onClick={() => setAward({ bid: b, status: 'accepted' })}
                     >
                       Award
                     </button>
                     <button
-                      className="btn-secondary text-[12px]"
+                      className="btn-secondary btn-sm"
                       disabled={busyBid === b.id}
                       onClick={() => setAward({ bid: b, status: 'rejected' })}
                     >
@@ -699,12 +711,12 @@ export default function MarketplacePage() {
         onCancel={() => setAward(null)}
       >
         {award?.status === 'rejected' && (
-          <>
-            <label className="block text-[11px] mb-1" style={{ color: 'var(--stone)' }}>
+          <div className="mt-4">
+            <label className="block text-[11px] font-medium mb-1.5 uppercase tracking-wider" style={{ color: 'var(--stone)' }}>
               Reason shared with the contractor
             </label>
-            <input className="input-5bloc" value={rejectionNote} onChange={(e) => setRejectionNote(e.target.value)} />
-          </>
+            <input className="input-5bloc" value={rejectionNote} onChange={(e) => setRejectionNote(e.target.value)} placeholder="e.g. Not selected for this package" />
+          </div>
         )}
       </ConfirmDialog>
     </div>

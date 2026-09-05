@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import Link from '@/compat/next-link'
 import { supabase } from '@/integrations/supabase/client'
 import { useRouter } from '@/compat/next-navigation'
 import { useToast } from '@/components/ui5/Toast'
@@ -123,12 +122,6 @@ function formatDate(value: string | null | undefined): string {
   return d.toLocaleDateString('en', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-function formatTime(value: string): string {
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return 'Just now'
-  return d.toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit' })
-}
-
 function summarise(resources: SyncResource[]): string {
   const ok = resources.filter((r) => r.error === undefined)
   const failed = resources.filter((r) => r.error !== undefined)
@@ -147,9 +140,9 @@ export default function IntegrationsPage() {
   const [activeCategory, setActiveCategory] = useState<(typeof CATEGORIES)[number]['id']>('all')
   const [syncing, setSyncing] = useState<ProviderId | 'all' | null>(null)
   const [syncResults, setSyncResults] = useState<Partial<Record<ProviderId, SyncResult>>>({})
-  const [detailsFor, setDetailsFor] = useState<IntegrationItem | null>(null)
   const [pendingDisconnect, setPendingDisconnect] = useState<IntegrationItem | null>(null)
   const [disconnecting, setDisconnecting] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const loadStatus = useCallback(async () => {
     setLoading(true)
@@ -199,7 +192,12 @@ export default function IntegrationsPage() {
       toast(`Autodesk connection failed${detail ? `: ${detail}` : '. Please try again.'}`, 'error', 9000)
     }
 
-    router.replace('/integrations', { scroll: false })
+    // Move router.replace into a microtask or next tick to avoid state update warning if triggered by toast
+    // Actually router.replace is fine here, but if the toast causes a re-render it might be an issue.
+    // Using a microtask just in case.
+    Promise.resolve().then(() => {
+      router.replace('/integrations', { scroll: false })
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -215,14 +213,12 @@ export default function IntegrationsPage() {
       )
       return
     }
-    // A full-page redirect cannot send an auth header, so pass the session token along.
     const { data } = await supabase.auth.getSession()
     const token = data.session?.access_token
     window.location.href = `/api/integrations/${item.provider}/connect${
       token ? `?t=${encodeURIComponent(token)}` : ''
     }`
   }
-
 
   const confirmDisconnect = async () => {
     if (!pendingDisconnect) return
@@ -298,7 +294,6 @@ export default function IntegrationsPage() {
     let succeeded = 0
     try {
       for (const provider of connected) {
-        // eslint-disable-next-line no-await-in-loop
         if (await runSync(provider)) succeeded += 1
       }
       if (succeeded === connected.length) {
@@ -319,26 +314,19 @@ export default function IntegrationsPage() {
   const unconfigured = (Object.keys(providers) as ProviderId[]).filter((p) => !providers[p].configured)
   const hasSynced = Object.keys(syncResults).some((k) => syncResults[k as ProviderId])
 
-  const filtered =
-    activeCategory === 'all' ? INTEGRATIONS : INTEGRATIONS.filter((item) => item.category === activeCategory)
-
-  const showCalendarWidget = providers.google.connected && (activeCategory === 'all' || activeCategory === 'workspace')
+  const filtered = INTEGRATIONS.filter((item) => {
+    const matchCat = activeCategory === 'all' || item.category === activeCategory
+    const matchSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                        item.description.toLowerCase().includes(searchQuery.toLowerCase())
+    return matchCat && matchSearch
+  })
 
   return (
-    <div className="p-6 space-y-8 max-w-screen-xl mx-auto font-body">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="page-m">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
         <div>
-          <p className="label-sm mb-1" style={{ color: 'var(--stone)' }}>
-            System Automation
-          </p>
-          <h1
-            className="font-display text-[22px] lg:text-[26px] leading-[30px]"
-            style={{ color: 'var(--on-surface)' }}
-          >
-            Enterprise Integrations
-          </h1>
-          <p className="text-[12px] mt-1" style={{ color: 'var(--on-surface-variant)' }}>
+          <h1 className="page-m-title">Enterprise Integrations</h1>
+          <p className="page-m-sub">
             Connect third-party accounts so documents, drawings, emails, and schedules stay in one place.
           </p>
         </div>
@@ -346,457 +334,187 @@ export default function IntegrationsPage() {
         <button
           onClick={handleSyncAll}
           disabled={syncing !== null || loading || !!statusError}
-          className="btn-primary shrink-0 py-2.5 px-5 flex items-center gap-2"
+          className="btn-primary"
         >
-          <span className={`material-icons-outlined text-[16px] ${syncing === 'all' ? 'animate-spin' : ''}`}>
+          <span className={`material-icons-outlined text-[18px] ${syncing === 'all' ? 'animate-spin' : ''}`}>
             sync
           </span>
-          {syncing === 'all' ? 'Resyncing...' : 'Resync connected'}
+          {syncing === 'all' ? 'Resyncing...' : 'Resync all connected'}
         </button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="card-glass" style={{ padding: '16px 20px', borderRadius: '12px' }}>
-          <p className="label-sm text-[10px]" style={{ color: 'var(--stone)' }}>
-            Linked accounts
-          </p>
-          <div className="flex items-center gap-2.5 mt-2">
-            <span className="text-[22px] font-medium" style={{ color: 'var(--on-surface)' }}>
-              {connectedCount} / {totalProviders}
-            </span>
-            {connectedCount > 0 && (
-              <span className="chip" style={{ background: 'rgba(111,220,140,.12)', color: 'var(--success)' }}>
-                Active
-              </span>
-            )}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+        <div className="card-m stat-m">
+          <p className="stat-m-label">Linked accounts</p>
+          <div className="flex items-end justify-between">
+            <span className="stat-m-value">{connectedCount} / {totalProviders}</span>
+            {connectedCount > 0 && <span className="chip-m chip-m-green">Active</span>}
           </div>
+          <p className="stat-m-note">{connectedCount === totalProviders ? 'All accounts linked' : `${totalProviders - connectedCount} remaining`}</p>
         </div>
 
-        <div className="card-glass" style={{ padding: '16px 20px', borderRadius: '12px' }}>
-          <p className="label-sm text-[10px]" style={{ color: 'var(--stone)' }}>
-            Items seen in last sync
-          </p>
-          <div className="flex items-center gap-2.5 mt-2">
-            <span className="text-[22px] font-medium" style={{ color: 'var(--on-surface)' }}>
-              {hasSynced ? syncedItems : '--'}
-            </span>
-            <span className="chip" style={{ background: 'rgba(122,184,255,.12)', color: 'var(--blue)' }}>
-              {hasSynced ? 'Live count' : 'Not synced yet'}
-            </span>
+        <div className="card-m stat-m">
+          <p className="stat-m-label">Last Sync Items</p>
+          <div className="flex items-end justify-between">
+            <span className="stat-m-value">{hasSynced ? syncedItems : '--'}</span>
+            <span className="chip-m chip-m-blue">{hasSynced ? 'Live count' : 'Pending'}</span>
           </div>
+          <p className="stat-m-note">{hasSynced ? 'Data fetched successfully' : 'Not synced yet'}</p>
         </div>
 
-        <div className="card-glass" style={{ padding: '16px 20px', borderRadius: '12px' }}>
-          <p className="label-sm text-[10px]" style={{ color: 'var(--stone)' }}>
-            Server credentials
-          </p>
-          <div className="flex items-center gap-2.5 mt-2">
-            <span className="text-[12px] font-medium truncate" style={{ color: 'var(--on-surface)' }}>
-              {statusError
-                ? 'Status unavailable'
-                : loading
-                  ? 'Checking...'
-                  : unconfigured.length === 0
-                    ? 'All providers configured'
-                    : `${unconfigured.map((p) => PROVIDER_LABEL[p]).join(', ')} not configured`}
+        <div className="card-m stat-m">
+          <p className="stat-m-label">Server Config</p>
+          <div className="flex items-center gap-3 mt-2">
+            <div className={`w-3 h-3 rounded-full ${unconfigured.length === 0 ? 'bg-success' : 'bg-amber'}`} />
+            <span className="text-[14px] font-semibold">
+              {unconfigured.length === 0 ? 'Fully Configured' : `${unconfigured.length} Missing`}
             </span>
-            <div
-              className="w-2.5 h-2.5 rounded-full shrink-0"
-              style={{
-                background: statusError
-                  ? 'var(--error)'
-                  : loading
-                    ? 'var(--stone)'
-                    : unconfigured.length === 0
-                      ? 'var(--success)'
-                      : 'var(--warning, var(--amber))',
-              }}
-            />
           </div>
+          <p className="stat-m-note truncate">
+            {unconfigured.length === 0 ? 'All providers ready' : unconfigured.map(p => PROVIDER_LABEL[p]).join(', ')}
+          </p>
         </div>
       </div>
 
-      {/* Category filters */}
-      <div className="flex flex-wrap border-b pb-px gap-1" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-        {CATEGORIES.map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => setActiveCategory(cat.id)}
-            className="px-4 py-3 text-xs font-semibold relative transition flex items-center gap-2"
-            style={{
-              color: activeCategory === cat.id ? 'var(--amber)' : 'var(--stone)',
-              boxShadow: activeCategory === cat.id ? 'inset 0 -2px 0 var(--amber-dk)' : 'none',
-            }}
-          >
-            <span className="material-icons-outlined text-[15px]">{cat.icon}</span>
-            <span>{cat.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {statusError ? (
-        <ErrorState
-          title="Could not check your connected accounts"
-          error={statusError}
-          description="Nothing has been disconnected — we just could not read the current status. Connecting or syncing now could behave unexpectedly."
-          onRetry={loadStatus}
-        />
-      ) : null}
-
-      {loading && !statusError && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[0, 1].map((i) => (
-            <Skeleton key={i} className="h-64 w-full" />
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div className="flex bg-surface-container-low rounded-lg p-0.5 border border-hairline w-fit">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id)}
+              className={`px-4 py-2 text-xs font-bold rounded-md transition-all flex items-center gap-2 ${
+                activeCategory === cat.id 
+                  ? 'bg-surface-elevated text-amber shadow-sm border border-hairline-strong' 
+                  : 'text-stone hover:text-on-surface'
+              }`}
+            >
+              <span className="material-icons-outlined text-[16px]">{cat.icon}</span>
+              {cat.label}
+            </button>
           ))}
         </div>
-      )}
 
-      {/* Integration cards */}
-      {!loading && !statusError && (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filtered.map((item) => {
-          const state = providers[item.provider]
-          const result = syncResults[item.provider]
-          const isBusy = syncing === item.provider || syncing === 'all'
-
-          return (
-            <div
-              key={item.id}
-              className="card-5bloc flex flex-col justify-between relative overflow-hidden"
-              style={{
-                borderRadius: '16px',
-                border: `1px solid ${
-                  state.connected ? `color-mix(in srgb, ${item.color} 20%, transparent)` : 'rgba(159,142,122,0.08)'
-                }`,
-                boxShadow: 'var(--shadow-2)',
-              }}
-            >
-              <div
-                className="absolute top-0 left-0 right-0 h-1"
-                style={{ background: state.connected ? item.color : 'rgba(255,255,255,0.06)' }}
-              />
-
-              <div className="space-y-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-12 h-12 flex items-center justify-center rounded-xl shrink-0"
-                      style={{
-                        background: `color-mix(in srgb, ${item.color} ${state.connected ? 18 : 10}%, transparent)`,
-                        color: item.color,
-                      }}
-                    >
-                      <span className="material-icons-outlined text-[18px]">{item.icon}</span>
-                    </div>
-                    <div>
-                      <h3 className="text-[14px] font-medium leading-tight" style={{ color: 'var(--on-surface)' }}>
-                        {item.name}
-                      </h3>
-                      <p className="text-[10px] mt-0.5" style={{ color: 'var(--stone)' }}>
-                        Provider: {item.providerLabel}
-                      </p>
-                    </div>
-                  </div>
-
-                  <span
-                    className="px-3 py-1 rounded-full text-[10px] font-bold uppercase shrink-0"
-                    style={
-                      loading
-                        ? { background: 'rgba(255,255,255,0.05)', color: 'var(--stone)' }
-                        : state.connected
-                          ? {
-                              background: 'rgba(46,204,138,0.12)',
-                              color: 'var(--success)',
-                              border: '1px solid rgba(46,204,138,0.25)',
-                            }
-                          : state.configured
-                            ? {
-                                background: 'rgba(255,255,255,0.05)',
-                                color: 'var(--stone)',
-                                border: '1px solid rgba(255,255,255,0.08)',
-                              }
-                            : {
-                                background: 'rgba(245,166,35,0.10)',
-                                color: 'var(--amber)',
-                                border: '1px solid rgba(245,166,35,0.25)',
-                              }
-                    }
-                  >
-                    {loading
-                      ? 'Checking'
-                      : state.connected
-                        ? 'Connected'
-                        : state.configured
-                          ? 'Not connected'
-                          : 'Setup required'}
-                  </span>
-                </div>
-
-                <p className="text-xs leading-relaxed" style={{ color: 'var(--on-surface-variant)' }}>
-                  {item.description}
-                </p>
-
-                {state.connected && state.account && (
-                  <p className="text-[11px] flex items-center gap-1" style={{ color: 'var(--stone)' }}>
-                    <span className="material-icons-outlined text-[13px]">account_circle</span>
-                    {state.account.email || state.account.name || `Connected via ${item.providerLabel} OAuth`}
-                  </p>
-                )}
-
-                {!state.configured && !loading && (
-                  <div
-                    className="rounded-xl px-3 py-2.5 text-[11px] leading-relaxed"
-                    style={{ background: 'rgba(245,166,35,0.08)', color: 'var(--on-surface-variant)' }}
-                  >
-                    This server has no {item.providerLabel} credentials. Add{' '}
-                    {state.missingEnv.length ? (
-                      state.missingEnv.map((name, i) => (
-                        <React.Fragment key={name}>
-                          {i > 0 && ' and '}
-                          <code style={{ color: 'var(--amber)' }}>{name}</code>
-                        </React.Fragment>
-                      ))
-                    ) : (
-                      <code style={{ color: 'var(--amber)' }}>OAuth credentials</code>
-                    )}{' '}
-                    to the environment, then restart the app.
-                  </div>
-                )}
-
-                {result && (
-                  <div className="space-y-1">
-                    {result.resources.map((r) => (
-                      <p key={r.key} className="text-[11px] flex items-start gap-1.5">
-                        <span
-                          className="material-icons-outlined text-[13px] shrink-0"
-                          style={{ color: r.error ? 'var(--error)' : 'var(--success)' }}
-                        >
-                          {r.error ? 'error_outline' : 'check_circle'}
-                        </span>
-                        <span style={{ color: r.error ? 'var(--error)' : 'var(--on-surface-variant)' }}>
-                          {r.error ? `${r.label}: ${r.error}` : `${r.count ?? 0} ${r.label.toLowerCase()}`}
-                        </span>
-                      </p>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Footer */}
-              <div
-                className="mt-6 pt-4 flex items-center justify-between gap-3 flex-wrap"
-                style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
-              >
-                <div className="space-y-0.5">
-                  <span className="text-[10px] block" style={{ color: 'var(--stone)' }}>
-                    LAST SYNC
-                  </span>
-                  <span className="font-mono text-[11px] font-semibold" style={{ color: 'var(--on-surface)' }}>
-                    {result ? formatTime(result.syncedAt) : 'Never'}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {state.connected ? (
-                    <>
-                      <button
-                        onClick={() => setDetailsFor(item)}
-                        className="btn-secondary py-1.5 px-3 text-[11px] font-bold rounded-lg"
-                      >
-                        Details
-                      </button>
-                      {item.surface && (
-                        <Link
-                          href={item.surface.href}
-                          className="btn-secondary py-1.5 px-3 text-[11px] font-bold rounded-lg flex items-center gap-1"
-                        >
-                          <span className="material-icons-outlined text-[13px]">open_in_new</span>
-                          Open
-                        </Link>
-                      )}
-                      <button
-                        onClick={() => handleSync(item.provider)}
-                        disabled={isBusy}
-                        className="btn-ghost-amber py-1.5 px-3 text-[11px] font-bold rounded-lg flex items-center gap-1"
-                      >
-                        <span className={`material-icons-outlined text-[13px] ${isBusy ? 'animate-spin' : ''}`}>
-                          sync
-                        </span>
-                        {isBusy ? 'Syncing' : 'Sync'}
-                      </button>
-                      <button
-                        onClick={() => setPendingDisconnect(item)}
-                        className="btn-ghost-error py-1.5 px-3 text-[11px] font-bold rounded-lg"
-                      >
-                        Disconnect
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      onClick={() => handleConnect(item)}
-                      disabled={loading}
-                      className={state.configured ? 'btn-primary py-1.5 px-4 text-[11px] font-bold rounded-lg' : 'btn-secondary py-1.5 px-4 text-[11px] font-bold rounded-lg'}
-                    >
-                      {state.configured ? `Connect ${item.providerLabel}` : 'Setup required'}
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          )
-        })}
+        <div className="search-5bloc w-full md:w-64">
+          <span className="material-icons-outlined">search</span>
+          <input 
+            type="text" 
+            placeholder="Search integrations…" 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
       </div>
-      )}
 
-      {/* Live calendar preview - the Calendar integration has no other surface yet */}
-      {showCalendarWidget && (
-        <div className="card-5bloc relative" style={{ borderRadius: '16px', boxShadow: 'var(--shadow-2)' }}>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <p className="label-sm" style={{ color: 'var(--stone)' }}>
-                Google Calendar
-              </p>
-              <h2 className="text-[14px] font-medium" style={{ color: 'var(--on-surface)' }}>
-                Next 30 days
-              </h2>
-            </div>
-            <span className="material-icons-outlined text-[18px]" style={{ color: '#0F9D58' }}>
-              event
-            </span>
-          </div>
-          <CalendarWidget className="max-h-[320px]" />
+      {!!statusError && (
+        <div className="mb-8">
+          <ErrorState
+            title="Connection Status Unavailable"
+            error={statusError}
+            onRetry={loadStatus}
+          />
         </div>
       )}
 
-      {/* Details panel - real connection facts only, nothing editable that is not persisted */}
-      {detailsFor && (
-        <div
-          className="fixed inset-0 flex items-center justify-center z-50 p-6"
-          style={{ background: 'var(--scrim)', backdropFilter: 'blur(6px)' }}
-          onClick={() => setDetailsFor(null)}
-        >
-          <div
-            className="w-full max-w-md overflow-hidden flex flex-col"
-            style={{ borderRadius: '24px', background: 'var(--surface-container)', boxShadow: 'var(--shadow-4)' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              className="px-6 py-4 flex items-center justify-between"
-              style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}
-            >
-              <div className="flex items-center gap-2">
-                <span className="material-icons-outlined text-[18px]" style={{ color: detailsFor.color }}>
-                  {detailsFor.icon}
-                </span>
-                <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--on-surface)' }}>
-                  {detailsFor.name}
-                </span>
-              </div>
-              <button onClick={() => setDetailsFor(null)} style={{ color: 'var(--stone)' }} aria-label="Close">
-                <span className="material-icons-outlined text-[20px]">close</span>
-              </button>
-            </div>
+      {loading && !statusError ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Skeleton className="h-48 w-full" />
+          <Skeleton className="h-48 w-full" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {filtered.map((item) => {
+            const state = providers[item.provider]
+            const result = syncResults[item.provider]
+            const isBusy = syncing === item.provider || syncing === 'all'
 
-            <div className="p-6 space-y-4 text-[12px]">
-              {(() => {
-                const state = providers[detailsFor.provider]
-                const account = state.account
-                const rows: { label: string; value: string }[] = [
-                  { label: 'Account', value: account?.email || account?.name || 'Unknown' },
-                  { label: 'Connected on', value: formatDate(account?.connectedAt) },
-                  { label: 'Access token renews', value: formatDate(account?.expiresAt) },
-                ]
-
-                return (
-                  <>
-                    <div className="space-y-2">
-                      {rows.map((row) => (
-                        <div key={row.label} className="flex items-baseline justify-between gap-4">
-                          <span style={{ color: 'var(--stone)' }}>{row.label}</span>
-                          <span className="text-right font-medium" style={{ color: 'var(--on-surface)' }}>
-                            {row.value}
-                          </span>
-                        </div>
-                      ))}
+            return (
+              <div key={item.id} className="card-m overflow-hidden flex flex-col">
+                <div className="card-m-head">
+                  <div className="flex items-center gap-3">
+                    <div className="feed-m-icon" style={{ color: item.color, background: `color-mix(in srgb, ${item.color} 10%, transparent)` }}>
+                      <span className="material-icons-outlined">{item.icon}</span>
                     </div>
-
-                    {detailsFor.provider === 'google' && (
-                      <div>
-                        <p className="mb-2" style={{ color: 'var(--stone)' }}>
-                          Linked Drive folders
-                        </p>
-                        {account?.driveFolders?.length ? (
-                          <ul className="space-y-1.5">
-                            {account.driveFolders.map((folder) => (
-                              <li
-                                key={folder.id}
-                                className="flex items-center gap-2 px-3 py-2 rounded-lg"
-                                style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--on-surface)' }}
-                              >
-                                <span className="material-icons-outlined text-[14px]" style={{ color: 'var(--stone)' }}>
-                                  folder
-                                </span>
-                                <span className="truncate">{folder.name}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p style={{ color: 'var(--on-surface-variant)' }}>
-                            None yet. Open <strong>Documents</strong> and link a project folder to expose it to 5Bloc.
-                          </p>
-                        )}
-                        {state.missingOptionalEnv.length > 0 && (
-                          <p className="mt-2 text-[11px]" style={{ color: 'var(--amber)' }}>
-                            Folder picking needs {state.missingOptionalEnv.join(' and ')} on the server.
-                          </p>
-                        )}
+                    <div>
+                      <h3 className="card-m-title">{item.name}</h3>
+                      <p className="text-[11px] text-stone uppercase font-bold tracking-tight">{item.providerLabel}</p>
+                    </div>
+                  </div>
+                  {state.connected ? (
+                    <span className="chip-m chip-m-green">Connected</span>
+                  ) : (
+                    <span className="chip-m">Not Linked</span>
+                  )}
+                </div>
+                
+                <div className="p-5 flex-1">
+                  <p className="text-[13.5px] leading-relaxed text-on-surface-variant mb-6">
+                    {item.description}
+                  </p>
+                  
+                  {state.connected && (
+                    <div className="bg-surface-container-low rounded-xl p-3 mb-6 border border-hairline">
+                      <div className="flex items-center justify-between text-[12px] mb-2">
+                        <span className="text-stone font-medium">Account</span>
+                        <span className="font-semibold">{state.account?.email || 'Active'}</span>
                       </div>
-                    )}
+                      <div className="flex items-center justify-between text-[12px]">
+                        <span className="text-stone font-medium">Last Sync</span>
+                        <span className="font-semibold">{result?.syncedAt ? formatDate(result.syncedAt) : 'Never'}</span>
+                      </div>
+                    </div>
+                  )}
 
-                    {detailsFor.provider === 'autodesk' && (
-                      <p style={{ color: 'var(--on-surface-variant)' }}>
-                        Upload DWG or RVT files from the CAD viewer. 5Bloc stores them in Autodesk Platform Services,
-                        translates them to SVF2, and renders them in-app.
-                      </p>
-                    )}
-
-                    {detailsFor.surface && (
-                      <Link
-                        href={detailsFor.surface.href}
-                        className="btn-secondary py-2 px-3 text-[11px] inline-flex items-center gap-1"
+                  <div className="flex items-center gap-3">
+                    {!state.connected ? (
+                      <button 
+                        className="btn-primary w-full" 
+                        onClick={() => handleConnect(item)}
+                        disabled={!state.configured}
                       >
-                        <span className="material-icons-outlined text-[13px]">open_in_new</span>
-                        {detailsFor.surface.label}
-                      </Link>
+                        Connect {item.providerLabel}
+                      </button>
+                    ) : (
+                      <>
+                        <button
+                          className="btn-secondary flex-1"
+                          onClick={() => handleSync(item.provider)}
+                          disabled={isBusy}
+                        >
+                          <span className={`material-icons-outlined text-[16px] ${isBusy ? 'animate-spin' : ''}`}>sync</span>
+                          Sync Now
+                        </button>
+                        <button
+                          className="btn-ghost-error btn-icon"
+                          onClick={() => setPendingDisconnect(item)}
+                          title="Disconnect"
+                        >
+                          <span className="material-icons-outlined text-[18px]">link_off</span>
+                        </button>
+                      </>
                     )}
-                  </>
-                )
-              })()}
-            </div>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
-            <div className="px-6 py-4 flex justify-end" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-              <button onClick={() => setDetailsFor(null)} className="btn-secondary py-1.5 px-4 text-xs rounded-lg">
-                Close
-              </button>
-            </div>
-          </div>
+      {providers.google.connected && (activeCategory === 'all' || activeCategory === 'workspace') && (
+        <div className="mt-8 pt-8 border-t border-hairline">
+          <h2 className="card-m-title mb-6 px-1">Calendar Overview</h2>
+          <CalendarWidget />
         </div>
       )}
 
       <ConfirmDialog
-        open={pendingDisconnect !== null}
-        title={`Disconnect ${pendingDisconnect ? PROVIDER_LABEL[pendingDisconnect.provider] : ''}?`}
-        message={
-          pendingDisconnect?.provider === 'google'
-            ? 'This removes the stored token for Drive, Gmail, and Calendar, and 5Bloc will stop showing data from them until you reconnect.'
-            : 'This removes the stored Autodesk token. Uploaded models stay in Autodesk Platform Services but 5Bloc cannot open them until you reconnect.'
-        }
-        confirmLabel="Disconnect"
-        variant="danger"
-        loading={disconnecting}
+        open={!!pendingDisconnect}
+        title={`Disconnect ${pendingDisconnect?.providerLabel}?`}
+        message={`This will stop 5Bloc from reading your ${pendingDisconnect?.name} data. You can reconnect at any time.`}
+        confirmLabel={disconnecting ? 'Disconnecting...' : 'Disconnect'}
         onConfirm={confirmDisconnect}
         onCancel={() => setPendingDisconnect(null)}
+        variant="danger"
       />
     </div>
   )

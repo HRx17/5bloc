@@ -129,29 +129,25 @@ export default function CatalogPage() {
   }
 
   return (
-    <div id="main-content" className="mx-auto max-w-6xl px-4 py-6 lg:px-6">
-      <header className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className="page-m">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
         <div>
-          <p className="kicker mb-1">Vendor tools</p>
-          <h1 className="text-[22px] font-semibold tracking-tight" style={{ color: 'var(--on-surface)' }}>
-            Product catalogue
-          </h1>
-          <p className="mt-1 text-[13.5px] max-w-xl" style={{ color: 'var(--on-surface-variant)' }}>
-            Upload CSV exports from Tally, Zoho, Excel, or your ERP. Built for distributors with 10,000+ SKUs —
-            we chunk the upload so signup never blocks on typing every item.
+          <h1 className="page-m-title">Product Catalogue</h1>
+          <p className="page-m-sub">
+            Upload CSV exports from Tally, Zoho, Excel, or your ERP. Built for distributors with 10,000+ SKUs.
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-3">
           <button
             type="button"
             onClick={downloadCatalogTemplate}
-            className="btn-secondary inline-flex items-center gap-2 text-[12.5px]"
+            className="btn-secondary"
           >
-            <Download className="h-3.5 w-3.5" aria-hidden />
+            <Download className="h-4 w-4" aria-hidden />
             Template CSV
           </button>
-          <label className="btn-primary inline-flex items-center gap-2 text-[12.5px] cursor-pointer">
-            {importing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" aria-hidden />}
+          <label className="btn-primary cursor-pointer">
+            {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" aria-hidden />}
             {importing ? 'Importing…' : 'Upload CSV'}
             <input
               type="file"
@@ -169,124 +165,128 @@ export default function CatalogPage() {
       </header>
 
       {importing && (
-        <div
-          className="mb-4 h-2 w-full overflow-hidden rounded-full"
-          style={{ background: 'var(--surface-container-high)' }}
-          role="progressbar"
-          aria-valuenow={progress}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label="Import progress"
-        >
-          <div className="h-full rounded-full" style={{ width: `${progress}%`, background: 'var(--amber)' }} />
+        <div className="mb-6 card-m p-4">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-xs font-bold text-stone uppercase tracking-wider">Import Progress</span>
+            <span className="text-xs font-bold text-amber">{progress}%</span>
+          </div>
+          <div className="meter-m">
+            <span style={{ width: `${progress}%` }} />
+          </div>
         </div>
       )}
 
       {error && (
-        <p role="alert" className="mb-4 text-[13px]" style={{ color: 'var(--error)' }}>
-          {error}
-        </p>
+        <div className="mb-6 p-4 rounded-xl bg-error/10 border border-error/20 flex items-center gap-3">
+          <span className="material-icons-outlined text-error">error_outline</span>
+          <p className="text-sm text-error font-medium">{error}</p>
+        </div>
       )}
       {message && (
-        <p role="status" className="mb-4 text-[13px]" style={{ color: 'var(--success)' }}>
-          {message}
-        </p>
+        <div className="mb-6 p-4 rounded-xl bg-success/10 border border-success/20 flex items-center gap-3">
+          <span className="material-icons-outlined text-success">check_circle_outline</span>
+          <p className="text-sm text-success font-medium">{message}</p>
+        </div>
       )}
 
-      <section
-        className="rounded-2xl p-4 mb-5"
-        style={{ background: 'var(--surface-container)', boxShadow: 'inset 0 0 0 1px var(--hairline)' }}
-      >
-        <div className="flex items-start gap-3">
-          <FileSpreadsheet className="h-5 w-5 shrink-0 mt-0.5" style={{ color: 'var(--purple)' }} aria-hidden />
-          <div className="text-[13px] leading-relaxed" style={{ color: 'var(--on-surface-variant)' }}>
-            <strong style={{ color: 'var(--on-surface)' }}>Still on the waitlist?</strong>{' '}
-            Use{' '}
-            <Link href="/join-as-vendor" className="underline" style={{ color: 'var(--amber)' }}>
-              Join as vendor
-            </Link>{' '}
-            to submit your profile + catalogue before invite. After you have an account, re-upload here anytime.
+      <div className="card-m p-4 mb-8 bg-surface-container-low border-l-4 border-l-purple">
+        <div className="flex items-start gap-4">
+          <div className="feed-m-icon !bg-purple/10 !text-purple">
+            <FileSpreadsheet className="h-4 w-4" aria-hidden />
+          </div>
+          <div>
+            <h3 className="text-[14px] font-bold text-on-surface">Still on the waitlist?</h3>
+            <p className="text-[13px] text-on-surface-variant mt-1">
+              Use <Link href="/join-as-vendor" className="text-amber font-semibold underline underline-offset-4 decoration-amber/30">Join as vendor</Link> to submit your profile + catalogue before invite.
+            </p>
           </div>
         </div>
-      </section>
-
-      <div className="mb-4 relative max-w-md">
-        <label htmlFor="catalog-search" className="sr-only">Search catalogue</label>
-        <Search
-          className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5"
-          style={{ color: 'var(--stone)' }}
-          aria-hidden
-        />
-        <input
-          id="catalog-search"
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search SKU, name, brand…"
-          className="input-5bloc pl-9 h-10 text-[13px]"
-        />
       </div>
 
-      <div
-        className="overflow-x-auto rounded-2xl"
-        style={{ background: 'var(--surface-container)', boxShadow: 'inset 0 0 0 1px var(--hairline)' }}
-      >
+      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="search-5bloc w-full md:w-80">
+          <Search className="h-4 w-4 text-stone" aria-hidden />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search SKU, name, brand…"
+          />
+        </div>
+        {items.length >= 200 && (
+          <p className="text-[11px] font-bold text-stone uppercase tracking-tight">
+            Showing first 200 rows
+          </p>
+        )}
+      </div>
+
+      <div className="card-m overflow-hidden">
         {loading ? (
-          <div className="p-4 space-y-2">
-            {Array.from({ length: 6 }, (_, i) => (
-              <Skeleton key={i} className="h-11 w-full" />
+          <div className="p-6 space-y-4">
+            {Array.from({ length: 8 }, (_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
             ))}
           </div>
         ) : loadError ? (
-          <ErrorState
-            title="Could not load your catalogue"
-            description="Nothing has been deleted — we could not read your items. You can still upload a CSV while this is failing."
-            error={loadError}
-            onRetry={load}
-          />
+          <div className="p-8">
+            <ErrorState
+              title="Catalogue unavailable"
+              description="We could not read your items. You can still upload a CSV."
+              error={loadError}
+              onRetry={load}
+            />
+          </div>
         ) : filtered.length === 0 ? (
-          <EmptyState
-            icon={query.trim() ? 'search_off' : 'inventory_2'}
-            title={query.trim() ? `No SKUs match “${query.trim()}”` : 'No catalogue items yet'}
-            description={
-              query.trim()
-                ? 'Search covers SKU, name, category and brand. Clear the search to see the full catalogue.'
-                : 'Upload a CSV export from Tally, Zoho, Excel or your ERP to populate thousands of SKUs in one go. Start from the template if you are unsure of the columns.'
-            }
-            actionLabel={query.trim() ? undefined : 'Download template CSV'}
-            onClick={query.trim() ? undefined : downloadCatalogTemplate}
-          />
+          <div className="p-8">
+            <EmptyState
+              icon={query.trim() ? 'search_off' : 'inventory_2'}
+              title={query.trim() ? `No matches for “${query.trim()}”` : 'No catalogue items'}
+              description={
+                query.trim()
+                  ? 'Search covers SKU, name, category and brand. Try a broader term.'
+                  : 'Upload a CSV export to populate thousands of SKUs. Start from our template.'
+              }
+              actionLabel={query.trim() ? undefined : 'Download template'}
+              onClick={query.trim() ? undefined : downloadCatalogTemplate}
+            />
+          </div>
         ) : (
-          <table className="w-full text-left text-[12.5px]">
-            <caption className="sr-only">Your product catalogue</caption>
-            <thead style={{ color: 'var(--on-surface-variant)', background: 'var(--surface-container-low)' }}>
-              <tr>
-                <th scope="col" className="px-4 py-3 font-medium">SKU</th>
-                <th scope="col" className="px-4 py-3 font-medium">Name</th>
-                <th scope="col" className="px-4 py-3 font-medium">Category</th>
-                <th scope="col" className="px-4 py-3 font-medium">Brand</th>
-                <th scope="col" className="px-4 py-3 font-medium">Price</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((row) => (
-                <tr key={row.id ?? row.sku + row.name} style={{ borderTop: '1px solid var(--hairline)', color: 'var(--on-surface)' }}>
-                  <td className="px-4 py-2.5 font-mono text-[11.5px]">{row.sku}</td>
-                  <td className="px-4 py-2.5">{row.name}</td>
-                  <td className="px-4 py-2.5" style={{ color: 'var(--on-surface-variant)' }}>{row.category || '—'}</td>
-                  <td className="px-4 py-2.5" style={{ color: 'var(--on-surface-variant)' }}>{row.brand || '—'}</td>
-                  <td className="px-4 py-2.5">{row.price ? `${row.currency} ${row.price}` : '—'}</td>
+          <div className="overflow-x-auto">
+            <table className="table-m">
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>Name</th>
+                  <th>Category</th>
+                  <th>Brand</th>
+                  <th>Price</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map((row) => (
+                  <tr key={row.id ?? row.sku + row.name}>
+                    <td className="font-mono text-[11px] font-bold text-stone">{row.sku}</td>
+                    <td className="font-semibold">{row.name}</td>
+                    <td>
+                      {row.category ? (
+                        <span className="chip-m chip-m-blue">{row.category}</span>
+                      ) : '—'}
+                    </td>
+                    <td>
+                      {row.brand ? (
+                        <span className="chip-m">{row.brand}</span>
+                      ) : '—'}
+                    </td>
+                    <td className="font-mono font-bold text-amber">
+                      {row.price ? `${row.currency} ${row.price}` : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
-      {items.length >= 200 && (
-        <p className="mt-3 text-[12px]" style={{ color: 'var(--on-surface-variant)' }}>
-          Showing the first 200 rows. Full catalogue stays searchable server-side after import.
-        </p>
-      )}
     </div>
   )
 }

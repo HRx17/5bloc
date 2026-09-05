@@ -110,3 +110,6 @@ Autodesk OAuth credentials. All third-party services are the repo's own, not pla
 - Google OAuth + Workspace (Drive/Gmail/Calendar); Google Fonts CDN
 - Upstash Redis rate limiting; cron `/api/public/cron/meeting-reminders` (CRON_SECRET)
 - HeyCatch analytics, PostHog (VITE_POSTHOG_KEY), Sentry envelopes (SENTRY_DSN / VITE_SENTRY_DSN)
+
+## New task (user request)
+- Push current code to GitHub `main` so Vercel can pull the latest build and deploy it.
