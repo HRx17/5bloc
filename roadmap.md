@@ -97,6 +97,24 @@ user if those features are wanted: Razorpay (payments), Resend (outbound email),
 (AI features), Cloudflare R2 (file storage), Upstash Redis (usage limits), Google and
 Autodesk OAuth credentials. All third-party services are the repo's own, not platform ones.
 
+## UI/UX polish — complete
+- Applied one Material-style design system across every signed-in screen: `page-m`, `card-m`,
+  `card-m-head`, `card-m-title`, `table-m`, `chip-m`, `stat-m`, `feed-m-icon`, `search-5bloc`.
+- Kept the existing amber/charcoal palette (CSS variables) and dark-mode support.
+- Polished screens: Dashboard, Projects, Clients, Invoices, Documents, Marketplace, Messages,
+  Calendar, Integrations, Catalog, AI tools, Settings, Pay/Portal token pages, Admin, role
+  dashboards (builder, contractor, consultant, client), CAD, Coordination, Client detail,
+  all project-detail tabs, and new-project/new-invoice/marketplace-detail flows.
+- Landing page header is clean and aligned; public pages render without console errors.
+
+## Verification status
+- `bunx tsgo --noEmit -p tsconfig.json` passes with no errors.
+- `bun run build` produces a production bundle successfully.
+- Public routes (`/`, `/about`, `/list-your-business`, `/join-as-vendor`, `/vs/5bloc-vs-procore`)
+  render with zero console errors.
+- Authenticated route smoke tests were passing before the injected preview session expired;
+  code is structurally ready for Vercel deployment with the env vars already configured there.
+
 ## Out of scope / cannot port
 - Electron desktop wrapper (`electron/`) — desktop builds stay in the GitHub repo.
 - Service worker / offline PWA behaviour needs rebuilding on this framework.
@@ -111,5 +129,6 @@ Autodesk OAuth credentials. All third-party services are the repo's own, not pla
 - Upstash Redis rate limiting; cron `/api/public/cron/meeting-reminders` (CRON_SECRET)
 - HeyCatch analytics, PostHog (VITE_POSTHOG_KEY), Sentry envelopes (SENTRY_DSN / VITE_SENTRY_DSN)
 
-## New task (user request)
-- Push current code to GitHub `main` so Vercel can pull the latest build and deploy it.
+## Remaining deployment step
+- Push current code to GitHub `main` so Vercel can pull the latest build and deploy it with the
+  existing environment variables already configured in the Vercel project.
