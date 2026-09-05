@@ -119,30 +119,20 @@ export default function ContractorDashboardPage() {
   return (
     <div className="page-m space-y-8">
       <div>
-        <h1 className="page-m-title" style={{ color: 'var(--on-surface)' }}>
-          Contractor workspace
-        </h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
+        <h1 className="page-m-title">Contractor workspace</h1>
+        <p className="page-m-sub">
           Projects open for service, your bids, and invited workspaces — in one place.
         </p>
       </div>
 
       <section className="grid md:grid-cols-3 gap-4">
         {stats.map((k) => (
-          <div
-            key={k.label}
-            className="p-5 rounded-2xl"
-            style={{ background: 'var(--surface-container)', boxShadow: 'var(--shadow-2)' }}
-          >
-            <p className="text-[12px]" style={{ color: 'var(--stone)' }}>
-              {k.label}
-            </p>
+          <div key={k.label} className="card-m stat-m">
+            <p className="stat-m-label">{k.label}</p>
             {k.pending ? (
               <Skeleton className="h-8 w-16 mt-2" />
             ) : (
-              <p className="text-[28px] font-semibold mt-1" style={{ color: 'var(--on-surface)' }}>
-                {k.failed ? '—' : k.value}
-              </p>
+              <p className="stat-m-value">{k.failed ? '—' : k.value}</p>
             )}
           </div>
         ))}
@@ -150,7 +140,7 @@ export default function ContractorDashboardPage() {
 
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Projects open for service</h2>
+          <h2 className="card-m-title">Projects open for service</h2>
           <Link href="/marketplace" className="text-[12px]" style={{ color: 'var(--amber)' }}>
             Browse marketplace
           </Link>
@@ -184,8 +174,7 @@ export default function ContractorDashboardPage() {
                 <Link
                   key={t.id}
                   href={`/marketplace/tenders/${t.id}`}
-                  className="p-5 rounded-2xl flex flex-col justify-between gap-3"
-                  style={{ background: 'var(--surface-container)', boxShadow: 'var(--shadow-2)' }}
+                  className="card-m card-m-hover p-5 flex flex-col justify-between gap-3"
                 >
                   <div>
                     <p className="font-semibold text-lg">{t.project_name || t.title}</p>
@@ -199,7 +188,7 @@ export default function ContractorDashboardPage() {
                     )}
                     <div className="flex flex-wrap gap-1 mt-3">
                       {services.map((s) => (
-                        <span key={s} className="chip text-[10px]" style={{ color: 'var(--amber)' }}>
+                        <span key={s} className="chip-m chip-m-amber">
                           {s}
                         </span>
                       ))}
@@ -210,14 +199,7 @@ export default function ContractorDashboardPage() {
                       </p>
                     )}
                   </div>
-                  <span
-                    className="chip text-[11px] w-fit"
-                    style={
-                      t.my_bid
-                        ? { color: 'var(--success)', background: 'rgba(46,204,138,0.12)' }
-                        : { color: 'var(--amber)', background: 'rgba(245,166,35,0.12)' }
-                    }
-                  >
+                  <span className={`chip-m w-fit ${t.my_bid ? 'chip-m-green' : 'chip-m-amber'}`}>
                     {t.my_bid ? `Bid submitted · ${money(t.my_bid.amount)}` : 'View details & bid'}
                   </span>
                 </Link>
@@ -229,7 +211,7 @@ export default function ContractorDashboardPage() {
 
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Recent bids</h2>
+          <h2 className="card-m-title">Recent bids</h2>
           <Link href="/contractor/bids" className="text-[12px]" style={{ color: 'var(--amber)' }}>
             View all
           </Link>
@@ -254,25 +236,25 @@ export default function ContractorDashboardPage() {
             description="Open a project above to read the scope, drawings and budget, then submit your price and timeline. Architects usually shortlist within a week."
           />
         ) : (
-          <div className="space-y-2">
-            {bids.slice(0, 5).map((b) => (
-              <div
-                key={b.id}
-                className="px-4 py-3 rounded-xl flex justify-between"
-                style={{ background: 'var(--surface-container-low)' }}
-              >
-                <span className="text-sm">{b.tender_title || b.tenders?.title || 'Project'}</span>
-                <span className="text-sm" style={{ color: 'var(--amber)' }}>
-                  {money(b.amount)} · {b.status}
-                </span>
-              </div>
-            ))}
+          <div className="card-m overflow-x-auto">
+            <table className="table-m">
+              <tbody>
+                {bids.slice(0, 5).map((b) => (
+                  <tr key={b.id}>
+                    <td>{b.tender_title || b.tenders?.title || 'Project'}</td>
+                    <td style={{ color: 'var(--amber)' }}>
+                      {money(b.amount)} · {b.status}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold mb-4">Invited projects</h2>
+        <h2 className="card-m-title mb-4">Invited projects</h2>
         {loadingProjects ? (
           <div className="grid md:grid-cols-2 gap-3">
             {Array.from({ length: 2 }, (_, i) => (
@@ -295,7 +277,7 @@ export default function ContractorDashboardPage() {
         ) : (
           <div className="grid md:grid-cols-2 gap-3">
             {projects.map((p) => (
-              <div key={p.id} className="p-4 rounded-xl" style={{ background: 'var(--surface-container)' }}>
+              <div key={p.id} className="card-m p-4">
                 <p className="font-semibold">{p.name}</p>
                 <p className="text-[12px] mt-1" style={{ color: 'var(--stone)' }}>
                   {p.city} · {p.phase?.replaceAll('_', ' ')}

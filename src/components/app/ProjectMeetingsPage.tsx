@@ -226,7 +226,7 @@ export default function ProjectMeetingsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 space-y-4">
-          <div className="card-5bloc space-y-4">
+          <div className="card-m p-5 space-y-4">
             <div className="border-b pb-3 flex items-center justify-between">
               <div>
                 <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">
@@ -294,7 +294,7 @@ export default function ProjectMeetingsPage() {
 
         <div>
           {activeMeeting ? (
-            <div className="card-5bloc space-y-5 animate-fade-in">
+            <div className="card-m p-5 space-y-5 animate-fade-in">
               <div className="border-b pb-3 flex items-center justify-between">
                 <div>
                   <h4 className="text-xs font-bold font-mono text-amber uppercase tracking-wide">
@@ -408,7 +408,7 @@ export default function ProjectMeetingsPage() {
               </button>
             </div>
           ) : (
-            <div className="card-5bloc text-center py-12 text-stone text-xs">
+            <div className="card-m text-center py-12 text-stone text-xs">
               <span className="material-icons-outlined text-[32px] text-stone/25 mb-2">event</span>
               <p>Select a meeting to view time, join link, attendees, decisions, and action owners.</p>
             </div>

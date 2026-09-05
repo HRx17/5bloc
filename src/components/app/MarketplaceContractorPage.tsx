@@ -128,7 +128,7 @@ export default function MarketplaceContractorPage() {
     return (
       <div className="page-m space-y-6">
         <Skeleton style={{ height: 14, width: 160 }} />
-        <div className="card-5bloc space-y-3">
+        <div className="card-m p-5 space-y-3">
           <Skeleton style={{ height: 24, width: '45%' }} />
           <Skeleton lines={2} />
         </div>
@@ -198,16 +198,16 @@ export default function MarketplaceContractorPage() {
           />
           <div className="absolute inset-x-0 bottom-0 p-6 md:p-8 space-y-3">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="chip text-[10px] uppercase" style={{ color: '#1d1d1f', background: 'var(--amber)', border: 'none' }}>
+              <span className="chip-m text-[10px] uppercase" style={{ color: '#1d1d1f', background: 'var(--amber)' }}>
                 {isVendor ? 'Vendor · Supplies' : 'Contractor · Services'}
               </span>
               {listing.verified && (
-                <span className="chip text-[10px] uppercase" style={{ color: '#1d1d1f', background: 'var(--success)', border: 'none' }}>
+                <span className="chip-m chip-m-green text-[10px] uppercase">
                   Verified partner
                 </span>
               )}
               {listing.badge_active && (
-                <span className="chip text-[10px] uppercase" style={{ color: '#fff', background: 'rgba(8,9,9,0.55)', border: 'none' }}>
+                <span className="chip-m text-[10px] uppercase" style={{ color: '#fff', background: 'rgba(8,9,9,0.55)' }}>
                   Badge
                 </span>
               )}
@@ -224,7 +224,7 @@ export default function MarketplaceContractorPage() {
           {listing.tags.length > 0 && (
             <div className="flex flex-wrap items-center gap-1.5">
               {listing.tags.map((t) => (
-                <span key={t} className="chip text-[10px]" style={{ color: 'var(--stone)' }}>
+                <span key={t} className="chip-m text-[10px]">
                   {t}
                 </span>
               ))}
@@ -273,9 +273,9 @@ export default function MarketplaceContractorPage() {
           )}
 
           {activeTab === 'about' && (
-            <div className="card-5bloc space-y-5">
+            <div className="card-m p-5 space-y-5">
               <div>
-                <h4 className="text-xs font-bold font-mono uppercase mb-2" style={{ color: 'var(--stone)' }}>
+                <h4 className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--stone)' }}>
                   {isVendor ? 'What they supply' : 'About the business'}
                 </h4>
                 <p className="text-[13px] leading-relaxed">
@@ -289,12 +289,12 @@ export default function MarketplaceContractorPage() {
 
               {isVendor && listing.supply_categories.length > 0 && (
                 <div>
-                  <h4 className="text-xs font-bold font-mono uppercase mb-2" style={{ color: 'var(--stone)' }}>
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--stone)' }}>
                     Supply categories
                   </h4>
                   <div className="flex flex-wrap gap-1.5">
                     {listing.supply_categories.map((c) => (
-                      <span key={c} className="chip text-[11px]" style={{ color: 'var(--amber)' }}>
+                      <span key={c} className="chip-m chip-m-amber text-[11px]">
                         {c}
                       </span>
                     ))}
@@ -345,7 +345,7 @@ export default function MarketplaceContractorPage() {
           {activeTab === 'reviews' && hasReviews && (
             <div className="space-y-4">
               {reviews.map((rev, idx) => (
-                <div key={idx} className="card-5bloc space-y-2">
+                <div key={idx} className="card-m p-5 space-y-2">
                   <div className="flex justify-between items-start">
                     <span className="text-[10px] font-mono" style={{ color: 'var(--stone)' }}>
                       {new Date(rev.created_at).toLocaleDateString('en-IN')}
@@ -367,11 +367,8 @@ export default function MarketplaceContractorPage() {
 
         <aside className="space-y-4">
           {hasContact && (
-            <div className="card-5bloc space-y-2">
-              <h3
-                className="text-xs font-bold font-mono uppercase tracking-wider border-b pb-2"
-                style={{ color: 'var(--amber)', borderColor: 'var(--surface-container-high)' }}
-              >
+            <div className="card-m p-5 space-y-2">
+              <h3 className="card-m-title text-amber-dk pb-2" style={{ boxShadow: 'inset 0 -1px 0 var(--hairline)' }}>
                 Contact
               </h3>
               {listing.contact_name && <p className="text-[13px] font-semibold">{listing.contact_name}</p>}
@@ -389,11 +386,8 @@ export default function MarketplaceContractorPage() {
           )}
 
           {role === 'architect' && (
-            <div className="card-5bloc space-y-4">
-              <h3
-                className="text-xs font-bold font-mono uppercase tracking-wider border-b pb-2"
-                style={{ color: 'var(--amber)', borderColor: 'var(--surface-container-high)' }}
-              >
+            <div className="card-m p-5 space-y-4">
+              <h3 className="card-m-title text-amber-dk pb-2" style={{ boxShadow: 'inset 0 -1px 0 var(--hairline)' }}>
                 {isVendor ? 'Invite vendor' : 'Invite contractor'}
               </h3>
               <p className="text-xs leading-relaxed" style={{ color: 'var(--stone)' }}>

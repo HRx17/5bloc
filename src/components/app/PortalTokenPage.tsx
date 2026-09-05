@@ -194,17 +194,17 @@ export default function PortalTokenPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen font-body" style={{ background: '#F7F5F0' }} aria-busy="true">
+      <div className="min-h-screen font-body bg-surface-canvas" aria-busy="true">
         <span className="sr-only">Loading your project portal…</span>
-        <header className="px-6 py-5" style={{ background: '#FFFFFF', boxShadow: '0 1px 0 rgba(12,18,32,0.06)' }}>
+        <header className="px-6 py-5 card-m rounded-none">
           <div className="max-w-4xl mx-auto space-y-2">
-            <div className="h-3 w-40 animate-pulse rounded" style={{ background: '#EDE9E2' }} />
-            <div className="h-7 w-64 animate-pulse rounded" style={{ background: '#EDE9E2' }} />
+            <div className="h-3 w-40 animate-pulse rounded" style={{ background: 'var(--surface-container-high)' }} />
+            <div className="h-7 w-64 animate-pulse rounded" style={{ background: 'var(--surface-container-high)' }} />
           </div>
         </header>
         <main className="max-w-4xl mx-auto px-6 py-8 space-y-6">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-40 animate-pulse rounded-2xl" style={{ background: '#FFFFFF' }} />
+            <div key={i} className="h-40 animate-pulse card-m" />
           ))}
         </main>
       </div>
@@ -213,15 +213,15 @@ export default function PortalTokenPage() {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#F7F5F0' }}>
+      <div className="min-h-screen flex items-center justify-center p-6 bg-surface-canvas">
         <div className="max-w-md text-center" role="alert">
-          <h1 className="text-2xl font-semibold" style={{ color: '#0C1220' }}>
+          <h1 className="text-2xl font-semibold text-on-surface">
             This portal isn’t available
           </h1>
-          <p className="mt-2 text-sm" style={{ color: '#6B7485' }}>
+          <p className="mt-2 text-sm text-on-surface-var">
             {error || 'We could not find a project for this link.'}
           </p>
-          <p className="mt-3 text-[13px] leading-relaxed" style={{ color: '#9E9687' }}>
+          <p className="mt-3 text-[13px] leading-relaxed text-stone">
             Portal links are private and can be turned off or reissued by your architect. If this keeps
             happening, ask them to send you a fresh link.
           </p>
@@ -229,7 +229,6 @@ export default function PortalTokenPage() {
             type="button"
             onClick={load}
             className="mt-6 px-4 py-2 text-[13px] font-semibold rounded-lg"
-            style={{ background: '#F5A623', color: '#0C1220' }}
           >
             Try again
           </button>
@@ -242,11 +241,11 @@ export default function PortalTokenPage() {
   const pending = documents.filter((d) => d.approval_status === 'pending')
 
   return (
-    <div className="min-h-screen font-body" style={{ background: '#F7F5F0', color: '#0C1220' }}>
-      <header className="px-6 py-5" style={{ background: '#FFFFFF', boxShadow: '0 1px 0 rgba(12,18,32,0.06)' }}>
+    <div className="min-h-screen font-body bg-surface-canvas text-on-surface">
+      <header className="px-6 py-5 card-m rounded-none">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div>
-            <p className="text-[11px] uppercase tracking-wider" style={{ color: '#9E9687' }}>
+            <p className="text-[11px] uppercase tracking-wider text-stone">
               Client portal · {org_name || 'Architect firm'}
             </p>
             <h1 className="text-2xl font-semibold mt-1">{project.name}</h1>
@@ -262,29 +261,29 @@ export default function PortalTokenPage() {
 
       <main className="max-w-4xl mx-auto px-6 py-8 space-y-8">
         {settings.welcome_note && (
-          <p className="text-sm leading-relaxed" style={{ color: '#6B7485' }}>
+          <p className="text-sm leading-relaxed text-on-surface-var">
             {settings.welcome_note}
           </p>
         )}
 
         {settings.show_overview !== false && (
-          <section className="p-5 rounded-2xl" style={{ background: '#FFFFFF' }}>
+          <section className="p-5 card-m">
             <h2 className="font-semibold text-lg mb-3">Progress</h2>
-            <p className="text-sm mb-4" style={{ color: '#6B7485' }}>
+            <p className="text-sm mb-4 text-on-surface-var">
               Current phase:{' '}
-              <strong style={{ color: '#0C1220' }}>
+              <strong className="text-on-surface">
                 {PHASE_LABELS[project.phase] || project.phase}
               </strong>
             </p>
             {(milestones || []).length === 0 ? (
-              <p className="text-sm" style={{ color: '#9E9687' }}>
+              <p className="text-sm text-stone">
                 Your architect hasn’t published a phase breakdown yet. The overall phase above is current.
               </p>
             ) : (
             <div className="space-y-2">
               {(milestones || []).map((m) => (
                 <div key={m.id || m.phase} className="flex items-center gap-3">
-                  <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: '#EDE9E2' }}>
+                  <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'var(--surface-container-high)' }}>
                     <div
                       className="h-full rounded-full"
                       style={{
@@ -293,7 +292,7 @@ export default function PortalTokenPage() {
                       }}
                     />
                   </div>
-                  <span className="text-[11px] w-36" style={{ color: '#6B7485' }}>
+                  <span className="text-[11px] w-36 text-on-surface-var">
                     {PHASE_LABELS[m.phase] || m.phase}
                   </span>
                 </div>
@@ -304,14 +303,14 @@ export default function PortalTokenPage() {
         )}
 
         {settings.show_approvals !== false && pending.length > 0 && (
-          <section className="p-5 rounded-2xl" style={{ background: '#FFFFFF' }}>
+          <section className="p-5 card-m">
             <h2 className="font-semibold text-lg mb-3">Needs your approval</h2>
             <div className="space-y-3">
               {pending.map((doc) => (
                 <div key={doc.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-2">
                   <div>
                     <p className="font-medium">{doc.name}</p>
-                    <p className="text-[12px]" style={{ color: '#9E9687' }}>
+                    <p className="text-[12px] text-stone">
                       Version {doc.version}
                     </p>
                   </div>
@@ -320,7 +319,6 @@ export default function PortalTokenPage() {
                       onClick={() => actOnDoc(doc.id, doc.name, 'approve')}
                       disabled={!!busyDoc}
                       className="px-4 py-2 text-[12px] font-semibold rounded-lg disabled:opacity-50"
-                      style={{ background: '#F5A623', color: '#0C1220' }}
                     >
                       {busyDoc === doc.id ? 'Working…' : 'Approve'}
                     </button>
@@ -340,17 +338,17 @@ export default function PortalTokenPage() {
         )}
 
         {settings.show_documents !== false && (
-          <section className="p-5 rounded-2xl" style={{ background: '#FFFFFF' }}>
+          <section className="p-5 card-m">
             <h2 className="font-semibold text-lg mb-3">Shared documents</h2>
             {documents.length === 0 ? (
-              <p className="text-sm" style={{ color: '#9E9687' }}>No documents shared yet.</p>
+              <p className="text-sm text-stone">No documents shared yet.</p>
             ) : (
               <ul className="divide-y" style={{ borderColor: '#EDE9E2' }}>
                 {documents.map((doc) => (
                   <li key={doc.id} className="py-3 flex justify-between gap-3 text-sm items-center">
                     <span>{doc.name}</span>
                     <div className="flex items-center gap-3">
-                      <span style={{ color: '#9E9687' }} className="capitalize">
+                      <span className="text-stone capitalize">
                         {doc.approval_status?.replaceAll('_', ' ')}
                       </span>
                       <button
@@ -371,10 +369,10 @@ export default function PortalTokenPage() {
         )}
 
         {settings.show_payments !== false && (
-          <section className="p-5 rounded-2xl" style={{ background: '#FFFFFF' }}>
+          <section className="p-5 card-m">
             <h2 className="font-semibold text-lg mb-3">Payment schedule</h2>
             {(milestones || []).filter((m) => m.fee_amount).length === 0 ? (
-              <p className="text-sm" style={{ color: '#9E9687' }}>
+              <p className="text-sm text-stone">
                 No payments have been scheduled yet. Your architect will add them here as the project
                 progresses.
               </p>
@@ -399,7 +397,7 @@ export default function PortalTokenPage() {
         )}
 
         {settings.show_questions !== false && (
-          <section className="p-5 rounded-2xl" style={{ background: '#FFFFFF' }}>
+          <section className="p-5 card-m">
             <h2 className="font-semibold text-lg mb-3">Ask your architect</h2>
             {questionSent ? (
               <div>
@@ -432,7 +430,7 @@ export default function PortalTokenPage() {
                     value={askerEmail}
                     onChange={(e) => setAskerEmail(e.target.value)}
                   />
-                  <p className="text-[11px] mt-1" style={{ color: '#9E9687' }}>
+                  <p className="text-[11px] mt-1 text-stone">
                     Only needed if you want a reply by email — your architect already sees this in the project.
                   </p>
                 </div>
@@ -452,7 +450,6 @@ export default function PortalTokenPage() {
                   onClick={sendQuestion}
                   disabled={sendingQuestion}
                   className="px-4 py-2 text-[12px] font-semibold rounded-lg disabled:opacity-50"
-                  style={{ background: '#F5A623', color: '#0C1220' }}
                 >
                   {sendingQuestion ? 'Sending…' : 'Send question'}
                 </button>

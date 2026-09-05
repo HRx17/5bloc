@@ -93,8 +93,8 @@ export default function BuilderApprovalsPage() {
 
   return (
     <div className="page-m">
-      <h1 className="page-m-title mb-2">Approval inbox</h1>
-      <p className="text-sm mb-6" style={{ color: 'var(--stone)' }}>
+      <h1 className="page-m-title">Approval inbox</h1>
+      <p className="page-m-sub mb-6">
         Drawings and variations waiting for your decision.
       </p>
       {loading ? (
@@ -124,12 +124,12 @@ export default function BuilderApprovalsPage() {
             const decided = item.approval_status !== 'pending'
             const busy = pendingId === item.id
             return (
-              <div key={item.id} className="p-4 rounded-xl" style={{ background: 'var(--surface-container)' }}>
+              <div key={item.id} className="card-m p-4">
                 <p className="font-semibold">{item.name}</p>
                 <p className="text-[12px] mt-1" style={{ color: 'var(--stone)' }}>
                   {item.project_name} · v{item.version} · {item.approval_status}
                 </p>
-                <div className="flex gap-2 mt-3">
+                <div className="flex gap-2 mt-3 flex-wrap">
                   <button
                     className="btn-primary text-[11px]"
                     disabled={busy || decided}

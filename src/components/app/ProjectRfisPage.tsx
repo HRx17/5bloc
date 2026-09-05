@@ -318,7 +318,7 @@ export default function ProjectRfisPage() {
  { label: 'Under Review', value: reviewCount, color: 'text-amber' },
  { label: 'Answered / Resolved', value: answeredCount, color: 'text-success' },
  ].map((stat, idx) => (
- <div key={idx} className="card-5bloc p-4">
+ <div key={idx} className="card-m p-4">
  <span className="text-xs text-stone font-medium">{stat.label}</span>
  <h4 className={`text-xl font-bold mt-1 ${stat.color}`}>{stat.value}</h4>
  </div>
@@ -326,7 +326,7 @@ export default function ProjectRfisPage() {
  </div>
 
  {/* Main RFI table Card container */}
- <div className="card-5bloc flex flex-col justify-between">
+ <div className="card-m p-5 flex flex-col justify-between">
  <div className="flex items-center justify-between pb-4" style={{ boxShadow: '0 1px 0 rgba(159,142,122,0.10)' }}>
  <div>
  <h3 className="text-sm font-semibold" style={{ color: 'var(--on-surface)' }}>Request For Information Log</h3>
@@ -363,7 +363,7 @@ export default function ProjectRfisPage() {
  />
  ) : (
  <div className="overflow-x-auto mt-4">
- <table className="w-full text-left text-xs" style={{ borderCollapse: 'collapse' }}>
+ <table className="table-m w-full text-left text-xs" style={{ borderCollapse: 'collapse' }}>
  <thead>
  <tr className="text-xs font-semibold" style={{ color: 'var(--stone)', boxShadow: '0 1px 0 rgba(159,142,122,0.12)' }}>
  <th className="pb-3 pl-2">#</th>

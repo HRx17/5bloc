@@ -191,7 +191,7 @@ export default function CadPage() {
   // ── Connection check failed — do not pretend Autodesk is disconnected ──
   if (statusError) {
     return (
-      <div className="p-5 lg:p-7 max-w-[1240px] mx-auto">
+      <div className="page-m">
         <PageHeader />
         <ErrorState
           className="mt-6"
@@ -207,7 +207,7 @@ export default function CadPage() {
   // ── Checking connection ──
   if (connected === null) {
     return (
-      <div className="p-5 lg:p-7 max-w-[1240px] mx-auto">
+      <div className="page-m">
         <PageHeader />
         <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5 mt-6">
           <div className="space-y-4">
@@ -224,11 +224,11 @@ export default function CadPage() {
   // ── Not connected gate ──
   if (connected === false) {
     return (
-      <div className="p-5 lg:p-7 max-w-[1240px] mx-auto">
+      <div className="page-m">
         <PageHeader />
         <motion.div
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-          className="app-card flex flex-col items-center justify-center text-center py-20 mt-6">
+          className="card-m flex flex-col items-center justify-center text-center py-20 mt-6">
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
             style={{ background: 'rgba(245,166,35,0.12)', color: 'var(--amber)' }}>
             <span className="material-icons-outlined text-[28px]">architecture</span>
@@ -252,7 +252,7 @@ export default function CadPage() {
   }
 
   return (
-    <div className="p-5 lg:p-7 max-w-[1240px] mx-auto">
+    <div className="page-m">
       <PageHeader />
 
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5 mt-6">
@@ -264,10 +264,12 @@ export default function CadPage() {
             onDragLeave={() => setDragOver(false)}
             onDrop={e => { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files) }}
             onClick={() => fileInputRef.current?.click()}
-            className="rounded-2xl p-6 text-center cursor-pointer transition-all"
+            className="card-m p-6 text-center cursor-pointer transition-all"
             style={{
-              border: `1.5px dashed ${dragOver ? 'var(--amber)' : 'rgba(159,142,122,0.25)'}`,
-              background: dragOver ? 'rgba(245,166,35,0.06)' : 'var(--surface-container)',
+              boxShadow: dragOver
+                ? '0 0 0 1.5px var(--amber)'
+                : '0 1px 2px rgba(0,0,0,0.04), inset 0 0 0 1px var(--hairline)',
+              background: dragOver ? 'rgba(245,166,35,0.06)' : 'var(--surface-elevated)',
             }}
           >
             <input ref={fileInputRef} type="file" hidden
@@ -302,14 +304,16 @@ export default function CadPage() {
                 onClick={() => m.status === 'ready' && setSelected(m.urn)}
                 className="group flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all"
                 style={{
-                  background: selected === m.urn ? 'rgba(245,166,35,0.10)' : 'var(--surface-container)',
-                  boxShadow: selected === m.urn ? 'inset 0 0 0 1px rgba(245,166,35,0.25)' : 'none',
+                  background: selected === m.urn ? 'rgba(245,166,35,0.10)' : 'var(--surface-elevated)',
+                  boxShadow: selected === m.urn ? 'inset 0 0 0 1px rgba(245,166,35,0.25)' : 'inset 0 0 0 1px var(--hairline)',
                   cursor: m.status === 'ready' ? 'pointer' : 'default',
                 }}
               >
-                <span className="material-icons-outlined text-[18px] shrink-0"
+                <span className="feed-m-icon"
                   style={{ color: m.status === 'ready' ? 'var(--amber)' : 'var(--stone)' }}>
-                  {m.status === 'ready' ? 'view_in_ar' : m.status === 'failed' ? 'error_outline' : 'hourglass_top'}
+                  <span className="material-icons-outlined">
+                    {m.status === 'ready' ? 'view_in_ar' : m.status === 'failed' ? 'error_outline' : 'hourglass_top'}
+                  </span>
                 </span>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate" style={{ color: 'var(--on-surface)' }}>{m.name}</p>
@@ -330,7 +334,7 @@ export default function CadPage() {
         </div>
 
         {/* ── Viewer ── */}
-        <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--surface-container)', minHeight: 540 }}>
+        <div className="card-m overflow-hidden" style={{ minHeight: 540 }}>
           <AnimatePresence mode="wait">
             {selectedModel?.status === 'ready' ? (
               <motion.div key={selectedModel.urn} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full">
@@ -365,10 +369,10 @@ function PageHeader() {
       initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}>
       <p className="text-[12px] mb-1" style={{ color: 'var(--stone)' }}>Autodesk Platform Services</p>
-      <h1 className="font-display text-[22px] lg:text-[26px] leading-tight" style={{ color: 'var(--on-surface)' }}>
+      <h1 className="page-m-title">
         CAD Plan Viewer
       </h1>
-      <p className="text-[13px] mt-1" style={{ color: 'var(--on-surface-variant)' }}>
+      <p className="page-m-sub">
         View DWG, RVT &amp; Fusion 360 models in 2D and 3D — no AutoCAD install required.
       </p>
     </motion.div>

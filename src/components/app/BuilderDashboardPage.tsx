@@ -72,14 +72,13 @@ export default function BuilderDashboardPage() {
 
   return (
     <div className="page-m space-y-8">
-      <div>
-        <h1 className="page-m-title">Builder portfolio</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
-          All projects across your architects — approvals, budget, vendor recommendations.
-        </p>
-      </div>
-
-      <div className="flex gap-3">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="page-m-title">Builder portfolio</h1>
+          <p className="page-m-sub">
+            All projects across your architects — approvals, budget, vendor recommendations.
+          </p>
+        </div>
         <Link href="/builder/approvals" className="btn-primary text-[12px]">
           Approval inbox
         </Link>
@@ -107,7 +106,7 @@ export default function BuilderDashboardPage() {
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
           {projects.map((p) => (
-            <div key={p.id} className="p-5 rounded-2xl" style={{ background: 'var(--surface-container)' }}>
+            <div key={p.id} className="card-m card-m-hover p-5">
               <div className="flex justify-between gap-3">
                 <div>
                   <Link href={`/projects/${p.id}/documents`} className="font-semibold text-lg hover:underline">
@@ -117,9 +116,7 @@ export default function BuilderDashboardPage() {
                     {p.city} · {String(p.phase || '').replaceAll('_', ' ')}
                   </p>
                 </div>
-                <span className="chip" style={{ color: 'var(--stone)' }}>
-                  {p.status}
-                </span>
+                <span className="chip-m">{p.status}</span>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2 text-[12px]">
                 <div>
@@ -131,7 +128,7 @@ export default function BuilderDashboardPage() {
                   <p>₹{Number(p.architect_fee || 0).toLocaleString()}</p>
                 </div>
               </div>
-              <div className="mt-4 flex gap-2">
+              <div className="mt-4 flex gap-2 flex-wrap">
                 <Link href={`/projects/${p.id}/documents`} className="btn-secondary text-[11px]">
                   Review docs
                 </Link>
@@ -154,8 +151,8 @@ export default function BuilderDashboardPage() {
 
       {recommend && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.55)' }}>
-          <div className="w-full max-w-md p-6 rounded-2xl space-y-3" style={{ background: 'var(--surface-container-high)' }}>
-            <h3 className="font-semibold">Recommend a vendor</h3>
+          <div className="card-m w-full max-w-md p-6 space-y-3">
+            <h3 className="card-m-title">Recommend a vendor</h3>
             <input className="input-5bloc" placeholder="Vendor / company name" value={recommend.name} onChange={(e) => setRecommend({ ...recommend, name: e.target.value })} />
             <input className="input-5bloc" placeholder="Specialization" value={recommend.spec} onChange={(e) => setRecommend({ ...recommend, spec: e.target.value })} />
             <input className="input-5bloc" placeholder="Email" value={recommend.email} onChange={(e) => setRecommend({ ...recommend, email: e.target.value })} />

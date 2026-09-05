@@ -139,7 +139,7 @@ export default function ProjectMessagesPage() {
 
   return (
     <div className="space-y-4 font-body">
-      <div className="card-5bloc p-4">
+      <div className="card-m p-4">
         <h3 className="text-sm font-semibold text-white">Project messages</h3>
         <p className="text-[11px] text-stone mt-1">
           Channels sync for all project members. Attach images or documents to a message.
@@ -147,7 +147,7 @@ export default function ProjectMessagesPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 min-h-[420px]">
-        <div className="card-5bloc p-3 space-y-1">
+        <div className="card-m p-3 space-y-1">
           {channels.map((ch) => (
             <button
               key={ch}
@@ -164,7 +164,7 @@ export default function ProjectMessagesPage() {
           ))}
         </div>
 
-        <div className="md:col-span-3 card-5bloc flex flex-col">
+        <div className="md:col-span-3 card-m p-5 flex flex-col">
           <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[320px]">
             {loading ? (
               <div className="space-y-4 py-2">

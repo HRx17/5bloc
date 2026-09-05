@@ -303,8 +303,8 @@ export default function ClientDetailPage() {
       </div>
 
       <div className="grid md:grid-cols-3 gap-4">
-        <div className="card-5bloc md:col-span-2 space-y-3">
-          <h3 className="text-xs font-semibold text-amber">Contact</h3>
+        <div className="card-m md:col-span-2 p-5 space-y-3">
+          <h3 className="card-m-title text-amber">Contact</h3>
           <div className="grid sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-[11px] mb-1" style={{ color: 'var(--stone)' }}>Name</label>
@@ -351,8 +351,8 @@ export default function ClientDetailPage() {
             </button>
           </div>
         </div>
-        <div className="card-5bloc space-y-3">
-          <h3 className="text-xs font-semibold text-amber mb-2">Linked projects</h3>
+        <div className="card-m p-5 space-y-3">
+          <h3 className="card-m-title text-amber mb-2">Linked projects</h3>
           {client.projects.length === 0 ? (
             <p className="text-[12px]" style={{ color: 'var(--stone)' }}>
               No projects linked yet. Link one below to share a portal with this contact.
@@ -400,9 +400,9 @@ export default function ClientDetailPage() {
         </div>
       </div>
 
-      <div className="card-5bloc space-y-2">
+      <div className="card-m p-5 space-y-2">
         <div className="flex justify-between">
-          <h3 className="text-xs font-semibold text-amber">Notes</h3>
+          <h3 className="card-m-title text-amber">Notes</h3>
           {savingNotes && <span className="text-[11px]" style={{ color: 'var(--stone)' }}>Saving…</span>}
         </div>
         <textarea
@@ -412,8 +412,8 @@ export default function ClientDetailPage() {
         />
       </div>
 
-      <div className="card-5bloc space-y-4">
-        <h3 className="text-xs font-semibold text-amber">Communication log</h3>
+      <div className="card-m p-5 space-y-4">
+        <h3 className="card-m-title text-amber">Communication log</h3>
         <form onSubmit={handleAddCommLog} className="flex flex-col md:flex-row gap-2">
           <select
             className="input-5bloc"
@@ -441,14 +441,14 @@ export default function ClientDetailPage() {
         )}
         <ul className="space-y-2">
           {(logs || []).map((log) => (
-            <li key={log.id} className="text-sm">
-              <span className="capitalize" style={{ color: 'var(--amber)' }}>
-                {log.type}
-              </span>{' '}
-              · {log.summary}
-              <span className="block text-[11px]" style={{ color: 'var(--stone)' }}>
-                {log.date}
-              </span>
+            <li key={log.id} className="flex items-start gap-3 text-sm">
+              <span className="chip-m chip-m-amber capitalize shrink-0">{log.type}</span>
+              <div>
+                <span>{log.summary}</span>
+                <span className="block text-[11px]" style={{ color: 'var(--stone)' }}>
+                  {log.date}
+                </span>
+              </div>
             </li>
           ))}
         </ul>

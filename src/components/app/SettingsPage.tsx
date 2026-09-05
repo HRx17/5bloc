@@ -568,9 +568,9 @@ export default function SettingsPage() {
 
   if (loadError) {
     return (
-      <div className="p-6 font-body max-w-5xl mx-auto space-y-6">
+      <div className="page-m font-body space-y-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-wide">Workspace Settings</h1>
+          <h1 className="page-m-title">Workspace Settings</h1>
         </div>
         <ErrorState
           title="Could not load your settings"
@@ -583,10 +583,10 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-6 font-body select-none max-w-5xl mx-auto space-y-6">
+    <div className="page-m font-body select-none space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-wide">Workspace Settings</h1>
-        <p className="text-xs text-stone mt-1">
+        <h1 className="page-m-title">Workspace Settings</h1>
+        <p className="page-m-sub">
           {hydrated
             ? showsBilling
               ? 'Configure your profile, notifications, and payments.'
@@ -596,7 +596,7 @@ export default function SettingsPage() {
       </div>
 
       <div className="flex flex-col md:flex-row gap-6 items-start">
-        <div className="card-5bloc w-full md:w-56 shrink-0 py-4 px-3 space-y-1">
+        <div className="card-m w-full md:w-56 shrink-0 py-4 px-3 space-y-1">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -613,7 +613,7 @@ export default function SettingsPage() {
 
         <div className="flex-grow w-full">
           {!hydrated && (
-            <div className="card-5bloc space-y-4">
+            <div className="card-m p-5 space-y-4">
               <Skeleton className="h-5 w-40" />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Skeleton className="h-9 w-full" />
@@ -625,9 +625,11 @@ export default function SettingsPage() {
           )}
 
           {hydrated && activeTab === 'profile' && (
-            <div className="card-5bloc space-y-6">
-              <h3 className="text-sm font-semibold text-amber pb-2.5">User Profile</h3>
-              <form onSubmit={handleProfileSave} className="space-y-4">
+            <div className="card-m">
+              <div className="card-m-head">
+                <h3 className="card-m-title text-amber">User Profile</h3>
+              </div>
+              <form onSubmit={handleProfileSave} className="p-5 space-y-4">
                 <div className="flex items-center gap-4 pb-2">
                   <div
                     className="w-14 h-14 border flex items-center justify-center font-bold text-lg text-amber overflow-hidden bg-navy-lt"
@@ -714,9 +716,11 @@ export default function SettingsPage() {
           )}
 
           {hydrated && activeTab === 'organisation' && (
-            <div className="card-5bloc space-y-6">
-              <h3 className="text-sm font-semibold text-amber pb-2.5">Firm Information</h3>
-              <form onSubmit={handleOrgSave} className="space-y-4">
+            <div className="card-m">
+              <div className="card-m-head">
+                <h3 className="card-m-title text-amber">Firm Information</h3>
+              </div>
+              <form onSubmit={handleOrgSave} className="p-5 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-stone text-xs font-medium mb-1.5">Firm Name *</label>
@@ -771,8 +775,11 @@ export default function SettingsPage() {
 
           {hydrated && activeTab === 'team' && (
             <div className="space-y-6">
-              <div className="card-5bloc space-y-4">
-                <h3 className="text-sm font-semibold text-amber pb-2.5">Invite Firm Co-Worker</h3>
+              <div className="card-m">
+                <div className="card-m-head">
+                  <h3 className="card-m-title text-amber">Invite Firm Co-Worker</h3>
+                </div>
+                <div className="p-5 space-y-4">
                 <p className="text-[12px] leading-relaxed" style={{ color: 'var(--stone)' }}>
                   An <span className="text-white font-semibold">architect</span> is the account type.
                   You are the firm <span className="text-white font-semibold">owner</span>.
@@ -817,10 +824,14 @@ export default function SettingsPage() {
                     ))}
                   </div>
                 )}
+                </div>
               </div>
 
-              <div className="card-5bloc space-y-4">
-                <h3 className="text-xs font-semibold text-stone pb-2.5">Firm Workspace Members</h3>
+              <div className="card-m">
+                <div className="card-m-head">
+                  <h3 className="card-m-title">Firm Workspace Members</h3>
+                </div>
+                <div className="p-5 space-y-4">
                 {teamError ? (
                   <ErrorState
                     compact
@@ -829,42 +840,36 @@ export default function SettingsPage() {
                     onRetry={() => loadTeam()}
                   />
                 ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
+                <div className="overflow-x-auto -mx-5">
+                  <table className="table-m">
                     <thead>
-                      <tr className="text-stone text-[10px] pb-2 font-medium">
-                        <th className="pb-2 pl-2">Name</th>
-                        <th className="pb-2">Email</th>
-                        <th className="pb-2">Joined Date</th>
-                        <th className="pb-2">Workspace Role</th>
-                        <th className="pb-2 pr-2 text-right">Actions</th>
+                      <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Joined Date</th>
+                        <th>Workspace Role</th>
+                        <th className="text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-navy-lt/40 text-stone">
+                    <tbody>
                       {team.length === 0 && (
                         <tr>
-                          <td colSpan={5} className="py-4 pl-2 text-[11px]">
+                          <td colSpan={5} className="text-[11px] text-stone">
                             Nobody else is in this workspace yet. Invite a co-worker above to share projects with them.
                           </td>
                         </tr>
                       )}
                       {team.map((member) => (
                         <tr key={member.id}>
-                          <td className="py-3 pl-2 font-semibold text-white">{member.name}</td>
-                          <td className="py-3 text-xs">{member.email}</td>
-                          <td className="py-3 text-xs">{member.joined_at}</td>
-                          <td className="py-3">
-                            <span
-                              className="chip"
-                              style={{
-                                background: member.role === 'Owner' ? 'rgba(245,166,35,.12)' : 'rgba(159,142,122,.10)',
-                                color: member.role === 'Owner' ? 'var(--amber)' : 'var(--stone)',
-                              }}
-                            >
+                          <td className="font-semibold text-white">{member.name}</td>
+                          <td>{member.email}</td>
+                          <td>{member.joined_at}</td>
+                          <td>
+                            <span className={`chip-m ${member.role === 'Owner' ? 'chip-m-amber' : ''}`}>
                               {member.role}
                             </span>
                           </td>
-                          <td className="py-3 pr-2 text-right">
+                          <td className="text-right">
                             {member.role !== 'Owner' && (
                               <button
                                 onClick={() => setRemoveMember(member)}
@@ -880,6 +885,7 @@ export default function SettingsPage() {
                   </table>
                 </div>
                 )}
+                </div>
               </div>
             </div>
           )}
@@ -895,8 +901,8 @@ export default function SettingsPage() {
                 />
               ) : null}
 
-              <div className="card-5bloc space-y-3">
-                <h3 className="text-sm font-semibold text-amber">{billing.heading}</h3>
+              <div className="card-m p-5 space-y-3">
+                <h3 className="card-m-title text-amber">{billing.heading}</h3>
                 <p className="text-[11px] text-stone leading-relaxed">{billing.blurb}</p>
                 {isTestPeriod() && (
                   <p className="text-[11px] font-semibold" style={{ color: 'var(--amber)' }}>
@@ -935,7 +941,7 @@ export default function SettingsPage() {
                     return (
                       <div
                         key={plan.key}
-                        className="card-5bloc flex flex-col justify-between"
+                        className="card-m p-5 flex flex-col justify-between"
                         style={
                           current
                             ? { boxShadow: 'var(--shadow-amber)', background: 'rgba(245,166,35,.06)', color: 'var(--amber)' }
@@ -978,7 +984,7 @@ export default function SettingsPage() {
               )}
 
               {billing.addOns.map((addOn) => (
-                <div key={addOn.key} className="card-5bloc flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div key={addOn.key} className="card-m p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-amber/10 border text-amber flex items-center justify-center shrink-0">
                       <span className="material-icons-outlined text-[20px]">auto_awesome</span>
@@ -991,11 +997,11 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   {aiAddOn && addOn.key === 'ai' ? (
-                    <span className="chip text-[11px]" style={{ color: 'var(--success)' }}>
+                    <span className="chip-m chip-m-green">
                       Active
                     </span>
                   ) : isTestPeriod() ? (
-                    <span className="chip text-[11px]" style={{ color: 'var(--amber)' }}>
+                    <span className="chip-m chip-m-amber">
                       Included during test period
                     </span>
                   ) : (
@@ -1012,10 +1018,10 @@ export default function SettingsPage() {
                 </div>
               ))}
 
-              <div className="card-5bloc space-y-4">
+              <div className="card-m p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-semibold text-amber">Saved payment references</h3>
+                    <h3 className="card-m-title text-amber">Saved payment references</h3>
                     <p className="text-[11px] text-stone mt-0.5">
                       Saved for your records only (last 4 digits / UPI ID). Subscriptions and invoice
                       payments still run through Razorpay checkout — these are not charged automatically.
@@ -1033,11 +1039,7 @@ export default function SettingsPage() {
                         <button
                           key={k}
                           type="button"
-                          className="chip text-[11px]"
-                          style={{
-                            color: methodForm.kind === k ? 'var(--amber)' : 'var(--stone)',
-                            background: methodForm.kind === k ? 'rgba(245,166,35,0.12)' : 'rgba(159,142,122,0.1)',
-                          }}
+                          className={`chip-m ${methodForm.kind === k ? 'chip-m-amber' : ''}`}
                           onClick={() => setMethodForm((p) => ({ ...p, kind: k }))}
                         >
                           {k === 'card' ? 'Card' : 'UPI'}
@@ -1162,9 +1164,9 @@ export default function SettingsPage() {
               </div>
 
               {history.length > 0 && (
-                <div className="card-5bloc space-y-3">
+                <div className="card-m p-5 space-y-3">
                   <div>
-                    <h3 className="text-sm font-semibold text-amber">Billing history</h3>
+                    <h3 className="card-m-title text-amber">Billing history</h3>
                     <p className="text-[11px] text-stone mt-0.5">Receipts for your last twelve charges.</p>
                   </div>
                   <div className="space-y-2">
@@ -1202,9 +1204,11 @@ export default function SettingsPage() {
           )}
 
           {hydrated && activeTab === 'notifications' && (
-            <div className="card-5bloc space-y-6">
-              <h3 className="text-sm font-semibold text-amber pb-2.5">Email Notifications</h3>
-              <div className="space-y-4 text-xs">
+            <div className="card-m">
+              <div className="card-m-head">
+                <h3 className="card-m-title text-amber">Email Notifications</h3>
+              </div>
+              <div className="p-5 space-y-4 text-xs">
                 {[
                   { key: 'new_projects', label: 'New project invites', desc: 'Notify me when I am invited to a project workspace.' },
                   { key: 'comments', label: 'Document comments', desc: 'Notify me when someone comments on a drawing or sheet.' },
@@ -1246,14 +1250,15 @@ export default function SettingsPage() {
           )}
 
           {hydrated && activeTab === 'integrations' && (
-            <div className="card-5bloc space-y-5">
-              <div>
-                <h3 className="text-sm font-semibold text-amber pb-2.5">Connected Accounts</h3>
-                <p className="text-[11px] text-stone leading-relaxed">
-                  These accounts are linked to you personally, not to the whole firm. Connect or revoke them in the
-                  Integrations workspace.
-                </p>
+            <div className="card-m">
+              <div className="card-m-head">
+                <h3 className="card-m-title text-amber">Connected Accounts</h3>
               </div>
+              <div className="p-5 space-y-5">
+              <p className="text-[11px] text-stone leading-relaxed">
+                These accounts are linked to you personally, not to the whole firm. Connect or revoke them in the
+                Integrations workspace.
+              </p>
 
               <div className="space-y-3">
                 {INTEGRATION_PROVIDERS.map((item) => {
@@ -1291,6 +1296,7 @@ export default function SettingsPage() {
                 <a href="/cad" className="text-[11px] text-stone hover:text-amber">
                   Open CAD viewer
                 </a>
+              </div>
               </div>
             </div>
           )}

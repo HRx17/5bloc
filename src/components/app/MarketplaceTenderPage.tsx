@@ -180,11 +180,7 @@ export default function MarketplaceTenderPage() {
           </p>
         </div>
         <span
-          className="chip text-[11px] h-fit"
-          style={{
-            color: closed ? 'var(--stone)' : 'var(--success)',
-            background: closed ? 'rgba(159,142,122,0.12)' : 'rgba(46,204,138,0.12)',
-          }}
+          className={`chip-m text-[11px] h-fit ${closed ? '' : 'chip-m-green'}`}
         >
           {closed ? `Bidding ${tender.status}` : 'Open for service'}
         </span>
@@ -192,22 +188,22 @@ export default function MarketplaceTenderPage() {
 
       <div className="grid md:grid-cols-3 gap-5">
         <div className="md:col-span-2 space-y-5">
-          <section className="p-5 rounded-2xl" style={{ background: 'var(--surface-container)' }}>
-            <h2 className="text-sm font-semibold mb-3">Scope of work</h2>
+          <section className="card-m p-5">
+            <h2 className="card-m-title mb-3">Scope of work</h2>
             <p className="text-[13px] leading-relaxed" style={{ color: 'var(--stone)' }}>
               {tender.scope || 'The architect has not added a detailed scope. Contact them after bidding for drawings.'}
             </p>
             <div className="flex flex-wrap gap-1.5 mt-4">
               {services.map((s) => (
-                <span key={s} className="chip text-[10px]" style={{ color: 'var(--amber)' }}>
+                <span key={s} className="chip-m chip-m-amber text-[10px]">
                   {s}
                 </span>
               ))}
             </div>
           </section>
 
-          <section className="p-5 rounded-2xl" style={{ background: 'var(--surface-container)' }}>
-            <h2 className="text-sm font-semibold mb-3">Project details</h2>
+          <section className="card-m p-5">
+            <h2 className="card-m-title mb-3">Project details</h2>
             <dl className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-[12px]">
               {[
                 ['Type', tender.project_type ? tender.project_type.replaceAll('_', ' ') : '—'],
@@ -230,10 +226,10 @@ export default function MarketplaceTenderPage() {
         </div>
 
         <aside className="space-y-4">
-          <div className="p-5 rounded-2xl space-y-3" style={{ background: 'var(--surface-container)' }}>
+          <div className="card-m p-5 space-y-3">
             {myBid ? (
               <>
-                <h2 className="text-sm font-semibold">Your bid</h2>
+                <h2 className="card-m-title">Your bid</h2>
                 <p className="text-2xl font-semibold" style={{ color: 'var(--amber)' }}>
                   {money(myBid.amount)}
                 </p>
@@ -254,14 +250,14 @@ export default function MarketplaceTenderPage() {
               </>
             ) : closed ? (
               <>
-                <h2 className="text-sm font-semibold">Bidding closed</h2>
+                <h2 className="card-m-title">Bidding closed</h2>
                 <p className="text-[12px]" style={{ color: 'var(--stone)' }}>
                   This project is no longer accepting bids.
                 </p>
               </>
             ) : (
               <>
-                <h2 className="text-sm font-semibold">Submit your bid</h2>
+                <h2 className="card-m-title">Submit your bid</h2>
                 <div>
                   <label className="block text-[11px] mb-1" style={{ color: 'var(--stone)' }}>
                     Bid amount (₹) *

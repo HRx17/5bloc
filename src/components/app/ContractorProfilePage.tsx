@@ -111,13 +111,13 @@ export default function ContractorProfilePage() {
     <div className="page-m space-y-6">
       <div>
         <h1 className="page-m-title">Vendor profile</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
+        <p className="page-m-sub">
           This is how architects find you in the marketplace.
         </p>
       </div>
 
       {loading ? (
-        <div className="space-y-3 p-5 rounded-2xl" style={{ background: 'var(--surface-container)' }}>
+        <div className="card-m space-y-3 p-5">
           <Skeleton className="h-10 w-full" />
           <Skeleton className="h-24 w-full" />
           <Skeleton className="h-8 w-2/3" />
@@ -137,24 +137,14 @@ export default function ContractorProfilePage() {
       ) : (
         <>
           {(form.verified || form.badge_active) && (
-            <div className="flex gap-2">
-              {form.verified && (
-                <span className="chip" style={{ color: 'var(--success)', background: 'rgba(46,204,138,0.12)' }}>
-                  Verified
-                </span>
-              )}
-              {form.badge_active && (
-                <span className="chip" style={{ color: 'var(--amber)', background: 'rgba(245,166,35,0.12)' }}>
-                  ₹999 badge active
-                </span>
-              )}
-              <span className="chip" style={{ color: 'var(--stone)' }}>
-                Rating {form.rating || '—'}
-              </span>
+            <div className="flex gap-2 flex-wrap">
+              {form.verified && <span className="chip-m chip-m-green">Verified</span>}
+              {form.badge_active && <span className="chip-m chip-m-amber">₹999 badge active</span>}
+              <span className="chip-m">Rating {form.rating || '—'}</span>
             </div>
           )}
 
-          <div className="space-y-3 p-5 rounded-2xl" style={{ background: 'var(--surface-container)' }}>
+          <div className="card-m space-y-3 p-5">
             <input
               className="input-5bloc"
               placeholder="Company name"
@@ -173,13 +163,7 @@ export default function ContractorProfilePage() {
                   key={t}
                   type="button"
                   onClick={() => toggle(t)}
-                  className="chip"
-                  style={{
-                    color: form.specializations.includes(t) ? 'var(--amber)' : 'var(--stone)',
-                    background: form.specializations.includes(t)
-                      ? 'rgba(245,166,35,0.12)'
-                      : 'rgba(159,142,122,0.1)',
-                  }}
+                  className={`chip-m ${form.specializations.includes(t) ? 'chip-m-amber' : ''}`}
                 >
                   {t}
                 </button>
@@ -211,7 +195,7 @@ export default function ContractorProfilePage() {
               value={form.gst_number}
               onChange={(e) => setForm({ ...form, gst_number: e.target.value })}
             />
-            <div className="flex justify-between items-center pt-2">
+            <div className="flex justify-between items-center pt-2 flex-wrap gap-2">
               <button
                 className="btn-secondary text-[12px]"
                 type="button"

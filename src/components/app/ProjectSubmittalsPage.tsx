@@ -172,7 +172,7 @@ export default function ProjectSubmittalsPage() {
 
   return (
     <div className="space-y-6 font-body select-none relative h-full">
-      <div className="card-5bloc flex flex-col justify-between">
+      <div className="card-m p-5 flex flex-col justify-between">
         <div className="flex items-center justify-between pb-4 border-b ">
           <div>
             <h3 className="text-sm font-semibold text-white">Product & Material Submittals</h3>
@@ -211,7 +211,7 @@ export default function ProjectSubmittalsPage() {
           />
         ) : (
           <div className="overflow-x-auto mt-4">
-            <table className="w-full text-left text-xs ">
+            <table className="table-m w-full text-left text-xs ">
               <thead>
                 <tr className="text-stone border-b font-body text-[10px] tracking-wider font-semibold">
                   <th className="pb-3 pl-2">#</th>
