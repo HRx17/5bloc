@@ -73,7 +73,7 @@ export default function ConsultantDashboardPage() {
     <div className="page-m space-y-6">
       <div>
         <h1 className="page-m-title">Consultant workspace</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
+        <p className="page-m-sub">
           Discipline-scoped drawings, RFIs and submittals — without the firm noise.
         </p>
       </div>
@@ -84,11 +84,7 @@ export default function ConsultantDashboardPage() {
             key={d}
             type="button"
             onClick={() => setDiscipline(d)}
-            className="chip capitalize"
-            style={{
-              color: discipline === d ? 'var(--amber)' : 'var(--stone)',
-              background: discipline === d ? 'rgba(245,166,35,0.12)' : 'rgba(159,142,122,0.1)',
-            }}
+            className={`chip-m capitalize ${discipline === d ? 'chip-m-amber' : ''}`}
           >
             {d}
           </button>
@@ -117,7 +113,7 @@ export default function ConsultantDashboardPage() {
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
           {projects.map((p) => (
-            <div key={p.id} className="p-5 rounded-2xl" style={{ background: 'var(--surface-container)' }}>
+            <div key={p.id} className="card-m card-m-hover p-5">
               <Link href={`/projects/${p.id}/documents`} className="font-semibold text-lg hover:underline">
                 {p.name}
               </Link>
