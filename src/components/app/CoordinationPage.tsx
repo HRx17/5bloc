@@ -54,7 +54,7 @@ function StatusBadge({ status }: { status: string }) {
   const m = STATUS_META[status] ?? STATUS_META.open
   return (
     <span
-      className="text-[10.5px] font-semibold px-2 py-0.5 rounded-full shrink-0"
+      className="chip-m shrink-0"
       style={{ background: m.bg, color: m.color }}
     >
       {m.label}
@@ -360,7 +360,7 @@ export default function CoordinationPage() {
   )
 
   return (
-    <div className="p-5 lg:p-7 max-w-[1240px] mx-auto space-y-6">
+    <div className="page-m space-y-6">
 
       {/* ── Header ── */}
       <motion.div
@@ -371,10 +371,10 @@ export default function CoordinationPage() {
       >
         <div>
           <p className="text-[12px] mb-1" style={{ color: 'var(--stone)' }}>All projects</p>
-          <h1 className="font-display text-[22px] lg:text-[26px] leading-tight" style={{ color: 'var(--on-surface)' }}>
+          <h1 className="page-m-title">
             Coordination
           </h1>
-          <p className="text-[13px] mt-1" style={{ color: 'var(--on-surface-variant)' }}>
+          <p className="page-m-sub">
             RFIs, messages, meetings and site issues — across all projects in one place.
           </p>
         </div>
@@ -407,16 +407,16 @@ export default function CoordinationPage() {
           <motion.button
             key={s.label}
             onClick={() => setTab(s.tab)}
-            className="rounded-2xl p-4 text-left w-full"
+            className="card-m card-m-hover stat-m text-left w-full"
             whileHover={{ y: -3 }}
             transition={{ duration: 0.18 }}
-            style={{ background: 'var(--surface-container)', boxShadow: `inset 3px 0 0 ${s.color}` }}
+            style={{ boxShadow: `0 1px 2px rgba(0,0,0,0.04), inset 0 0 0 1px var(--hairline), inset 3px 0 0 ${s.color}` }}
           >
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2">
               <span className="material-icons-outlined text-[15px]" style={{ color: s.color }}>{s.icon}</span>
-              <span className="text-[11px] font-medium" style={{ color: 'var(--stone)' }}>{s.label}</span>
+              <span className="stat-m-label">{s.label}</span>
             </div>
-            <p className="font-display text-[20px]" style={{ color: 'var(--on-surface)' }}>
+            <p className="stat-m-value">
               {loading || s.unavailable ? '—' : s.value}
             </p>
           </motion.button>
@@ -486,41 +486,35 @@ export default function CoordinationPage() {
                 }
               />
             ) : (
-              <div
-                className="rounded-2xl overflow-hidden"
-                style={{ background: 'var(--surface-container)' }}
-              >
-                <table className="w-full text-[13px]">
+              <div className="card-m overflow-hidden">
+                <table className="table-m">
                   <thead>
-                    <tr style={{ boxShadow: '0 1px 0 rgba(255,255,255,0.04)' }}>
-                      <th className="text-left py-3 px-4 text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--stone)' }}>RFI</th>
-                      <th className="text-left py-3 px-4 text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--stone)' }}>Title</th>
-                      <th className="text-left py-3 px-4 text-[11px] font-semibold uppercase tracking-wider hidden md:table-cell" style={{ color: 'var(--stone)' }}>Project</th>
-                      <th className="text-left py-3 px-4 text-[11px] font-semibold uppercase tracking-wider hidden lg:table-cell" style={{ color: 'var(--stone)' }}>Raised by</th>
-                      <th className="text-left py-3 px-4 text-[11px] font-semibold uppercase tracking-wider hidden lg:table-cell" style={{ color: 'var(--stone)' }}>Due</th>
-                      <th className="text-left py-3 px-4 text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--stone)' }}>Status</th>
+                    <tr>
+                      <th>RFI</th>
+                      <th>Title</th>
+                      <th className="hidden md:table-cell">Project</th>
+                      <th className="hidden lg:table-cell">Raised by</th>
+                      <th className="hidden lg:table-cell">Due</th>
+                      <th>Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {visibleRfis.map((rfi, idx) => (
+                    {visibleRfis.map((rfi) => (
                       <tr
                         key={rfi.id}
-                        className="transition-colors cursor-pointer"
-                        style={idx > 0 ? { boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)' } : {}}
+                        className="cursor-pointer"
                         onClick={() => { setSelectedRfi(rfi); setRfiResponse('') }}
-                        onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.025)')}
-                        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = '')}
                       >
-                        <td className="py-3.5 px-4 font-mono text-[11px]" style={{ color: 'var(--stone)' }}>{rfi.number}</td>
-                        <td className="py-3.5 px-4 font-medium" style={{ color: 'var(--on-surface)' }}>
+                        <td className="font-mono text-[11px]" style={{ color: 'var(--stone)' }}>{rfi.number}</td>
+                        <td className="font-medium" style={{ color: 'var(--on-surface)' }}>
                           <span className="line-clamp-1">{rfi.title}</span>
                         </td>
-                        <td className="py-3.5 px-4 hidden md:table-cell" style={{ color: 'var(--on-surface-variant)' }}>
+                        <td className="hidden md:table-cell" style={{ color: 'var(--on-surface-variant)' }}>
                           <span className="line-clamp-1">{rfi.project}</span>
                         </td>
-                        <td className="py-3.5 px-4 hidden lg:table-cell" style={{ color: 'var(--stone)' }}>{rfi.raised_by}</td>
-                        <td className="py-3.5 px-4 hidden lg:table-cell font-mono text-[11px]" style={{ color: rfi.status === 'overdue' ? 'var(--error)' : 'var(--stone)' }}>{rfi.due_date || '—'}</td>
-                        <td className="py-3.5 px-4"><StatusBadge status={rfi.status} /></td>
+                        <td className="hidden lg:table-cell" style={{ color: 'var(--stone)' }}>{rfi.raised_by}</td>
+                        <td className="hidden lg:table-cell font-mono text-[11px]" style={{ color: rfi.status === 'overdue' ? 'var(--error)' : 'var(--stone)' }}>{rfi.due_date || '—'}</td>
+                        <td><StatusBadge status={rfi.status} /></td>
                       </tr>
                     ))}
                   </tbody>
