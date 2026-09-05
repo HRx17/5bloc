@@ -139,10 +139,10 @@ export function PartnerSection({
 }) {
   return (
     <section
-      className="rounded-2xl p-5 sm:p-6"
-      style={{ background: '#fff', border: '1px solid var(--lp-border)' }}
+      className="rounded-[14px] p-5 sm:p-6"
+      style={{ background: '#fff', boxShadow: '0 1px 2px rgba(0,0,0,0.04), inset 0 0 0 1px var(--lp-border)' }}
     >
-      <h2 className="text-[13px] font-semibold mb-5" style={{ color: 'var(--lp-text)' }}>
+      <h2 className="text-[13px] font-semibold tracking-[-0.01em] mb-5" style={{ color: 'var(--lp-text)' }}>
         {title}
       </h2>
       <div className="grid gap-5">{children}</div>
