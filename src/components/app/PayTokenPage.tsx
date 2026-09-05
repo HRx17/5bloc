@@ -105,12 +105,12 @@ export default function PayTokenPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center font-body" style={{ background: '#F7F5F0' }} aria-busy="true">
+      <div className="min-h-screen flex items-center justify-center font-body bg-surface-canvas" aria-busy="true">
         <span className="sr-only">Loading invoice…</span>
-        <div className="w-full max-w-md mx-4 rounded-2xl p-6 space-y-3" style={{ background: '#FFFFFF' }}>
-          <div className="h-4 w-32 animate-pulse rounded" style={{ background: '#EDE9E2' }} />
-          <div className="h-8 w-48 animate-pulse rounded" style={{ background: '#EDE9E2' }} />
-          <div className="h-20 w-full animate-pulse rounded-xl" style={{ background: '#EDE9E2' }} />
+        <div className="card-m w-full max-w-md mx-4 p-6 space-y-3">
+          <div className="h-4 w-32 animate-pulse rounded" style={{ background: 'var(--surface-container-high)' }} />
+          <div className="h-8 w-48 animate-pulse rounded" style={{ background: 'var(--surface-container-high)' }} />
+          <div className="h-20 w-full animate-pulse rounded-xl" style={{ background: 'var(--surface-container-high)' }} />
         </div>
       </div>
     )
@@ -118,23 +118,18 @@ export default function PayTokenPage() {
 
   if (error || !invoice) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 font-body" style={{ background: '#F7F5F0' }}>
+      <div className="min-h-screen flex items-center justify-center p-6 font-body bg-surface-canvas">
         <div className="max-w-md text-center" role="alert">
-          <h1 className="text-2xl font-semibold" style={{ color: '#0C1220' }}>
+          <h1 className="text-2xl font-semibold text-on-surface">
             Payment link unavailable
           </h1>
-          <p className="mt-2 text-sm" style={{ color: '#6B7485' }}>
+          <p className="mt-2 text-sm text-on-surface-var">
             {error || 'We could not find an invoice for this link.'}
           </p>
-          <p className="mt-3 text-[13px]" style={{ color: '#9E9687' }}>
+          <p className="mt-3 text-[13px] text-stone">
             Ask your architect to resend the invoice email — payment links are private and can be reissued.
           </p>
-          <button
-            type="button"
-            onClick={load}
-            className="mt-6 px-4 py-2 text-[13px] font-semibold rounded-lg"
-            style={{ background: '#F5A623', color: '#0C1220' }}
-          >
+          <button type="button" onClick={load} className="btn-primary mt-6 px-4 py-2 text-[13px]">
             Try again
           </button>
         </div>
@@ -143,48 +138,48 @@ export default function PayTokenPage() {
   }
 
   return (
-    <div className="min-h-screen font-body" style={{ background: '#F7F5F0', color: '#0C1220' }}>
-      <header className="px-6 py-5" style={{ background: '#FFFFFF', boxShadow: '0 1px 0 rgba(12,18,32,0.06)' }}>
+    <div className="min-h-screen font-body bg-surface-canvas text-on-surface">
+      <header className="card-m rounded-none px-6 py-5">
         <div className="max-w-md mx-auto">
-          <p className="text-[11px] uppercase tracking-wider" style={{ color: '#9E9687' }}>
+          <p className="text-[11px] uppercase tracking-wider text-stone">
             Invoice payment
           </p>
-          <h1 className="text-2xl font-semibold mt-1">{invoice.invoice_number}</h1>
+          <h1 className="page-m-title mt-1">{invoice.invoice_number}</h1>
         </div>
       </header>
 
       <main className="max-w-md mx-auto px-6 py-8 space-y-5">
-        <section className="p-5 rounded-2xl space-y-3" style={{ background: '#FFFFFF' }}>
+        <section className="card-m p-5 space-y-3">
           <div className="flex justify-between text-sm">
-            <span style={{ color: '#6B7485' }}>Billed to</span>
+            <span className="text-on-surface-var">Billed to</span>
             <span className="font-medium">{invoice.client_name || '—'}</span>
           </div>
           {invoice.project_name && (
             <div className="flex justify-between text-sm">
-              <span style={{ color: '#6B7485' }}>Project</span>
+              <span className="text-on-surface-var">Project</span>
               <span className="font-medium text-right">{invoice.project_name}</span>
             </div>
           )}
           {invoice.due_date && (
             <div className="flex justify-between text-sm">
-              <span style={{ color: '#6B7485' }}>Due</span>
+              <span className="text-on-surface-var">Due</span>
               <span className="font-medium">{invoice.due_date}</span>
             </div>
           )}
-          <div className="flex justify-between pt-3 border-t text-sm" style={{ borderColor: '#EDE9E2' }}>
+          <div className="flex justify-between pt-3 text-sm" style={{ boxShadow: 'inset 0 1px 0 var(--hairline)' }}>
             <span className="font-semibold">Amount due</span>
-            <span className="font-semibold text-lg" style={{ color: '#D4891A' }}>
+            <span className="font-semibold text-lg text-amber-dk">
               ₹{Number(invoice.total).toLocaleString('en-IN')}
             </span>
           </div>
         </section>
 
         {paid || invoice.status === 'paid' ? (
-          <div className="p-5 rounded-2xl text-center" style={{ background: 'rgba(46,204,138,0.12)' }}>
-            <p className="font-semibold" style={{ color: '#1B7A4E' }}>
+          <div className="card-m p-5 text-center">
+            <p className="chip-m chip-m-green mx-auto">
               This invoice is paid
             </p>
-            <p className="text-sm mt-1" style={{ color: '#6B7485' }}>
+            <p className="text-sm mt-2 text-on-surface-var">
               Thank you. No further action is needed.
             </p>
           </div>
@@ -193,14 +188,13 @@ export default function PayTokenPage() {
             type="button"
             onClick={pay}
             disabled={paying || !payable}
-            className="w-full px-4 py-3 text-[14px] font-semibold rounded-xl disabled:opacity-50"
-            style={{ background: '#F5A623', color: '#0C1220' }}
+            className="btn-primary w-full px-4 py-3 text-[14px] disabled:opacity-50"
           >
             {paying ? 'Opening checkout…' : 'Pay online securely'}
           </button>
         )}
 
-        <p className="text-[11px] text-center" style={{ color: '#9E9687' }}>
+        <p className="text-[11px] text-center text-stone">
           Payments are processed by Razorpay. Your card details never touch 5Bloc servers.
         </p>
       </main>
