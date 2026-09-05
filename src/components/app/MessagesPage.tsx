@@ -96,7 +96,6 @@ function Messenger() {
             if (prev.some((m) => m.id === row.id)) return prev
             return [...prev, row]
           })
-          // Hydrate sender info if missing
           if (row.sender_id) {
             const { data } = await supabaseClient
               .from('profiles')
@@ -204,252 +203,243 @@ function Messenger() {
   }
 
   return (
-    <div className="h-full flex" style={{ background: 'var(--surface-canvas)' }}>
-      {/* ── Conversation list ── */}
-      <aside
-        className={`${activeId ? 'hidden md:flex' : 'flex'} w-full md:w-[320px] shrink-0 flex-col`}
-        style={{ boxShadow: 'inset -1px 0 0 var(--hairline)', background: 'var(--surface-container-low)' }}
-      >
-        <div className="h-[52px] px-4 flex items-center justify-between shrink-0" style={{ boxShadow: '0 1px 0 var(--hairline)' }}>
-          <h1 className="text-[15px] font-bold" style={{ color: 'var(--on-surface)' }}>Messages</h1>
+    <div className="page-m">
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="page-m-title">Messages</h1>
+            <p className="page-m-sub">Connect with architects, contractors and vendors</p>
+          </div>
           <button
             onClick={() => setShowNew(true)}
-            className="h-8 w-8 flex items-center justify-center rounded-xl transition-colors"
-            style={{ background: 'rgba(245,166,35,0.12)', color: 'var(--amber)' }}
-            title="New message"
-            aria-label="New message"
+            className="btn-primary"
           >
-            <span className="material-icons-outlined text-[18px]">edit_square</span>
+            <span className="material-icons-outlined">edit_square</span>
+            New message
           </button>
         </div>
 
-        <div className="px-3 py-2.5 shrink-0">
-          <div className="search-5bloc">
-            <span className="material-icons-outlined">search</span>
-            <input value={convSearch} onChange={(e) => setConvSearch(e.target.value)} placeholder="Search conversations…" />
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-2 pb-3">
-          {loadingConvs ? (
-            <div className="px-1 py-2 space-y-1.5">
-              {Array.from({ length: 6 }, (_, i) => (
-                <Skeleton key={i} className="h-14 w-full" />
-              ))}
-            </div>
-          ) : filteredConvs.length === 0 ? (
-            convSearch.trim() ? (
-              <div className="px-4 py-10 text-center">
-                <span className="material-icons-outlined text-[32px] mb-2" style={{ color: 'var(--stone)', opacity: 0.5 }}>search_off</span>
-                <p className="text-[13px] font-medium" style={{ color: 'var(--on-surface-variant)' }}>No conversations match “{convSearch.trim()}”</p>
-                <p className="text-[12px] mt-1 mb-3" style={{ color: 'var(--stone)' }}>Search matches the conversation or person’s name. Clear it to see all threads.</p>
-                <button onClick={() => setConvSearch('')} className="btn-secondary text-[12px] py-2">Clear search</button>
-              </div>
-            ) : (
-              <div className="px-4 py-10 text-center">
-                <span className="material-icons-outlined text-[32px] mb-2" style={{ color: 'var(--stone)', opacity: 0.5 }}>forum</span>
-                <p className="text-[13px] font-medium" style={{ color: 'var(--on-surface-variant)' }}>No conversations yet</p>
-                <p className="text-[12px] mt-1 mb-3" style={{ color: 'var(--stone)' }}>Message an architect, consultant or contractor you work with — replies arrive in real time.</p>
-                <button onClick={() => setShowNew(true)} className="btn-primary text-[12px] py-2">New message</button>
-              </div>
-            )
-          ) : (
-            filteredConvs.map((c) => {
-              const title = me ? conversationTitle(c, me.id) : 'Conversation'
-              const isActive = c.id === activeId
-              const preview = c.lastMessage
-                ? (c.lastMessage.sender_id === me?.id ? 'You: ' : '') + (c.lastMessage.body || 'Attachment')
-                : 'No messages yet'
-              return (
-                <button
-                  key={c.id}
-                  onClick={() => openConversation(c.id)}
-                  className="flex items-center gap-3 w-full px-2.5 py-2.5 rounded-xl text-left transition-colors mb-0.5"
-                  style={{ background: isActive ? 'var(--overlay-active)' : 'transparent' }}
-                  onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--overlay-hover)' }}
-                  onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
-                >
-                  <ConvAvatar conv={c} myId={me?.id} />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[13px] font-semibold truncate" style={{ color: 'var(--on-surface)' }}>{title}</span>
-                      <span className="text-[10px] shrink-0" style={{ color: 'var(--stone)' }}>
-                        {c.lastMessage ? relativeTime(c.lastMessage.created_at) : ''}
-                      </span>
-                    </div>
-                    {c.project_name && (
-                      <span
-                        className="text-[10px] truncate flex items-center gap-1"
-                        style={{ color: 'var(--amber)' }}
-                      >
-                        <span className="material-icons-outlined text-[11px]">folder</span>
-                        {c.project_name}
-                      </span>
-                    )}
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-[12px] truncate" style={{ color: c.unread > 0 ? 'var(--on-surface-variant)' : 'var(--stone)', fontWeight: c.unread > 0 ? 600 : 400 }}>
-                        {preview}
-                      </span>
-                      {c.unread > 0 && (
-                        <span className="text-[9px] font-mono font-bold min-w-[16px] h-[16px] px-1 flex items-center justify-center rounded-full shrink-0" style={{ background: 'var(--amber)', color: 'var(--ink-black)' }}>
-                          {c.unread > 9 ? '9+' : c.unread}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </button>
-              )
-            })
-          )}
-        </div>
-      </aside>
-
-      {/* ── Thread ── */}
-      <section className={`${activeId ? 'flex' : 'hidden md:flex'} flex-1 flex-col min-w-0`}>
-        {!active ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
-            <span className="material-icons-outlined text-[28px] mb-3" style={{ color: 'var(--stone)', opacity: 0.4 }}>chat</span>
-            <p className="text-[15px] font-semibold" style={{ color: 'var(--on-surface-variant)' }}>Your messages</p>
-            <p className="text-[13px] mt-1 max-w-xs" style={{ color: 'var(--stone)' }}>
-              Select a conversation or start a new one to chat in real time.
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Thread header */}
-            <div className="h-[52px] px-4 flex items-center justify-between shrink-0" style={{ boxShadow: '0 1px 0 var(--hairline)', background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)' }}>
-              <div className="flex items-center gap-3 min-w-0">
-                <button onClick={() => { setActiveId(null); setActiveConversation(null) }} className="md:hidden h-8 w-8 flex items-center justify-center rounded-xl" style={{ color: 'var(--stone)' }}>
-                  <span className="material-icons-outlined text-[18px]">arrow_back</span>
-                </button>
-                <ConvAvatar conv={active} myId={me?.id} />
-                <div className="min-w-0">
-                  <p className="text-[13.5px] font-bold truncate" style={{ color: 'var(--on-surface)' }}>
-                    {me ? conversationTitle(active, me.id) : 'Conversation'}
-                  </p>
-                  <p className="text-[11px] truncate" style={{ color: 'var(--stone)' }}>
-                    {active.members.length} {active.members.length === 1 ? 'member' : 'members'}
-                    {active.project_name ? (
-                      <>
-                        {' · '}
-                        <a
-                          href={`/projects/${active.project_id}`}
-                          className="hover:underline"
-                          style={{ color: 'var(--amber)' }}
-                        >
-                          {active.project_name}
-                        </a>
-                      </>
-                    ) : active.type === 'project' ? (
-                      ' · Project chat'
-                    ) : (
-                      ''
-                    )}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowAdd(true)}
-                className="flex items-center gap-1.5 px-3 h-8 rounded-xl text-[12px] font-semibold transition-colors"
-                style={{ background: 'var(--overlay-hover)', color: 'var(--on-surface-variant)' }}
-                title="Add people"
-              >
-                <span className="material-icons-outlined text-[16px]">person_add</span>
-                <span className="hidden sm:inline">Add</span>
-              </button>
+        <div className="grid md:grid-cols-[320px_1fr] gap-6 min-h-[680px] h-[calc(100vh-200px)]">
+          {/* ── Conversation list ── */}
+          <aside
+            className={`${activeId ? 'hidden md:flex' : 'flex'} card-m flex-col overflow-hidden`}
+          >
+            <div className="card-m-head">
+              <span className="card-m-title">Conversations</span>
+              {convSearch.trim() && (
+                 <button onClick={() => setConvSearch('')} className="text-[11px] font-medium text-amber hover:underline">Clear</button>
+              )}
             </div>
 
-            {/* Messages */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
-              {loadingMsgs ? (
-                <div className="space-y-4 py-2">
-                  {[64, 40, 56, 44].map((w, i) => (
-                    <div key={i} className={`flex ${i % 2 ? 'justify-end' : 'justify-start'}`}>
-                      <Skeleton className="h-10 rounded-2xl" style={{ width: `${w}%` }} />
-                    </div>
+            <div className="px-4 py-3 border-b border-hairline">
+              <div className="search-5bloc">
+                <span className="material-icons-outlined">search</span>
+                <input value={convSearch} onChange={(e) => setConvSearch(e.target.value)} placeholder="Search…" />
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+              {loadingConvs ? (
+                <div className="p-2 space-y-2">
+                  {Array.from({ length: 6 }, (_, i) => (
+                    <Skeleton key={i} className="h-14 w-full rounded-xl" />
                   ))}
                 </div>
-              ) : messages.length === 0 ? (
-                <div className="text-center py-10">
-                  <p className="text-[13px]" style={{ color: 'var(--stone)' }}>No messages yet — say hello.</p>
+              ) : filteredConvs.length === 0 ? (
+                <div className="px-4 py-12 text-center">
+                  <span className="material-icons-outlined text-[32px] mb-2" style={{ color: 'var(--stone)', opacity: 0.5 }}>
+                    {convSearch.trim() ? 'search_off' : 'forum'}
+                  </span>
+                  <p className="text-[13px] font-medium" style={{ color: 'var(--on-surface-variant)' }}>
+                    {convSearch.trim() ? 'No matches' : 'No conversations'}
+                  </p>
                 </div>
               ) : (
-                groupByDate(messages).map((group) => (
-                  <div key={group.date}>
-                    <div className="flex items-center justify-center my-3">
-                      <span className="text-[10px] font-mono uppercase tracking-wider px-2.5 py-1 rounded-full" style={{ background: 'var(--surface-container)', color: 'var(--stone)' }}>
-                        {group.label}
-                      </span>
-                    </div>
-                    {group.items.map((m, i) => {
-                      const isMe = m.sender_id === me?.id
-                      const prev = group.items[i - 1]
-                      const showMeta = !prev || prev.sender_id !== m.sender_id
-                      return <Bubble key={m.id} m={m} isMe={isMe} showMeta={showMeta} />
-                    })}
-                  </div>
-                ))
+                filteredConvs.map((c) => {
+                  const title = me ? conversationTitle(c, me.id) : 'Conversation'
+                  const isActive = c.id === activeId
+                  const preview = c.lastMessage
+                    ? (c.lastMessage.sender_id === me?.id ? 'You: ' : '') + (c.lastMessage.body || 'Attachment')
+                    : 'No messages yet'
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => openConversation(c.id)}
+                      className={`flex items-center gap-3 w-full px-3 py-3 rounded-xl text-left transition-colors ${isActive ? 'bg-overlay-active' : 'hover:bg-overlay-hover'}`}
+                    >
+                      <ConvAvatar conv={c} myId={me?.id} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[13px] font-semibold truncate" style={{ color: 'var(--on-surface)' }}>{title}</span>
+                          <span className="text-[10px] shrink-0" style={{ color: 'var(--stone)' }}>
+                            {c.lastMessage ? relativeTime(c.lastMessage.created_at) : ''}
+                          </span>
+                        </div>
+                        {c.project_name && (
+                          <span
+                            className="text-[10px] truncate flex items-center gap-1 mt-0.5"
+                            style={{ color: 'var(--amber)' }}
+                          >
+                            <span className="material-icons-outlined text-[12px]">folder</span>
+                            {c.project_name}
+                          </span>
+                        )}
+                        <div className="flex items-center justify-between gap-2 mt-0.5">
+                          <span className="text-[12px] truncate" style={{ color: c.unread > 0 ? 'var(--on-surface)' : 'var(--stone)', fontWeight: c.unread > 0 ? 600 : 400 }}>
+                            {preview}
+                          </span>
+                          {c.unread > 0 && (
+                            <span className="text-[9px] font-mono font-bold min-w-[16px] h-[16px] px-1 flex items-center justify-center rounded-full shrink-0" style={{ background: 'var(--amber)', color: 'var(--ink-black)' }}>
+                              {c.unread > 9 ? '9+' : c.unread}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  )
+                })
               )}
             </div>
+          </aside>
 
-            {/* Composer */}
-            <div className="px-3 py-3 shrink-0" style={{ boxShadow: '0 -1px 0 var(--hairline)' }}>
-              {file && (
-                <div className="flex items-center gap-2 mb-2 px-1">
-                  <span className="material-icons-outlined text-[16px]" style={{ color: 'var(--amber)' }}>attach_file</span>
-                  <span className="text-[12px] truncate flex-1" style={{ color: 'var(--on-surface-variant)' }}>{file.name}</span>
-                  <button type="button" onClick={() => setFile(null)} className="text-[11px]" style={{ color: 'var(--stone)' }}>
-                    Remove
+          {/* ── Thread ── */}
+          <section className={`${activeId ? 'flex' : 'hidden md:flex'} card-m flex-col min-w-0 overflow-hidden`}>
+            {!active ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-surface-dim/30">
+                <span className="material-icons-outlined text-[48px] mb-4" style={{ color: 'var(--stone)', opacity: 0.3 }}>chat_bubble_outline</span>
+                <p className="text-[15px] font-semibold" style={{ color: 'var(--on-surface-variant)' }}>Your messages</p>
+                <p className="text-[13px] mt-2 max-w-xs" style={{ color: 'var(--stone)' }}>
+                  Select a conversation from the list to view the thread and send a message.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="card-m-head bg-surface-elevated/50 backdrop-blur-md sticky top-0 z-10">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <button onClick={() => { setActiveId(null); setActiveConversation(null) }} className="md:hidden btn-icon mr-1">
+                      <span className="material-icons-outlined">arrow_back</span>
+                    </button>
+                    <ConvAvatar conv={active} myId={me?.id} />
+                    <div className="min-w-0">
+                      <p className="card-m-title truncate">
+                        {me ? conversationTitle(active, me.id) : 'Conversation'}
+                      </p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[11px]" style={{ color: 'var(--stone)' }}>
+                          {active.members.length} {active.members.length === 1 ? 'member' : 'members'}
+                        </span>
+                        {active.project_name && (
+                          <a
+                            href={`/projects/${active.project_id}`}
+                            className="text-[11px] font-medium hover:underline flex items-center gap-1"
+                            style={{ color: 'var(--amber)' }}
+                          >
+                            <span className="material-icons-outlined text-[12px]">folder</span>
+                            {active.project_name}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowAdd(true)}
+                    className="btn-secondary btn-sm"
+                  >
+                    <span className="material-icons-outlined">person_add</span>
+                    <span className="hidden sm:inline">Add People</span>
                   </button>
                 </div>
-              )}
-              <div className="flex items-end gap-2">
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept={CHAT_ACCEPT}
-                  className="hidden"
-                  onChange={(e) => {
-                    const next = e.target.files?.[0] || null
-                    setFile(next)
-                    e.target.value = ''
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => fileRef.current?.click()}
-                  className="h-10 w-10 shrink-0 flex items-center justify-center rounded-xl"
-                  style={{ background: 'var(--overlay-hover)', color: 'var(--on-surface-variant)' }}
-                  aria-label="Attach image or document"
-                  title="Attach image or document"
-                >
-                  <span className="material-icons-outlined text-[18px]">attach_file</span>
-                </button>
-                <textarea
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
-                  }}
-                  rows={1}
-                  placeholder="Write a message…"
-                  className="input-5bloc resize-none max-h-32"
-                  style={{ minHeight: '40px' }}
-                />
-                <button
-                  onClick={handleSend}
-                  disabled={(!draft.trim() && !file) || sending}
-                  className="btn-primary h-10 w-10 shrink-0"
-                  style={{ padding: 0 }}
-                  aria-label="Send"
-                >
-                  <span className="material-icons-outlined text-[18px]">{sending ? 'hourglass_empty' : 'send'}</span>
-                </button>
-              </div>
-            </div>
-          </>
-        )}
-      </section>
+
+                <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6 space-y-1 bg-surface-canvas/20">
+                  {loadingMsgs ? (
+                    <div className="space-y-6 py-4">
+                      {[64, 40, 56, 44].map((w, i) => (
+                        <div key={i} className={`flex ${i % 2 ? 'justify-end' : 'justify-start'}`}>
+                          <Skeleton className="h-12 rounded-2xl" style={{ width: `${w}%` }} />
+                        </div>
+                      ))}
+                    </div>
+                  ) : messages.length === 0 ? (
+                    <div className="text-center py-20">
+                      <p className="text-[13px] italic" style={{ color: 'var(--stone)' }}>No messages yet — say hello to start the conversation.</p>
+                    </div>
+                  ) : (
+                    groupByDate(messages).map((group) => (
+                      <div key={group.date}>
+                        <div className="flex items-center justify-center my-6">
+                          <span className="text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-hairline" style={{ background: 'var(--surface-container-low)', color: 'var(--stone)' }}>
+                            {group.label}
+                          </span>
+                        </div>
+                        {group.items.map((m, i) => {
+                          const isMe = m.sender_id === me?.id
+                          const prev = group.items[i - 1]
+                          const showMeta = !prev || prev.sender_id !== m.sender_id
+                          return <Bubble key={m.id} m={m} isMe={isMe} showMeta={showMeta} />
+                        })}
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div className="p-4 border-t border-hairline bg-surface-elevated">
+                  {file && (
+                    <div className="flex items-center gap-3 mb-3 p-2 rounded-lg bg-overlay-hover border border-hairline">
+                      <span className="feed-m-icon">
+                         <span className="material-icons-outlined">attach_file</span>
+                      </span>
+                      <span className="text-[12px] font-medium truncate flex-1" style={{ color: 'var(--on-surface)' }}>{file.name}</span>
+                      <button type="button" onClick={() => setFile(null)} className="btn-icon">
+                        <span className="material-icons-outlined">close</span>
+                      </button>
+                    </div>
+                  )}
+                  <div className="flex items-end gap-3">
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      accept={CHAT_ACCEPT}
+                      className="hidden"
+                      onChange={(e) => {
+                        const next = e.target.files?.[0] || null
+                        setFile(next)
+                        e.target.value = ''
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileRef.current?.click()}
+                      className="btn-icon btn-icon-sm h-10 w-10 !rounded-xl bg-overlay-hover hover:bg-overlay-active"
+                      title="Attach file"
+                    >
+                      <span className="material-icons-outlined text-[20px]">add</span>
+                    </button>
+                    <textarea
+                      value={draft}
+                      onChange={(e) => setDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
+                      }}
+                      rows={1}
+                      placeholder="Write a message…"
+                      className="input-5bloc flex-1 resize-none max-h-32 py-2.5"
+                      style={{ minHeight: '42px' }}
+                    />
+                    <button
+                      onClick={handleSend}
+                      disabled={(!draft.trim() && !file) || sending}
+                      className="btn-primary h-10 w-10 !rounded-xl shrink-0"
+                      style={{ padding: 0 }}
+                    >
+                      <span className="material-icons-outlined text-[18px]">{sending ? 'hourglass_empty' : 'send'}</span>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </section>
+        </div>
+      </div>
 
       {showNew && me && (
         <PeopleModal
@@ -504,11 +494,8 @@ function ConvAvatar({ conv, myId }: { conv: ChatConversation; myId?: string }) {
   const isGroup = conv.type !== 'dm' && (conv.title || others.length > 1)
   return (
     <div
-      className="w-10 h-10 flex items-center justify-center text-[12px] font-bold rounded-full shrink-0"
-      style={{
-        background: isGroup ? 'rgba(122,184,255,0.14)' : 'rgba(245,166,35,0.14)',
-        color: isGroup ? 'var(--blue)' : 'var(--amber)',
-      }}
+      className={`w-10 h-10 flex items-center justify-center text-[12px] font-bold rounded-full shrink-0 ${isGroup ? 'bg-blue/10 text-blue' : 'bg-amber/10 text-amber'}`}
+      style={{ boxShadow: 'inset 0 0 0 1px var(--hairline)' }}
     >
       {isGroup
         ? <span className="material-icons-outlined text-[18px]">groups</span>
@@ -521,35 +508,37 @@ function Bubble({ m, isMe, showMeta }: { m: ChatMessage; isMe: boolean; showMeta
   const senderName = m.sender?.full_name || m.sender?.email || 'User'
   const time = new Date(m.created_at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
   return (
-    <div className={`flex gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'} ${showMeta ? 'mt-2.5' : 'mt-0.5'}`}>
-      <div className="w-7 shrink-0">
+    <div className={`flex gap-3 ${isMe ? 'flex-row-reverse' : 'flex-row'} ${showMeta ? 'mt-4' : 'mt-1'}`}>
+      <div className="w-8 shrink-0">
         {!isMe && showMeta && (
-          <div className="w-7 h-7 flex items-center justify-center text-[10px] font-bold rounded-full" style={{ background: 'var(--surface-container-high)', color: 'var(--on-surface-variant)' }}>
+          <div className="w-8 h-8 flex items-center justify-center text-[10px] font-bold rounded-full bg-surface-container-high border border-hairline text-stone">
             {initialsOf(senderName)}
           </div>
         )}
       </div>
-      <div className={`max-w-[72%] ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
+      <div className={`max-w-[80%] ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
         {showMeta && !isMe && (
-          <span className="text-[11px] font-semibold mb-0.5 px-1" style={{ color: 'var(--on-surface-variant)' }}>{senderName}</span>
+          <span className="text-[11px] font-bold mb-1 px-1 text-stone uppercase tracking-tight">{senderName}</span>
         )}
         <div
-          className="px-3.5 py-2 text-[13px] leading-snug"
+          className="px-4 py-2.5 text-[14px] leading-relaxed"
           style={{
-            background: isMe ? 'var(--amber)' : 'var(--surface-container)',
+            background: isMe ? 'var(--amber)' : 'var(--surface-elevated)',
             color: isMe ? 'var(--ink-black)' : 'var(--on-surface)',
-            borderRadius: isMe ? '16px 4px 16px 16px' : '4px 16px 16px 16px',
-            boxShadow: isMe ? 'none' : 'inset 0 0 0 1px var(--hairline)',
+            borderRadius: isMe ? '18px 4px 18px 18px' : '4px 18px 18px 18px',
+            boxShadow: isMe ? 'var(--shadow-1)' : 'inset 0 0 0 1px var(--hairline), var(--shadow-1)',
             whiteSpace: 'pre-wrap',
             wordBreak: 'break-word',
           }}
         >
           {m.body?.trim() && m.body.trim() !== m.attachment_name ? m.body : null}
           {m.attachment_url && m.attachment_name && (
-            <ChatAttachment fileKey={m.attachment_url} filename={m.attachment_name} />
+            <div className={m.body?.trim() ? 'mt-2' : ''}>
+              <ChatAttachment fileKey={m.attachment_url} filename={m.attachment_name} />
+            </div>
           )}
         </div>
-        <span className="text-[9.5px] mt-0.5 px-1" style={{ color: 'var(--stone)' }}>{time}</span>
+        <span className="text-[10px] mt-1.5 px-1 opacity-60 text-stone">{time}</span>
       </div>
     </div>
   )
@@ -613,20 +602,19 @@ function PeopleModal({
   const canSubmit = selected.length > 0 && !submitting
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'var(--scrim)', backdropFilter: 'blur(4px)' }} onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'var(--scrim)', backdropFilter: 'blur(8px)' }} onClick={onClose}>
       <div
-        className="w-full max-w-md rounded-2xl overflow-hidden"
-        style={{ background: 'var(--surface-container)', boxShadow: '0 20px 60px rgba(0,0,0,0.5), inset 0 0 0 1px var(--hairline)' }}
+        className="card-m w-full max-w-md overflow-hidden animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-5 py-3.5" style={{ boxShadow: '0 1px 0 var(--hairline)' }}>
-          <h2 className="text-[15px] font-bold" style={{ color: 'var(--on-surface)' }}>{title}</h2>
-          <button onClick={onClose} className="h-7 w-7 flex items-center justify-center rounded-lg" style={{ color: 'var(--stone)' }}>
-            <span className="material-icons-outlined text-[18px]">close</span>
+        <div className="card-m-head">
+          <span className="card-m-title">{title}</span>
+          <button onClick={onClose} className="btn-icon">
+            <span className="material-icons-outlined">close</span>
           </button>
         </div>
 
-        <div className="p-5 space-y-3">
+        <div className="p-5 space-y-4">
           {allowTitle && (
             <input
               value={groupTitle}
@@ -638,12 +626,12 @@ function PeopleModal({
 
           {allowProject && (
             <div>
-              <label className="block text-[11px] font-medium mb-1.5" style={{ color: 'var(--stone)' }}>
-                Which project is this about?
+              <label className="block text-[11px] font-bold mb-1.5 uppercase tracking-wider text-stone">
+                Project Link
               </label>
               {projects.length > 0 ? (
-                <div className="select-5bloc">
-                  <select value={projectId} onChange={(e) => setProjectId(e.target.value)}>
+                <div className="select-5bloc w-full">
+                  <select className="w-full" value={projectId} onChange={(e) => setProjectId(e.target.value)}>
                     <option value="">Not linked to a project</option>
                     {projects.map((p) => (
                       <option key={p.id} value={p.id}>{p.name}</option>
@@ -652,20 +640,18 @@ function PeopleModal({
                   <span className="material-icons-outlined chevron">expand_more</span>
                 </div>
               ) : (
-                <p className="text-[12px]" style={{ color: 'var(--stone)' }}>
-                  No projects yet — create one first if this chat should live on a job.
-                </p>
+                <p className="text-[12px] text-stone">No projects found.</p>
               )}
             </div>
           )}
 
           {selected.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-2">
               {selected.map((u) => (
-                <span key={u.id} className="inline-flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-full text-[12px]" style={{ background: 'rgba(245,166,35,0.12)', color: 'var(--amber)' }}>
-                  <span className="w-5 h-5 flex items-center justify-center text-[9px] font-bold rounded-full" style={{ background: 'rgba(245,166,35,0.2)' }}>{initialsOf(u.full_name, u.email)}</span>
+                <span key={u.id} className="chip-m chip-m-amber !py-1 !px-2 gap-1.5">
+                  <span className="text-[10px] font-bold">{initialsOf(u.full_name, u.email)}</span>
                   {u.full_name || u.email}
-                  <button onClick={() => setSelected((prev) => prev.filter((x) => x.id !== u.id))}>
+                  <button onClick={() => setSelected((prev) => prev.filter((x) => x.id !== u.id))} className="hover:opacity-60">
                     <span className="material-icons-outlined text-[14px]">close</span>
                   </button>
                 </span>
@@ -675,29 +661,27 @@ function PeopleModal({
 
           <div className="search-5bloc">
             <span className="material-icons-outlined">search</span>
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by name or email…" autoFocus />
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search for people…" autoFocus />
           </div>
 
-          <div className="max-h-[240px] overflow-y-auto -mx-1">
+          <div className="max-h-[260px] overflow-y-auto space-y-1">
             {searching ? (
-              <p className="text-center text-[12px] py-4" style={{ color: 'var(--stone)' }}>Searching…</p>
+              <p className="text-center text-[12px] py-6 text-stone">Searching directory…</p>
             ) : query.trim().length >= 2 && results.length === 0 ? (
-              <p className="text-center text-[12px] py-4" style={{ color: 'var(--stone)' }}>No registered users found for “{query.trim()}”.</p>
+              <p className="text-center text-[12px] py-6 text-stone">No results found.</p>
             ) : (
               results.map((u) => (
                 <button
                   key={u.id}
                   onClick={() => { setSelected((prev) => [...prev, u]); setQuery(''); setResults([]) }}
-                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-left transition-colors"
-                  onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'var(--overlay-hover)')}
-                  onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
+                  className="flex items-center gap-3 w-full px-3 py-3 rounded-xl text-left hover:bg-overlay-hover transition-colors"
                 >
-                  <div className="w-8 h-8 flex items-center justify-center text-[11px] font-bold rounded-full shrink-0" style={{ background: 'rgba(245,166,35,0.14)', color: 'var(--amber)' }}>
+                  <div className="feed-m-icon !bg-amber/10 !text-amber font-bold text-[10px]">
                     {initialsOf(u.full_name, u.email)}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[13px] font-semibold truncate" style={{ color: 'var(--on-surface)' }}>{u.full_name || u.email}</p>
-                    <p className="text-[11px] truncate" style={{ color: 'var(--stone)' }}>{u.email}{u.role ? ` · ${u.role}` : ''}</p>
+                    <p className="text-[13px] font-semibold text-on-surface truncate">{u.full_name || u.email}</p>
+                    <p className="text-[11px] text-stone truncate">{u.role || 'User'}</p>
                   </div>
                 </button>
               ))
@@ -705,14 +689,14 @@ function PeopleModal({
           </div>
         </div>
 
-        <div className="px-5 py-3.5 flex items-center justify-end gap-2" style={{ boxShadow: '0 -1px 0 var(--hairline)' }}>
-          <button onClick={onClose} className="btn-secondary text-[12.5px] py-2">Cancel</button>
+        <div className="card-m-head !bg-surface-container-low/50">
+          <button onClick={onClose} className="btn-secondary btn-sm">Cancel</button>
           <button
             disabled={!canSubmit}
             onClick={async () => { setSubmitting(true); await onSubmit(selected.map((s) => s.id), { title: groupTitle.trim() || undefined, projectId: projectId || undefined }) }}
-            className="btn-primary text-[12.5px] py-2"
+            className="btn-primary btn-sm"
           >
-            {submitting ? 'Working…' : actionLabel}
+            {submitting ? 'Creating…' : actionLabel}
           </button>
         </div>
       </div>

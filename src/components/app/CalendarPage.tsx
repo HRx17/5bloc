@@ -183,16 +183,16 @@ export default function CalendarPage() {
   const todayKey = ymd(now.getFullYear(), now.getMonth(), now.getDate())
 
   return (
-    <div className="page-m space-y-6">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <div className="page-m">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
         <div>
           <h1 className="page-m-title">Calendar</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--stone)' }}>
+          <p className="page-m-sub">
             Schedule project meetings, send invites, and get reminders before they start.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex border rounded-md overflow-hidden">
+          <div className="flex bg-surface-container-low rounded-lg p-0.5 border border-hairline">
             {(
               [
                 ['month', 'Month', 'calendar_month'],
@@ -203,8 +203,10 @@ export default function CalendarPage() {
                 key={key}
                 type="button"
                 onClick={() => setView(key)}
-                className={`px-3 py-1.5 text-[11px] font-mono uppercase flex items-center gap-1.5 transition-colors ${
-                  view === key ? 'bg-amber text-navy font-bold' : 'text-stone hover:text-white'
+                className={`px-3 py-1.5 text-[11px] font-bold uppercase flex items-center gap-1.5 rounded-md transition-all ${
+                  view === key 
+                    ? 'bg-surface-elevated text-amber shadow-sm border border-hairline-strong' 
+                    : 'text-stone hover:text-on-surface'
                 }`}
               >
                 <span className="material-icons-outlined text-[14px]">{icon}</span>
@@ -227,137 +229,181 @@ export default function CalendarPage() {
       {loadError ? (
         <ErrorState title="Could not load the calendar" error={loadError} onRetry={load} />
       ) : view === 'timeline' ? (
-        <ProjectTimeline projects={timeline} loading={timelineLoading} />
+        <div className="card-m p-6">
+          <ProjectTimeline projects={timeline} loading={timelineLoading} />
+        </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          <div className="lg:col-span-2 card-5bloc space-y-4">
-            <div className="flex items-center justify-between">
-              <button type="button" className="btn-secondary py-1 px-2 text-xs" onClick={() => shiftMonth(-1)}>
-                <span className="material-icons-outlined text-[16px]">chevron_left</span>
-              </button>
-              <h2 className="text-sm font-semibold text-white">{monthLabel(year, month)}</h2>
-              <button type="button" className="btn-secondary py-1 px-2 text-xs" onClick={() => shiftMonth(1)}>
-                <span className="material-icons-outlined text-[16px]">chevron_right</span>
+          <div className="lg:col-span-2 card-m overflow-hidden">
+            <div className="card-m-head">
+              <div className="flex items-center gap-4">
+                <h2 className="card-m-title">{monthLabel(year, month)}</h2>
+                <div className="flex items-center gap-1">
+                   <button type="button" className="btn-icon btn-icon-sm" onClick={() => shiftMonth(-1)}>
+                    <span className="material-icons-outlined">chevron_left</span>
+                  </button>
+                  <button type="button" className="btn-icon btn-icon-sm" onClick={() => shiftMonth(1)}>
+                    <span className="material-icons-outlined">chevron_right</span>
+                  </button>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                className="btn-secondary btn-xs"
+                onClick={() => {
+                  setYear(now.getFullYear());
+                  setMonth(now.getMonth());
+                  setSelected(todayKey);
+                }}
+              >
+                Today
               </button>
             </div>
 
-            {loading ? (
-              <Skeleton className="h-[360px] w-full" />
-            ) : (
-              <div className="grid grid-cols-7 gap-1">
-                {WEEKDAYS.map((d) => (
-                  <div key={d} className="text-center text-[10px] font-mono uppercase text-stone py-1">
-                    {d}
-                  </div>
-                ))}
-                {cells.map((day, idx) => {
-                  if (!day) return <div key={`b-${idx}`} />
-                  const key = ymd(year, month, day)
-                  const items = byDay.get(key) || []
-                  const isSelected = key === selected
-                  const isToday = key === todayKey
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => setSelected(key)}
-                      className="min-h-[64px] p-1.5 text-left border transition-colors"
-                      style={{
-                        background: isSelected ? 'rgba(245,166,35,0.12)' : 'transparent',
-                        borderColor: isToday ? 'var(--amber)' : 'rgba(255,255,255,0.06)',
-                      }}
-                    >
-                      <span className="text-[11px] font-mono" style={{ color: isToday ? 'var(--amber)' : 'var(--on-surface)' }}>
-                        {day}
-                      </span>
-                      <div className="mt-1 space-y-0.5">
-                        {items.slice(0, 2).map((m) => (
-                          <p key={m.id} className="text-[9px] leading-tight line-clamp-1" style={{ color: 'var(--amber)' }}>
-                            {formatTime(m.starts_at) || m.title}
-                          </p>
-                        ))}
-                        {items.length > 2 && (
-                          <p className="text-[9px] text-stone">+{items.length - 2}</p>
-                        )}
-                      </div>
-                    </button>
-                  )
-                })}
-              </div>
-            )}
+            <div className="p-4">
+              {loading ? (
+                <Skeleton className="h-[400px] w-full" />
+              ) : (
+                <div className="grid grid-cols-7 gap-px bg-hairline rounded-lg overflow-hidden border border-hairline">
+                  {WEEKDAYS.map((d) => (
+                    <div key={d} className="bg-surface-container-low text-center text-[10px] font-bold uppercase text-stone py-2 border-b border-hairline">
+                      {d}
+                    </div>
+                  ))}
+                  {cells.map((day, idx) => {
+                    if (!day) return <div key={`b-${idx}`} className="bg-surface-container-lowest min-h-[80px]" />
+                    const key = ymd(year, month, day)
+                    const items = byDay.get(key) || []
+                    const isSelected = key === selected
+                    const isToday = key === todayKey
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => setSelected(key)}
+                        className={`min-h-[80px] p-2 text-left transition-all relative ${
+                          isSelected ? 'bg-surface-bright z-10' : 'bg-surface-container-lowest hover:bg-surface-container-low'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <span className={`text-[11px] font-bold ${isToday ? 'bg-amber text-ink-black w-5 h-5 flex items-center justify-center rounded-full' : 'text-on-surface'}`}>
+                            {day}
+                          </span>
+                          {isSelected && <div className="absolute inset-0 border-2 border-amber/30 pointer-events-none" />}
+                        </div>
+                        <div className="mt-2 space-y-1">
+                          {items.slice(0, 3).map((m) => (
+                            <div key={m.id} className="chip-m chip-m-amber !text-[9px] !py-0 !px-1.5 w-full truncate">
+                              {formatTime(m.starts_at) || 'All day'} {m.title}
+                            </div>
+                          ))}
+                          {items.length > 3 && (
+                            <p className="text-[9px] text-stone pl-1">+{items.length - 3} more</p>
+                          )}
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="card-5bloc space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">
+          <div className="space-y-6">
+            <div className="card-m overflow-hidden">
+              <div className="card-m-head">
+                <h3 className="card-m-title uppercase text-[11px] tracking-wider text-stone">
                   {new Date(selected + 'T12:00:00').toLocaleDateString('en-IN', {
                     weekday: 'short',
                     day: 'numeric',
                     month: 'short',
                   })}
                 </h3>
-                <button type="button" className="text-[10px] font-mono text-amber" onClick={() => setShowSchedule(true)}>
-                  + Add
+                <button type="button" className="btn-secondary btn-xs" onClick={() => setShowSchedule(true)}>
+                  <span className="material-icons-outlined !text-[14px]">add</span>
+                  Add
                 </button>
               </div>
-              {selectedMeetings.length === 0 ? (
-                <p className="text-[11px] text-stone py-4">Nothing scheduled this day.</p>
-              ) : (
-                <div className="space-y-2">
-                  {selectedMeetings.map((m) => (
-                    <Link
-                      key={m.id}
-                      href={`/projects/${m.project_id}/meetings`}
-                      className="block p-3 border border-navy-lt/40 hover:border-amber/40 transition-colors"
-                    >
-                      <p className="text-xs font-semibold text-white">{m.title}</p>
-                      <p className="text-[11px] text-stone mt-0.5">
-                        {formatTime(m.starts_at) || 'All day'}
-                        {m.project_name ? ` · ${m.project_name}` : ''}
-                      </p>
-                      {m.location ? <p className="text-[11px] text-stone">{m.location}</p> : null}
-                    </Link>
-                  ))}
-                </div>
-              )}
+              <div className="p-4">
+                {selectedMeetings.length === 0 ? (
+                  <div className="py-8 text-center">
+                    <span className="material-icons-outlined text-stone/40 text-3xl mb-2">event_busy</span>
+                    <p className="text-[12px] text-stone">Nothing scheduled</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {selectedMeetings.map((m) => (
+                      <Link
+                        key={m.id}
+                        href={`/projects/${m.project_id}/meetings`}
+                        className="block p-3 rounded-xl border border-hairline hover:border-amber/40 hover:bg-surface-container-low transition-all group"
+                      >
+                        <p className="text-sm font-semibold group-hover:text-amber transition-colors">{m.title}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                           <span className="chip-m !text-[10px]">
+                            {formatTime(m.starts_at) || 'All day'}
+                          </span>
+                          {m.project_name && <span className="text-[11px] text-stone truncate">{m.project_name}</span>}
+                        </div>
+                        {m.location && (
+                          <div className="flex items-center gap-1 mt-2 text-stone">
+                            <span className="material-icons-outlined !text-[12px]">location_on</span>
+                            <span className="text-[11px] truncate">{m.location}</span>
+                          </div>
+                        )}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="card-5bloc space-y-3">
-              <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Upcoming</h3>
-              {upcoming.length === 0 ? (
-                <p className="text-[11px] text-stone">No upcoming meetings this month.</p>
-              ) : (
-                upcoming.map((m) => (
-                  <Link key={m.id} href={`/projects/${m.project_id}/meetings`} className="block">
-                    <p className="text-xs text-white font-medium">{m.title}</p>
-                    <p className="text-[10px] text-stone font-mono">
-                      {m.starts_at
-                        ? new Date(m.starts_at).toLocaleString('en-IN', {
-                            day: 'numeric',
-                            month: 'short',
-                            hour: 'numeric',
-                            minute: '2-digit',
-                          })
-                        : m.meeting_date}
-                      {m.project_name ? ` · ${m.project_name}` : ''}
-                    </p>
-                  </Link>
-                ))
-              )}
+            <div className="card-m overflow-hidden">
+              <div className="card-m-head">
+                <h3 className="card-m-title uppercase text-[11px] tracking-wider text-stone">Upcoming</h3>
+              </div>
+              <div className="p-4 space-y-4">
+                {upcoming.length === 0 ? (
+                  <p className="text-[12px] text-stone">No upcoming meetings.</p>
+                ) : (
+                  upcoming.map((m) => (
+                    <Link key={m.id} href={`/projects/${m.project_id}/meetings`} className="flex flex-col gap-1 group">
+                      <p className="text-[13px] font-medium group-hover:text-amber transition-colors">{m.title}</p>
+                      <div className="flex items-center gap-2">
+                         <span className="text-[10px] font-bold text-stone uppercase tracking-tighter">
+                          {m.starts_at
+                            ? new Date(m.starts_at).toLocaleString('en-IN', {
+                                day: 'numeric',
+                                month: 'short',
+                                hour: 'numeric',
+                                minute: '2-digit',
+                              })
+                            : m.meeting_date}
+                        </span>
+                        {m.project_name && <span className="w-1 h-1 rounded-full bg-hairline-strong" />}
+                        {m.project_name && <span className="text-[10px] text-stone truncate">{m.project_name}</span>}
+                      </div>
+                    </Link>
+                  ))
+                )}
+              </div>
             </div>
 
             {googleEvents.length > 0 && (
-              <div className="card-5bloc space-y-3">
-                <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Google Calendar</h3>
-                {googleEvents.slice(0, 5).map((e) => (
-                  <a key={e.id} href={e.htmlLink} target="_blank" rel="noreferrer" className="block">
-                    <p className="text-xs text-white">{e.summary}</p>
-                    <p className="text-[10px] text-stone font-mono">
-                      {e.start ? new Date(e.start).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : ''}
-                    </p>
-                  </a>
-                ))}
+              <div className="card-m overflow-hidden border-l-4 border-l-blue">
+                <div className="card-m-head">
+                  <h3 className="card-m-title uppercase text-[11px] tracking-wider text-blue">Google Calendar</h3>
+                </div>
+                <div className="p-4 space-y-4">
+                  {googleEvents.slice(0, 5).map((e) => (
+                    <a key={e.id} href={e.htmlLink} target="_blank" rel="noreferrer" className="flex flex-col gap-1 group">
+                      <p className="text-[13px] font-medium group-hover:text-blue transition-colors">{e.summary}</p>
+                      <p className="text-[10px] font-bold text-stone uppercase">
+                        {e.start ? new Date(e.start).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }) : ''}
+                      </p>
+                    </a>
+                  ))}
+                </div>
               </div>
             )}
           </div>

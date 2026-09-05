@@ -54,20 +54,20 @@ export default function InvoicesPage() {
 
   useLiveReload(load, ['invoices'])
 
-  const getStatusStyle = (status: Invoice['status']): React.CSSProperties => {
+  const getStatusChipClass = (status: Invoice['status']): string => {
     switch (status) {
       case 'draft':
-        return { background: 'rgba(159,142,122,.10)', color: 'var(--stone)' }
+        return 'chip-m'
       case 'sent':
-        return { background: 'rgba(122,184,255,.12)', color: 'var(--blue)' }
+        return 'chip-m chip-m-blue'
       case 'paid':
-        return { background: 'rgba(111,220,140,.12)', color: 'var(--success)' }
+        return 'chip-m chip-m-green'
       case 'overdue':
-        return { background: 'rgba(255,180,171,.12)', color: 'var(--error)' }
+        return 'chip-m chip-m-red'
       case 'cancelled':
-        return { background: 'rgba(159,142,122,.10)', color: 'var(--stone)' }
+        return 'chip-m'
       default:
-        return {}
+        return 'chip-m'
     }
   }
 
@@ -228,95 +228,96 @@ export default function InvoicesPage() {
   const overdueCount = invoices.filter((i) => i.status === 'overdue').length
 
   return (
-    <div className="p-6 space-y-6 font-body select-none max-w-7xl mx-auto">
+    <div className="page-m space-y-8 font-body">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-wide">Invoices Registry</h1>
-          <p className="text-xs text-stone mt-1">
+          <h1 className="page-m-title">Invoices Registry</h1>
+          <p className="page-m-sub">
             Manage project billing, calculate CGST/SGST/IGST taxes, and track collections.
           </p>
         </div>
         <Link href="/invoices/new" className="btn-primary">
-          <span className="material-icons-outlined text-[18px]">add</span>
+          <span className="material-icons-outlined">add</span>
           CREATE NEW INVOICE
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {[
           {
             label: 'Collected Fees',
             value: `₹${paidThisMonth.toLocaleString()}`,
             trend: 'Paid invoices (GST incl.)',
-            color: 'text-success',
+            accent: 'text-success',
           },
           {
             label: 'Outstanding Fees',
             value: `₹${outstanding.toLocaleString()}`,
             trend: 'Awaiting client release',
-            color: 'text-blue',
+            accent: 'text-blue',
           },
           {
             label: 'Overdue Invoices',
-            value: overdueCount,
+            value: overdueCount.toString(),
             trend: 'Requires follow up',
-            color: 'text-error',
+            accent: 'text-error',
           },
         ].map((stat, idx) => (
-          <div key={idx} className="card-5bloc p-4">
-            <span className="text-[10px] text-stone font-mono uppercase tracking-wider">{stat.label}</span>
-            <h4 className={`text-xl font-bold mt-1 ${stat.color}`}>{stat.value}</h4>
-            <p className="text-[10px] text-stone mt-1 font-mono">{stat.trend}</p>
+          <div key={idx} className="card-m stat-m">
+            <span className="stat-m-label">{stat.label}</span>
+            <div className={`stat-m-value ${stat.accent}`}>{stat.value}</div>
+            <p className="stat-m-note">{stat.trend}</p>
           </div>
         ))}
       </div>
 
-      <div className="card-5bloc flex flex-col justify-between">
-        <div className="flex items-center justify-between pb-4 ">
+      <div className="card-m flex flex-col">
+        <div className="card-m-head">
           <div>
-            <h3 className="text-sm font-bold uppercase text-white font-mono">Invoice Records</h3>
-            <p className="text-[11px] text-stone mt-0.5">
+            <h3 className="card-m-title">Invoice Records</h3>
+            <p className="text-[12px] text-stone mt-0.5">
               Numbers generated server-side. Mark paid when funds clear.
             </p>
           </div>
         </div>
 
         {loading ? (
-          <div className="space-y-3 py-4">
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="h-8 w-full" />
-            <Skeleton className="h-8 w-3/4" />
-            <Skeleton className="h-8 w-full" />
+          <div className="p-6 space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-3/4" />
           </div>
         ) : error ? (
-          <ErrorState
-            title="Could not load your invoices"
-            error={error}
-            onRetry={load}
-            style={{ background: 'transparent' }}
-          />
+          <div className="p-8">
+            <ErrorState
+              title="Could not load your invoices"
+              error={error}
+              onRetry={load}
+            />
+          </div>
         ) : invoices.length === 0 ? (
-          <EmptyState
-            icon="receipt_long"
-            title="No invoices raised yet"
-            description="Raise your first fee invoice — GST is calculated for you and the invoice number is issued server-side."
-            actionLabel="Create invoice"
-            href="/invoices/new"
-            style={{ background: 'transparent' }}
-          />
+          <div className="p-12">
+            <EmptyState
+              icon="receipt_long"
+              title="No invoices raised yet"
+              description="Raise your first fee invoice — GST is calculated for you and the invoice number is issued server-side."
+              actionLabel="Create invoice"
+              href="/invoices/new"
+            />
+          </div>
         ) : (
-          <div className="overflow-x-auto mt-4">
-            <table className="w-full text-left text-xs ">
+          <div className="overflow-x-auto">
+            <table className="table-m">
               <thead>
-                <tr className="text-stone font-mono uppercase text-[10px] tracking-wider">
-                  <th className="pb-3 pl-2">Invoice #</th>
-                  <th className="pb-3">Project</th>
-                  <th className="pb-3">Client</th>
-                  <th className="pb-3 text-right">Subtotal (₹)</th>
-                  <th className="pb-3 text-right">Total (₹)</th>
-                  <th className="pb-3">Status</th>
-                  <th className="pb-3">Due Date</th>
-                  <th className="pb-3 pr-2 text-right">Actions</th>
+                <tr>
+                  <th>Invoice #</th>
+                  <th>Project</th>
+                  <th>Client</th>
+                  <th className="text-right">Subtotal (₹)</th>
+                  <th className="text-right">Total (₹)</th>
+                  <th>Status</th>
+                  <th>Due Date</th>
+                  <th className="text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -327,76 +328,71 @@ export default function InvoicesPage() {
                   return (
                     <tr
                       key={inv.id}
-                      className="group"
-                      style={isOverdue ? { boxShadow: 'inset 3px 0 0 var(--error)' } : {}}
+                      className={isOverdue ? 'bg-error/5' : ''}
                     >
-                      <td className="py-4 pl-3 font-mono text-[10px] text-white font-semibold">
+                      <td className="font-mono text-[12px] font-semibold">
                         {inv.invoice_number}
                       </td>
-                      <td className="py-4 font-semibold text-white truncate max-w-[160px]">
+                      <td className="font-semibold truncate max-w-[160px]">
                         {inv.project_name}
                       </td>
-                      <td className="py-4 text-stone">{inv.client_name}</td>
-                      <td className="py-4 text-right font-mono text-stone">
+                      <td className="text-stone">{inv.client_name}</td>
+                      <td className="text-right font-mono text-stone">
                         {Number(inv.subtotal || 0).toLocaleString()}
                       </td>
-                      <td className="py-4 text-right font-mono font-semibold text-white">
+                      <td className="text-right font-mono font-semibold text-amber">
                         {Number(inv.total || 0).toLocaleString()}
                       </td>
-                      <td className="py-4">
-                        <span className="chip" style={getStatusStyle(inv.status)}>
+                      <td>
+                        <span className={getStatusChipClass(inv.status)}>
                           {inv.status.replace(/_/g, ' ').toUpperCase()}
                         </span>
                       </td>
-                      <td className="py-4 font-mono text-[10px] text-stone">{inv.due_date || '—'}</td>
-                      <td className="py-4 pr-2 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="font-mono text-[11px] text-stone">{inv.due_date || '—'}</td>
+                      <td className="text-right">
+                        <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => handlePdf(inv.id)}
-                            className="p-1 text-stone hover:text-amber hover:bg-navy-lt transition"
+                            className="btn-icon"
                             title="View / PDF"
                           >
-                            <span className="material-icons-outlined text-[16px]">picture_as_pdf</span>
+                            <span className="material-icons-outlined">picture_as_pdf</span>
                           </button>
                           {unpaid && (
-                            <button
-                              onClick={() => handleSend(inv)}
-                              disabled={busyId !== null}
-                              className="p-1 text-stone hover:text-blue hover:bg-navy-lt transition disabled:opacity-40"
-                              title={rowBusy ? 'Working…' : inv.status === 'draft' ? 'Email invoice' : 'Re-email invoice'}
-                            >
-                              <span className="material-icons-outlined text-[16px]">send</span>
-                            </button>
-                          )}
-                          {unpaid && (
-                            <button
-                              onClick={() => handleCopyPayLink(inv)}
-                              disabled={busyId !== null}
-                              className="p-1 text-stone hover:text-amber hover:bg-navy-lt transition disabled:opacity-40"
-                              title={rowBusy ? 'Working…' : 'Copy pay link'}
-                            >
-                              <span className="material-icons-outlined text-[16px]">link</span>
-                            </button>
-                          )}
-                          {unpaid && (
-                            <button
-                              onClick={() => handleCollectPayment(inv)}
-                              disabled={busyId !== null}
-                              className="p-1 text-stone hover:text-blue hover:bg-navy-lt transition disabled:opacity-40"
-                              title={rowBusy ? 'Working…' : 'Collect payment online'}
-                            >
-                              <span className="material-icons-outlined text-[16px] text-blue">payments</span>
-                            </button>
-                          )}
-                          {unpaid && (
-                            <button
-                              onClick={() => handleMarkPaid(inv)}
-                              disabled={busyId !== null}
-                              className="p-1 text-stone hover:text-success hover:bg-navy-lt transition disabled:opacity-40"
-                              title="Mark Paid"
-                            >
-                              <span className="material-icons-outlined text-[16px]">check_circle</span>
-                            </button>
+                            <>
+                              <button
+                                onClick={() => handleSend(inv)}
+                                disabled={busyId !== null}
+                                className="btn-icon"
+                                title={rowBusy ? 'Working…' : inv.status === 'draft' ? 'Email invoice' : 'Re-email invoice'}
+                              >
+                                <span className="material-icons-outlined">send</span>
+                              </button>
+                              <button
+                                onClick={() => handleCopyPayLink(inv)}
+                                disabled={busyId !== null}
+                                className="btn-icon"
+                                title={rowBusy ? 'Working…' : 'Copy pay link'}
+                              >
+                                <span className="material-icons-outlined">link</span>
+                              </button>
+                              <button
+                                onClick={() => handleCollectPayment(inv)}
+                                disabled={busyId !== null}
+                                className="btn-icon"
+                                title={rowBusy ? 'Working…' : 'Collect payment online'}
+                              >
+                                <span className="material-icons-outlined text-blue">payments</span>
+                              </button>
+                              <button
+                                onClick={() => handleMarkPaid(inv)}
+                                disabled={busyId !== null}
+                                className="btn-icon"
+                                title="Mark Paid"
+                              >
+                                <span className="material-icons-outlined text-success">check_circle</span>
+                              </button>
+                            </>
                           )}
                         </div>
                       </td>

@@ -95,54 +95,54 @@ export default function AiContractScanPage() {
     }
   }
 
-  const getRiskColor = (level: string) => {
+  const getRiskChipClass = (level: string) => {
     switch (level) {
-      case 'high': return { background: 'rgba(255,180,171,.12)', color: 'var(--error)' }
-      case 'medium': return { background: 'rgba(245,166,35,.12)', color: 'var(--amber)' }
-      default: return { background: 'rgba(122,184,255,.12)', color: 'var(--blue)' }
+      case 'high': return 'chip-m-red'
+      case 'medium': return 'chip-m-amber'
+      default: return 'chip-m-blue'
     }
   }
 
   return (
-    <div className="p-6 space-y-6 font-body select-none max-w-7xl mx-auto">
+    <div className="page-m space-y-8">
       {/* Page Title */}
       <div>
-        <h1 className="text-2xl font-bold tracking-wide">AI Contract Risk Scan</h1>
-        <p className="text-xs text-stone mt-1">
+        <h1 className="page-m-title">AI Contract Risk Scan</h1>
+        <p className="page-m-sub">
           Upload or paste project client contracts. Heuristic scan flags common liability patterns — not legal advice.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Left Input panel */}
-        <div className="card-5bloc space-y-4">
-          <div className="flex items-center justify-between pb-2 mb-2" style={{ boxShadow: '0 1px 0 rgba(159,142,122,0.10)' }}>
-            <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-amber">Scan Input</h3>
+        <div className="card-m">
+          <div className="card-m-head">
+            <h3 className="card-m-title text-amber">Scan Input</h3>
             <span className="material-icons-outlined text-stone text-[18px]">gavel</span>
           </div>
 
-          <form onSubmit={handleRunScan} className="space-y-4">
+          <form onSubmit={handleRunScan} className="p-5 space-y-4">
             {/* File upload mock */}
             <div>
               <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-2 font-mono">Upload Contract (.pdf, .docx)</label>
-              <div className="border border-dashed border-stone/30 p-4 text-center cursor-pointer hover:border-amber transition relative">
+              <div className="border border-dashed border-hairline rounded-xl p-6 text-center cursor-pointer hover:border-amber transition relative bg-surface-low">
                 <input
                   type="file"
                   accept=".pdf,.docx,.txt"
                   onChange={handleFileUploadMock}
                   className="absolute inset-0 opacity-0 cursor-pointer"
                 />
-                <span className="material-icons-outlined text-[28px] text-stone">cloud_upload</span>
-                <p className="text-[11px] text-stone mt-1">
+                <span className="material-icons-outlined text-[32px] text-stone/40">cloud_upload</span>
+                <p className="text-[12px] text-stone mt-2">
                   {fileName ? `Selected: ${fileName}` : 'Drag file here or click to browse'}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="divider flex-1"></span>
+              <span className="h-[1px] bg-hairline flex-1"></span>
               <span className="text-[10px] text-stone font-mono">OR PASTE TEXT</span>
-              <span className="divider flex-1"></span>
+              <span className="h-[1px] bg-hairline flex-1"></span>
             </div>
 
             <div>
@@ -171,15 +171,15 @@ export default function AiContractScanPage() {
         <div className="lg:col-span-2 min-h-[500px]">
           {loading ? (
             /* Loading state */
-            <div className="card-5bloc flex flex-col items-center justify-center text-center h-[520px] space-y-6">
-              <div className="w-12 h-12 bg-amber/10 border flex items-center justify-center text-amber animate-spin">
+            <div className="card-m flex flex-col items-center justify-center text-center h-[520px] space-y-6">
+              <div className="w-16 h-16 bg-amber/5 border border-amber/20 rounded-full flex items-center justify-center text-amber animate-spin">
                 <span className="material-icons-outlined text-[28px]">sync</span>
               </div>
               <div className="space-y-1">
                 <h4 className="text-sm font-bold text-white uppercase tracking-wider font-mono">Analyzing Contract Terms</h4>
                 <p className="text-xs text-stone">{loadingMessages[loadingStep]}</p>
               </div>
-              <div className="w-64 bg-navy h-1.5 overflow-hidden border">
+              <div className="w-64 bg-surface-low h-1.5 overflow-hidden rounded-full">
                 <div
                   className="bg-amber h-full transition-all duration-1000"
                   style={{ width: `${(loadingStep + 1) * 20}%` }}
@@ -190,49 +190,55 @@ export default function AiContractScanPage() {
             /* Scanned Results display */
             <div className="space-y-6 animate-fade-in">
               {/* Score summary card */}
-              <div className="card-5bloc flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="card-m p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div className="space-y-1">
-                  <h2 className="text-sm font-bold font-mono uppercase text-white tracking-wider">Audit Result Summary</h2>
+                  <h2 className="text-[15px] font-bold text-white uppercase tracking-wide">Audit Result Summary</h2>
                   <p className="text-xs text-stone">Audit completed. Risk checklist generated below.</p>
                 </div>
-                <div className="flex items-center gap-3.5">
+                <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <p className="text-xs text-stone">Compliance Score</p>
+                    <p className="text-[10px] font-mono text-stone uppercase tracking-wider">Compliance Score</p>
                     <h1 className="text-2xl font-bold text-amber">{scanResult.score} / 100</h1>
                   </div>
-                  <div className="w-12 h-12 flex items-center justify-center text-amber bg-amber/10 border text-lg font-bold">
+                  <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-xl font-black ${
+                    scanResult.score >= 80 ? 'bg-green-500/10 text-green-500' : scanResult.score >= 60 ? 'bg-amber/10 text-amber' : 'bg-error/10 text-error'
+                  }`}>
                     {scanResult.score >= 80 ? 'A' : scanResult.score >= 60 ? 'C' : 'F'}
                   </div>
                 </div>
               </div>
 
               {/* Risky Clauses Section */}
-              <div className="card-5bloc space-y-4">
-                <h3 className="text-xs font-bold font-mono text-error uppercase tracking-wider border-b pb-2">
-                  Flagged Design Risks ({scanResult.risks.length})
-                </h3>
-                <div className="space-y-4">
+              <div className="card-m">
+                <div className="card-m-head border-b border-hairline">
+                  <h3 className="card-m-title text-error uppercase">
+                    Flagged Design Risks ({scanResult.risks.length})
+                  </h3>
+                </div>
+                <div className="p-5 space-y-4">
                   {scanResult.risks.map((risk, index) => (
-                    <div key={index} className="p-4 bg-navy/30 border space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
-                          <span className="font-mono text-stone">{risk.clauseNumber}</span> - {risk.title}
+                    <div key={index} className="card-m bg-surface-low/30 overflow-hidden">
+                      <div className="px-4 py-3 border-b border-hairline flex items-center justify-between bg-surface-low/50">
+                        <h4 className="text-[13px] font-bold text-white flex items-center gap-2">
+                          <span className="font-mono text-stone text-[11px] bg-surface-high px-1.5 py-0.5 rounded">{risk.clauseNumber}</span> {risk.title}
                         </h4>
-                        <span className="chip" style={getRiskColor(risk.riskLevel)}>{risk.riskLevel} Risk</span>
+                        <span className={`chip-m ${getRiskChipClass(risk.riskLevel)}`}>{risk.riskLevel} Risk</span>
                       </div>
                       
-                      <div className="p-3 bg-navy-mid text-stone font-mono text-[11px] border">
-                        "{risk.text}"
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 text-xs">
-                        <div>
-                          <p className="text-stone font-semibold mb-1">Contract Implication:</p>
-                          <p className="text-white leading-relaxed">{risk.implication}</p>
+                      <div className="p-4 space-y-4">
+                        <div className="p-3 bg-surface-canvas text-stone font-mono text-[11px] rounded border border-hairline leading-relaxed italic">
+                          "{risk.text}"
                         </div>
-                        <div>
-                          <p className="text-amber font-semibold mb-1">Suggested Remedy:</p>
-                          <p className="text-white leading-relaxed">{risk.remedy}</p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-[12px]">
+                          <div className="space-y-1.5">
+                            <p className="text-stone font-bold uppercase text-[10px] tracking-wider">Contract Implication</p>
+                            <p className="text-white leading-relaxed">{risk.implication}</p>
+                          </div>
+                          <div className="space-y-1.5">
+                            <p className="text-amber font-bold uppercase text-[10px] tracking-wider">Suggested Remedy</p>
+                            <p className="text-white leading-relaxed">{risk.remedy}</p>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -241,26 +247,31 @@ export default function AiContractScanPage() {
               </div>
 
               {/* Missing Clauses Section */}
-              <div className="card-5bloc space-y-4">
-                <h3 className="text-xs font-bold font-mono text-blue uppercase tracking-wider border-b pb-2">
-                  Missing Compliance Clauses ({scanResult.missing.length})
-                </h3>
-                <div className="space-y-4">
+              <div className="card-m">
+                <div className="card-m-head border-b border-hairline">
+                  <h3 className="card-m-title text-blue uppercase">
+                    Missing Compliance Clauses ({scanResult.missing.length})
+                  </h3>
+                </div>
+                <div className="p-5 space-y-4">
                   {scanResult.missing.map((item, index) => (
-                    <div key={index} className="p-4 bg-navy/30 border space-y-3.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-white font-mono">{item.category}</span>
-                        <span className={`chip ${
-                          item.importance === 'critical' ? 'bg-error/10 text-error' : 'bg-stone/10 text-stone'
+                    <div key={index} className="card-m bg-surface-low/30 overflow-hidden">
+                      <div className="px-4 py-3 border-b border-hairline flex items-center justify-between bg-surface-low/50">
+                        <span className="text-[13px] font-bold text-white">{item.category}</span>
+                        <span className={`chip-m ${
+                          item.importance === 'critical' ? 'chip-m-red' : 'chip-m-blue'
                         }`}>{item.importance}</span>
                       </div>
-                      <p className="text-xs text-stone leading-relaxed">{item.description}</p>
                       
-                      <div className="pt-2.5 border-t border-navy-lt">
-                        <p className="text-[10px] text-stone font-mono mb-1.5 uppercase">SUGGESTED DROP-IN TEXT:</p>
-                        <p className="text-xs text-white leading-relaxed p-3 bg-navy-mid border font-mono">
-                          {item.suggestedText}
-                        </p>
+                      <div className="p-4 space-y-4">
+                        <p className="text-[12px] text-stone leading-relaxed">{item.description}</p>
+                        
+                        <div className="pt-3 border-t border-hairline">
+                          <p className="text-[10px] text-stone font-mono mb-2 uppercase tracking-widest">SUGGESTED DROP-IN TEXT</p>
+                          <p className="text-[11px] text-white leading-relaxed p-3 bg-surface-canvas border border-hairline font-mono rounded">
+                            {item.suggestedText}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -269,10 +280,12 @@ export default function AiContractScanPage() {
             </div>
           ) : (
             /* Idle screen placeholder */
-            <div className="card-5bloc flex flex-col items-center justify-center text-center h-[520px] text-stone">
-              <span className="material-icons-outlined text-[48px] text-stone/20 mb-3">gavel</span>
-              <h4 className="text-sm font-bold text-white">AI Contract Scan Engine Idle</h4>
-              <p className="text-xs max-w-sm mt-1">
+            <div className="card-m flex flex-col items-center justify-center text-center h-[520px] text-stone p-8">
+              <div className="w-20 h-20 bg-surface-low rounded-full flex items-center justify-center text-stone/20 mb-4">
+                <span className="material-icons-outlined text-[48px]">gavel</span>
+              </div>
+              <h4 className="text-[15px] font-bold text-white uppercase tracking-wider">AI Contract Scan Engine Idle</h4>
+              <p className="text-xs max-w-sm mt-3 text-stone/60 leading-relaxed">
                 Upload a document or paste terms in the left panel to trigger the professional design liability audit.
               </p>
             </div>

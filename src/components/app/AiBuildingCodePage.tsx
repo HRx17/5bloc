@@ -21,10 +21,10 @@ function normalizePlan(raw: unknown): 'free' | 'solo' | 'team' {
   return 'free'
 }
 
-const SEVERITY: Record<BuildingCodeFinding['severity'], { label: string; color: string; bg: string }> = {
-  blocker: { label: 'Blocker', color: 'var(--error)', bg: 'rgba(255,138,128,.12)' },
-  warning: { label: 'Check', color: 'var(--amber)', bg: 'rgba(245,166,35,.12)' },
-  note: { label: 'Note', color: 'var(--blue)', bg: 'rgba(122,184,255,.10)' },
+const SEVERITY: Record<BuildingCodeFinding['severity'], { label: string; chipClass: string }> = {
+  blocker: { label: 'Blocker', chipClass: 'chip-m-red' },
+  warning: { label: 'Check', chipClass: 'chip-m-amber' },
+  note: { label: 'Note', chipClass: 'chip-m-blue' },
 }
 
 export default function AiBuildingCodePage() {
@@ -206,17 +206,17 @@ export default function AiBuildingCodePage() {
   }
 
   return (
-    <div className="p-6 space-y-6 font-body select-none max-w-7xl mx-auto">
+    <div className="page-m space-y-8">
       <div>
-        <h1 className="text-2xl font-bold tracking-wide">AI Building Code Checker</h1>
-        <p className="text-xs text-stone mt-1">
+        <h1 className="page-m-title">AI Building Code Checker</h1>
+        <p className="page-m-sub">
           Typology-aware briefing against NBC 2016 and typical Indian DCR — FSI, setbacks, fire, parking
           and the NOCs this building type actually needs.
         </p>
       </div>
 
       {planGateLoading ? (
-        <div className="card-5bloc p-8 text-center text-stone animate-pulse text-xs">Checking plan access…</div>
+        <div className="card-m p-8 text-center text-stone animate-pulse text-xs">Checking plan access…</div>
       ) : needsUpgrade ? (
         <UpgradePrompt
           title="Building Code Checker is a paid feature"
@@ -226,32 +226,35 @@ export default function AiBuildingCodePage() {
 
       {!needsUpgrade && !planGateLoading && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          <div className="card-5bloc space-y-4">
-            <div className="flex items-center justify-between pb-2.5 mb-2">
-              <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-amber">Site brief</h3>
-              <span className="text-[10px] text-stone font-mono uppercase">
-                Remaining: <span className="text-white font-bold">{remainingCalls} runs</span>
+          <div className="card-m">
+            <div className="card-m-head">
+              <h3 className="card-m-title">Site Brief</h3>
+              <span className="chip-m chip-m-amber text-[10px]">
+                {remainingCalls} runs left
               </span>
             </div>
 
-            <form onSubmit={handleGenerate} className="space-y-4">
+            <form onSubmit={handleGenerate} className="p-5 space-y-4">
               {projects.length > 0 && (
                 <div>
                   <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1.5 font-mono">
                     Pull from a project
                   </label>
-                  <select
-                    value={form.projectId}
-                    onChange={(e) => applyProject(e.target.value)}
-                    className="input-5bloc py-1.5 text-xs font-medium"
-                  >
-                    <option value="">Not linked — enter details below</option>
-                    {projects.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="select-5bloc w-full">
+                    <select
+                      value={form.projectId}
+                      onChange={(e) => applyProject(e.target.value)}
+                      className="w-full"
+                    >
+                      <option value="">Not linked — enter details below</option>
+                      {projects.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="material-icons-outlined chevron">expand_more</span>
+                  </div>
                 </div>
               )}
 
@@ -259,17 +262,20 @@ export default function AiBuildingCodePage() {
                 <label className="block text-stone text-[10px] font-bold uppercase tracking-wider mb-1.5 font-mono">
                   Typology
                 </label>
-                <select
-                  value={form.projectType}
-                  onChange={(e) => setForm((f) => ({ ...f, projectType: e.target.value }))}
-                  className="input-5bloc py-1.5 text-xs font-medium"
-                >
-                  {TYPOLOGY_OPTIONS.map((t) => (
-                    <option key={t.value} value={t.value}>
-                      {t.label}
-                    </option>
-                  ))}
-                </select>
+                <div className="select-5bloc w-full">
+                  <select
+                    value={form.projectType}
+                    onChange={(e) => setForm((f) => ({ ...f, projectType: e.target.value }))}
+                    className="w-full"
+                  >
+                    {TYPOLOGY_OPTIONS.map((t) => (
+                      <option key={t.value} value={t.value}>
+                        {t.label}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="material-icons-outlined chevron">expand_more</span>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -356,18 +362,20 @@ export default function AiBuildingCodePage() {
                 />
               </div>
 
-              <button type="submit" disabled={loading} className="btn-primary w-full py-2 text-xs font-bold">
-                {loading ? loadingMessages[loadingStep] : `Check ${typologyLabel(form.projectType).toLowerCase()} codes`}
+              <button type="submit" disabled={loading} className="btn-primary w-full py-2.5 text-[13px] font-bold mt-2">
+                {loading ? 'RUNNING CHECKS...' : `CHECK ${typologyLabel(form.projectType).toUpperCase()} CODES`}
               </button>
             </form>
           </div>
 
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-6">
             {!result && !loading && (
-              <div className="card-5bloc p-10 text-center">
-                <span className="material-icons-outlined text-[36px] text-amber">gavel</span>
-                <p className="text-sm font-semibold text-white mt-3">No check run yet</p>
-                <p className="text-xs text-stone mt-1 max-w-md mx-auto leading-relaxed">
+              <div className="card-m flex flex-col items-center justify-center text-center h-[450px] text-stone p-8">
+                <div className="w-20 h-20 bg-surface-low rounded-full flex items-center justify-center text-amber/20 mb-4">
+                  <span className="material-icons-outlined text-[48px]">gavel</span>
+                </div>
+                <h4 className="text-[15px] font-bold text-white uppercase tracking-wider">No check run yet</h4>
+                <p className="text-xs text-stone/60 mt-3 max-w-md mx-auto leading-relaxed">
                   Pick a typology — commercial and institutional are not treated as a house — and we will
                   list likely blockers, bye-law ranges and the NOCs to seed on Permits.
                 </p>
@@ -375,78 +383,93 @@ export default function AiBuildingCodePage() {
             )}
 
             {loading && (
-              <div className="card-5bloc p-10 text-center animate-pulse">
-                <p className="text-xs font-mono text-amber uppercase">{loadingMessages[loadingStep]}</p>
+              <div className="card-m p-12 text-center animate-pulse space-y-4">
+                <div className="w-16 h-16 bg-amber/5 border border-amber/20 rounded-full flex items-center justify-center text-amber animate-spin mx-auto">
+                  <span className="material-icons-outlined text-[32px]">sync</span>
+                </div>
+                <p className="text-[11px] font-mono text-amber uppercase tracking-widest">{loadingMessages[loadingStep]}</p>
               </div>
             )}
 
             {result && (
-              <>
-                <div className="card-5bloc space-y-2">
-                  <p className="text-[10px] font-mono uppercase text-amber tracking-wider">
-                    {result.typology} · {result.city}
-                  </p>
-                  <p className="text-sm text-white leading-relaxed">{result.summary}</p>
-                  <p className="text-[11px] text-stone leading-relaxed">{result.disclaimer}</p>
+              <div className="space-y-6 animate-fade-in">
+                <div className="card-m">
+                  <div className="card-m-head border-b border-hairline">
+                    <h3 className="card-m-title uppercase text-amber">Summary</h3>
+                    <span className="text-[10px] font-mono text-stone uppercase">{result.typology} · {result.city}</span>
+                  </div>
+                  <div className="p-5 space-y-3">
+                    <p className="text-[14px] text-white leading-relaxed">{result.summary}</p>
+                    <p className="text-[11px] text-stone leading-relaxed italic border-t border-hairline pt-3">{result.disclaimer}</p>
+                  </div>
                 </div>
 
-                <div className="card-5bloc space-y-3">
-                  <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-white">Findings</h3>
-                  <div className="space-y-3">
+                <div className="card-m">
+                  <div className="card-m-head border-b border-hairline">
+                    <h3 className="card-m-title uppercase">Findings</h3>
+                  </div>
+                  <div className="p-5 space-y-4">
                     {result.findings.map((f, i) => {
                       const meta = SEVERITY[f.severity] || SEVERITY.note
                       return (
-                        <div key={`${f.topic}-${i}`} className="border rounded-md p-3 space-y-1.5">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs font-semibold text-white">{f.topic}</span>
-                            <span
-                              className="text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded"
-                              style={{ color: meta.color, background: meta.bg }}
-                            >
-                              {meta.label}
-                            </span>
+                        <div key={`${f.topic}-${i}`} className="card-m bg-surface-low/30 overflow-hidden">
+                          <div className="px-4 py-3 border-b border-hairline flex items-center justify-between bg-surface-low/50">
+                            <span className="text-[13px] font-bold text-white">{f.topic}</span>
+                            <span className={`chip-m ${meta.chipClass}`}>{meta.label}</span>
                           </div>
-                          <p className="text-[12px] text-stone leading-relaxed">{f.finding}</p>
-                          <p className="text-[11px] text-white leading-relaxed">Next: {f.action}</p>
+                          <div className="p-4 space-y-3">
+                            <p className="text-[13px] text-stone leading-relaxed">{f.finding}</p>
+                            <div className="flex gap-2 items-start pt-2 border-t border-hairline">
+                              <span className="material-icons-outlined text-amber text-[16px] mt-0.5">arrow_forward</span>
+                              <p className="text-[12px] text-white leading-relaxed">
+                                <span className="font-bold text-amber text-[10px] uppercase tracking-wider mr-1">Action:</span>
+                                {f.action}
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       )
                     })}
                   </div>
                 </div>
 
-                <div className="card-5bloc space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-white">
-                      Clearances to track
-                    </h3>
+                <div className="card-m">
+                  <div className="card-m-head border-b border-hairline">
+                    <h3 className="card-m-title uppercase">Clearances to track</h3>
                     {form.projectId ? (
                       <button
                         type="button"
                         disabled={seedingPermits}
                         onClick={seedClearances}
-                        className="btn-secondary py-1 px-2.5 text-[10px] font-mono font-bold uppercase disabled:opacity-50"
+                        className="btn-secondary py-1.5 px-3 text-[10px] font-bold uppercase disabled:opacity-50"
                       >
                         {seedingPermits ? 'Adding…' : 'Add to project Permits'}
                       </button>
                     ) : (
-                      <span className="text-[10px] text-stone">
-                        Link a project on the left to add these as permits
+                      <span className="text-[10px] text-stone italic">
+                        Link a project to add these as permits
                       </span>
                     )}
                   </div>
-                  <div className="divide-y divide-navy-lt/30">
+                  <div className="divide-y divide-hairline">
                     {result.required_clearances.map((c) => (
-                      <div key={c.name} className="py-2.5">
-                        <p className="text-xs font-semibold text-white">{c.name}</p>
-                        <p className="text-[11px] text-stone">
-                          {c.authority}
-                          {c.why ? ` — ${c.why}` : ''}
-                        </p>
+                      <div key={c.name} className="p-5 hover:bg-surface-low/20 transition-colors">
+                        <div className="flex justify-between items-start gap-4">
+                          <div>
+                            <p className="text-[14px] font-semibold text-white">{c.name}</p>
+                            <p className="text-[12px] text-stone mt-1">{c.authority}</p>
+                          </div>
+                          {c.why && (
+                            <div className="max-w-[50%] bg-surface-canvas p-2 rounded border border-hairline">
+                              <p className="text-[11px] text-stone leading-relaxed italic">"{c.why}"</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
-              </>
+              </div>
             )}
           </div>
         </div>
