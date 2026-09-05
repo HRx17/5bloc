@@ -397,7 +397,7 @@ export default function ProjectOverviewPage() {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="card-5bloc space-y-3 md:col-span-2">
+        <div className="card-m p-5 space-y-3 md:col-span-2">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-semibold text-amber">Project Specifications</h3>
             <div className="flex gap-2">
@@ -577,7 +577,7 @@ export default function ProjectOverviewPage() {
           )}
         </div>
 
-        <div className="card-5bloc space-y-3">
+        <div className="card-m p-5 space-y-3">
           <div className="flex justify-between items-center">
             <h3 className="text-xs font-semibold text-amber">Recent activity</h3>
             <Link href={`/projects/${projectId}/rfis`} className="text-[11px]" style={{ color: 'var(--amber)' }}>
@@ -609,7 +609,7 @@ export default function ProjectOverviewPage() {
         </div>
       </div>
 
-      <div className="card-5bloc">
+      <div className="card-m p-5">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold">Phase milestones</h3>
           <button type="button" className="btn-secondary text-[11px]" onClick={exportMilestonesToCSV}>

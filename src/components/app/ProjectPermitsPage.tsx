@@ -214,7 +214,7 @@ export default function ProjectPermitsPage() {
           { label: 'Pending Clearances', value: pendingCount, sub: 'Under municipal review', color: 'text-amber' },
           { label: 'RERA Registry Status', value: reraRegistered ? 'Certified' : 'Not Registered', sub: reraRegistered ? reraNum : 'Action required', color: reraRegistered ? 'text-blue' : 'text-error' }
         ].map((stat, idx) => (
-          <div key={idx} className="card-5bloc p-4">
+          <div key={idx} className="card-m p-4">
             <span className="text-[10px] text-stone font-mono uppercase tracking-wider">{stat.label}</span>
             <h4 className={`text-lg font-bold mt-1 ${stat.color}`}>{stat.value}</h4>
             <p className="text-[10px] text-stone mt-1 font-mono">{stat.sub}</p>
@@ -225,7 +225,7 @@ export default function ProjectPermitsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Left Column: Clearances Log table */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="card-5bloc space-y-4">
+          <div className="card-m p-5 space-y-4">
             <div className="border-b pb-3 flex justify-between items-center">
               <div>
                 <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Sanction & NOC Checklist</h3>
@@ -317,7 +317,7 @@ export default function ProjectPermitsPage() {
         </div>
 
         {/* Right Column: Building codes zonation checking tool */}
-        <div className="card-5bloc space-y-5">
+        <div className="card-m p-5 space-y-5">
           <div className="border-b pb-3">
             <h3 className="text-xs font-bold font-mono text-amber uppercase tracking-wider">Bye-Laws Bye-laws checking</h3>
             <p className="text-[10px] text-stone mt-0.5">Automated local authority codes lookup checklist.</p>

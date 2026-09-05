@@ -563,7 +563,7 @@ export default function ProjectInvoicesPage() {
     <div className="space-y-6 font-body select-none">
       
       {/* ── PRACTICE REVENUE DASHBOARD ── */}
-      <div className="card-5bloc space-y-4">
+      <div className="card-m p-5 space-y-4">
         <div className="border-b pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
             <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Practice Revenue Analytics</h3>
@@ -617,7 +617,7 @@ export default function ProjectInvoicesPage() {
         
         {/* Left Column: Client Invoices registry & Expense Tracker */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="card-5bloc space-y-4">
+          <div className="card-m p-5 space-y-4">
             <div className="border-b pb-3 flex items-center justify-between">
               <div>
                 <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Client Fee Invoices</h3>
@@ -652,7 +652,7 @@ export default function ProjectInvoicesPage() {
               />
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="table-m w-full text-left text-xs">
                   <thead>
                     <tr className="text-stone font-mono uppercase text-[10px] tracking-wider border-b pb-2">
                       <th className="pb-3 pl-2">Invoice #</th>
@@ -726,7 +726,7 @@ export default function ProjectInvoicesPage() {
           </div>
 
           {/* Project Expense Tracker */}
-          <div className="card-5bloc space-y-4">
+          <div className="card-m p-5 space-y-4">
             <div className="border-b pb-3 flex justify-between items-center">
               <div>
                 <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Project Expense Log</h3>
@@ -736,7 +736,7 @@ export default function ProjectInvoicesPage() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+              <table className="table-m w-full text-left text-xs">
                 <thead>
                   <tr className="text-stone font-mono uppercase text-[10px] tracking-wider border-b pb-2">
                     <th className="pb-3 pl-2">Date</th>
@@ -837,7 +837,7 @@ export default function ProjectInvoicesPage() {
         {/* Right Column: Fee Calculator Card & Consultant Disbursements */}
         <div className="space-y-6">
           {/* Fee Calculator Card */}
-          <div className="card-5bloc space-y-4">
+          <div className="card-m p-5 space-y-4">
             <div className="border-b pb-3 flex items-center justify-between">
               <div>
                 <h3 className="text-xs font-bold font-mono text-amber uppercase tracking-wider">Fee Calculator</h3>
@@ -961,7 +961,7 @@ export default function ProjectInvoicesPage() {
           </div>
 
           {/* Consultant Disbursements */}
-          <div className="card-5bloc space-y-4">
+          <div className="card-m p-5 space-y-4">
             <div className="border-b pb-3 flex items-center justify-between">
               <div>
                 <h3 className="text-xs font-bold font-mono text-amber uppercase tracking-wider">Consultant Disbursements</h3>

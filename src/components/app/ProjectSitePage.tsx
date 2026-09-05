@@ -256,7 +256,7 @@ export default function ProjectSitePage() {
             
             {/* 1. VISITS TAB */}
             {activeSubTab === 'visits' && (
-              <div className="card-5bloc space-y-5">
+              <div className="card-m p-5 space-y-5">
                 <div className="border-b pb-3 flex justify-between items-center">
                   <div>
                     <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Site Inspection logs</h3>
@@ -301,7 +301,7 @@ export default function ProjectSitePage() {
 
             {/* 2. MATERIALS TAB */}
             {activeSubTab === 'materials' && (
-              <div className="card-5bloc space-y-5">
+              <div className="card-m p-5 space-y-5">
                 <div className="border-b pb-3 flex justify-between items-center">
                   <div>
                     <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Materials Verification registry</h3>
@@ -363,7 +363,7 @@ export default function ProjectSitePage() {
 
             {/* 3. PUNCH LIST TAB */}
             {activeSubTab === 'punch' && (
-              <div className="card-5bloc space-y-5">
+              <div className="card-m p-5 space-y-5">
                 <div className="border-b pb-3 flex justify-between items-center">
                   <div>
                     <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Closeout Snag checklist</h3>
@@ -408,7 +408,7 @@ export default function ProjectSitePage() {
           </div>
 
           {/* Right Column addition forms */}
-          <div className="card-5bloc space-y-5">
+          <div className="card-m p-5 space-y-5">
             <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-amber border-b pb-2 mb-2">
               Log Record Details
             </h3>

@@ -552,7 +552,7 @@ export default function ProjectDocumentsPage() {
  {/* Main Layout containing folder column and document lists */}
  <div className="flex flex-col md:flex-row gap-6 items-start h-full">
  {/* Left collapsible folders lists */}
- <div className="card-5bloc w-full md:w-56 shrink-0 py-4 px-3 space-y-4">
+ <div className="card-m w-full md:w-56 shrink-0 py-4 px-3 space-y-4">
  <div className="flex items-center justify-between px-2 pb-2 border-b ">
  <span className="text-xs font-semibold text-amber font-body">Folders</span>
  <span className="material-icons-outlined text-[16px] text-stone">create_new_folder</span>
@@ -593,7 +593,7 @@ export default function ProjectDocumentsPage() {
  </div>
 
  {/* Right side Document data display table */}
- <div className="card-5bloc flex-1 w-full overflow-hidden flex flex-col justify-between min-h-[400px]">
+ <div className="card-m p-5 flex-1 w-full overflow-hidden flex flex-col justify-between min-h-[400px]">
  {/* Action header */}
  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b ">
  <div>
@@ -657,7 +657,7 @@ export default function ProjectDocumentsPage() {
  />
  ) : (
  <div className="overflow-x-auto flex-1 mt-4">
- <table className="w-full text-left text-xs ">
+ <table className="table-m w-full text-left text-xs ">
  <thead>
  <tr className="text-stone border-b font-body text-[10px] tracking-wider font-semibold">
  <th className="pb-3 pl-2">Type</th>
@@ -984,7 +984,7 @@ export default function ProjectDocumentsPage() {
                 <div className="space-y-4 text-xs">
                   <h1 className="text-base font-bold text-stone-850 pb-1">{viewingDoc.name}</h1>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-[11px] border">
+                    <table className="table-m w-full text-left text-[11px] border">
                       <thead>
                         <tr className="bg-[#f5f2ee] border-b text-stone-700 font-bold">
                           <th className="p-2">Material Description</th>
@@ -1263,7 +1263,7 @@ export default function ProjectDocumentsPage() {
 
   {showLinkGDocModal && (
     <div className="fixed inset-0 bg-navy/85 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
-      <div className="card-5bloc w-full max-w-md space-y-4">
+      <div className="card-m p-5 w-full max-w-md space-y-4">
         <div className="flex justify-between items-center pb-2 border-b border-navy-lt/50">
           <h3 className="text-sm font-semibold text-amber flex items-center gap-1.5">
             <span className="material-icons-outlined text-[18px]">cloud_queue</span>

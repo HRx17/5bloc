@@ -236,7 +236,7 @@ export default function ProjectIssuesPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 space-y-4">
-          <div className="card-5bloc space-y-4">
+          <div className="card-m p-5 space-y-4">
             <div className="border-b pb-3 flex items-center justify-between">
               <div>
                 <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Site Issue Register</h3>
@@ -280,7 +280,7 @@ export default function ProjectIssuesPage() {
               />
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="table-m w-full text-left text-xs">
                   <thead>
                     <tr className="text-stone font-mono uppercase text-[10px] tracking-wider border-b pb-2">
                       <th className="pb-3 pl-2"># ID</th>
@@ -328,7 +328,7 @@ export default function ProjectIssuesPage() {
 
         <div>
           {activeIssue ? (
-            <div className="card-5bloc space-y-5 animate-fade-in">
+            <div className="card-m p-5 space-y-5 animate-fade-in">
               <div className="border-b pb-3 flex items-center justify-between">
                 <div>
                   <h4 className="text-xs font-bold font-mono text-amber uppercase tracking-wide">
@@ -427,7 +427,7 @@ export default function ProjectIssuesPage() {
               </div>
             </div>
           ) : (
-            <div className="card-5bloc text-center py-12 text-stone text-xs">
+            <div className="card-m text-center py-12 text-stone text-xs">
               <span className="material-icons-outlined text-[32px] text-stone/25 mb-2">check_circle_outline</span>
               <p>Select a reported issue from the log to view detailed descriptions, photos, and change execution status.</p>
             </div>

@@ -201,7 +201,7 @@ export default function ProjectTransmittalsPage() {
           { label: 'Awaiting Acknowledgment', value: transmittals.filter(t => t.status !== 'acknowledged').length, sub: 'Pending receipt verification' },
           { label: 'Construction Releases', value: transmittals.filter(t => t.purpose === 'For Construction').length, sub: 'Active blueprints on construction site' }
         ].map((kpi, idx) => (
-          <div key={idx} className="card-5bloc p-4">
+          <div key={idx} className="card-m p-4">
             <span className="text-[10px] text-stone font-mono uppercase tracking-wider">{kpi.label}</span>
             <h4 className="text-lg font-bold text-white mt-1 font-mono">{kpi.value}</h4>
             <p className="text-[10px] text-stone mt-1 font-mono">{kpi.sub}</p>
@@ -211,7 +211,7 @@ export default function ProjectTransmittalsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Left: Table of issued transmittals */}
-        <div className="lg:col-span-2 card-5bloc space-y-4">
+        <div className="lg:col-span-2 card-m p-5 space-y-4">
           <div className="border-b pb-3 flex justify-between items-center">
             <div>
               <h3 className="text-xs font-bold font-mono text-white uppercase tracking-wider">Transmittals Dispatch Registry</h3>
@@ -346,7 +346,7 @@ export default function ProjectTransmittalsPage() {
         </div>
 
         {/* Right: Informational context block */}
-        <div className="card-5bloc space-y-4">
+        <div className="card-m p-5 space-y-4">
           <div className="border-b pb-3">
             <h3 className="text-xs font-bold font-mono text-amber uppercase tracking-wider">AEC Legal Protection</h3>
             <p className="text-[10px] text-stone mt-0.5 font-mono">Drawing transmission liability rules.</p>
